@@ -1,1 +1,2 @@
-# ai-moa
+# AI-MOA
+AI Enabled Medical Office Administrator Assistant
