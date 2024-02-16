@@ -4,4 +4,4 @@ AI Enabled Medical Office Administrator Assistant
 
 <H3>License</H3>
 <HR>
-Copyright $#169; 2024 by Spring Health Corp
+Copyright &#169; 2024 by Spring Health Corp
