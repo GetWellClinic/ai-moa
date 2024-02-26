@@ -29,6 +29,10 @@ class OscarAutomation:
             config = json.load(file)
         return config
 
+    def save_config(self, config):
+        with open('config_file', 'w') as file:
+            json.dump(config, file, indent=4)
+
     def login_successful_callback(self, driver):
         login_url = f"{self.base_url}/login.do"
         return self.login.login(driver, login_url)
@@ -39,7 +43,8 @@ class OscarAutomation:
 
         self.login = Login(self.username, self.password, self.pin, self.base_url)
         self.pdf_processor = PdfProcessor(self.base_url, self.session, self.last_processed_pdf)
-        self.pdf_processor.process_pdfs(driver, f"{self.base_url}/login.do", self.login_successful_callback)
+        self.config["last_processed_pdf"] = self.pdf_processor.process_pdfs(driver, f"{self.base_url}/login.do", self.login_successful_callback)
+        self.save_config(self.config)
         driver.quit()
 
     def process_documents(self):
@@ -48,7 +53,8 @@ class OscarAutomation:
 
         self.login = Login(self.username, self.password, self.pin, self.base_url)
         self.document_processor = DocumentProcessor(self.base_url, self.session)
-        self.document_processor.process_documents(driver, f"{self.base_url}/login.do", self.login_successful_callback)
+        self.config["last_processed_pdf"] = self.document_processor.process_documents(driver, f"{self.base_url}/login.do", self.login_successful_callback)
+
         driver.quit()
 
 if __name__ == "__main__":

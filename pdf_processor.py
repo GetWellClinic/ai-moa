@@ -45,6 +45,7 @@ class PdfProcessor:
                 current_file = datetime.strptime(split_string[1], "%Y-%m-%d %H:%M:%S")
 
                 if last_file <= current_file:
+                    update_time = split_string[1]
                     pdf_content = self.get_pdf_content(option.get_attribute('value'))
                     if pdf_content:
                         with open("downloaded_pdf.pdf", "wb") as f:
@@ -92,3 +93,5 @@ class PdfProcessor:
 
                         # Send the POST request
                         response = self.session.post(url, data=params)
+
+        return update_time
