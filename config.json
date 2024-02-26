@@ -4,5 +4,6 @@
         "username": "oscardoc",
         "password": "******",
         "pin": "****"
-    }
+    },
+    "last_processed_pdf":""
 }

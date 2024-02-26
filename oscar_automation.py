@@ -1,6 +1,8 @@
 import json
 import requests
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from login import Login
 from pdf_processor import PdfProcessor
@@ -13,6 +15,7 @@ class OscarAutomation:
         self.password = self.config['user_login']['password']
         self.pin = self.config['user_login']['pin']
         self.base_url = self.config['base_url']
+        self.last_processed_pdf = self.config['last_processed_pdf']
         self.session = requests.Session()
         response = self.session.post(f"{self.base_url}/login.do", data={"username": self.username, "password": self.password, "pin": self.pin})
         
@@ -31,14 +34,18 @@ class OscarAutomation:
         return self.login.login(driver, login_url)
 
     def process_pdfs(self):
-        driver = webdriver.Chrome(ChromeDriverManager().install())
+        chrome_options = Options()
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+
         self.login = Login(self.username, self.password, self.pin, self.base_url)
-        self.pdf_processor = PdfProcessor(self.base_url, self.session)
+        self.pdf_processor = PdfProcessor(self.base_url, self.session, self.last_processed_pdf)
         self.pdf_processor.process_pdfs(driver, f"{self.base_url}/login.do", self.login_successful_callback)
         driver.quit()
 
     def process_documents(self):
-        driver = webdriver.Chrome(ChromeDriverManager().install())
+        chrome_options = Options()
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+
         self.login = Login(self.username, self.password, self.pin, self.base_url)
         self.document_processor = DocumentProcessor(self.base_url, self.session)
         self.document_processor.process_documents(driver, f"{self.base_url}/login.do", self.login_successful_callback)
