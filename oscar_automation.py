@@ -60,4 +60,4 @@ class OscarAutomation:
 if __name__ == "__main__":
     oscar = OscarAutomation()
     oscar.process_pdfs()
-    oscar.process_documents()
+    # oscar.process_documents()

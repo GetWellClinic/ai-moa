@@ -1,6 +1,7 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from datetime import datetime
+from workflow import Workflow
 
 class PdfProcessor:
     def __init__(self, base_url, session, last_processed_pdf):
@@ -46,52 +47,55 @@ class PdfProcessor:
 
                 if last_file <= current_file:
                     update_time = split_string[1]
-                    pdf_content = self.get_pdf_content(option.get_attribute('value'))
-                    if pdf_content:
-                        with open("downloaded_pdf.pdf", "wb") as f:
-                            f.write(pdf_content)
-                        print("PDF Content:", pdf_content)
 
-                        url = f"{self.base_url}/demographic/SearchDemographic.do"
+                    workflow = Workflow("test_workflow.pdf")
+                    workflow.execute_tasks_from_csv()
+                    # pdf_content = self.get_pdf_content(option.get_attribute('value'))
+                    # if pdf_content:
+                    #     with open("downloaded_pdf.pdf", "wb") as f:
+                    #         f.write(pdf_content)
+                    #     print("PDF Content:", pdf_content)
 
-                        # Define the payload data
-                        payload = {
-                            "query": "test"
-                        }
+                    #     url = f"{self.base_url}/demographic/SearchDemographic.do"
 
-                        # Send the POST request
-                        response = self.session.post(url, data=payload)
+                    #     # Define the payload data
+                    #     payload = {
+                    #         "query": "test"
+                    #     }
 
-                        url = f"{self.base_url}/dms/ManageDocument.do"
+                    #     # Send the POST request
+                    #     response = self.session.post(url, data=payload)
 
-                        # Define the parameters
-                        params = {
-                            "method": "addIncomingDocument",
-                            "pdfDir": "File",
-                            "pdfName": "sample.pdf",
-                            "queueId": "1",
-                            "pdfNo": "1",
-                            "queue": "1",
-                            "pdfAction": "",
-                            "lastdemographic_no": "1",
-                            "entryMode": "Fast",
-                            "docType": "lab",
-                            "docClass": "Cardio Respiratory Report",
-                            "docSubClass": "",
-                            "documentDescription": "this is a test",
-                            "observationDate": "2024-02-09",
-                            "saved": "false",
-                            "demog": "1",
-                            "demographicKeyword": "TEST, PATIENT (1961-12-23)",
-                            "provi": "999998",
-                            "flagproviders":"999998",
-                            "MRPNo": "",
-                            "MRPName": "undefined",
-                            "ProvKeyword": "",
-                            "save": "Save & Next"
-                        }
+                    #     url = f"{self.base_url}/dms/ManageDocument.do"
 
-                        # Send the POST request
-                        response = self.session.post(url, data=params)
+                    #     # Define the parameters
+                    #     params = {
+                    #         "method": "addIncomingDocument",
+                    #         "pdfDir": "File",
+                    #         "pdfName": "sample.pdf",
+                    #         "queueId": "1",
+                    #         "pdfNo": "1",
+                    #         "queue": "1",
+                    #         "pdfAction": "",
+                    #         "lastdemographic_no": "1",
+                    #         "entryMode": "Fast",
+                    #         "docType": "lab",
+                    #         "docClass": "Cardio Respiratory Report",
+                    #         "docSubClass": "",
+                    #         "documentDescription": "this is a test",
+                    #         "observationDate": "2024-02-09",
+                    #         "saved": "false",
+                    #         "demog": "1",
+                    #         "demographicKeyword": "TEST, PATIENT (1961-12-23)",
+                    #         "provi": "999998",
+                    #         "flagproviders":"999998",
+                    #         "MRPNo": "",
+                    #         "MRPName": "undefined",
+                    #         "ProvKeyword": "",
+                    #         "save": "Save & Next"
+                    #     }
+
+                    #     # Send the POST request
+                    #     response = self.session.post(url, data=params)
 
         return update_time
