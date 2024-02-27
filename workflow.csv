@@ -1,0 +1,12 @@
+1,ask_ai,"is this a spam email?	",1,3
+1,flag_email,param2,exit,exit
+1,flag_email,param3,exit,exit
+1,ask_ai,"is this a patient document?",6,8
+1,ask_ai,"is this a patient document?",5,7
+1,get_patient_details,param1,9,1
+1,get_patient_details,param1,param2,10,2
+1,flag_email,param4,exit,exit
+1,flag_email,param5,exit,exit
+1,update_oscar,param1,7,exit
+1,update_oscar,param1,param2,8,exit
+1,flag_email,param6,exit,exit
