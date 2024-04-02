@@ -1,0 +1,1 @@
+1,get_document_description,"Give a short description in less than 6 words for the above document which should include the type of the document, status, and Hospital or speciality doctor details along with appointment details if any. It should be less than 6 words!",exit,exit

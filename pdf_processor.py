@@ -48,7 +48,7 @@ class PdfProcessor:
                 if last_file <= current_file:
                     update_time = split_string[1]
 
-                    workflow = Workflow("test_workflow.pdf")
+                    workflow = Workflow("test_workflow.pdf",self.session,self.base_url)
                     workflow.execute_tasks_from_csv()
                     # pdf_content = self.get_pdf_content(option.get_attribute('value'))
                     # if pdf_content:

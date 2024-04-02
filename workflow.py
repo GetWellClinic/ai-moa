@@ -2,11 +2,50 @@ import csv
 import random
 import fitz
 import PyPDF2
+import requests
+import json
 
 class Workflow:
-    def __init__(self, filepath):
+    def __init__(self, filepath, session, base_url):
+        self.patient_name = ''
+        self.demographic_number = ''
+        self.provider_number = ''
+        self.document_description = ''
         self.filepath = filepath
         self.tesseracted_text = None
+        self.session = session
+        self.base_url = base_url
+        self.url = "http://127.0.0.1:5000/v1/chat/completions"
+        self.headers = {
+            "Authorization": "Bearer qwerty",
+            "Content-Type": "application/json"
+        }
+        self.categories = [
+                            "Lab",
+                            "Consult",
+                            "Insurance",
+                            "Legal",
+                            "Others Circle of Care Requests from other doctors/clinics",
+                            "NEW Info request from Cowan",
+                            "Old Chart",
+                            "Radiology",
+                            "Pathology",
+                            "Others",
+                            "Photo",
+                            "Consent",
+                            "Diagnostics",
+                            "Pharmacy",
+                            "Requisition",
+                            "Health Care Connect referral"
+                        ]
+
+    def find_category_index(self,text):
+        for index, category in enumerate(self.categories):
+            if text.lower() == category.lower():
+                print(index)
+                self.execute_tasks_from_csv(index)
+                return True
+        return False
 
     def has_ocr(self):
         pdf_path = self.filepath
@@ -54,27 +93,160 @@ class Workflow:
                 for page_num in range(num_pages):  # Iterate over all pages
                     page = reader.pages[page_num]
                     text += page.extract_text()
-            self.tesseracted_text = text
+            #self.tesseracted_text = text
+            self.tesseracted_text = """ """
             return True
         except Exception as e:
             print("An error occurred:", e)
             return False
 
-    def ask_ai(self,param,additional_param=None):
-        print(f"Executing ask_ai with parameter: {param}, additional_param={additional_param}")
-        return random.choice([True, False]),"test"
+    def build_prompt(self,prompt):
+        data = {
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant designed to output JSON."
+                },
+                {
+                    "role": "user",
+                    "content": self.tesseracted_text + '. '+ prompt
+                }
+            ],
+            "mode": "instruct",
+            "temperature": 1,
+            "character": "Assistant"
+        }
+        response = requests.post(self.url, headers=self.headers, json=data)
+        print(response.json())
+        content_value = response.json()['choices'][0]['message']['content']
+        print(content_value)
+        self.find_category_index(content_value)
+        return True
 
-    def flag_email(self,param):
-        print(f"Executing flag_email with parameter: {param}")
-        return random.choice([True, False])
+    def build_sub_prompt(self,prompt):
+        data = {
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant designed to output JSON."
+                },
+                {
+                    "role": "user",
+                    "content": self.tesseracted_text + '. '+ prompt
+                }
+            ],
+            "mode": "instruct",
+            "temperature": 1,
+            "character": "Assistant"
+        }
+        response = requests.post(self.url, headers=self.headers, json=data)
+        return response.json()['choices'][0]['message']['content']
 
-    def get_patient_details(self,param1, param2,additional_param=None):
-        print(f"Executing get_patient_details with parameters: {param1}, {param2}, additional_param={additional_param}")
-        return random.choice([True, True]),"1245dsd"
+    def get_patient_name(self,prompt):
+        name = self.build_sub_prompt(self.tesseracted_text + prompt)
+        if '.' in name:
+            name = name.replace('.', '')
+        print(name)
+        url = f"{self.base_url}/demographic/SearchDemographic.do"
 
-    def update_oscar(self,param1, param2, additional_param=None):
-        print(f"Executing update_oscar with parameters: {param1}, {param2}, additional_param={additional_param}")
-        return random.choice([True, True])
+        # Define the payload data
+        payload = {
+            "query": name
+        }
+
+        # Send the POST request
+        response = self.session.post(url, data=payload)
+
+        print(response.text)
+
+        response_data = json.loads(response.text)
+
+        if len(response_data["results"]) == 0:
+            return False
+        else:
+            return True,response_data["results"]
+
+    def get_doctor_name(self,prompt):
+        name = self.build_sub_prompt(self.tesseracted_text + prompt)
+        if '.' in name:
+            name = name.replace('.', '')
+        print(name)
+        url = f"{self.base_url}/provider/SearchProvider.do"
+
+        # Define the payload data
+        payload = {
+            "query": name
+        }
+
+        # Send the POST request
+        response = self.session.post(url, data=payload)
+
+        print(response.text)
+
+        response_data = json.loads(response.text)
+
+        if len(response_data["results"]) == 0:
+            return False
+        else:
+            return True,response_data["results"]
+
+    def get_document_description(self,prompt):
+        result = self.build_sub_prompt(self.tesseracted_text + prompt)
+        print(result)
+        self.document_description = result
+        return True
+
+    def filter_results(self,prompt,additional_param=None):
+        if additional_param is not None:
+            details = self.build_sub_prompt(self.tesseracted_text + prompt + str(additional_param))
+            print(details)
+            return True,details
+        else:
+            return False
+
+    def set_patient(self,additional_param=None):
+        if additional_param is not None:
+            print(str(additional_param))
+            data = json.loads(additional_param)
+            self.patient_name = data[0]['formattedName'] + '(' + data[0]['fomattedDob'] + ')'
+            self.demographic_number = data[0]['demographicNo']
+            return True
+        else:
+            return False
+
+    def set_doctor(self,additional_param=None):
+        if additional_param is not None:
+            print(str(additional_param))
+            data = json.loads(additional_param)
+            self.provider_number = data[0]['providerNo']
+            return True
+        else:
+            return False
+
+    def oscar_update(self):
+        print(self.patient_name)
+        print(self.demographic_number)
+        print(self.provider_number)
+        print(self.document_description)
+        return True
+
+    # More available funcitons and its usage
+
+    # def ask_ai(self,param,additional_param=None):
+    #     print(f"Executing ask_ai with parameter: {param}, additional_param={additional_param}")
+    #     return random.choice([True, False]),"test"
+
+    # def flag_email(self,param):
+    #     print(f"Executing flag_email with parameter: {param}")
+    #     return random.choice([True, False])
+
+    # def get_patient_details(self,param1, param2,additional_param=None):
+    #     print(f"Executing get_patient_details with parameters: {param1}, {param2}, additional_param={additional_param}")
+    #     return random.choice([True, True]),"1245dsd"
+
+    # def update_oscar(self,param1, param2, additional_param=None):
+    #     print(f"Executing update_oscar with parameters: {param1}, {param2}, additional_param={additional_param}")
+    #     return random.choice([True, True])
 
 
     def execute_task(self,task, previous_result=None):
@@ -134,7 +306,10 @@ class Workflow:
                 tasks.append(row)
         return tasks
 
-    def execute_tasks_from_csv(self):
-        tasks = self.read_tasks_from_csv('workflow.csv')
+    def execute_tasks_from_csv(self,index=None):
+        if index is None:
+            tasks = self.read_tasks_from_csv('workflow.csv')
+        else:
+            tasks = self.read_tasks_from_csv(str(index)+'.csv')
         print(self.filepath)
         self.execute_tasks(tasks, 0)
