@@ -1,15 +1,32 @@
-1,has_ocr,2,1
-1,extract_text_from_pdf,2,exit
-1,extract_text_from_pdf_file,3,exit
-1,build_prompt,"For the following question in one word if confidence level is 100% else reply others. From the list choose one that suits the type of the document? Lab, Consult, Insurance, Legal, Others Circle of Care Requests from other doctors/clinics, NEW Info request from Cowan, Old Chart, Radiology, Others, Photo, Consent, Diagnostics, Pharmacy, Requisition, Health Care Connect referral",4,exit
-1,build_sub_prompt,"For the following question if confidence level is more than 85% give the  answer in one word using the format 'True' else 'False'. Does the document has the name of the patient?. ",5,exit
-1,get_patient_name,"Answer only to the following question. What is the name of the patient? Answer should be only one or two words!",6,6
-1,filter_results,"choose one from the following list that suits the patient the most based on the name and date of birth and give the selected item, make sure the response is just the selected item with all the details (fomattedDob,formattedName,demographicNo,nextAppointment,status,providerNo) in the provided format as of the question. Make sure the response is just the selected item nothing else! Dont add any other text than the result! Response should be in json format not as string!.",7,7
-1,set_patient,8,8
-1,build_sub_prompt,"For the following question if confidence level is more than 85% give the  answer in one word using the format 'True' else 'False'. Does the document has the name of the Doctor?. ",9,exit
-1,get_doctor_name,"What is the name of the Doctor? Answer should be only one or two words!",10,10
-1,filter_results,"choose one from the following list that suits the consultant doctor the most based on the details given and give the selected item, make sure the response is just the selected item with all the details (firstName,lastName,ohipNo,providerNo) from the list in the provided format as of the question. Make sure the response is just the selected item nothing else! Dont add any other text than the result! Response should be in json format not as string!",11,11
-1,set_doctor,12,12
+1,has_ocr,2,3
+1,extract_text_from_pdf,4,exit
+1,extract_text_from_pdf_file,4,exit
+1,extract_text_doctr,4,exit
+1,build_prompt,"For the following question, respond in one word, only one word if confidence level is more than 85%, else reply ‘Others’. From the list, choose one that suits the type of the EMR document. Here are your options, respond with only one of terms and no other words: Lab, Consult, Insurance, Legal, Old Chart, Radiology, Photo, Consent, Pathology, Diagnostics, Pharmacy, Requisition, HCC Referrals. See descriptions of these terms below; these descriptions should be only used to help you to identify the correct term, and not to be used to display in the output.
+
+
+Lab: This refers to documents related to laboratory tests and results related to blood.
+Consult: This refers to documents related to professional medical advice or consultations; this would include any response to a referral, to another doctor, and ED Consultations. Consult also includes pathology done by a dermatologist who has seen the patient. ED Consultations and ED Reports are also considered as a consult.
+Insurance: This refers to documents related to patient insurance information, including request for medical records such as specifically clinical notes, consultation reports, and test results, for the purpose of assessing a disability claim, policy details, coverage, claims, and billing.
+Legal: This refers to documents that requests to transfer copy/original of patients medical records to specific healthcare providers.
+Old Chart: This refers to documents that includes patients previous medical reports or records, patients previous consulation records, patients previous lab reports.
+Radiology: This refers to documents solely regarding radiology reports from a radiologist.
+Photo: This refers to photographs related to the patient’s condition.
+Consent: This refers to documents that request permission to view/access patients medical records from specific healthcare providers; this does not include the requests to transfer copy/original of the patients medical records to specific healthcare providers.
+Pathology: This refers to documents related to detail findings from tissue or fluid sample analyses and examination of cells obtained from body fluids, aspirates, or tissue scrapings to diagnose diseases, particularly cancerous and precancerous conditions, also laboratory tests conducted on various specimens to identify microorganisms and determine appropriate treatment strategies for infectious diseases and mircobiology reports. This only applies if the document is from a medical laboratory or a pathologist.
+Diagnostics: This refers to documents related to diagnostic reports or results including  laboratory test commonly used to assess heart rhythm and electrical activity in patients.
+Pharmacy: This refers to documents sent from a pharmacist solely regarding medication renewals, as well as questions from a pharmacist at a pharmacy to a doctor. This does not include consultations from other physicians that also discuss medications as part of a consultation by a physician; these are consultations.
+Requisition: This refers to documents that mentions challenges like misplaced medical records, missing test results, unavailability of supplies or equipment, communication breakdowns, insurance authorization issues, and technical difficulties with electronic health record; this also includes requests to resend any of the EMR records may arise due to issues such as misplaced medical records, missing test results, and communication breakdowns related to patients.
+HCC Referrals: This refers to documents for incoming referrals to family physicians at that clinic from health care connect.
+Please choose the most appropriate type for your document.",5,exit
+1,build_sub_prompt,"For the following question if confidence level is more than 85% give the  answer in one word using the format 'True' else 'False'. Does the document has the name of the patient?. ",6,exit
+1,get_patient_name,"Answer only to the following question in one word. What is the first name of the patient?",7,7
+1,filter_results,"choose one from the following list that suits the patient the most based on the name and date of birth and give the selected item, make sure the response is just the selected item with all the details (fomattedDob,formattedName,demographicNo,nextAppointment,status,providerNo) in the provided format as of the question. Make sure the response is just the selected item nothing else! Dont add any other text than the result! Response should be in json format not as string!.",8,8
+1,set_patient,9,9
+1,build_sub_prompt,"For the following question if confidence level is more than 85% give the  answer in one word using the format 'True' else 'False'. Does the document has the name of the Doctor?. ",10,exit
+1,get_doctor_name,"Answer only to the following question in one word.What is the first name of the Doctor? Give the response in a json format, if there are more than one doctor mentioned, list all the first names as a json array.",11,11
+1,filter_results,"choose all from the following list that suits the consultant doctor the most based on the details given and give the selected item, make sure the response is just the selected item with all the details (firstName,lastName,ohipNo,providerNo) from the list in the provided format as of the question. Make sure the response is just the selected item nothing else! Dont add any other text than the result! Response should be in json format not as string!",12,12
+1,set_doctor,13,13
 1,oscar_update,exit,exit
 1,ask_ai,"is this a patient document?",9,11
 1,ask_ai,"is this a patient document?",8,10

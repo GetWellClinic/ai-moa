@@ -1,21 +1,29 @@
 import csv
+import re
 import random
 import fitz
 import PyPDF2
 import requests
 import json
+import datetime
+from doctr.io import DocumentFile
+from doctr.models import ocr_predictor
 
 class Workflow:
-    def __init__(self, filepath, session, base_url):
+    def __init__(self, filepath, session, base_url, file_name):
         self.patient_name = ''
+        self.fileType = ''
         self.demographic_number = ''
-        self.provider_number = ''
+        self.mrp = ''
+        self.provider_number = []
         self.document_description = ''
         self.filepath = filepath
         self.tesseracted_text = None
         self.session = session
         self.base_url = base_url
+        self.file_name = file_name
         self.url = "http://127.0.0.1:5000/v1/chat/completions"
+        # the Authorization qwerty will have to be changed, this for testing
         self.headers = {
             "Authorization": "Bearer qwerty",
             "Content-Type": "application/json"
@@ -25,8 +33,6 @@ class Workflow:
                             "Consult",
                             "Insurance",
                             "Legal",
-                            "Others Circle of Care Requests from other doctors/clinics",
-                            "NEW Info request from Cowan",
                             "Old Chart",
                             "Radiology",
                             "Pathology",
@@ -36,13 +42,18 @@ class Workflow:
                             "Diagnostics",
                             "Pharmacy",
                             "Requisition",
-                            "Health Care Connect referral"
+                            "Referral",
+                            "Request"
                         ]
 
     def find_category_index(self,text):
+        if '.' in text:
+            text = text.replace('.', '')
         for index, category in enumerate(self.categories):
             if text.lower() == category.lower():
                 print(index)
+                #set file type
+                self.fileType = category.lower()
                 self.execute_tasks_from_csv(index)
                 return True
         return False
@@ -83,6 +94,40 @@ class Workflow:
             print("An error occurred:", e)
             return False
 
+    def extract_text_doctr(self):
+        pdf_path = self.filepath
+        print(pdf_path)
+        text = ''
+        try:
+            model = ocr_predictor(pretrained=True)
+
+            # PDF
+            doc = DocumentFile.from_pdf(pdf_path)
+
+            # Analyze
+            result = model(doc)
+            # Iterate through pages
+            for page in result.pages:
+                #print(f"Page {page.page_idx}:")
+                
+                # Iterate through blocks
+                for block in page.blocks:
+                    #print("Block:")
+                    
+                    # Iterate through lines
+                    for line in block.lines:
+                        text += '\n'
+                        
+                        # Print words in the line
+                        for word in line.words:
+                            text += word.value + ' '
+
+            self.tesseracted_text = text
+            return True
+        except Exception as e:
+            print("An error occurred:", e)
+            return False
+
     def extract_text_from_pdf_file(self):
         text = ''
         pdf_path = self.filepath
@@ -93,8 +138,8 @@ class Workflow:
                 for page_num in range(num_pages):  # Iterate over all pages
                     page = reader.pages[page_num]
                     text += page.extract_text()
-            #self.tesseracted_text = text
-            self.tesseracted_text = """ """
+            self.tesseracted_text = text
+            #self.tesseracted_text = """"""
             return True
         except Exception as e:
             print("An error occurred:", e)
@@ -113,8 +158,13 @@ class Workflow:
                 }
             ],
             "mode": "instruct",
-            "temperature": 1,
-            "character": "Assistant"
+            #should be a parameter, only if needed else default api values
+            "temperature": .1,
+            "character": "Assistant",
+            #should be a parameter
+            "top_p":.1
+            #should be a parameter
+            #max_tokens:100
         }
         response = requests.post(self.url, headers=self.headers, json=data)
         print(response.json())
@@ -136,8 +186,10 @@ class Workflow:
                 }
             ],
             "mode": "instruct",
-            "temperature": 1,
-            "character": "Assistant"
+            "temperature": .1,
+            "character": "Assistant",
+            "top_p":.1
+            #max_tokens:100
         }
         response = requests.post(self.url, headers=self.headers, json=data)
         return response.json()['choices'][0]['message']['content']
@@ -167,28 +219,51 @@ class Workflow:
             return True,response_data["results"]
 
     def get_doctor_name(self,prompt):
-        name = self.build_sub_prompt(self.tesseracted_text + prompt)
-        if '.' in name:
-            name = name.replace('.', '')
-        print(name)
-        url = f"{self.base_url}/provider/SearchProvider.do"
+        names = self.build_sub_prompt(self.tesseracted_text + prompt)
+        print("inside get doctor")
+        print(names)
+        array_pattern = r'\[.*?\]'
+        array_match = re.search(array_pattern, names)
+        oscar_response = []
+        if array_match:
+            matched_string = array_match.group()
+            array = json.loads(matched_string)
+            #data = json.loads(names)
+            print("array")
+            print(array)
+            for item in array:
+                # name = item
+                # if '.' in name:
+                #     name = name.replace('.', '')
+                print("name oscar")
+                print(item)
+                url = f"{self.base_url}/provider/SearchProvider.do"
 
-        # Define the payload data
-        payload = {
-            "query": name
-        }
+                # Define the payload data
+                payload = {
+                    "query": item
+                }
 
-        # Send the POST request
-        response = self.session.post(url, data=payload)
+                # Send the POST request
+                response = self.session.post(url, data=payload)
 
-        print(response.text)
+                print(response.text)
 
-        response_data = json.loads(response.text)
+                response_data = json.loads(response.text)
 
-        if len(response_data["results"]) == 0:
-            return False
-        else:
-            return True,response_data["results"]
+                if len(response_data["results"]) != 0:
+                    results = response_data["results"]
+                    if isinstance(results, list):
+                        for item in results:
+                            if isinstance(item, dict):
+                                oscar_response.append(item)
+
+            # if len(oscar_response) != 0:
+            #     return True,oscar_response
+            # else:
+            #     return False
+
+            print(oscar_response)
 
     def get_document_description(self,prompt):
         result = self.build_sub_prompt(self.tesseracted_text + prompt)
@@ -210,6 +285,9 @@ class Workflow:
             data = json.loads(additional_param)
             self.patient_name = data[0]['formattedName'] + '(' + data[0]['fomattedDob'] + ')'
             self.demographic_number = data[0]['demographicNo']
+            # Add MRP
+            if data[0]['providerNo'] is None:
+                self.mrp.append(data[0]['providerNo'])
             return True
         else:
             return False
@@ -218,16 +296,52 @@ class Workflow:
         if additional_param is not None:
             print(str(additional_param))
             data = json.loads(additional_param)
-            self.provider_number = data[0]['providerNo']
+            for item in data:
+                if isinstance(item, dict):
+                    if 'providerNo' in item:
+                        self.provider_number.append(item['providerNo'])
+            #self.provider_number.append(data[0]['providerNo'])
+            self.provider_number.append(data[0]['providerNo'])
+            #self.provider_number = data[0]['providerNo']
             return True
         else:
             return False
 
     def oscar_update(self):
-        print(self.patient_name)
-        print(self.demographic_number)
-        print(self.provider_number)
-        print(self.document_description)
+        #print("Document Details:")
+        #print(self.patient_name)
+        #print(self.demographic_number)
+        #print(self.provider_number)
+        #print(self.document_description)
+        url = f"{self.base_url}/dms/ManageDocument.do"
+
+        # Define the parameters
+        params = {
+            "method": "addIncomingDocument",
+            "pdfDir": "File",
+            "pdfName": self.file_name,
+            "queueId": "1",
+            "pdfNo": "1",
+            "queue": "1",
+            "pdfAction": "",
+            "lastdemographic_no": "1",
+            "entryMode": "Fast",
+            "docType": self.fileType,
+            "docClass": "",
+            "docSubClass": "",
+            "documentDescription": self.document_description,
+            "observationDate": datetime.datetime.now().date(),
+            "saved": "false",
+            "demog": "1",
+            "demographicKeyword": self.get_patient_name,
+            "provi": self.provider_number[0],
+            "flagproviders":self.provider_number[0],
+            "MRPNo": self.mrp
+            "MRPName": "undefined",
+            "ProvKeyword": "",
+            "save": "Save & Next"
+        }
+
         return True
 
     # More available funcitons and its usage
