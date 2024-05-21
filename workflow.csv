@@ -18,15 +18,11 @@ Diagnostics: This refers to documents related to diagnostic reports or results i
 Pharmacy: This refers to documents sent from a pharmacist solely regarding medication renewals, as well as questions from a pharmacist at a pharmacy to a doctor. This does not include consultations from other physicians that also discuss medications as part of a consultation by a physician; these are consultations.
 Requisition: This refers to documents that mentions challenges like misplaced medical records, missing test results, unavailability of supplies or equipment, communication breakdowns, insurance authorization issues, and technical difficulties with electronic health record; this also includes requests to resend any of the EMR records may arise due to issues such as misplaced medical records, missing test results, and communication breakdowns related to patients.
 HCC Referrals: This refers to documents for incoming referrals to family physicians at that clinic from health care connect.
-Please choose the most appropriate type for your document.",5,exit
+Please choose the most appropriate type for your document.",5,5
 1,build_sub_prompt,"For the following question if confidence level is more than 85% give the  answer in one word using the format 'True' else 'False'. Does the document has the name of the patient?. ",6,exit
-1,get_patient_name,"Answer only to the following question in one word. What is the first name of the patient?",7,7
+1,get_patient_name,"Answer only to the following question in two words; and the answer should be in the following format. Format : Lastname, Firstname. What is the name of the patient?",7,7
 1,filter_results,"choose one from the following list that suits the patient the most based on the name and date of birth and give the selected item, make sure the response is just the selected item with all the details (fomattedDob,formattedName,demographicNo,nextAppointment,status,providerNo) in the provided format as of the question. Make sure the response is just the selected item nothing else! Dont add any other text than the result! Response should be in json format not as string!.",8,8
 1,set_patient,9,9
-1,build_sub_prompt,"For the following question if confidence level is more than 85% give the  answer in one word using the format 'True' else 'False'. Does the document has the name of the Doctor?. ",10,exit
-1,get_doctor_name,"Answer only to the following question in one word.What is the first name of the Doctor? Give the response in a json format, if there are more than one doctor mentioned, list all the first names as a json array.",11,11
-1,filter_results,"choose all from the following list that suits the consultant doctor the most based on the details given and give the selected item, make sure the response is just the selected item with all the details (firstName,lastName,ohipNo,providerNo) from the list in the provided format as of the question. Make sure the response is just the selected item nothing else! Dont add any other text than the result! Response should be in json format not as string!",12,12
-1,set_doctor,13,13
 1,oscar_update,exit,exit
 1,ask_ai,"is this a patient document?",9,11
 1,ask_ai,"is this a patient document?",8,10

@@ -46,16 +46,36 @@ class Workflow:
                             "Request"
                         ]
 
+        self.categories_code = [
+                            "Lab",
+                            "Consult",
+                            "Insurance",
+                            "Legal",
+                            "OldChart",
+                            "Radiology",
+                            "Pathology",
+                            "Others",
+                            "Photo",
+                            "Consent",
+                            "Diagnostics",
+                            "Pharmacy",
+                            "Requisition",
+                            "Referral",
+                            "Request"
+                        ]
+
     def find_category_index(self,text):
+        print("inside find_category_index")
         if '.' in text:
             text = text.replace('.', '')
-        for index, category in enumerate(self.categories):
-            if text.lower() == category.lower():
-                print(index)
-                #set file type
-                self.fileType = category.lower()
-                self.execute_tasks_from_csv(index)
-                return True
+        for index, category in enumerate(self.categories_code):
+            for word in text.split():
+                if word.lower() == category.lower():
+                    print(index)
+                    #set file type
+                    self.fileType = category.lower()
+                    self.execute_tasks_from_csv(index)
+                    return True
         return False
 
     def has_ocr(self):
@@ -209,7 +229,7 @@ class Workflow:
         # Send the POST request
         response = self.session.post(url, data=payload)
 
-        print(response.text)
+        #print(response.text)
 
         response_data = json.loads(response.text)
 
@@ -218,52 +238,82 @@ class Workflow:
         else:
             return True,response_data["results"]
 
-    def get_doctor_name(self,prompt):
-        names = self.build_sub_prompt(self.tesseracted_text + prompt)
-        print("inside get doctor")
-        print(names)
-        array_pattern = r'\[.*?\]'
-        array_match = re.search(array_pattern, names)
+    def set_doctor_from_code(self,name):
+        #print(name)
         oscar_response = []
-        if array_match:
-            matched_string = array_match.group()
-            array = json.loads(matched_string)
-            #data = json.loads(names)
-            print("array")
-            print(array)
-            for item in array:
-                # name = item
-                # if '.' in name:
-                #     name = name.replace('.', '')
-                print("name oscar")
-                print(item)
-                url = f"{self.base_url}/provider/SearchProvider.do"
+        if name:
+            if '.' in name:
+                name = name.replace('.', '')
 
-                # Define the payload data
-                payload = {
-                    "query": item
-                }
+            url = f"{self.base_url}/provider/SearchProvider.do"
 
-                # Send the POST request
-                response = self.session.post(url, data=payload)
+            # Define the payload data
+            payload = {
+                "query": name
+            }
 
-                print(response.text)
+            # Send the POST request
+            response = self.session.post(url, data=payload)
 
-                response_data = json.loads(response.text)
+            #print(response.text)
 
-                if len(response_data["results"]) != 0:
-                    results = response_data["results"]
-                    if isinstance(results, list):
-                        for item in results:
-                            if isinstance(item, dict):
-                                oscar_response.append(item)
+            data = json.loads(response.text)
 
-            # if len(oscar_response) != 0:
-            #     return True,oscar_response
-            # else:
-            #     return False
+            #print(data)
 
-            print(oscar_response)
+            for item in data["results"]:
+                #print(item)
+                if isinstance(item, dict):
+                    if 'providerNo' in item:
+                        #print(item['providerNo'])
+                        self.provider_number.append(item['providerNo'])
+
+            #print(self.provider_number)
+
+            if self.provider_number is not None:
+                return True
+            else:
+                return False
+
+    def get_doctor_name(self,prompt):
+        name = self.build_sub_prompt(self.tesseracted_text + prompt)
+        #print("inside get doctor")
+        print(name)
+        array_pattern = r'\[.*?\]'
+        #name = "Sokolowski"
+        #array_match = re.search(array_pattern, names)
+        oscar_response = []
+        if name:
+            if '.' in name:
+                name = name.replace('.', '')
+
+            url = f"{self.base_url}/provider/SearchProvider.do"
+
+            # Define the payload data
+            payload = {
+                "query": name
+            }
+
+            # Send the POST request
+            response = self.session.post(url, data=payload)
+
+            #print(response.text)
+
+            response_data = json.loads(response.text)
+
+            if len(response_data["results"]) != 0:
+                results = response_data["results"]
+                if isinstance(results, list):
+                    for item in results:
+                        if isinstance(item, dict):
+                            oscar_response.append(item)
+
+            if len(oscar_response) != 0:
+                return True,oscar_response
+            else:
+                return False
+
+            #print(oscar_response)
 
     def get_document_description(self,prompt):
         result = self.build_sub_prompt(self.tesseracted_text + prompt)
@@ -274,35 +324,40 @@ class Workflow:
     def filter_results(self,prompt,additional_param=None):
         if additional_param is not None:
             details = self.build_sub_prompt(self.tesseracted_text + prompt + str(additional_param))
-            print(details)
+            #print(details)
             return True,details
         else:
             return False
 
     def set_patient(self,additional_param=None):
         if additional_param is not None:
-            print(str(additional_param))
+            #print(str(additional_param))
             data = json.loads(additional_param)
             self.patient_name = data[0]['formattedName'] + '(' + data[0]['fomattedDob'] + ')'
             self.demographic_number = data[0]['demographicNo']
             # Add MRP
-            if data[0]['providerNo'] is None:
-                self.mrp.append(data[0]['providerNo'])
+            if data[0]['providerNo'] is not None:
+                self.mrp = data[0]['providerNo']
             return True
         else:
             return False
 
     def set_doctor(self,additional_param=None):
         if additional_param is not None:
-            print(str(additional_param))
+            #additional_param = '[{"firstName": "Michelle", "lastName": "Liu", "ohipNo": "", "providerNo": "999998"},{"firstName": "John", "lastName": "Doe", "ohipNo": "", "providerNo": "999998"}]'
+            #print(str(additional_param))
             data = json.loads(additional_param)
+            print(data)
             for item in data:
+                #print(item)
                 if isinstance(item, dict):
                     if 'providerNo' in item:
+                        print(item['providerNo'])
                         self.provider_number.append(item['providerNo'])
             #self.provider_number.append(data[0]['providerNo'])
-            self.provider_number.append(data[0]['providerNo'])
+            #self.provider_number.append(data[0]['providerNo'])
             #self.provider_number = data[0]['providerNo']
+            print(self.provider_number)
             return True
         else:
             return False
@@ -330,17 +385,27 @@ class Workflow:
             "docClass": "",
             "docSubClass": "",
             "documentDescription": self.document_description,
-            "observationDate": datetime.datetime.now().date(),
+            "observationDate": str(datetime.datetime.now().date()),
             "saved": "false",
             "demog": "1",
-            "demographicKeyword": self.get_patient_name,
+            "demographicKeyword": self.patient_name,
             "provi": self.provider_number[0],
-            "flagproviders":self.provider_number[0],
-            "MRPNo": self.mrp
+            "MRPNo": self.mrp,
             "MRPName": "undefined",
             "ProvKeyword": "",
             "save": "Save & Next"
         }
+
+        params["flagproviders"] = []
+
+        for value in self.provider_number:
+            params["flagproviders"].append(value)
+
+        print(params)
+
+        response = self.session.post(url, data=params)
+
+        print(response)
 
         return True
 

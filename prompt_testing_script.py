@@ -30,7 +30,7 @@ def getDoctorNamePrompt():
     return promopt
 
 def getPrompt():
-    promopt = """Act as if you are a medical office assistant who follows direction precisly and consistantly when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as output format:, after review through the following steps. 1. Select one category from  CATEGORY LIST provided below. If the provided category list does not provide a strong match display the word 'Other'. Output format template: 'category (Name of the pharmacy)'. Ensure this output format template is followed precisly including brackets (), and the output must end without a period. For reference this is an example using this output template 'Rx Refill (Shoppers), Rx Clarification (New Canyon Pharmacy), Rx Summary (MedsCheck)'. CATEGORY LIST: Rx Refill, Rx Clarification, Rx Summary, Lab Test Results, Imaging Results, Consultation Notes, Allergy List, Immunization Records, Family History, Patient Demographics"""
+    promopt = """Act as if you are a medical office assistant who follows direction precisly and consistently when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as output format:, after review through the following steps. 1. Select one category from  CATEGORY LIST provided below. If the provided category list does not provide a strong match display the word 'Other'. 2. Compose a miximum three word summary of the type of content of the findings.  Output format template: 'category (Name of the facility) summary'. Ensure this output format template is followed precisely including brackets (), and the output must end without a period. For reference this is an example using this output template 'MRI Head (NYGH) Trauma, CT Chest (UHN) nodule, CXR (PDS), BMD (PDS), U/S abdo pelvis (PDS), Angiography (NYGH)'. CATEGORY LIST: MRI Head (NYGH) Trauma, CT Chest Nodule, CXR, BMD, U/S Abdo Pelvis, Angiography, Mammography, PET Scan, CT Angiogram, MRI Spine"""
     return promopt
 
 
@@ -39,34 +39,36 @@ def get_pdf_files(folder_path):
     for file in os.listdir(folder_path):
         if file.endswith(".pdf"):
             pdf_files.append(file)
-    return pdf_files
-    #return ["Sample-C6-003.pdf"]
+    #return pdf_files
+    return ["Sample-C2-001.pdf"]
 
 def getText(pdf_file):
-    model = ocr_predictor(det_arch='db_resnet50', pretrained=True)
-    # PDF
-    doc = DocumentFile.from_pdf(pdf_file)
-    # Analyze
-    result = model(doc)
-    text = ''
-    # Iterate through pages
-    for page in result.pages:
-        #print(f"Page {page.page_idx}:")
-        
-        # Iterate through blocks
-        for block in page.blocks:
-            #print("Block:")
+    try:
+        model = ocr_predictor(pretrained=True)
+        # PDF
+        doc = DocumentFile.from_pdf(pdf_file)
+        # Analyze
+        result = model(doc)
+        text = ''
+        # Iterate through pages
+        for page in result.pages:
+            #print(f"Page {page.page_idx}:")
             
-            # Iterate through lines
-            for line in block.lines:
-                text += '\n'
+            # Iterate through blocks
+            for block in page.blocks:
+                #print("Block:")
                 
-                # Print words in the line
-                for word in line.words:
-                    text += word.value + ' '
-
-    return text
-                
+                # Iterate through lines
+                for line in block.lines:
+                    text += '\n'
+                    
+                    # Print words in the line
+                    for word in line.words:
+                        text += word.value + ' '
+        print(text)
+        return text
+    except Exception as e:
+        print("An error occurred:", e)
 
 def getDescription(text):
     url = "http://127.0.0.1:5000/v1/chat/completions"
@@ -105,13 +107,13 @@ def append_to_file(file_path, content):
         file.write(content + "\n")
 
 
-folder_path = "/home/justinjoseph/Documents/AI-MOA/C5 - Pharmacy/"
+folder_path = "/home/justinjoseph/Desktop/AI-MOA/C2 - Radiology/"
 print(folder_path)
 pdf_files = get_pdf_files(folder_path)
 
 print("PDF files in", folder_path, "are:")
 response = "yes"
-file_path = "C5 - Pharmacy.txt"
+file_path = "C5 - test.txt"
 #append_to_file(file_path, getPrompt())
 
 for pdf_file in pdf_files:
@@ -120,6 +122,7 @@ for pdf_file in pdf_files:
         append_to_file(file_path, pdf_file)
         path = folder_path + pdf_file
         text = getText(path)
+        print(path)
         fileType = text + getTypePrompt()
         getDescription(fileType)
         doctorName = text + getDoctorNamePrompt()
