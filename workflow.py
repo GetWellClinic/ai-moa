@@ -1,6 +1,7 @@
 import csv
 import re
 import random
+import torch
 import fitz
 import PyPDF2
 import requests
@@ -10,7 +11,7 @@ from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 
 class Workflow:
-    def __init__(self, filepath, session, base_url, file_name):
+    def __init__(self, filepath, session, base_url, file_name, enable_ocr_gpu):
         self.patient_name = ''
         self.fileType = ''
         self.demographic_number = ''
@@ -22,6 +23,7 @@ class Workflow:
         self.session = session
         self.base_url = base_url
         self.file_name = file_name
+        self.enable_ocr_gpu = enable_ocr_gpu
         self.url = "http://127.0.0.1:5000/v1/chat/completions"
         # the Authorization qwerty will have to be changed, this for testing
         self.headers = {
@@ -116,11 +118,14 @@ class Workflow:
 
     def extract_text_doctr(self):
         pdf_path = self.filepath
-        print(pdf_path)
+        # print(pdf_path)
         text = ''
         try:
-            model = ocr_predictor(pretrained=True)
-
+            if(self.enable_ocr_gpu == True):
+                device = torch.device("cuda:0")
+                model = ocr_predictor(pretrained=True).to(device)
+            else:
+                model = ocr_predictor(pretrained=True)
             # PDF
             doc = DocumentFile.from_pdf(pdf_path)
 

@@ -4,10 +4,11 @@ from datetime import datetime
 from workflow import Workflow
 
 class PdfProcessor:
-    def __init__(self, base_url, session, last_processed_pdf):
+    def __init__(self, base_url, session, last_processed_pdf,enable_ocr_gpu):
         self.base_url = base_url
         self.session = session
         self.last_processed_pdf = last_processed_pdf
+        self.enable_ocr_gpu = enable_ocr_gpu
 
     def get_pdf_content(self, name):
         pdf_url = f"{self.base_url}/dms/ManageDocument.do?method=displayIncomingDocs&curPage=1&pdfDir=File&queueId=1&pdfName={name}"
@@ -53,7 +54,7 @@ class PdfProcessor:
                         with open("downloaded_pdf.pdf", "wb") as f:
                             f.write(pdf_content)
                         print("PDF Content:", pdf_content)
-                        workflow = Workflow("downloaded_pdf.pdf",self.session,self.base_url,option.get_attribute('value'))
+                        workflow = Workflow("downloaded_pdf.pdf",self.session,self.base_url,option.get_attribute('value'),self.enable_ocr_gpu)
                         workflow.execute_tasks_from_csv()
                     # pdf_content = self.get_pdf_content(option.get_attribute('value'))
                     # if pdf_content:

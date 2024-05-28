@@ -16,6 +16,7 @@ class OscarAutomation:
         self.pin = self.config['user_login']['pin']
         self.base_url = self.config['base_url']
         self.last_processed_pdf = self.config['last_processed_pdf']
+        self.enable_ocr_gpu = self.config['enable_ocr_gpu']
         self.session = requests.Session()
         response = self.session.post(f"{self.base_url}/login.do", data={"username": self.username, "password": self.password, "pin": self.pin})
         
@@ -42,7 +43,7 @@ class OscarAutomation:
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
         self.login = Login(self.username, self.password, self.pin, self.base_url)
-        self.pdf_processor = PdfProcessor(self.base_url, self.session, self.last_processed_pdf)
+        self.pdf_processor = PdfProcessor(self.base_url, self.session, self.last_processed_pdf,self.enable_ocr_gpu)
         self.config["last_processed_pdf"] = self.pdf_processor.process_pdfs(driver, f"{self.base_url}/login.do", self.login_successful_callback)
         self.save_config(self.config)
         driver.quit()

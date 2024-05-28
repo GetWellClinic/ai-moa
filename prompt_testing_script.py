@@ -1,5 +1,7 @@
 import requests
 import os
+import torch
+import time
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 
@@ -84,15 +86,20 @@ SPECIALITY LIST FOR REFERENCE: Cardiology, Gastroenterology, Respirology, Dermat
 
 def get_pdf_files(folder_path):
     pdf_files = []
+    files_to_remove = {
+
+    }
     for file in os.listdir(folder_path):
-        if file.endswith(".pdf"):
+        if file.endswith(".pdf") and file not in files_to_remove:
             pdf_files.append(file)
     return pdf_files
-    #return ["Sample-C2-001.pdf"]
+    # return ["Sample-C1-012.pdf"]
 
 def getText(pdf_file):
+    start_time = time.time()
     try:
-        model = ocr_predictor(pretrained=True)
+        device = torch.device("cuda:0")
+        model = ocr_predictor(pretrained=True).to(device)
         # PDF
         doc = DocumentFile.from_pdf(pdf_file)
         # Analyze
@@ -113,7 +120,11 @@ def getText(pdf_file):
                     # Print words in the line
                     for word in line.words:
                         text += word.value + ' '
-        #print(text)
+        # print(text)
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print("OCR Time taken for one file:", elapsed_time, "seconds")
+        # print("ocr completed")
         return text
     except Exception as e:
         print("An error occurred:", e)
@@ -162,10 +173,11 @@ pdf_files = get_pdf_files(folder_path)
 
 #print("PDF files in", folder_path, "are:")
 response = "yes"
-file_path = "all_files.txt"
+file_path = "test.txt"
 #append_to_file(file_path, getPrompt())
 
 for pdf_file in pdf_files:
+    start_time = time.time()
     if response in ('yes', 'y'):
         print(pdf_file)
         append_to_file(file_path, pdf_file)
@@ -173,9 +185,34 @@ for pdf_file in pdf_files:
         text = getText(path)
         #print(path)
         fileType = text + getTypePrompt()
+        start_time_type = time.time()
+        append_to_file(file_path, "File Type:")
         typeOfDOcument = getDescription(fileType)
+        end_time_type = time.time()
+        elapsed_time_type = end_time_type - start_time_type
+        append_to_file(file_path, "Time taken for file type identification:")
+        append_to_file(file_path,elapsed_time_type)
+        print("Time taken for file type identification:", elapsed_time_type, "seconds")
         #doctorName = text + getDoctorNamePrompt()
         #getDescription(doctorName)
+        if typeOfDOcument is None or text is None:
+            print(typeOfDOcument)
+            print(":::")
+            print(text)
+            print(":::")
+            print(getPrompt(typeOfDOcument))
         description = text + getPrompt(typeOfDOcument)
+        start_time_desc = time.time()
+        append_to_file(file_path, "Description:")
         documentDescription = getDescription(description)
+        end_time_desc = time.time()
+        elapsed_time_desc = end_time_desc - start_time_desc
+        print("Time taken for file description:", elapsed_time_desc, "seconds")
+        append_to_file(file_path, "Time taken for file description:")
+        append_to_file(file_path,elapsed_time_desc)
         #response = input("Do you want to continue execution? (yes/no): ").strip().lower()
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print("Time taken for the file:", elapsed_time, "seconds")
+    append_to_file(file_path, "Time taken for the file:")
+    append_to_file(file_path,elapsed_time)
