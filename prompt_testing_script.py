@@ -173,7 +173,7 @@ pdf_files = get_pdf_files(folder_path)
 
 #print("PDF files in", folder_path, "are:")
 response = "yes"
-file_path = "test.txt"
+file_path = "all_files_ocr_gpu.txt"
 #append_to_file(file_path, getPrompt())
 
 for pdf_file in pdf_files:
@@ -191,7 +191,7 @@ for pdf_file in pdf_files:
         end_time_type = time.time()
         elapsed_time_type = end_time_type - start_time_type
         append_to_file(file_path, "Time taken for file type identification:")
-        append_to_file(file_path,elapsed_time_type)
+        append_to_file(file_path,str(elapsed_time_type))
         print("Time taken for file type identification:", elapsed_time_type, "seconds")
         #doctorName = text + getDoctorNamePrompt()
         #getDescription(doctorName)
@@ -209,10 +209,10 @@ for pdf_file in pdf_files:
         elapsed_time_desc = end_time_desc - start_time_desc
         print("Time taken for file description:", elapsed_time_desc, "seconds")
         append_to_file(file_path, "Time taken for file description:")
-        append_to_file(file_path,elapsed_time_desc)
+        append_to_file(file_path,str(elapsed_time_desc))
         #response = input("Do you want to continue execution? (yes/no): ").strip().lower()
     end_time = time.time()
     elapsed_time = end_time - start_time
     print("Time taken for the file:", elapsed_time, "seconds")
     append_to_file(file_path, "Time taken for the file:")
-    append_to_file(file_path,elapsed_time)
+    append_to_file(file_path,str(elapsed_time))
