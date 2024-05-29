@@ -20,7 +20,7 @@ Consent: This refers to documents that request permission to view/access patient
 Pathology: This refers to documents related to detail findings from tissue or fluid sample analyses and examination of cells obtained from body fluids, aspirates, or tissue scrapings to diagnose diseases, particularly cancerous and precancerous conditions, also laboratory tests conducted on various specimens to identify microorganisms and determine appropriate treatment strategies for infectious diseases and mircobiology reports. This only applies if the document is from a medical laboratory or a pathologist.
 Diagnostics: This refers to documents related to diagnostic reports or results including  laboratory test commonly used to assess heart rhythm and electrical activity in patients.
 Pharmacy: This refers to documents sent from a pharmacist solely regarding medication renewals, as well as questions from a pharmacist at a pharmacy to a doctor. This does not include consultations from other physicians that also discuss medications as part of a consultation by a physician; these are consultations.
-Requisition: This refers to documents that mentions challenges like misplaced medical records, missing test results, unavailability of supplies or equipment, communication breakdowns, insurance authorization issues, and technical difficulties with electronic health record; this also includes requests to resend any of the EMR records may arise due to issues such as misplaced medical records, missing test results, and communication breakdowns related to patients.
+Requisition: This refers to documents that mentions challenges like misplaced medical records, missing test results, unavailability of supplies or equipment, communication breakdowns, insurance authorization issues, and technical difficulties with electronic health record, any radiology scan requisition, blood work test requisition; this also includes requests to resend any of the EMR records may arise due to issues such as misplaced medical records, missing test results, and communication breakdowns related to patients.
 HCC Referrals: This refers to documents for incoming referrals to family physicians at that clinic from health care connect.
 Please choose the most appropriate type for your document."""
     return promopt
@@ -81,6 +81,7 @@ SPECIALITY LIST FOR REFERENCE: Cardiology, Gastroenterology, Respirology, Dermat
             if word.lower() == category.lower():
                 #print(index)
                 return promopt[index]
+    return "Unknown category" 
                 
 
 
@@ -93,7 +94,7 @@ def get_pdf_files(folder_path):
         if file.endswith(".pdf") and file not in files_to_remove:
             pdf_files.append(file)
     return pdf_files
-    # return ["Sample-C1-012.pdf"]
+    # return ["Sample-C2-017.pdf"]
 
 def getText(pdf_file):
     start_time = time.time()
@@ -173,7 +174,7 @@ pdf_files = get_pdf_files(folder_path)
 
 #print("PDF files in", folder_path, "are:")
 response = "yes"
-file_path = "all_files_ocr_gpu.txt"
+file_path = "all_files_ocr_gpu_0.3_q8_q6.txt"
 #append_to_file(file_path, getPrompt())
 
 for pdf_file in pdf_files:
@@ -195,13 +196,12 @@ for pdf_file in pdf_files:
         print("Time taken for file type identification:", elapsed_time_type, "seconds")
         #doctorName = text + getDoctorNamePrompt()
         #getDescription(doctorName)
-        if typeOfDOcument is None or text is None:
-            print(typeOfDOcument)
-            print(":::")
-            print(text)
-            print(":::")
-            print(getPrompt(typeOfDOcument))
-        description = text + getPrompt(typeOfDOcument)
+        typeIdentified = getPrompt(typeOfDOcument)
+        if typeIdentified == "Unknown category":
+            append_to_file(file_path, "Unable to identify file category")
+            print("Unable to identify file category")
+            continue
+        description = text + typeIdentified
         start_time_desc = time.time()
         append_to_file(file_path, "Description:")
         documentDescription = getDescription(description)
