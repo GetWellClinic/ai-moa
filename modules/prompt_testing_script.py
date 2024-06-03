@@ -1,4 +1,5 @@
 import csv
+import json
 import requests
 import os
 import re
@@ -30,6 +31,22 @@ def getDoctorNamePrompt():
     #promopt = """Answer only to the following question in one word.What is the lastname of the Doctor? Give the response in a json format, if there are more than one doctor mentioned, list all the first names as a json array."""
     promopt = """ instructions: Your task is to identify the lastname of the patients physician to whom this report is addressed; this is the family physician of the patient. Return these names in a JSON array. The rules are as follows:,
   rules: 1.Patient first names or patient last names are never part of the output.,2.If the lastname of the patient's family physician to whom this document is addressed is available and the confidence level is more than 85%, return a JSON array with one element - the lastname of the patient's family physician. The response will always be a single JSON array without any additional text or explanation.,3.If the confidence level is less than 85% return an empty JSON array., 4.Do not include any other information or assumptions from the document in the response., 5.The response should not contain any sentences or explanations, only a JSON array., 6.Any hypothetical scenarios or conditional statements should not be included in the response.""" 
+    
+    if prompt_output is not None:
+        # Define the regex pattern
+        pattern = r'^\[\s*(?:"[a-zA-Z\'-]+"|\s*)\s*\]$'
+        
+        # Check if the output matches the pattern
+        if re.match(pattern, prompt_output):
+            # Additional check to ensure it's a valid JSON array
+            try:
+                output = json.loads(prompt_output)
+                if isinstance(output, list) and (len(output) == 0 or (len(output) == 1 and isinstance(output[0], str))):
+                    return True
+            except json.JSONDecodeError:
+                return False
+        return False
+    
     return promopt
 
 def getPrompt(text):
@@ -84,7 +101,9 @@ def getPrompt(text):
                 csv_file_path = os.path.join(f"{index}.csv")
                 with open(csv_file_path, mode='r') as csv_file:
                     csv_reader = csv.reader(csv_file)
-                    prompt = " ".join([row[0] for row in csv_reader])
+                    first_row = next(csv_reader)
+                prompt = first_row[1]
+                    #prompt = " ".join([row[0] for row in csv_reader])
                 return prompt
     return "No matching category found."
 
