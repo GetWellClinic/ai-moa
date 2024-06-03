@@ -487,8 +487,8 @@ class Workflow:
 
     def execute_tasks_from_csv(self,index=None):
         if index is None:
-            tasks = self.read_tasks_from_csv('workflow.csv')
+            tasks = self.read_tasks_from_csv('./workflow-config/workflow.csv')
         else:
-            tasks = self.read_tasks_from_csv(str(index)+'.csv')
+            tasks = self.read_tasks_from_csv('./workflow-config/'+str(index)+'.csv')
         print(self.filepath)
         self.execute_tasks(tasks, 0)
