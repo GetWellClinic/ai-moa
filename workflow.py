@@ -8,9 +8,12 @@ import json
 import datetime
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
+from PIL import Image
+import io
+import pytesseract
 
 class Workflow:
-    def __init__(self, filepath, session, base_url, file_name):
+    def __init__(self, filepath, session, base_url, file_name, dry_run=False):
         self.patient_name = ''
         self.fileType = ''
         self.demographic_number = ''
@@ -22,6 +25,7 @@ class Workflow:
         self.session = session
         self.base_url = base_url
         self.file_name = file_name
+        self.dry_run = dry_run
         self.url = "http://127.0.0.1:5000/v1/chat/completions"
         # the Authorization qwerty will have to be changed, this for testing
         self.headers = {
@@ -427,9 +431,11 @@ class Workflow:
 
         print(params)
 
-        response = self.session.post(url, data=params)
-
-        print(response)
+        if self.dry_run:
+            print("[Dry Run] Would update Oscar system with document details.")
+        else:
+            response = self.session.post(url, data=params)
+            print(response)
 
         return True
 
@@ -519,4 +525,10 @@ class Workflow:
         else:
             tasks = self.read_tasks_from_csv('./workflow-config/' + str(index) + '.csv')
         print(self.filepath)
-        self.execute_tasks(tasks, 0)
+        if self.dry_run:
+            print("[Dry Run] Would execute the following tasks:")
+            for task in tasks:
+                print(task)
+        else:
+            self.execute_tasks(tasks, 0)
+

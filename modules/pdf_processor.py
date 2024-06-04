@@ -2,6 +2,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from datetime import datetime
 from workflow import Workflow
+import os
 
 class PdfProcessor:
     """
@@ -43,7 +44,7 @@ class PdfProcessor:
             print("Failed to fetch PDF content. Status code:", pdf_response.status_code)
             return None
 
-    def process_pdfs(self, driver, login_url, login_successful_callback):
+    def process_pdfs(self, driver, login_url, login_successful_callback, dry_run=False, pdf_dir=None):
         """
         Processes incoming PDFs from the web application.
 
@@ -51,10 +52,27 @@ class PdfProcessor:
             driver (selenium.webdriver): The Selenium WebDriver instance.
             login_url (str): The URL of the login page.
             login_successful_callback (function): A callback function to check if login was successful.
+            dry_run (bool): A flag to determine if the method should perform a dry run.
+            pdf_dir (str): The directory path where PDFs are stored for the dry run.
 
         Returns:
             str: The timestamp of the last processed PDF.
         """
+        if dry_run and pdf_dir is None:
+            raise ValueError("PDF directory must be provided for dry run.")
+
+        if dry_run:
+            # Simulate processing PDFs from the provided directory
+            for filename in os.listdir(pdf_dir):
+                if filename.endswith(".pdf"):
+                    pdf_path = os.path.join(pdf_dir, filename)
+                    print(f"[Dry Run] Processing PDF: {pdf_path}")
+
+                    # Simulate workflow tasks
+                    workflow = Workflow(pdf_path, self.session, self.base_url, filename, dry_run)
+                    workflow.execute_tasks_from_csv()
+            return "Dry run completed."
+        
         # Navigate to the login page
         driver.get(login_url)
         
@@ -106,7 +124,7 @@ class PdfProcessor:
                         print("PDF Content:", pdf_content)
                         
                         # Execute workflow tasks using the Workflow class
-                        workflow = Workflow("downloaded_pdf.pdf", self.session, self.base_url, option.get_attribute('value'))
+                        workflow = Workflow("downloaded_pdf.pdf", self.session, self.base_url, option.get_attribute('value'), dry_run)
                         workflow.execute_tasks_from_csv()
 
         return update_time
