@@ -1,7 +1,7 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from datetime import datetime
-from workflow import Workflow
+from processing.workflow import Workflow
 import os
 
 class PdfProcessor:
