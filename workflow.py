@@ -64,7 +64,14 @@ class Workflow:
                             "Request"
                         ]
 
-    def find_category_index(self,text):
+    def find_category_index(self, text):
+        """
+        Finds the index of a category in the text and sets the fileType attribute.
+        Calls execute_tasks_from_csv with the index if a category is found.
+
+        :param text: Text to search for categories.
+        :return: True if category found, else False.
+        """
         print("inside find_category_index")
         if '.' in text:
             text = text.replace('.', '')
@@ -72,13 +79,18 @@ class Workflow:
             for word in text.split():
                 if word.lower() == category.lower():
                     print(index)
-                    #set file type
+                    # set file type
                     self.fileType = category.lower()
                     self.execute_tasks_from_csv(index)
                     return True
         return False
 
     def has_ocr(self):
+        """
+        Checks if the PDF file has OCR text.
+
+        :return: True if OCR text is found, else False.
+        """
         pdf_path = self.filepath
         try:
             pdf_document = fitz.open(pdf_path)
@@ -93,6 +105,11 @@ class Workflow:
             return False
 
     def extract_text_from_pdf(self):
+        """
+        Extracts text from images within the PDF using Tesseract OCR.
+
+        :return: True if text extraction is successful, else False.
+        """
         pdf_path = self.filepath
         try:
             pdf_document = fitz.open(pdf_path)
@@ -115,6 +132,11 @@ class Workflow:
             return False
 
     def extract_text_doctr(self):
+        """
+        Extracts text from PDF using the Doctr OCR model.
+
+        :return: True if text extraction is successful, else False.
+        """
         pdf_path = self.filepath
         print(pdf_path)
         text = ''
@@ -128,16 +150,11 @@ class Workflow:
             result = model(doc)
             # Iterate through pages
             for page in result.pages:
-                #print(f"Page {page.page_idx}:")
-                
                 # Iterate through blocks
                 for block in page.blocks:
-                    #print("Block:")
-                    
                     # Iterate through lines
                     for line in block.lines:
                         text += '\n'
-                        
                         # Print words in the line
                         for word in line.words:
                             text += word.value + ' '
@@ -149,6 +166,11 @@ class Workflow:
             return False
 
     def extract_text_from_pdf_file(self):
+        """
+        Extracts text from PDF using PyPDF2.
+
+        :return: True if text extraction is successful, else False.
+        """
         text = ''
         pdf_path = self.filepath
         try:
@@ -159,13 +181,18 @@ class Workflow:
                     page = reader.pages[page_num]
                     text += page.extract_text()
             self.tesseracted_text = text
-            #self.tesseracted_text = """"""
             return True
         except Exception as e:
             print("An error occurred:", e)
             return False
 
-    def build_prompt(self,prompt):
+    def build_prompt(self, prompt):
+        """
+        Builds a prompt for the external service and processes the response.
+
+        :param prompt: Additional prompt text.
+        :return: True if successful.
+        """
         data = {
             "messages": [
                 {
@@ -174,17 +201,13 @@ class Workflow:
                 },
                 {
                     "role": "user",
-                    "content": self.tesseracted_text + '. '+ prompt
+                    "content": self.tesseracted_text + '. ' + prompt
                 }
             ],
             "mode": "instruct",
-            #should be a parameter, only if needed else default api values
             "temperature": .1,
             "character": "Assistant",
-            #should be a parameter
-            "top_p":.1
-            #should be a parameter
-            #max_tokens:100
+            "top_p": .1
         }
         response = requests.post(self.url, headers=self.headers, json=data)
         print(response.json())
@@ -193,7 +216,13 @@ class Workflow:
         self.find_category_index(content_value)
         return True
 
-    def build_sub_prompt(self,prompt):
+    def build_sub_prompt(self, prompt):
+        """
+        Builds a sub-prompt for the external service and returns the response content.
+
+        :param prompt: Additional prompt text.
+        :return: Response content from the external service.
+        """
         data = {
             "messages": [
                 {
@@ -202,19 +231,24 @@ class Workflow:
                 },
                 {
                     "role": "user",
-                    "content": self.tesseracted_text + '. '+ prompt
+                    "content": self.tesseracted_text + '. ' + prompt
                 }
             ],
             "mode": "instruct",
             "temperature": .1,
             "character": "Assistant",
-            "top_p":.1
-            #max_tokens:100
+            "top_p": .1
         }
         response = requests.post(self.url, headers=self.headers, json=data)
         return response.json()['choices'][0]['message']['content']
 
-    def get_patient_name(self,prompt):
+    def get_patient_name(self, prompt):
+        """
+        Retrieves the patient name using the provided prompt.
+
+        :param prompt: Prompt text to use.
+        :return: True and patient results if successful, else False.
+        """
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
         if '.' in name:
             name = name.replace('.', '')
@@ -229,17 +263,20 @@ class Workflow:
         # Send the POST request
         response = self.session.post(url, data=payload)
 
-        #print(response.text)
-
         response_data = json.loads(response.text)
 
         if len(response_data["results"]) == 0:
             return False
         else:
-            return True,response_data["results"]
+            return True, response_data["results"]
 
-    def set_doctor_from_code(self,name):
-        #print(name)
+    def set_doctor_from_code(self, name):
+        """
+        Sets the doctor from the code provided.
+
+        :param name: Doctor's name or code.
+        :return: True if provider number is found, else False.
+        """
         oscar_response = []
         if name:
             if '.' in name:
@@ -254,34 +291,23 @@ class Workflow:
 
             # Send the POST request
             response = self.session.post(url, data=payload)
-
-            #print(response.text)
-
             data = json.loads(response.text)
 
-            #print(data)
-
             for item in data["results"]:
-                #print(item)
-                if isinstance(item, dict):
-                    if 'providerNo' in item:
-                        #print(item['providerNo'])
-                        self.provider_number.append(item['providerNo'])
+                if isinstance(item, dict) and 'providerNo' in item:
+                    self.provider_number.append(item['providerNo'])
 
-            #print(self.provider_number)
+            return bool(self.provider_number)
 
-            if self.provider_number is not None:
-                return True
-            else:
-                return False
+    def get_doctor_name(self, prompt):
+        """
+        Retrieves the doctor name using the provided prompt.
 
-    def get_doctor_name(self,prompt):
+        :param prompt: Prompt text to use.
+        :return: True and doctor results if successful, else False.
+        """
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
-        #print("inside get doctor")
         print(name)
-        array_pattern = r'\[.*?\]'
-        #name = "Sokolowski"
-        #array_match = re.search(array_pattern, names)
         oscar_response = []
         if name:
             if '.' in name:
@@ -289,85 +315,86 @@ class Workflow:
 
             url = f"{self.base_url}/provider/SearchProvider.do"
 
-            # Define the payload data
             payload = {
                 "query": name
             }
 
             # Send the POST request
             response = self.session.post(url, data=payload)
-
-            #print(response.text)
-
             response_data = json.loads(response.text)
 
-            if len(response_data["results"]) != 0:
-                results = response_data["results"]
-                if isinstance(results, list):
-                    for item in results:
-                        if isinstance(item, dict):
-                            oscar_response.append(item)
+            if response_data["results"]:
+                for item in response_data["results"]:
+                    if isinstance(item, dict):
+                        oscar_response.append(item)
 
-            if len(oscar_response) != 0:
-                return True,oscar_response
-            else:
-                return False
+            return bool(oscar_response), oscar_response
 
-            #print(oscar_response)
+    def get_document_description(self, prompt):
+        """
+        Retrieves the document description using the provided prompt.
 
-    def get_document_description(self,prompt):
+        :param prompt: Prompt text to use.
+        :return: True if successful.
+        """
         result = self.build_sub_prompt(self.tesseracted_text + prompt)
         print(result)
         self.document_description = result
         return True
 
-    def filter_results(self,prompt,additional_param=None):
-        if additional_param is not None:
-            details = self.build_sub_prompt(self.tesseracted_text + prompt + str(additional_param))
-            #print(details)
-            return True,details
-        else:
-            return False
+    def filter_results(self, prompt, additional_param=None):
+        """
+        Filters results based on the provided prompt and additional parameters.
 
-    def set_patient(self,additional_param=None):
-        if additional_param is not None:
-            #print(str(additional_param))
+        :param prompt: Prompt text to use.
+        :param additional_param: Additional parameters to use for filtering.
+        :return: True and details if additional_param is provided, else False.
+        """
+        if additional_param:
+            details = self.build_sub_prompt(self.tesseracted_text + prompt + str(additional_param))
+            return True, details
+        return False
+
+    def set_patient(self, additional_param=None):
+        """
+        Sets the patient details from the additional parameters.
+
+        :param additional_param: Additional parameters to use.
+        :return: True if successful, else False.
+        """
+        if additional_param:
             data = json.loads(additional_param)
             self.patient_name = data[0]['formattedName'] + '(' + data[0]['fomattedDob'] + ')'
             self.demographic_number = data[0]['demographicNo']
-            # Add MRP
-            if data[0]['providerNo'] is not None:
+            if data[0]['providerNo']:
                 self.mrp = data[0]['providerNo']
             return True
-        else:
-            return False
+        return False
 
-    def set_doctor(self,additional_param=None):
-        if additional_param is not None:
-            #additional_param = '[{"firstName": "Michelle", "lastName": "Liu", "ohipNo": "", "providerNo": "999998"},{"firstName": "John", "lastName": "Doe", "ohipNo": "", "providerNo": "999998"}]'
-            #print(str(additional_param))
+    def set_doctor(self, additional_param=None):
+        """
+        Sets the doctor details from the additional parameters.
+
+        :param additional_param: Additional parameters to use.
+        :return: True if successful, else False.
+        """
+        if additional_param:
             data = json.loads(additional_param)
             print(data)
             for item in data:
-                #print(item)
-                if isinstance(item, dict):
-                    if 'providerNo' in item:
-                        print(item['providerNo'])
-                        self.provider_number.append(item['providerNo'])
-            #self.provider_number.append(data[0]['providerNo'])
-            #self.provider_number.append(data[0]['providerNo'])
-            #self.provider_number = data[0]['providerNo']
+                if isinstance(item, dict) and 'providerNo' in item:
+                    print(item['providerNo'])
+                    self.provider_number.append(item['providerNo'])
             print(self.provider_number)
             return True
-        else:
-            return False
+        return False
 
     def oscar_update(self):
-        #print("Document Details:")
-        #print(self.patient_name)
-        #print(self.demographic_number)
-        #print(self.provider_number)
-        #print(self.document_description)
+        """
+        Updates the Oscar system with the document details.
+
+        :return: True if successful.
+        """
         url = f"{self.base_url}/dms/ManageDocument.do"
 
         # Define the parameters
@@ -396,10 +423,7 @@ class Workflow:
             "save": "Save & Next"
         }
 
-        params["flagproviders"] = []
-
-        for value in self.provider_number:
-            params["flagproviders"].append(value)
+        params["flagproviders"] = self.provider_number
 
         print(params)
 
@@ -409,26 +433,14 @@ class Workflow:
 
         return True
 
-    # More available funcitons and its usage
+    def execute_task(self, task, previous_result=None):
+        """
+        Executes a single task from the task list.
 
-    # def ask_ai(self,param,additional_param=None):
-    #     print(f"Executing ask_ai with parameter: {param}, additional_param={additional_param}")
-    #     return random.choice([True, False]),"test"
-
-    # def flag_email(self,param):
-    #     print(f"Executing flag_email with parameter: {param}")
-    #     return random.choice([True, False])
-
-    # def get_patient_details(self,param1, param2,additional_param=None):
-    #     print(f"Executing get_patient_details with parameters: {param1}, {param2}, additional_param={additional_param}")
-    #     return random.choice([True, True]),"1245dsd"
-
-    # def update_oscar(self,param1, param2, additional_param=None):
-    #     print(f"Executing update_oscar with parameters: {param1}, {param2}, additional_param={additional_param}")
-    #     return random.choice([True, True])
-
-
-    def execute_task(self,task, previous_result=None):
+        :param task: Task to execute.
+        :param previous_result: Result from the previous task.
+        :return: Next task index and result, or exit if function not found or not callable.
+        """
         task_number, function_name, *params, true_next_row, false_next_row = task
         function_to_call = getattr(self, function_name, None)
         
@@ -447,14 +459,21 @@ class Workflow:
                 if response[0]:
                     return true_next_row, response[1]
                 else:
-                    return false_next_row,response[1]
+                    return false_next_row, response[1]
             else:
                 return true_next_row if response else false_next_row 
         else:
             print(f"Error: Function {function_name} not found or not callable.")
             return false_next_row 
 
-    def execute_tasks(self,tasks, current_row, previous_result=None):
+    def execute_tasks(self, tasks, current_row, previous_result=None):
+        """
+        Executes tasks recursively starting from the current row.
+
+        :param tasks: List of tasks to execute.
+        :param current_row: Index of the current task.
+        :param previous_result: Result from the previous task.
+        """
         if current_row >= len(tasks):
             print("Reached end of tasks.")
             return
@@ -464,8 +483,7 @@ class Workflow:
             print("Exiting task execution.")
             return
 
-        if isinstance(next_row, tuple): 
-            #print(next_row)
+        if isinstance(next_row, tuple):
             next_row_index = int(next_row[0])
             next_result = next_row[1] if len(next_row) > 1 else None
             self.execute_tasks(tasks, next_row_index, previous_result=next_result)
@@ -476,8 +494,13 @@ class Workflow:
                 next_result = next_row_parts[1] if len(next_row_parts) > 1 else None
                 self.execute_tasks(tasks, next_row_index, previous_result=next_result)
 
+    def read_tasks_from_csv(self, file_path):
+        """
+        Reads tasks from a CSV file.
 
-    def read_tasks_from_csv(self,file_path):
+        :param file_path: Path to the CSV file.
+        :return: List of tasks.
+        """
         tasks = []
         with open(file_path, 'r') as file:
             reader = csv.reader(file)
@@ -485,10 +508,15 @@ class Workflow:
                 tasks.append(row)
         return tasks
 
-    def execute_tasks_from_csv(self,index=None):
+    def execute_tasks_from_csv(self, index=None):
+        """
+        Executes tasks read from a CSV file.
+
+        :param index: Index of the CSV file to read from. Default is None.
+        """
         if index is None:
             tasks = self.read_tasks_from_csv('./workflow-config/workflow.csv')
         else:
-            tasks = self.read_tasks_from_csv('./workflow-config/'+str(index)+'.csv')
+            tasks = self.read_tasks_from_csv('./workflow-config/' + str(index) + '.csv')
         print(self.filepath)
         self.execute_tasks(tasks, 0)
