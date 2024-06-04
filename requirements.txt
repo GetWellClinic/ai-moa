@@ -1,0 +1,8 @@
+selenium
+PyMuPDF
+PyPDF2
+requests
+python-doctr
+Pillow
+pytesseract
+webdriver-manager
