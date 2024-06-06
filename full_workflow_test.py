@@ -11,6 +11,8 @@ import datetime
 import time
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
+import guidance
+from guidance import models,gen,select
 
 class Workflow:
     def __init__(self, filepath):
@@ -19,20 +21,21 @@ class Workflow:
         self.demographic_number = ''
         self.mrp = ''
         self.provider_number = []
-        self.logFile = "log_test.txt"
+        self.logFile = "log_guidance.txt"
         self.document_description = ''
         self.filepath = filepath
         self.tesseracted_text = None
+        self.mistral = guidance.models.OpenAI("gpt-3.5-turbo-instruct")
         # self.session = session
         # self.base_url = base_url
         # self.file_name = file_name
         self.enable_ocr_gpu = True
-        self.url = "http://127.0.0.1:5000/v1/chat/completions"
+        # self.url = "http://127.0.0.1:5000/v1/chat/completions"
         # the Authorization qwerty will have to be changed, this for testing
-        self.headers = {
-            "Authorization": "Bearer qwerty",
-            "Content-Type": "application/json"
-        }
+        # self.headers = {
+        #     "Authorization": "Bearer qwerty",
+        #     "Content-Type": "application/json"
+        # }
         self.categories = [
                             "Lab",
                             "Consult",
@@ -156,6 +159,7 @@ class Workflow:
             elapsed_time = end_time - start_time
             self.append_to_file("Time taken for the OCR:")
             self.append_to_file(str(elapsed_time))
+            self.mistral += text
             return True
         except Exception as e:
             print("An error occurred:", e)
@@ -180,67 +184,71 @@ class Workflow:
 
     def build_prompt(self,prompt):
         start_time = time.time()
-        data = {
-            "messages": [
-                {
-                    "role": "system",
-                    "content": "You are a helpful assistant designed to output JSON."
-                },
-                {
-                    "role": "user",
-                    "content": self.tesseracted_text + '. '+ prompt
-                }
-            ],
-            "mode": "instruct",
-            #should be a parameter, only if needed else default api values
-            "temperature": .1,
-            "character": "Assistant",
-            #should be a parameter
-            "top_p":.1
-            #should be a parameter
-            #max_tokens:100
-        }
-        response = requests.post(self.url, headers=self.headers, json=data)
-        # print(response.json())
-        content_value = response.json()['choices'][0]['message']['content']
+        # data = {
+        #     "messages": [
+        #         {
+        #             "role": "system",
+        #             "content": "You are a helpful assistant designed to output JSON."
+        #         },
+        #         {
+        #             "role": "user",
+        #             "content": self.tesseracted_text + '. '+ prompt
+        #         }
+        #     ],
+        #     "mode": "instruct",
+        #     #should be a parameter, only if needed else default api values
+        #     "temperature": .1,
+        #     "character": "Assistant",
+        #     #should be a parameter
+        #     "top_p":.1
+        #     #should be a parameter
+        #     #max_tokens:100
+        # }
+        # response = requests.post(self.url, headers=self.headers, json=data)
+        # # print(response.json())
+        # content_value = response.json()['choices'][0]['message']['content']
         # print(content_value)
+        lm = self.mistral + prompt + gen(stop='.', name="response")
         end_time = time.time()
         elapsed_time = end_time - start_time
         self.append_to_file("Response:")
-        self.append_to_file(response.json()['choices'][0]['message']['content'])
+        self.append_to_file(lm["response"])
+        # self.append_to_file(response.json()['choices'][0]['message']['content'])
         self.append_to_file("Time taken for the prompt:")
         self.append_to_file(str(elapsed_time))
-        self.append_to_file("Document Type: "+content_value)
-        self.find_category_index(content_value)
+        self.append_to_file("Document Type: "+lm["response"])
+        self.find_category_index(lm["response"])
         return True
 
     def build_sub_prompt(self,prompt):
         start_time = time.time()
-        data = {
-            "messages": [
-                {
-                    "role": "system",
-                    "content": "You are a helpful assistant designed to output JSON."
-                },
-                {
-                    "role": "user",
-                    "content": self.tesseracted_text + '. '+ prompt
-                }
-            ],
-            "mode": "instruct",
-            "temperature": .1,
-            "character": "Assistant",
-            "top_p":.1
-            #max_tokens:100
-        }
-        response = requests.post(self.url, headers=self.headers, json=data)
+        # data = {
+        #     "messages": [
+        #         {
+        #             "role": "system",
+        #             "content": "You are a helpful assistant designed to output JSON."
+        #         },
+        #         {
+        #             "role": "user",
+        #             "content": self.tesseracted_text + '. '+ prompt
+        #         }
+        #     ],
+        #     "mode": "instruct",
+        #     "temperature": .1,
+        #     "character": "Assistant",
+        #     "top_p":.1
+        #     #max_tokens:100
+        # }
+        # response = requests.post(self.url, headers=self.headers, json=data)
+        lm = self.mistral + prompt + gen(max_tokens=15, name="response")
         end_time = time.time()
         elapsed_time = end_time - start_time
         self.append_to_file("Response:")
-        self.append_to_file(response.json()['choices'][0]['message']['content'])
+        self.append_to_file(lm["response"])
+        # self.append_to_file(response.json()['choices'][0]['message']['content'])
         self.append_to_file("Time taken for the prompt:")
         self.append_to_file(str(elapsed_time))
-        return response.json()['choices'][0]['message']['content']
+        return lm["response"]
 
     def get_patient_name(self,prompt):
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
