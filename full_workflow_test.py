@@ -21,7 +21,7 @@ class Workflow:
         self.demographic_number = ''
         self.mrp = ''
         self.provider_number = []
-        self.logFile = "log_guidance.txt"
+        self.logFile = "log_test_13_guidance.txt"
         self.document_description = ''
         self.filepath = filepath
         self.tesseracted_text = None
@@ -30,12 +30,12 @@ class Workflow:
         # self.base_url = base_url
         # self.file_name = file_name
         self.enable_ocr_gpu = True
-        # self.url = "http://127.0.0.1:5000/v1/chat/completions"
+        self.url = "http://127.0.0.1:5000/v1/chat/completions"
         # the Authorization qwerty will have to be changed, this for testing
-        # self.headers = {
-        #     "Authorization": "Bearer qwerty",
-        #     "Content-Type": "application/json"
-        # }
+        self.headers = {
+            "Authorization": "Bearer qwerty",
+            "Content-Type": "application/json"
+        }
         self.categories = [
                             "Lab",
                             "Consult",
@@ -87,6 +87,8 @@ class Workflow:
         return False
 
     def has_ocr(self):
+        # Error with Sample-C6-002.pdf
+        return False
         pdf_path = self.filepath
         try:
             pdf_document = fitz.open(pdf_path)
@@ -207,48 +209,66 @@ class Workflow:
         # response = requests.post(self.url, headers=self.headers, json=data)
         # # print(response.json())
         # content_value = response.json()['choices'][0]['message']['content']
-        # print(content_value)
-        lm = self.mistral + prompt + gen(stop='.', name="response")
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-        self.append_to_file("Response:")
-        self.append_to_file(lm["response"])
-        # self.append_to_file(response.json()['choices'][0]['message']['content'])
-        self.append_to_file("Time taken for the prompt:")
-        self.append_to_file(str(elapsed_time))
-        self.append_to_file("Document Type: "+lm["response"])
-        self.find_category_index(lm["response"])
-        return True
+        # self.append_to_file("Response:")
+        # self.append_to_file(content_value)
+        # return True
+        max_attempts = 5
+        attempts = 0
+        while attempts < max_attempts:
+            try:
+                with guidance.user():
+                    lm = self.mistral + prompt
+                    # self.append_to_file("Response before select:")
+                    # self.append_to_file(lm["response"])
+                with guidance.assistant():
+                    lm += select(self.categories,name='ans')
+                end_time = time.time()
+                elapsed_time = end_time - start_time
+                # self.append_to_file("Response:")
+                # self.append_to_file(lm["response"])
+                # self.append_to_file(response.json()['choices'][0]['message']['content'])
+                self.append_to_file("Time taken for the prompt:")
+                self.append_to_file(str(elapsed_time))
+                self.append_to_file("Document Type: "+lm["ans"])
+                # self.find_category_index(lm["response"])
+                return True
+            except guidance.models._model.ConstraintException as e:
+                attempts += 1
+                self.append_to_file(f"Attempt {attempts} failed. Retrying...")
+        else:
+            return False
+
 
     def build_sub_prompt(self,prompt):
         start_time = time.time()
-        # data = {
-        #     "messages": [
-        #         {
-        #             "role": "system",
-        #             "content": "You are a helpful assistant designed to output JSON."
-        #         },
-        #         {
-        #             "role": "user",
-        #             "content": self.tesseracted_text + '. '+ prompt
-        #         }
-        #     ],
-        #     "mode": "instruct",
-        #     "temperature": .1,
-        #     "character": "Assistant",
-        #     "top_p":.1
-        #     #max_tokens:100
-        # }
-        # response = requests.post(self.url, headers=self.headers, json=data)
-        lm = self.mistral + prompt + gen(max_tokens=15, name="response")
+        data = {
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant designed to output JSON."
+                },
+                {
+                    "role": "user",
+                    "content": self.tesseracted_text + '. '+ prompt
+                }
+            ],
+            "mode": "instruct",
+            "temperature": .1,
+            "character": "Assistant",
+            "top_p":.1
+            #max_tokens:100
+        }
+        response = requests.post(self.url, headers=self.headers, json=data)
+        #lm = self.mistral + prompt + gen(stop='.', name="response")
         end_time = time.time()
         elapsed_time = end_time - start_time
         self.append_to_file("Response:")
-        self.append_to_file(lm["response"])
-        # self.append_to_file(response.json()['choices'][0]['message']['content'])
+        # self.append_to_file(lm["response"])
+        self.append_to_file(response.json()['choices'][0]['message']['content'])
         self.append_to_file("Time taken for the prompt:")
         self.append_to_file(str(elapsed_time))
-        return lm["response"]
+        # return lm["response"]
+        return response.json()['choices'][0]['message']['content']
 
     def get_patient_name(self,prompt):
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
@@ -480,9 +500,9 @@ class Workflow:
         if function_to_call and callable(function_to_call):
             print(f"Executing Task {task_number} with function {function_name} and parameters: {', '.join(params)}")
             
-            if len(params) != 0:
-                self.append_to_file("Prompt:")
-                self.append_to_file("Prompt: ".join(params))
+            # if len(params) != 0:
+            #     self.append_to_file("Prompt:")
+            #     self.append_to_file("Prompt: ".join(params))
             
             if 'additional_param' in function_to_call.__code__.co_varnames:
                 additional_param = previous_result if previous_result is not None else None
@@ -550,13 +570,17 @@ class Workflow:
 def get_pdf_files(folder_path):
     pdf_files = []
     files_to_remove = {
-
+        "Sample-C10-002.pdf"
     }
+    retrying_files = {
+        
+    }
+    files_to_remove.update(retrying_files)
     for file in os.listdir(folder_path):
         if file.endswith(".pdf") and file not in files_to_remove:
             pdf_files.append(file)
     return pdf_files
-    # return ["Sample-C2-017.pdf"]
+    # return ["Sample-C3-003.pdf"]
 
 if __name__ == "__main__":
     folder_path = "/home/justinjoseph/Documents/AI-MOA/all_files/"
@@ -571,3 +595,4 @@ if __name__ == "__main__":
         elapsed_time = end_time - start_time
         workflow.append_to_file("Time taken for the file "+ pdf_file +" : ")
         workflow.append_to_file(str(elapsed_time))
+        # break
