@@ -9,6 +9,7 @@ import json
 import datetime
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
+from bs4 import BeautifulSoup
 
 class Workflow:
     def __init__(self, filepath, session, base_url, file_name, enable_ocr_gpu):
@@ -67,7 +68,8 @@ class Workflow:
                         ]
 
     def find_category_index(self,text):
-        print("inside find_category_index")
+        #print("inside find_category_index")
+        # to find the file type and execute the function based on that
         if '.' in text:
             text = text.replace('.', '')
         for index, category in enumerate(self.categories_code):
@@ -81,6 +83,7 @@ class Workflow:
         return False
 
     def has_ocr(self):
+        #checks for ocr layer
         pdf_path = self.filepath
         try:
             pdf_document = fitz.open(pdf_path)
@@ -95,6 +98,7 @@ class Workflow:
             return False
 
     def extract_text_from_pdf(self):
+        #pytesseract ocr
         pdf_path = self.filepath
         try:
             pdf_document = fitz.open(pdf_path)
@@ -117,6 +121,7 @@ class Workflow:
             return False
 
     def extract_text_doctr(self):
+        # if the pdf doesnt have ocr use doctr for ocr
         pdf_path = self.filepath
         # print(pdf_path)
         text = ''
@@ -154,6 +159,7 @@ class Workflow:
             return False
 
     def extract_text_from_pdf_file(self):
+        #if pdf has ocr get the text, no need to use doctr ocr
         text = ''
         pdf_path = self.filepath
         try:
@@ -171,6 +177,7 @@ class Workflow:
             return False
 
     def build_prompt(self,prompt):
+        # will be executed first, workflow starts from workflow.csv
         data = {
             "messages": [
                 {
@@ -195,10 +202,12 @@ class Workflow:
         print(response.json())
         content_value = response.json()['choices'][0]['message']['content']
         print(content_value)
+        # find the file type
         self.find_category_index(content_value)
         return True
 
     def build_sub_prompt(self,prompt):
+        #will used for llm api call, this doesnt have call to find_category_index()
         data = {
             "messages": [
                 {
@@ -207,7 +216,7 @@ class Workflow:
                 },
                 {
                     "role": "user",
-                    "content": self.tesseracted_text + '. '+ prompt
+                    "content": prompt
                 }
             ],
             "mode": "instruct",
@@ -220,6 +229,9 @@ class Workflow:
         return response.json()['choices'][0]['message']['content']
 
     def get_patient_name(self,prompt):
+        # to get the patient name based on the prompt and the file content
+        # the result from llm will be used to search for the patient in oscar using patient name
+        # filter_results() can be used after this to filter the results using llm
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
         if '.' in name:
             name = name.replace('.', '')
@@ -245,6 +257,9 @@ class Workflow:
 
     def set_doctor_from_code(self,name):
         #print(name)
+        # directly set provider name from csv using provider name, will search for the
+        # provider name in oscar and the resulting provider will be add to the provider
+        # list for the current file
         oscar_response = []
         if name:
             if '.' in name:
@@ -281,6 +296,8 @@ class Workflow:
                 return False
 
     def get_doctor_name(self,prompt):
+        # can be used to get the provider name using llm
+        # filter_results() can be used after this method to filter the results
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
         #print("inside get doctor")
         print(name)
@@ -321,12 +338,19 @@ class Workflow:
             #print(oscar_response)
 
     def get_document_description(self,prompt):
+        # this method can be used to get document description from the llm based
+        # on the format specified in the prompt-0.csv,1.csv,2.csv etc.
         result = self.build_sub_prompt(self.tesseracted_text + prompt)
         print(result)
         self.document_description = result
         return True
 
     def filter_results(self,prompt,additional_param=None):
+        # this method can be used to filter the results if we have an array of results
+        # this array will be passed to the llm along with ocr text, the prompt will set
+        # the criteria for selecting one value from the array.
+        # this should be use after the methods get_patient_name, get_doctor_name, patientSearch, getProviderList
+        # the above functions will return an array and filter_results will be used to select one from that array
         if additional_param is not None:
             details = self.build_sub_prompt(self.tesseracted_text + prompt + str(additional_param))
             #print(details)
@@ -335,6 +359,7 @@ class Workflow:
             return False
 
     def set_patient(self,additional_param=None):
+        # will be used after filter_results to set the selected value from the array
         if additional_param is not None:
             #print(str(additional_param))
             data = json.loads(additional_param)
@@ -348,6 +373,7 @@ class Workflow:
             return False
 
     def set_doctor(self,additional_param=None):
+        # will be used after filter_results to set the selected value from the array
         if additional_param is not None:
             #additional_param = '[{"firstName": "Michelle", "lastName": "Liu", "ohipNo": "", "providerNo": "999998"},{"firstName": "John", "lastName": "Doe", "ohipNo": "", "providerNo": "999998"}]'
             #print(str(additional_param))
@@ -367,6 +393,77 @@ class Workflow:
         else:
             return False
 
+    def patientSearch(self,prompt,type_of_query):
+        # to be used to search for a demographic using the below types
+        # Type : search_name,search_phone,search_dob,search_address,search_hin,search_chart_no,search_demographic_no
+        # filter_results can be used to select one from that array
+        query = self.build_sub_prompt(self.tesseracted_text + prompt)
+        array_pattern = r'\[.*?\]'
+        if query:
+            if '.' in query:
+                query = query.replace('.', '')
+
+            url = f"{self.base_url}/demographic/demographiccontrol.jsp"
+
+            # Define the payload data
+            payload = {
+                          "search_mode": type_of_query,
+                          "keyword": query,
+                          "orderby": ["last_name", "first_name"],
+                          "dboperation": "search_titlename",
+                          "limit1": 0,
+                          "limit2": 10,
+                          "displaymode": "Search",
+                          "ptstatus": "active",
+                          "fromMessenger": "False",
+                          "outofdomain": ""
+                        }
+
+            # Send the POST request
+            response = self.session.post(url, data=payload)
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            table = soup.find_all(class_="odd")
+            table += soup.find_all(class_="even")
+
+            if table:
+                print(str(table))
+                return True,str(table)
+            else:
+                return False
+
+    def getProviderList(self,prompt):
+        # to be used to get all the providers list from oscar.
+        # filter_results should be used to select one from that array
+        url = f"{self.base_url}/admin/providersearchresults.jsp"
+
+        # Define the payload data
+        payload = {
+                      "search_mode": "search_providerno",
+                      "search_status": "All",
+                      "keyword": "",
+                      "button": "",
+                      "orderby": "last_name",
+                      "limit1": 0,
+                      "limit2": 10000
+                    }
+
+        # Send the POST request
+        response = self.session.post(url, data=payload)
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        table = soup.find('table', {'id': 'tblResults'})
+
+        if table:
+            #print(table)
+            oscar_response = self.build_sub_prompt(prompt + str(table))
+            #print(oscar_response)
+            return True,oscar_response
+        else:
+            return False
+
     def oscar_update(self):
         #print("Document Details:")
         #print(self.patient_name)
@@ -374,6 +471,14 @@ class Workflow:
         #print(self.provider_number)
         #print(self.document_description)
         url = f"{self.base_url}/dms/ManageDocument.do"
+
+        # self.file_name = "2024_04_22_19_27_57.pdf"
+        # self.document_description = "test"
+        # self.fileType = "consult"
+        # self.patient_name = "TEST, PATIENT (1961-12-23)"
+        # self.mrp = ""
+        # self.provider_number.append("789456")
+        # self.provider_number.append("789456")
 
         # Define the parameters
         params = {
@@ -406,11 +511,11 @@ class Workflow:
         for value in self.provider_number:
             params["flagproviders"].append(value)
 
-        print(params)
+        # print(params)
 
         response = self.session.post(url, data=params)
 
-        print(response)
+        # print(response)
 
         return True
 

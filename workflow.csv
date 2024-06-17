@@ -48,3 +48,5 @@ Please choose one of the most appropriate general term for the document from the
 1,update_oscar,param1,10,exit
 1,update_oscar,param1,param2,11,exit
 1,flag_email,param6,exit,exit
+1,getProviderList,"From the below html content list the lastname, firstname and provider number for all the providers and return the list as a json array. Only return the json array nothing else.",exit,exit
+1,patientSearch,"Answer only to the following question in one word; what is the health card number / health insurance number of the patient?",search_hin,exit,exit
