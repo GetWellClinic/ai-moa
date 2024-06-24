@@ -472,14 +472,6 @@ class Workflow:
         #print(self.document_description)
         url = f"{self.base_url}/dms/ManageDocument.do"
 
-        # self.file_name = "2024_04_22_19_27_57.pdf"
-        # self.document_description = "test"
-        # self.fileType = "consult"
-        # self.patient_name = "TEST, PATIENT (1961-12-23)"
-        # self.mrp = ""
-        # self.provider_number.append("789456")
-        # self.provider_number.append("789456")
-
         # Define the parameters
         params = {
             "method": "addIncomingDocument",
