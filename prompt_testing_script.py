@@ -1,218 +1,601 @@
-import requests
 import os
+import csv
+import re
+import random
 import torch
+import fitz
+import PyPDF2
+import requests
+import json
+import datetime
 import time
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 
-def getTypePrompt():
-    promopt = """For the following question, respond in one word, only one word if confidence level is more than 85%, else reply ‘Others’. From the list, choose one that suits the type of the EMR document. Here are your options, respond with only one of terms and no other words: Lab, Consult, Insurance, Legal, Old Chart, Radiology, Photo, Consent, Pathology, Diagnostics, Pharmacy, Requisition, HCC Referrals. See descriptions of these terms below; these descriptions should be only used to help you to identify the correct term, and not to be used to display in the output.
+class Workflow:
+    def __init__(self, filepath):
+        self.patient_name = ''
+        self.fileType = ''
+        self.demographic_number = ''
+        self.mrp = ''
+        self.provider_number = []
+        self.logFile = "log_test_20.txt"
+        self.document_description = ''
+        self.filepath = filepath
+        self.tesseracted_text = None
+        # self.session = session
+        # self.base_url = base_url
+        # self.file_name = file_name
+        self.enable_ocr_gpu = True
+        self.url = "http://127.0.0.1:5000/v1/chat/completions"
+        # the Authorization qwerty will have to be changed, this for testing
+        self.headers = {
+            "Authorization": "Bearer qwerty",
+            "Content-Type": "application/json"
+        }
+        self.categories = [
+                            "Lab",
+                            "Consult",
+                            "Insurance",
+                            "Legal",
+                            "Old Chart",
+                            "Radiology",
+                            "Pathology",
+                            "Others",
+                            "Photo",
+                            "Consent",
+                            "Diagnostics",
+                            "Pharmacy",
+                            "Requisition",
+                            "Referral",
+                            "Request"
+                        ]
 
+        self.categories_code = [
+                            "Lab",
+                            "Consult",
+                            "Insurance",
+                            "Legal",
+                            "OldChart",
+                            "Radiology",
+                            "Pathology",
+                            "Others",
+                            "Photo",
+                            "Consent",
+                            "Diagnostics",
+                            "Pharmacy",
+                            "Requisition",
+                            "Referral",
+                            "Request"
+                        ]
 
-Lab: This refers to documents related to laboratory tests and results related to blood.
-Consult: This refers to documents related to professional medical advice or consultations; this would include any response to a referral, to another doctor, and ED Consultations. Consult also includes pathology done by a dermatologist who has seen the patient. ED Consultations and ED Reports are also considered as a consult.
-Insurance: This refers to documents related to patient insurance information, including request for medical records such as specifically clinical notes, consultation reports, and test results, for the purpose of assessing a disability claim, policy details, coverage, claims, and billing.
-Legal: This refers to documents that requests to transfer copy/original of patients medical records to specific healthcare providers.
-Old Chart: This refers to documents that includes patients previous medical reports or records, patients previous consulation records, patients previous lab reports.
-Radiology: This refers to documents solely regarding radiology reports from a radiologist.
-Photo: This refers to photographs related to the patient’s condition.
-Consent: This refers to documents that request permission to view/access patients medical records from specific healthcare providers; this does not include the requests to transfer copy/original of the patients medical records to specific healthcare providers.
-Pathology: This refers to documents related to detail findings from tissue or fluid sample analyses and examination of cells obtained from body fluids, aspirates, or tissue scrapings to diagnose diseases, particularly cancerous and precancerous conditions, also laboratory tests conducted on various specimens to identify microorganisms and determine appropriate treatment strategies for infectious diseases and mircobiology reports. This only applies if the document is from a medical laboratory or a pathologist.
-Diagnostics: This refers to documents related to diagnostic reports or results including  laboratory test commonly used to assess heart rhythm and electrical activity in patients.
-Pharmacy: This refers to documents sent from a pharmacist solely regarding medication renewals, as well as questions from a pharmacist at a pharmacy to a doctor. This does not include consultations from other physicians that also discuss medications as part of a consultation by a physician; these are consultations.
-Requisition: This refers to documents that mentions challenges like misplaced medical records, missing test results, unavailability of supplies or equipment, communication breakdowns, insurance authorization issues, and technical difficulties with electronic health record, any radiology scan requisition, blood work test requisition; this also includes requests to resend any of the EMR records may arise due to issues such as misplaced medical records, missing test results, and communication breakdowns related to patients.
-HCC Referrals: This refers to documents for incoming referrals to family physicians at that clinic from health care connect.
-Please choose the most appropriate type for your document."""
-    return promopt
+    def find_category_index(self,text):
+        # print("inside find_category_index")
+        if '.' in text:
+            text = text.replace('.', '')
+        for index, category in enumerate(self.categories_code):
+            for word in text.split():
+                if word.lower() == category.lower():
+                    # print(index)
+                    #set file type
+                    self.fileType = category.lower()
+                    self.execute_tasks_from_csv(index)
+                    return True
+        return False
 
-def getDoctorNamePrompt():
-    #promopt = """Answer only to the following question in one word.What is the lastname of the Doctor? Give the response in a json format, if there are more than one doctor mentioned, list all the first names as a json array."""
-    promopt = """ instructions: Your task is to identify the lastname of the patients physician to whom this report is addressed; this is the family physician of the patient. Return these names in a JSON array. The rules are as follows:,
-  rules: 1.Patient first names or patient last names are never part of the output.,2.If the lastname of the patient's family physician to whom this document is addressed is available and the confidence level is more than 85%, return a JSON array with one element - the lastname of the patient's family physician. The response will always be a single JSON array without any additional text or explanation.,3.If the confidence level is less than 85% return an empty JSON array., 4.Do not include any other information or assumptions from the document in the response., 5.The response should not contain any sentences or explanations, only a JSON array., 6.Any hypothetical scenarios or conditional statements should not be included in the response.""" 
-    return promopt
+    def has_ocr(self):
+        pdf_path = self.filepath
+        try:
+            pdf_document = fitz.open(pdf_path)
+            for page_num in range(len(pdf_document)):
+                page = pdf_document.load_page(page_num)
+                text = page.get_text()
+                if text.strip():
+                    return True
+            return False
+        except Exception as e:
+            print("An error occurred:", e)
+            return False
 
-def getPrompt(text):
-    promopt = [""] * 16
-    promopt[0] = "These rules always apply; patient first names or patient last names are never part of output; output ends without period '.'; Act as if you are a medical office assistant who follows direction precisely and consistantly when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as output format:, after review through the following steps. 1. Select one category from the list (Bloodwork, Immunology, Endocrinology) that suits the above document. 2. Identify the lab OR hospital name that performed the tests in the lab report; use the english name if there is both english and french; if uncertain look for a laboratry name. 3. Select one sub-type only from this list; you will use this choice for the sub-type in the output format template: TSH, h. pylori, LMC, hepatitis, other. Output format template: 'Consultation type (lab OR hospital name) sub-type'. Ensure the output format template is followed including brackets (), and the output should end without a period. For reference this is an example using this output template 'Bloodwork (Public Health) hepatitis'."
-    promopt[1] = """These rules always apply; patient first names or patient last names are never part of output; output ends without period ‘.’; Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as output format:, after review through the following steps.
+    def extract_text_from_pdf(self):
+        pdf_path = self.filepath
+        try:
+            pdf_document = fitz.open(pdf_path)
+            extracted_text = ''
+            for page_num in range(len(pdf_document)):
+                page = pdf_document.load_page(page_num)
+                image_list = page.get_images(full=True)
+                for img_index, img in enumerate(image_list):
+                    xref = img[0]
+                    base_image = pdf_document.extract_image(xref)
+                    image_bytes = base_image["image"]
+                    image = Image.open(io.BytesIO(image_bytes))
+                    
+                    image_text = pytesseract.image_to_string(image)
+                    extracted_text += image_text + '\n'
+            self.tesseracted_text = extracted_text
+            return True
+        except Exception as e:
+            print("An error occurred:", e)
+            return False
 
-If this document has a strong match in category as a Geriatric Nurse Report, HealthLinks Coordinated Care Plan, or ‘Discharge summary’, select from that list for the category. ‘ED summary’ should be used for all discharge summaries from an emergency department. If no strong match for the category, select one category as the consultation type from the SPECIALITY LIST FOR REFERENCE provided at the end of these instructions if there is a strong match based on the document content or select the category other.
-Identify the name of the consultant or attending physician who wrote this document. Always include the prefix ‘Dr.’ before the physician’s name; Always use the format: Dr. Firstname Lastname.
-Identify the hospital/lab that this consultation report is sent from if any; never directly reference the patient by any type of name.
-Without using the first name or last name of the patients, identify the sub-type or general nature of this specialty report and prepare a description in less than 5 words for the above document. Never directly reference the patient by any type of name. If document category is ‘ED summary’ this sub-type nature of the specialty report should be described as injury or illness in 5 words or less; Never directly reference the patient by any type of name in this description.
-Output format template: ‘Consultation type (consultant physician OR lab OR hospital name) sub-type or general nature’. If the report is from a hospital or lab or of the category ‘Discharge summary’, provide the hospital or lab name and do not include the physician’s name. Do not mention the words ‘Consultation type’ or ‘report’ or ‘note’ or ‘sub-type’ in the response! Only choose ‘Geriatrics’ if the consultation indicates this is from a Geriatrics specialist; this does not include ED Consultations; Do not use ‘Geriatrics’ as a specialty just because the patient is old or the issues are age related it must be only used if the physician sending the report is a  Geriatrician. Ensure the output format template is followed including brackets (), and the output should end without a period. For reference this is an example using this output template ‘Immunology (Dr. Smith) Allergy Test’.
+    def extract_text_doctr(self):
+        start_time = time.time()
+        pdf_path = self.filepath
+        # print(pdf_path)
+        text = ''
+        try:
+            if(self.enable_ocr_gpu == True):
+                device = torch.device("cuda:0")
+                model = ocr_predictor(pretrained=True).to(device)
+            else:
+                model = ocr_predictor(pretrained=True)
+            # PDF
+            doc = DocumentFile.from_pdf(pdf_path)
 
-SPECIALITY LIST FOR REFERENCE: Cardiology, Gastroenterology, Respirology, Dermatology, Orthopedics, Neurology, Hematology, Endocrinology, Rheumatology, Nephrology, Pulmonology, Ophthalmology, Psychiatry, Gynecology, Urology, Oncology, Infectious Diseases, Allergy and Immunology, Geriatrics, Gastrointestinal Surgery, Plastic Surgery, Vascular Surgery, Obstetrics, Pediatrics, Physical Medicine and Rehabilitation, Hepatology, Hematopathology, Nuclear Medicine, Radiology, Pain Management, Genetics, Hepatobiliary Surgery, Colorectal Surgery, Thoracic Surgery, Otolaryngology (ENT), Hematologic Oncology, Geriatric Psychiatry, Gynecologic Oncology, Neonatology, Interventional Cardiology, Clinical Genetics, Pediatric Cardiology, Pediatric Endocrinology, Pediatric Gastroenterology, Pediatric Hematology-Oncology, Pediatric Nephrology, Pediatric Neurology, Pediatric Pulmonology, Pediatric Rheumatology, Pediatric Surgery, Pediatric Urology, General Surgery, Pediatric Respirology, Anesthesiology, Surgical Outpatient, Pain management."""
-    promopt[2] = "Act as if you are a medical office assistant who follows direction precisly and consistantly when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as output format:, after review through the following steps. 1. Identify the organization who wrote this document. 2. Select one category from  CATEGORY LIST provided below. If the provided category list does not provide a strong match display the word 'Other'. Output format template: 'category (Insurance company name)'. Ensure this output format template is followed precisly including brackets (), and the output must end without a period. For reference this is an example using this output template 'Request - medical records (Lifeworks)'. CATEGORY LIST: Prior Authorization, Request - medical records, Other"
-    promopt[3] = "Act as if you are a medical office assistant who follows direction precisly and consistantly when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as output format:, after review through the following steps. 1. Identify the organization who wrote this document. 2. Select one category from  CATEGORY LIST provided below. If the provided category list does not provide a strong match display the word 'Other'. Output format template: 'category (Name of the firm/company/ the person who requested the document/the date of request if its requestd by a patient)'. Ensure this output format template is followed precisly including brackets (), and the output must end without a period. For reference this is an example using this output template 'Request Records (Sharma Law Firm),Attending physician’s statement (Spector Lit Law Firm), Request Record by patient (04 April 2021) '. CATEGORY LIST: Prior Authorization, Attending physician’s statement, Request Records, Request Record by patient"
-    promopt[4] = "Act as if you are a medical office assistant who follows direction precisly and consistantly when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as output format:, after review through the following steps. 1. Select one category from  CATEGORY LIST provided below. If the provided category list does not provide a strong match display the word 'Other'. Output format template: 'category (Name of the Doctor/Hospital/Clinic)'. Ensure this output format template is followed precisly including brackets (), and the output must end without a period. For reference this is an example using this output template 'Immunization record (Get well clinic), Old Medical Records (NYGH), Medical Records (Dr. Smith – Magenta Health), Rx history'. CATEGORY LIST: Immunization Record, Old Medical Records, Medical Records, Rx History, Surgical History, Family Medical History"
-    promopt[5] = "Act as if you are a medical office assistant who follows direction precisly and consistently when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as output format:, after review through the following steps. 1. Select one category from  CATEGORY LIST provided below. If the provided category list does not provide a strong match display the word 'Other'. 2. Compose a miximum three word summary of the type of content of the findings.  Output format template: 'category (Name of the facility) summary'. Ensure this output format template is followed precisely including brackets (), and the output must end without a period. For reference this is an example using this output template 'MRI Head (NYGH) Trauma, CT Chest (UHN) nodule, CXR (PDS), BMD (PDS), U/S abdo pelvis (PDS), Angiography (NYGH)'. CATEGORY LIST: MRI Head (NYGH) Trauma, CT Chest Nodule, CXR, BMD, U/S Abdo Pelvis, Angiography, Mammography, PET Scan, CT Angiogram, MRI Spine"
-    promopt[6] = "Act as if you are a medical office assistant who follows direction precisly and consistantly when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as output format:, after review through the following steps. 1. Select one category from  CATEGORY LIST provided below. If the provided category list does not provide a strong match display the word 'Other'. Output format template: 'category (Name of the hospital)'. Ensure this output format template is followed precisly including brackets (), and the output must end without a period. For reference this is an example using this output template 'Biopsy colon (HRH), Bone Marrow (Markham Stouffville), Gyn Cytopathology (NYGH). CATEGORY LIST: Biopsy Colon, Bone Marrow, Gyn Cytopathology, Blood Culture, Urinalysis, Complete Blood Count, Liver Function Test, Thyroid Function Test, Coagulation Profile, Tissue Culture"
-    promopt[7] = "Act as if you are a medical office assistant who follows direction precisly and consistantly when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as output format:, after review through the following steps. 1. Select one category from  CATEGORY LIST provided below. If the provided category list does not provide a strong match display the word 'Other'. Output format template: 'category (Name of Doctor/Hospital)'. Ensure this output format template is followed precisly including brackets (), and the output must end without a period. For reference this is an example using this output template 'Notification – Admission (TSH), Appt notification– OB (Dr.Cheng), Declined Appt – OB (Dr. Cha), Declined Appt from GWC – Psychotherapy (Dr. Copeland), Cancelled – Appt - OB (Dr. Cheng), Appt clarification - Physiatry (Dr. Unarket), Appt notification from GWC – WMP, ER visit (HRH), Unable to reach pt – Psychiatry (Dr. Chen)'. CATEGORY LIST: Notification – Admission, Appt Notification– OB, Declined Appt – OB, Declined Appt from GWC – Psychotherapy, Cancelled – Appt - OB, Appt Clarification - Physiatry, Appt Notification from GWC – WMP, ER Visit, Unable to Reach Pt – Psychiatry, PHQ-9, GAD-7, Patient Feedback, Patient Education Materials"
-    promopt[8] = "Give a short description in less than 6 words for the above document which should include the type of the document, type of specimen and name of the hospital. It should be less than 6 words!"
-    promopt[9] = "Act as if you are a medical office assistant who follows direction precisly and consistantly when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as output format:, after review through the following steps. 1. Select one category from  CATEGORY LIST provided below. If the provided category list does not provide a strong match display the word 'Other'. Output format template: 'category'. Ensure this output format template is followed precisly including brackets (), and the output must end without a period. For reference this is an example using this output template 'Patient Registration and Consent, Consent to release records, Authorization for release to third party, Non-Resident governing law consent form, Medical record transfer Consent, Patient Enrolment Form'. CATEGORY LIST: Patient Registration and Consent, Consent to Release Records, Authorization for Release to Third Party, Non-Resident Governing Law Consent Form, Medical Record Transfer Consent, Patient Enrolment Form, Informed Consent for Treatment, Consent for Telemedicine Services, Consent for Minor's Treatment, Consent for Surgical Procedure"
-    promopt[10] = "Act as if you are a medical office assistant who follows direction precisly and consistantly when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as output format:, after review through the following steps. 1. Select one category from  CATEGORY LIST provided below. If the provided category list does not provide a strong match display the word 'Other'. Output format template: 'category (Name of the facility)'. Ensure this output format template is followed precisly including brackets (), and the output must end without a period. For reference this is an example using this output template 'ECG (Lifelabs), Stress Test (the Heart Clinic ), PFT (Polyclinic), Holter Monitor (KHM)'. CATEGORY LIST: ECG, Stress Test, PFT, Holter Monitor, EEG, Sleep Study, Audiogram, Vision Test, Spirometry, Treadmill Test,ECG, EKG,Echocardiogram,Stress Test,Holter Monitor,Cardiac CatheterizationCardiac MRI, CT Angiography"
-    promopt[11] = "Act as if you are a medical office assistant who follows direction precisly and consistantly when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as output format:, after review through the following steps. 1. Select one category from  CATEGORY LIST provided below. If the provided category list does not provide a strong match display the word 'Other'. Output format template: 'category (Name of the pharmacy)'. Ensure this output format template is followed precisly including brackets (), and the output must end without a period. For reference this is an example using this output template 'Rx Refill (Shoppers), Rx Clarification (New Canyon Pharmacy), Rx Summary (MedsCheck)'. CATEGORY LIST: Rx Refill, Rx Clarification, Rx Summary, Lab Test Results, Imaging Results, Consultation Notes, Allergy List, Immunization Records, Family History, Patient Demographics"
-    promopt[12] = "Act as if you are a medical office assistant who follows direction precisly and consistantly when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as output format:, after review through the following steps. 1. Select one category from  CATEGORY LIST provided below. If the provided category list does not provide a strong match display the word 'Other'. Output format template: 'category (Name of the doctor/specialist/practitioner/location/)'. Ensure this output format template is followed precisly including brackets (), and the output must end without a period. For reference this is an example using this output template 'Req Neurologist (Dr. Prigozhikh), Req Cardiology (BP Monitor; Downsview Clinic), Req Colonscopy York Diagnostic Centre, Referral (ENT) Polyclinic – hearing loss, Referral to GWC (Dr. Copeland)- psychotherapy, Referral to GWC (Weight Management Program)'. CATEGORY LIST: Req Neurologist, Req Cardiology, Req Colonscopy, Referral (ENT), Referral to GWC, Req Dermatology, Req Endocrinology, Req Pulmonology, Referral (Ophthalmology), Referral to Physiotherapy"
-    promopt[13] = "Act as if you are a medical office assistant who follows direction precisly and consistantly when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as output format:. Output format template: 'HCC referral to Dr.(Name of Doctor/physician) - name of patient'. Ensure this output format template is followed precisly including brackets () and -, and the output must end without a period. For reference this is an example using this output template 'HCC referral to Dr. (John, Smith) – DOE, Cullian Murphy"
-    promopt[14] = "Act as if you are a medical office assistant who follows direction precisly and consistantly when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as output format:, after review through the following steps. 1. Select one category from  CATEGORY LIST provided below. If the provided category list does not provide a strong match display the word 'Other'. Output format template: 'category (Name of the physician who requested the document/the clinic that requested the document/ the clinic to which the patient is being transfered to)'. Ensure this output format template is followed precisly including brackets (), and the output must end without a period. For reference this is an example using this output template 'Request for Medical(Get well clinic),Request for Medical(Dr. Smith)'. CATEGORY LIST: Request for Medical Records"
-    promopt[15] = "Give a short description in less than 6 words for the above document which should include the details health care referal, referal doctors name . It should be less than 6 words!"
-    categories = [
-                    "Lab",
-                    "Consult",
-                    "Insurance",
-                    "Legal",
-                    "Old Chart",
-                    "Radiology",
-                    "Pathology",
-                    "Others",
-                    "Photo",
-                    "Consent",
-                    "Diagnostics",
-                    "Pharmacy",
-                    "Requisition",
-                    "Referral",
-                    "Request"
-                ]
-    if '.' in text:
-        text = text.replace('.', '')
-    for index, category in enumerate(categories):
-        for word in text.split():
-            if word.lower() == category.lower():
-                #print(index)
-                return promopt[index]
-    return "Unknown category" 
+            # Analyze
+            result = model(doc)
+            # Iterate through pages
+            for page in result.pages:
+                #print(f"Page {page.page_idx}:")
                 
+                # Iterate through blocks
+                for block in page.blocks:
+                    #print("Block:")
+                    
+                    # Iterate through lines
+                    for line in block.lines:
+                        text += '\n'
+                        
+                        # Print words in the line
+                        for word in line.words:
+                            text += word.value + ' '
 
+            self.tesseracted_text = text
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+            self.append_to_file("Time taken for the OCR:")
+            self.append_to_file(str(elapsed_time))
+            return True
+        except Exception as e:
+            print("An error occurred:", e)
+            return False
+
+    def extract_text_from_pdf_file(self):
+        text = ''
+        pdf_path = self.filepath
+        try:
+            with open(pdf_path, 'rb') as file:
+                reader = PyPDF2.PdfReader(file)
+                num_pages = len(reader.pages)
+                for page_num in range(num_pages):  # Iterate over all pages
+                    page = reader.pages[page_num]
+                    text += page.extract_text()
+            self.tesseracted_text = text
+            #self.tesseracted_text = """"""
+            return True
+        except Exception as e:
+            print("An error occurred:", e)
+            return False
+
+    def build_prompt(self,prompt):
+        start_time = time.time()
+        data = {
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant designed to output JSON."
+                },
+                {
+                    "role": "user",
+                    "content": self.tesseracted_text + '\n. '+"""For the following question, if confidence level is more than 85%, else reply ‘Others’. From the list, choose one that suits the type of the EMR document. Here are your options: Lab, Consult, Insurance, Legal, Old Chart, Radiology, Photo, Consent, Pathology, Diagnostics, Pharmacy, Requisition, HCC Referrals, Request. See descriptions of these terms below; these descriptions should be only used to help you to identify the correct term, and not to be used to display in the output."""+ prompt + '\n emphasized different aspects of the document based on the identified term'
+                }
+            ],
+            "mode": "instruct",
+            #should be a parameter, only if needed else default api values
+            "temperature": .1,
+            "character": "Assistant",
+            #should be a parameter
+            "top_p":.1
+            #should be a parameter
+            #max_tokens:100
+        }
+        response = requests.post(self.url, headers=self.headers, json=data)
+        # print(response.json())
+        content_value = response.json()['choices'][0]['message']['content']
+        # print(content_value)
+        # end_time = time.time()
+        # elapsed_time = end_time - start_time
+        self.append_to_file("Response:")
+        self.append_to_file(response.json()['choices'][0]['message']['content'])
+        # self.append_to_file("Time taken for the prompt:")
+        # self.append_to_file(str(elapsed_time))
+        # self.append_to_file("Document Type: "+content_value)
+        # self.find_category_index(content_value)
+
+        data = {
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant designed to output JSON."
+                },
+                {
+                    "role": "user",
+                    "content": content_value + "\n" + "Based on the above text, choose the type of the EMR document provided from the list of options. Here are your options, it is important to respond with only one of terms and no other words: Lab, Consult, Insurance, Legal, Old Chart, Radiology, Photo, Consent, Pathology, Diagnostics, Pharmacy, Requisition, HCC Referrals, Request. Please respond with just the word."
+                }
+            ],
+            "mode": "instruct",
+            #should be a parameter, only if needed else default api values
+            "temperature": .1,
+            "character": "Assistant",
+            #should be a parameter
+            "top_p":.1
+            #should be a parameter
+            #max_tokens:100
+        }
+
+        response = requests.post(self.url, headers=self.headers, json=data)
+        # print(response.json())
+        content_value = response.json()['choices'][0]['message']['content']
+        # print(content_value)
+        self.append_to_file("Second Response:")
+        self.append_to_file(response.json()['choices'][0]['message']['content'])
+        self.append_to_file("Second Document Type: "+content_value)
+
+        return True
+
+    def build_sub_prompt(self,prompt):
+        start_time = time.time()
+        data = {
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant designed to output JSON."
+                },
+                {
+                    "role": "user",
+                    "content": self.tesseracted_text + '. '+ prompt
+                }
+            ],
+            "mode": "instruct",
+            "temperature": .1,
+            "character": "Assistant",
+            "top_p":.1
+            #max_tokens:100
+        }
+        response = requests.post(self.url, headers=self.headers, json=data)
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        self.append_to_file("Response:")
+        self.append_to_file(response.json()['choices'][0]['message']['content'])
+        self.append_to_file("Time taken for the prompt:")
+        self.append_to_file(str(elapsed_time))
+        return response.json()['choices'][0]['message']['content']
+
+    def get_patient_name(self,prompt):
+        name = self.build_sub_prompt(self.tesseracted_text + prompt)
+        if '.' in name:
+            name = name.replace('.', '')
+        # self.append_to_file("Connecting to OSCAR to identify patient using patient name.")
+        # self.append_to_file("Test Mode, skipping api call to oscar.")
+        # print(name)
+        url = f"{self.base_url}/demographic/SearchDemographic.do"
+
+        # Define the payload data
+        payload = {
+            "query": name
+        }
+
+        # Send the POST request
+        response = self.session.post(url, data=payload)
+
+        #print(response.text)
+
+        response_data = json.loads(response.text)
+
+        if len(response_data["results"]) == 0:
+            return False
+        else:
+            return True,response_data["results"]
+
+    def set_doctor_from_code(self,name):
+        #print(name)
+        oscar_response = []
+        if name:
+            if '.' in name:
+                name = name.replace('.', '')
+
+            url = f"{self.base_url}/provider/SearchProvider.do"
+
+            # Define the payload data
+            payload = {
+                "query": name
+            }
+
+            # Send the POST request
+            response = self.session.post(url, data=payload)
+
+            #print(response.text)
+
+            data = json.loads(response.text)
+
+            #print(data)
+
+            for item in data["results"]:
+                #print(item)
+                if isinstance(item, dict):
+                    if 'providerNo' in item:
+                        #print(item['providerNo'])
+                        self.provider_number.append(item['providerNo'])
+
+            #print(self.provider_number)
+
+            if self.provider_number is not None:
+                return True
+            else:
+                return False
+
+    def get_doctor_name(self,prompt):
+        name = self.build_sub_prompt(self.tesseracted_text + prompt)
+        #print("inside get doctor")
+        # print(name)
+        array_pattern = r'\[.*?\]'
+        #name = "Sokolowski"
+        #array_match = re.search(array_pattern, names)
+        oscar_response = []
+        if name:
+            if '.' in name:
+                name = name.replace('.', '')
+
+            url = f"{self.base_url}/provider/SearchProvider.do"
+
+            # Define the payload data
+            payload = {
+                "query": name
+            }
+
+            # Send the POST request
+            response = self.session.post(url, data=payload)
+
+            #print(response.text)
+
+            response_data = json.loads(response.text)
+
+            if len(response_data["results"]) != 0:
+                results = response_data["results"]
+                if isinstance(results, list):
+                    for item in results:
+                        if isinstance(item, dict):
+                            oscar_response.append(item)
+
+            if len(oscar_response) != 0:
+                return True,oscar_response
+            else:
+                return False
+
+            print(oscar_response)
+
+    def get_document_description(self,prompt):
+        result = self.build_sub_prompt(self.tesseracted_text + prompt)
+        self.document_description = result
+        return True
+
+    def filter_results(self,prompt,additional_param=None):
+        self.append_to_file("Filtering results: ")
+        if additional_param is not None:
+            details = self.build_sub_prompt(self.tesseracted_text + prompt + str(additional_param))
+            #print(details)
+            return True,details
+        else:
+            self.append_to_file("Skipping filtering, not connected to oscar.")
+            return False
+
+    def set_patient(self,additional_param=None):
+        self.append_to_file("Storing patient details. ")
+        if additional_param is not None:
+            #print(str(additional_param))
+            data = json.loads(additional_param)
+            self.patient_name = data[0]['formattedName'] + '(' + data[0]['fomattedDob'] + ')'
+            self.demographic_number = data[0]['demographicNo']
+            # Add MRP
+            if data[0]['providerNo'] is not None:
+                self.mrp = data[0]['providerNo']
+            return True
+        else:
+            self.append_to_file("Skipping in test mode. ")
+            return False
+
+    def set_doctor(self,additional_param=None):
+        self.append_to_file("Storing provider details. ")
+        if additional_param is not None:
+            #additional_param = '[{"firstName": "Michelle", "lastName": "Liu", "ohipNo": "", "providerNo": "999998"},{"firstName": "John", "lastName": "Doe", "ohipNo": "", "providerNo": "999998"}]'
+            #print(str(additional_param))
+            data = json.loads(additional_param)
+            print(data)
+            for item in data:
+                #print(item)
+                if isinstance(item, dict):
+                    if 'providerNo' in item:
+                        print(item['providerNo'])
+                        self.provider_number.append(item['providerNo'])
+            #self.provider_number.append(data[0]['providerNo'])
+            #self.provider_number.append(data[0]['providerNo'])
+            #self.provider_number = data[0]['providerNo']
+            print(self.provider_number)
+            return True
+        else:
+            self.append_to_file("Skipping in test mode. ")
+            return False
+
+    def oscar_update(self):
+        self.append_to_file("Updating details in OSCAR. ")
+        self.append_to_file("Skipping OSCAR update in test mode. ")
+        #print("Document Details:")
+        #print(self.patient_name)
+        #print(self.demographic_number)
+        #print(self.provider_number)
+        #print(self.document_description)
+        # url = f"{self.base_url}/dms/ManageDocument.do"
+
+        # # Define the parameters
+        # params = {
+        #     "method": "addIncomingDocument",
+        #     "pdfDir": "File",
+        #     "pdfName": self.file_name,
+        #     "queueId": "1",
+        #     "pdfNo": "1",
+        #     "queue": "1",
+        #     "pdfAction": "",
+        #     "lastdemographic_no": "1",
+        #     "entryMode": "Fast",
+        #     "docType": self.fileType,
+        #     "docClass": "",
+        #     "docSubClass": "",
+        #     "documentDescription": self.document_description,
+        #     "observationDate": str(datetime.datetime.now().date()),
+        #     "saved": "false",
+        #     "demog": "1",
+        #     "demographicKeyword": self.patient_name,
+        #     "provi": self.provider_number[0],
+        #     "MRPNo": self.mrp,
+        #     "MRPName": "undefined",
+        #     "ProvKeyword": "",
+        #     "save": "Save & Next"
+        # }
+
+        # params["flagproviders"] = []
+
+        # for value in self.provider_number:
+        #     params["flagproviders"].append(value)
+
+        # print(params)
+
+        # response = self.session.post(url, data=params)
+
+        # print(response)
+
+        return True
+
+    # More available funcitons and its usage
+
+    # def ask_ai(self,param,additional_param=None):
+    #     print(f"Executing ask_ai with parameter: {param}, additional_param={additional_param}")
+    #     return random.choice([True, False]),"test"
+
+    # def flag_email(self,param):
+    #     print(f"Executing flag_email with parameter: {param}")
+    #     return random.choice([True, False])
+
+    # def get_patient_details(self,param1, param2,additional_param=None):
+    #     print(f"Executing get_patient_details with parameters: {param1}, {param2}, additional_param={additional_param}")
+    #     return random.choice([True, True]),"1245dsd"
+
+    # def update_oscar(self,param1, param2, additional_param=None):
+    #     print(f"Executing update_oscar with parameters: {param1}, {param2}, additional_param={additional_param}")
+    #     return random.choice([True, True])
+
+
+    def execute_task(self,task, previous_result=None):
+        task_number, function_name, *params, true_next_row, false_next_row = task
+        function_to_call = getattr(self, function_name, None)
+        
+        if function_to_call and callable(function_to_call):
+            print(f"Executing Task {task_number} with function {function_name} and parameters: {', '.join(params)}")
+            
+            # if len(params) != 0:
+            #     self.append_to_file("Prompt:")
+            #     self.append_to_file("Prompt: ".join(params))
+            
+            if 'additional_param' in function_to_call.__code__.co_varnames:
+                additional_param = previous_result if previous_result is not None else None
+                response = function_to_call(*params, additional_param=additional_param)
+            else:
+                response = function_to_call(*params)
+
+            print(f"Response from {function_name}: {response}")
+
+            if isinstance(response, tuple) and len(response) > 1:
+                if response[0]:
+                    return true_next_row, response[1]
+                else:
+                    return false_next_row,response[1]
+            else:
+                return true_next_row if response else false_next_row 
+        else:
+            print(f"Error: Function {function_name} not found or not callable.")
+            return false_next_row 
+
+    def execute_tasks(self,tasks, current_row, previous_result=None):
+        if current_row >= len(tasks):
+            print("Reached end of tasks.")
+            return
+
+        next_row = self.execute_task(tasks[current_row], previous_result)
+        if next_row == 'exit':
+            print("Exiting task execution.")
+            return
+
+        if isinstance(next_row, tuple): 
+            #print(next_row)
+            next_row_index = int(next_row[0])
+            next_result = next_row[1] if len(next_row) > 1 else None
+            self.execute_tasks(tasks, next_row_index, previous_result=next_result)
+        else:
+            next_row_parts = next_row.split(",") if next_row else None
+            if next_row_parts:
+                next_row_index = int(next_row_parts[0])
+                next_result = next_row_parts[1] if len(next_row_parts) > 1 else None
+                self.execute_tasks(tasks, next_row_index, previous_result=next_result)
+
+
+    def read_tasks_from_csv(self,file_path):
+        tasks = []
+        with open(file_path, 'r') as file:
+            reader = csv.reader(file)
+            for row in reader:
+                tasks.append(row)
+        return tasks
+
+    def execute_tasks_from_csv(self,index=None):
+        if index is None:
+            tasks = self.read_tasks_from_csv('workflow.csv')
+        else:
+            tasks = self.read_tasks_from_csv(str(index)+'.csv')
+        print(self.filepath)
+        self.execute_tasks(tasks, 0)
+
+    def append_to_file(self,content):
+        print(content)
+        with open(self.logFile, "a") as file:
+            file.write(content + "\n")
 
 def get_pdf_files(folder_path):
     pdf_files = []
     files_to_remove = {
 
     }
+    retrying_files = {
+        
+    }
+    files_to_remove.update(retrying_files)
     for file in os.listdir(folder_path):
         if file.endswith(".pdf") and file not in files_to_remove:
             pdf_files.append(file)
-    return pdf_files
-    # return ["Sample-C2-017.pdf"]
 
-def getText(pdf_file):
-    start_time = time.time()
-    try:
-        device = torch.device("cuda:0")
-        model = ocr_predictor(pretrained=True).to(device)
-        # PDF
-        doc = DocumentFile.from_pdf(pdf_file)
-        # Analyze
-        result = model(doc)
-        text = ''
-        # Iterate through pages
-        for page in result.pages:
-            #print(f"Page {page.page_idx}:")
-            
-            # Iterate through blocks
-            for block in page.blocks:
-                #print("Block:")
-                
-                # Iterate through lines
-                for line in block.lines:
-                    text += '\n'
-                    
-                    # Print words in the line
-                    for word in line.words:
-                        text += word.value + ' '
-        # print(text)
+    pdf_files_sorted = sorted(pdf_files)
+    return pdf_files_sorted
+    # return ["Sample-C1-021.pdf"]
+
+if __name__ == "__main__":
+    folder_path = "/home/justinjoseph/Documents/AI-MOA/new/"
+    #print(folder_path)
+    pdf_files = get_pdf_files(folder_path)
+    for pdf_file in pdf_files:
+        start_time = time.time()
+        workflow = Workflow(folder_path+pdf_file)
+        workflow.append_to_file("File: "+pdf_file)
+        workflow.execute_tasks_from_csv()
         end_time = time.time()
         elapsed_time = end_time - start_time
-        print("OCR Time taken for one file:", elapsed_time, "seconds")
-        # print("ocr completed")
-        return text
-    except Exception as e:
-        print("An error occurred:", e)
-
-def getDescription(text):
-    url = "http://127.0.0.1:5000/v1/chat/completions"
-    headers = {
-        "Authorization": "Bearer qwerty",
-        "Content-Type": "application/json"
-    }
-    data = {
-        "messages": [
-            {
-                "role": "system",
-                "content": "You are a helpful assistant designed to output JSON."
-            },
-            {
-                "role": "user",
-                "content": text
-            }
-        ],
-            "mode": "instruct",
-            "temperature": 0.3,
-            "character": "Assistant",
-            "top_p":.5
-            #"frequency_penalty":-2,
-            #"Presence_penalty":-2,
-            #"repatition_penalty":1,
-            #"max_tokens":21
-    }
-
-    response = requests.post(url, headers=headers, json=data)
-    content_value = response.json()['choices'][0]['message']['content']
-    print(content_value)
-    append_to_file(file_path, content_value)
-    return content_value
-
-def append_to_file(file_path, content):
-    with open(file_path, "a") as file:
-        file.write(content + "\n")
-
-
-folder_path = "/home/justinjoseph/Documents/AI-MOA/all_files/"
-#print(folder_path)
-pdf_files = get_pdf_files(folder_path)
-
-#print("PDF files in", folder_path, "are:")
-response = "yes"
-file_path = "all_files_ocr_gpu_0.3_q8_q6.txt"
-#append_to_file(file_path, getPrompt())
-
-for pdf_file in pdf_files:
-    start_time = time.time()
-    if response in ('yes', 'y'):
-        print(pdf_file)
-        append_to_file(file_path, pdf_file)
-        path = folder_path + pdf_file
-        text = getText(path)
-        #print(path)
-        fileType = text + getTypePrompt()
-        start_time_type = time.time()
-        append_to_file(file_path, "File Type:")
-        typeOfDOcument = getDescription(fileType)
-        end_time_type = time.time()
-        elapsed_time_type = end_time_type - start_time_type
-        append_to_file(file_path, "Time taken for file type identification:")
-        append_to_file(file_path,str(elapsed_time_type))
-        print("Time taken for file type identification:", elapsed_time_type, "seconds")
-        #doctorName = text + getDoctorNamePrompt()
-        #getDescription(doctorName)
-        typeIdentified = getPrompt(typeOfDOcument)
-        if typeIdentified == "Unknown category":
-            append_to_file(file_path, "Unable to identify file category")
-            print("Unable to identify file category")
-            continue
-        description = text + typeIdentified
-        start_time_desc = time.time()
-        append_to_file(file_path, "Description:")
-        documentDescription = getDescription(description)
-        end_time_desc = time.time()
-        elapsed_time_desc = end_time_desc - start_time_desc
-        print("Time taken for file description:", elapsed_time_desc, "seconds")
-        append_to_file(file_path, "Time taken for file description:")
-        append_to_file(file_path,str(elapsed_time_desc))
-        #response = input("Do you want to continue execution? (yes/no): ").strip().lower()
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    print("Time taken for the file:", elapsed_time, "seconds")
-    append_to_file(file_path, "Time taken for the file:")
-    append_to_file(file_path,str(elapsed_time))
+        workflow.append_to_file("Time taken for the file "+ pdf_file +" : ")
+        workflow.append_to_file(str(elapsed_time))
