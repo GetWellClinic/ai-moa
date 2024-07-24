@@ -16,6 +16,7 @@ class OscarAutomation:
         self.pin = self.config['user_login']['pin']
         self.base_url = self.config['base_url']
         self.last_processed_pdf = self.config['last_processed_pdf']
+        self.last_pending_doc_file = self.config['last_pending_doc_file']
         self.enable_ocr_gpu = self.config['enable_ocr_gpu']
         self.session = requests.Session()
         response = self.session.post(f"{self.base_url}/login.do", data={"username": self.username, "password": self.password, "pin": self.pin})
@@ -31,7 +32,7 @@ class OscarAutomation:
         return config
 
     def save_config(self, config):
-        with open('config_file', 'w') as file:
+        with open('config_file.json', 'w') as file:
             json.dump(config, file, indent=4)
 
     def login_successful_callback(self, driver):
@@ -53,12 +54,12 @@ class OscarAutomation:
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
         self.login = Login(self.username, self.password, self.pin, self.base_url)
-        self.document_processor = DocumentProcessor(self.base_url, self.session)
-        self.config["last_processed_pdf"] = self.document_processor.process_documents(driver, f"{self.base_url}/login.do", self.login_successful_callback)
-
+        self.document_processor = DocumentProcessor(self.base_url, self.session, self.last_pending_doc_file, self.enable_ocr_gpu)
+        self.config["last_pending_doc_file"] = self.document_processor.process_documents(driver, f"{self.base_url}/login.do", self.login_successful_callback)
+        self.save_config(self.config)
         driver.quit()
 
 if __name__ == "__main__":
     oscar = OscarAutomation()
-    oscar.process_pdfs()
-    # oscar.process_documents()
+    # oscar.process_pdfs()
+    oscar.process_documents()
