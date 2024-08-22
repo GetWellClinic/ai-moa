@@ -2,6 +2,7 @@ import os
 import csv
 import re
 import random
+import itertools
 import torch
 import fitz
 import PyPDF2
@@ -16,6 +17,7 @@ from bs4 import BeautifulSoup
 class Workflow:
     def __init__(self, filepath, session, base_url, file_name, enable_ocr_gpu):
         self.patient_name = ''
+        self.fl_name = ''
         self.fileType = ''
         self.demographic_number = ''
         self.mrp = ''
@@ -161,6 +163,7 @@ class Workflow:
             return True
         except Exception as e:
             print("An error occurred:", e)
+            os.remove(pdf_path)
             return False
 
     def extract_text_from_pdf_file(self):
@@ -287,7 +290,7 @@ class Workflow:
 
         # Define the payload data
         payload = {
-            "query": name
+            "query": "%"+name+"%"
         }
 
         # Send the POST request
@@ -301,6 +304,107 @@ class Workflow:
             return False
         else:
             return True,response_data["results"]
+
+    def patientSearch(self,prompt,type_of_query):
+        # to be used to search for a demographic using the below types
+        # Type : search_name,search_phone,search_dob,search_address,search_hin,search_chart_no,search_demographic_no
+        # filter_results can be used to select one from that array
+        query = self.build_sub_prompt(self.tesseracted_text + prompt)
+        # query = "OO7"
+        if "False" in query:
+            return False
+        array_pattern = r'\[.*?\]'
+        parts = query.split(':')
+        parts = [part.strip() for part in parts]
+        if len(parts) > 1:
+            query = parts[1]
+
+        if type_of_query == "search_dob":
+            pattern = r'\d{4}-\d{2}-\d{2}'
+            match = re.search(pattern, query)
+            if match:
+                query = match.group()
+                print(query)
+
+        if type_of_query == "search_hin":
+            pattern = r'\b\d+\b'
+            match = re.search(pattern, query)
+            if match:
+                query = match.group()
+                print(query)
+
+        if query:
+
+            if '.' in query:
+                query = query.replace('.', '')
+
+            if ',' in query:
+                query = query.replace(',', '')
+
+            table = self.getPatientHTML(type_of_query,query)
+
+            if table:
+                print(str(table))
+                return True,str(table)
+
+            if type_of_query == "search_name":
+                parts = query.split(' is ')
+                if len(parts) > 1:
+                    name_parts = parts[1].split()
+                else:
+                    name_parts = query.split()
+                
+                # print(name_parts)
+
+                all_combinations = list(itertools.permutations(name_parts))
+                formatted_combinations = [f"%{combo[0]}%,%{'%'.join(combo[1:])}%" for combo in all_combinations]
+
+                for combo in formatted_combinations:
+                    print(combo)
+                    table = self.getPatientHTML(type_of_query,combo)
+
+                    if table:
+                        print(str(table))
+                        return True,str(table)
+                    else:
+                        return False
+
+
+    def getPatientHTML(self,type_of_query,query):
+        url = f"{self.base_url}/demographic/demographiccontrol.jsp"
+
+        # Define the payload data
+        payload = {
+                      "search_mode": type_of_query,
+                      "keyword": "%"+query+"%",
+                      "orderby": ["last_name", "first_name"],
+                      "dboperation": "search_titlename",
+                      "limit1": 0,
+                      "limit2": 10,
+                      "displaymode": "Search",
+                      "ptstatus": "active",
+                      "fromMessenger": "False",
+                      "outofdomain": ""
+                    }
+
+        # Send the POST request
+        response = self.session.post(url, data=payload)
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        table = soup.find_all(class_="odd")
+        table += soup.find_all(class_="even")
+
+        return table
+
+
+    def unidentified_patient(self,prompt):
+        query = self.build_sub_prompt(self.tesseracted_text + prompt)
+        self.patient_name = "CONFIDENTIAL, UNATTACHED (2016-10-17)"
+        self.demographic_number = "285"
+        self.mrp = ""
+        self.document_description = query +" "+ self.document_description
+        return True
 
     def set_doctor_from_code(self,name):
         #print(name)
@@ -388,30 +492,44 @@ class Workflow:
         self.append_to_file("Filtering results: ")
         if additional_param is not None:
             details = self.build_sub_prompt(self.tesseracted_text + prompt + str(additional_param))
+            cleaned_string = details.replace("[", "").replace("]", "")
             #print(details)
-            return True,details
+            return True,cleaned_string
         else:
             self.append_to_file("Skipping filtering, not connected to oscar.")
             return False
 
     def set_patient(self,additional_param=None):
-        # self.append_to_file("Storing patient details. ")
-        # if additional_param is not None:
-        #     #print(str(additional_param))
-        #     data = json.loads(additional_param)
-        #     self.patient_name = data[0]['formattedName'] + '(' + data[0]['fomattedDob'] + ')'
-        #     self.demographic_number = data[0]['demographicNo']
-        #     # Add MRP
-        #     if data[0]['providerNo'] is not None:
-        #         self.mrp = data[0]['providerNo']
-        #     return True
-        # else:
-        #     self.append_to_file("Skipping in test mode. ")
-        #     return False
-        self.patient_name = "CONFIDENTIAL, UNATTACHED (2000-01-01)"
-        self.demographic_number = "55"
-        self.mrp = ""
-        return True
+        self.append_to_file("Storing patient details. ")
+        if additional_param is not None:
+            #print(str(additional_param))
+            match = re.search(r'```json\n(.*?)```', additional_param, re.DOTALL)
+
+            if match:
+                additional_param = match.group(1)
+            
+            additional_param = additional_param.replace("'", '"')
+
+            try:
+                data = json.loads(additional_param)
+            except json.JSONDecodeError as e:
+                print(f"JSON decoding error: {e}")
+                return False
+
+            self.patient_name = data['formattedName'] + '(' + data['formattedDob'] + ')'
+            self.fl_name = data['formattedName']
+            self.demographic_number = data['demographicNo']
+            # Add MRP
+            if data['providerNo'] is not None:
+                self.mrp = data['providerNo']
+            return True
+        else:
+            self.append_to_file("Skipping in test mode. ")
+            return False
+        # self.patient_name = "CONFIDENTIAL, UNATTACHED (2000-01-01)"
+        # self.demographic_number = "55"
+        # self.mrp = ""
+        # return True
 
     def set_doctor(self,additional_param=None):
         self.append_to_file("Storing provider details. ")
@@ -436,106 +554,132 @@ class Workflow:
             return False
 
     def getProviderList(self,prompt):
-        provider_list = [
-                          {"lastname": "Ha", "firstname": "Jimmy", "provider_number": 120},
-                          {"lastname": "Joo", "firstname": "Jiyeh", "provider_number": 81},
-                          {"lastname": "Lai", "firstname": "Kevin", "provider_number": 100},
-                          {"lastname": "Liu", "firstname": "Michelle", "provider_number": 2314},
-                          {"lastname": "MOA", "firstname": "Clinic", "provider_number": 7882},
-                          {"lastname": "Poon", "firstname": "Jeffrey", "provider_number": 77},
-                          {"lastname": "Sokolowski", "firstname": "Andrew", "provider_number": 117},
-                          {"lastname": "Wang", "firstname": "Marina", "provider_number": 97},
-                          {"lastname": "Wu", "firstname": "Pearson", "provider_number": 7541},
-                          {"lastname": "Young", "firstname": "Gregory", "provider_number": 19},
-                          {"lastname": "Yu", "firstname": "Anna", "provider_number": 84}
-                        ]
+
+            # content_value = self.getProviderListFromOscarLLMMode()
+            # provider_list = json.dumps(content_value)
+
+            provider_list = self.getProviderListFromOscarFileMode()
+
+            if provider_list is None:
+                self.provider_number.append(99)
+                return True
+        
+
+            data = {
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "You are a helpful assistant designed to output JSON."
+                    },
+                    {
+                        "role": "user",
+                        "content": self.tesseracted_text+ prompt + str(provider_list)
+                    }
+                ],
+                "mode": "instruct",
+                #should be a parameter, only if needed else default api values
+                "temperature": .1,
+                "character": "Assistant",
+                #should be a parameter
+                "top_p":.1
+                #should be a parameter
+                #max_tokens:100
+            }
+            response = requests.post(self.url, headers=self.headers, json=data)
+            # print(response.json())
+            content_value = response.json()['choices'][0]['message']['content']
+
+            print(content_value)
+
+            match = re.search(r'\b\d+\b', content_value)
+
+            if match:
+                numerical_value = int(match.group())
+                self.provider_number.append(numerical_value)
+            else:
+                self.provider_number.append(99)
+
+            return True
+
+    def getProviderListFromOscarFileMode(self):
+        file_path = 'providers.csv'
+        data = []
+        try:
+            with open(file_path, 'r') as file:
+                reader = csv.DictReader(file)
+                for row in reader:
+                    transformed_row = {
+                        "lastname": row["last_name"], 
+                        "firstname": row["first_name"],    
+                        "provider_number": int(row["provider_no"]) 
+                    }
+
+                    data.append(transformed_row)
+        except FileNotFoundError as e:
+        # Handle the case where the file is not found
+            print(f"File not found: {e}")
+        except IOError as e:
+            # Handle other I/O errors (e.g., file read/write errors)
+            print(f"Error reading the file: {e}")
+
+        # print(data)
+
+        return data
+
+
+    def getProviderListFromOscarLLMMode(self):
         # to be used to get all the providers list from oscar.
         # filter_results should be used to select one from that array
-        # url = f"{self.base_url}/admin/providersearchresults.jsp"
+        url = f"{self.base_url}/admin/providersearchresults.jsp"
 
-        # # Define the payload data
-        # payload = {
-        #               "search_mode": "search_providerno",
-        #               "search_status": "All",
-        #               "keyword": "",
-        #               "button": "",
-        #               "orderby": "last_name",
-        #               "limit1": 0,
-        #               "limit2": 10000
-        #             }
+        # Define the payload data
+        payload = {
+                      "search_mode": "search_providerno",
+                      "search_status": "All",
+                      "keyword": "",
+                      "button": "",
+                      "orderby": "last_name",
+                      "limit1": 0,
+                      "limit2": 10000
+                    }
 
-        # # Send the POST request
-        # response = self.session.post(url, data=payload)
+        # Send the POST request
+        response = self.session.post(url, data=payload)
 
-        # soup = BeautifulSoup(response.text, 'html.parser')
+        soup = BeautifulSoup(response.text, 'html.parser')
 
-        # table = soup.find('table', {'id': 'tblResults'})
+        table = soup.find('table', {'id': 'tblResults'})
 
-        # if table:
-        #     #print(table)
-        #     # oscar_response = self.build_sub_prompt(self.tesseracted_text + prompt + str(table))
-        #     #print(oscar_response)
-        #     data = {
-        #         "messages": [
-        #             {
-        #                 "role": "system",
-        #                 "content": "You are a helpful assistant designed to output JSON."
-        #             },
-        #             {
-        #                 "role": "user",
-        #                 "content": "From the below html content list the lastname, firstname and provider number for all the providers and return the list as a json array. Only return the json array nothing else."+ str(table)
-        #             }
-        #         ],
-        #         "mode": "instruct",
-        #         #should be a parameter, only if needed else default api values
-        #         "temperature": .1,
-        #         "character": "Assistant",
-        #         #should be a parameter
-        #         "top_p":.1
-        #         #should be a parameter
-        #         #max_tokens:100
-        #     }
-        #     response = requests.post(self.url, headers=self.headers, json=data)
-        #     # print(response.json())
-        #     content_value = response.json()['choices'][0]['message']['content']
-        #     print(content_value)
-        #     return True
-        # else:
-        #     return False
+        if table:
+            #print(table)
+            # oscar_response = self.build_sub_prompt(self.tesseracted_text + prompt + str(table))
+            #print(oscar_response)
+            data = {
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "You are a helpful assistant designed to output JSON."
+                    },
+                    {
+                        "role": "user",
+                        "content": "From the below html content list the lastname, firstname and provider number for all the providers and return the list as a json array. Only return the json array nothing else."+ str(table)
+                    }
+                ],
+                "mode": "instruct",
+                #should be a parameter, only if needed else default api values
+                "temperature": .1,
+                "character": "Assistant",
+                #should be a parameter
+                "top_p":.1
+                #should be a parameter
+                #max_tokens:100
+            }
+            response = requests.post(self.url, headers=self.headers, json=data)
+            # print(response.json())
+            content_value = response.json()['choices'][0]['message']['content']
+            print(content_value)
+            return content_value
 
-        data = {
-            "messages": [
-                {
-                    "role": "system",
-                    "content": "You are a helpful assistant designed to output JSON."
-                },
-                {
-                    "role": "user",
-                    "content": self.tesseracted_text+ prompt + json.dumps(provider_list)
-                }
-            ],
-            "mode": "instruct",
-            #should be a parameter, only if needed else default api values
-            "temperature": .1,
-            "character": "Assistant",
-            #should be a parameter
-            "top_p":.1
-            #should be a parameter
-            #max_tokens:100
-        }
-        response = requests.post(self.url, headers=self.headers, json=data)
-        # print(response.json())
-        content_value = response.json()['choices'][0]['message']['content']
-
-        match = re.search(r'\b\d+\b', content_value)
-
-        if match:
-            numerical_value = int(match.group())
-            self.provider_number.append(numerical_value)
-        else:
-            self.provider_number.append(789456)
-
-        return True
 
     def oscar_update(self):
         print("Document Details:")
@@ -580,19 +724,24 @@ class Workflow:
             "documentDescription": self.document_description,
             "observationDate": str(datetime.datetime.now().date()),
             "demog": self.demographic_number,
-            "flagproviders":self.provider_number[0]
+            "demofindName": self.fl_name,
+            "demoName": self.fl_name,
+            "demographicKeyword": self.patient_name
         }
 
-        # params["flagproviders"] = []
+        params["flagproviders"] = []
 
-        # for value in self.provider_number:
-        #     params["flagproviders"].append(value)
+        # Add provider to all
+        self.provider_number.append(127)
+
+        for value in self.provider_number:
+            params["flagproviders"].append(value)
 
         # print(params)
 
         response = self.session.post(url, data=params)
 
-        print(response)
+        # print(response)
 
         return True
 

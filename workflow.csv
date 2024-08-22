@@ -2,7 +2,7 @@
 1,extract_text_from_pdf,4,exit
 1,extract_text_from_pdf_file,4,exit
 1,extract_text_doctr,4,exit
-1,build_prompt,"For the following question, respond in one word, only one word if confidence level is more than 85%, else reply ‘Others’. From the list, choose one that suits the type of the EMR document. Here are your options, respond with only one of terms and no other words: Lab, Consult, Insurance, Legal, Old Chart, Radiology, Photo, Consent, Pathology, Diagnostics, Pharmacy, Requisition, HCC Referrals, Request. See descriptions of these terms below; these descriptions should be only used to help you to identify the correct term, and not to be used to display in the output.
+1,build_prompt,"
 
 
 Lab: This refers to documents related to laboratory tests and results related to blood and these blood test results are meticulously recorded, often accompanied by reference ranges to provide context for interpretation. These documents may also provides information about test results related to the patient's blood sample (Whole blood) which is used to detect the presence of antibodies. This also includes documents generated from Public Health Ontario Laboratory. This also includes diagnostic for iron deficiency, Hepatitis B surface antigen test, test for amount of Urea or Creatinine in blood.
@@ -34,11 +34,21 @@ HCC Referrals: This refers to documents for incoming referrals to family physici
 
 Request: This refers to documents that requests for release for all medical records, reports and documents related to a patient's health history. This document may contain the phrases 'any and all information', ‘all medical records’, ‘complete file’, ‘cumulative patient profile’. These documents include requests to transfer medical records to another medical clinic, or family doctor.
 
-Please choose one of the most appropriate general term for the document from the provided list without adding or explaining term definition in the response.",5,5
+",5,exit
+1,patientSearch,"Answer only to the following question in one word, one word only; In one word, one word only what is the health card number / health insurance number of the patient? If the health card number is not available only return False, no other words",search_hin,6,8
+1,filter_results,"For the following request, provide only the JSON object as shown in the example, and include no additional text or explanations. Select the item from the list that matches the patient's name and date of birth. The JSON object should include all the details: formattedDob, formattedName, demographicNo (Master Demographic File number) and providerNo. Follow the example format exactly. Example JSON object format: {'formattedDob': '1951-12-08','formattedName': 'John Doe','demographicNo': '22','providerNo': '_'} Follow this format strictly and DO NOT add any other text other than JSON object in the response!",7,exit
+1,set_patient,11,exit
+1,patientSearch,"Answer only to the following question; and the answer should be in the following format; What is the Date of Birth of the patient? Format: yyyy-mm-dd",search_dob,6,9
+1,patientSearch,"Answer only to the following question; and the answer should be in the following format; What is the full name of the patient? Format: Fullname",search_name,6,10
+1,unidentified_patient,"Answer only to the following question in two words; and the answer should be in the following format. Format : Lastname, Firstname. What is the name of the patient?",11,exit
+1,oscar_update,exit,exit
+1,patientSearch,"Answer only to the following question in one word; and the answer should be in the following format; What is the Lastname (For example, consider the name Carlos Alberto Hernandez Garcia. First Name: Carlos; Middle Name(s): Alberto; Last Name: Hernandez Garcia) of the patient in only one word, one word only? Format: Lastname",search_name,6,11
 1,build_sub_prompt,"For the following question if confidence level is more than 85% give the  answer in one word using the format 'True' else 'False'. Does the document has the name of the patient?. ",6,exit
 1,get_patient_name,"Answer only to the following question in two words; and the answer should be in the following format. Format : Lastname, Firstname. What is the name of the patient?",7,7
-1,filter_results,"choose one from the following list that suits the patient the most based on the name and date of birth and give the selected item, make sure the response is just the selected item with all the details (fomattedDob,formattedName,demographicNo,nextAppointment,status,providerNo) in the provided format as of the question. Make sure the response is just the selected item nothing else! Dont add any other text than the result! Response should be in json format not as string!.",8,8
-1,set_patient,9,9
+1,filter_results,"choose one from the following list that suits the patient the most based on the name and date of birth and give the selected item, make sure the response is just the selected item with all the details (fomattedDob,formattedName,demographicNo,nextAppointment,status,providerNo) in the provided format as of the question. Make sure the response is just the selected item in json format nothing else! Dont add any other text than the json result! Response should be only in json format not as string!.",8,8
+1,build_sub_prompt,"Answer only to the following question in one word; and the answer should be in the following format. Format : Health card number. What is the health card number of the patient?",9,9
+1,build_sub_prompt,"Answer only to the following question in the following format. Format : DD-MM-YYYY. What is the date of birth of the patient?",10,10
+1,set_patient,11,11
 1,oscar_update,exit,exit
 1,ask_ai,"is this a patient document?",9,11
 1,ask_ai,"is this a patient document?",8,10
@@ -50,4 +60,3 @@ Please choose one of the most appropriate general term for the document from the
 1,update_oscar,param1,param2,11,exit
 1,flag_email,param6,exit,exit
 1,getProviderList,"From the below html content list the lastname, firstname and provider number for all the providers and return the list as a json array. Only return the json array nothing else.",exit,exit
-1,patientSearch,"Answer only to the following question in one word; what is the health card number / health insurance number of the patient?",search_hin,exit,exit

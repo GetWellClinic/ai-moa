@@ -32,7 +32,7 @@ class OscarAutomation:
         return config
 
     def save_config(self, config):
-        with open('config_file.json', 'w') as file:
+        with open('config.json', 'w') as file:
             json.dump(config, file, indent=4)
 
     def login_successful_callback(self, driver):
