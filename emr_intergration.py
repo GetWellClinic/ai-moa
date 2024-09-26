@@ -377,6 +377,9 @@ class Workflow:
                 
                 # print(name_parts)
 
+                if len(name_parts) > 5:
+                    return False
+
                 all_combinations = list(itertools.permutations(name_parts))
                 formatted_combinations = [f"%{combo[0]}%,%{'%'.join(combo[1:])}%" for combo in all_combinations]
 
