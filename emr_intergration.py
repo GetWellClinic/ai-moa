@@ -72,7 +72,8 @@ class Workflow:
                             "Pharmacy",
                             "Requisition",
                             "Referral",
-                            "Request"
+                            "Request",
+                            "Advertisement"
                         ]
 
         self.categories_code = [
@@ -90,7 +91,8 @@ class Workflow:
                             "Pharmacy",
                             "Requisition",
                             "Referral",
-                            "Request"
+                            "Request",
+                            "Advertisement"
                         ]
 
     def find_category_index(self,text):
