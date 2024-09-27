@@ -343,18 +343,40 @@ class Workflow:
             query = parts[1]
 
         if type_of_query == "search_dob":
+
+            pattern = r'\bdate of birth of the patient\b.*?[.!?]'
+            match = re.search(pattern, query)
+
+            if match:
+                query = match.group()
+                # print(query)
+
             pattern = r'\d{4}-\d{2}-\d{2}'
             match = re.search(pattern, query)
+
+            patternText = r'\b(?:January|February|March|April|May|June|July|August|September|October|November|December) \d{1,2}, \d{4}\b'
+            matchText = re.search(patternText, query)
+
             if match:
                 query = match.group()
-                print(query)
+                # print(query)
+            elif matchText:
+                query = matchText.group()
+                query = self.convert_date(query)
 
         if type_of_query == "search_hin":
-            pattern = r'\b\d+\b'
+            pattern = r'\b\d{6,}[A-Za-z]*\b'
             match = re.search(pattern, query)
             if match:
                 query = match.group()
-                print(query)
+                query = query[:-2]
+
+
+        if type_of_query == "search_name":
+            pattern = r'\bfull name of the patient\b.*?[.!?]'
+            match = re.search(pattern, query)
+            if match:
+                query = match.group()
 
         if query:
 
@@ -364,36 +386,60 @@ class Workflow:
             if ',' in query:
                 query = query.replace(',', '')
 
-            table = self.getPatientHTML(type_of_query,query)
+            if type_of_query != "search_name":
 
-            if table:
-                print(str(table))
-                return True,str(table)
+                table = self.getPatientHTML(type_of_query,query)
 
-            if type_of_query == "search_name":
-                parts = query.split(' is ')
-                if len(parts) > 1:
-                    name_parts = parts[1].split()
+                if table:
+                    # print(str(table))
+                    return True,str(table)
                 else:
-                    name_parts = query.split()
-                
-                # print(name_parts)
-
-                if len(name_parts) > 5:
                     return False
 
-                all_combinations = list(itertools.permutations(name_parts))
-                formatted_combinations = [f"%{combo[0]}%,%{'%'.join(combo[1:])}%" for combo in all_combinations]
+            parts = query.split(' is ')
+            if len(parts) > 1:
+                name_parts = parts[1].split()
+            else:
+                name_parts = query.split()
 
-                for combo in formatted_combinations:
-                    print(combo)
-                    table = self.getPatientHTML(type_of_query,combo)
+            if len(name_parts) > 5:
+                return False
+            
+            # print(name_parts)
 
-                    if table:
-                        print(str(table))
-                        return True,str(table)
-                    else:
-                        return False
+            all_combinations = list(itertools.permutations(name_parts))
+            formatted_combinations = [f"%{combo[0]}%,%{'%'.join(combo[1:])}%" for combo in all_combinations]
+
+            for combo in formatted_combinations:
+                # print(combo)
+                table = self.getPatientHTML(type_of_query,combo)
+
+                if table:
+                    # print(str(table))
+                    return True,str(table)
+
+        return False
+
+    def convert_date(self,query):
+        # Split the string into components
+        month_str, day_str, year_str = query.split()
+        day = int(day_str[:-1])  # Remove the comma and convert to integer
+        year = int(year_str)  # Convert year to integer
+
+        # Create a mapping for month names to numbers
+        months = {
+            "January": "01", "February": "02", "March": "03", "April": "04",
+            "May": "05", "June": "06", "July": "07", "August": "08",
+            "September": "09", "October": "10", "November": "11", "December": "12"
+        }
+
+        # Get the month number from the mapping
+        month = months[month_str]
+
+        # Format the date as YYYY-MM-DD
+        formatted_date = f"{year}-{month}-{day:02d}"
+        
+        return formatted_date
 
 
     def getPatientHTML(self,type_of_query,query):
@@ -615,7 +661,7 @@ class Workflow:
             # print(response.json())
             content_value = response.json()['choices'][0]['message']['content']
 
-            print(content_value)
+            # print(content_value)
 
             match = re.search(r'\b\d+\b', content_value)
 
@@ -708,11 +754,14 @@ class Workflow:
 
 
     def oscar_update(self):
-        print("Document Details:")
-        print(self.patient_name)
-        print(self.demographic_number)
+        print("================ Document Details ================")
+        print("Patient Name : "+self.patient_name)
+        print("Demographic Number : "+self.demographic_number)
+        print("Provider Number : ")
         print(self.provider_number)
-        print(self.document_description)
+        print("Document Type : "+self.fileType)
+        print("Document Description : "+self.document_description)
+        print("================ End of Document Details ================")
         url = f"{self.base_url}/dms/ManageDocument.do"
 
         # Define the parameters for incoming doc
