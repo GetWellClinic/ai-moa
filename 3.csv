@@ -1,3 +1,23 @@
-1,get_document_description,"Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document. Review the above document and provide only the output using the specified output format, without labeling it as output format:, after review perform the following steps. 1. Identify the organization who wrote this document. 2. Select one correspondance type from  CORRESPONDANCE LIST provided below. If the provided category list does not provide a strong match display the word 'Other'. Output format template: 'correspondance type (Name of the firm/company/person who requested documents or records/date of request if its requested by a patient)'. Ensure this output format template is followed precisly including brackets (), and the output must end without a period. For reference, these are examples using this output template: Request for Records (Sharma Law Firm), Attending physician’s statement (Spector Lit Law Firm), Request for Record by patient (2024-Apr-03). CORRESPONDANCE LIST: Authorization for Release of Records, Attending Physician Statement, Request for Records, Request for records by patient, Correspondance - Legal",1,1
+1,get_document_description,"Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document. Review the above document and provide only the output using the specified output format, without labeling it as output format:, after review perform the following steps. 1. Identify the organization who wrote this document. 2. Select one correspondance type from  CORRESPONDANCE LIST provided below. If the provided category list does not provide a strong match display the word 'Other'. Output format template: 'correspondance type (Name of the firm/company/person who requested documents or records/date of request if its requested by a patient)'. Ensure this output format template is followed precisly including brackets (), and the output must end without a period. For reference, these are examples using this output template: Request for Records (Sharma Law Firm), Attending physician’s statement (Spector Lit Law Firm), Request for Record by patient (2024-Apr-03). CORRESPONDANCE LIST: Authorization for Release of Records, Attending Physician Statement, Request for Records, Request for records by patient, Correspondance - Legal, Governing Law and Jurisdiction Agreement.",1,1
 1,getProviderList,"Based on the above document, select the appropriate provider from the following list who requested for this document and only return the provider number (eg: 20) nothing else",exit,exit
 1,set_doctor_from_code,John Doe",exit,exit
+1,copyright,"# COPYRIGHT © 2024 by Spring Health Corporation <office(at)springhealth.org>
+# Toronto, Ontario, Canada
+# SUMMARY: This file is part of the Get Well Clinic's original 'AI-MOA' project's collection of software,
+# documentation, and configuration files.
+# These programs, documentation, and configuration files are made available to you as open source
+# in the hopes that your clinic or organization may find it useful and improve your care to the public
+# by reducing administrative burden for your staff and service providers. 
+# NO WARRANTY: This software and related documentation is provided 'AS IS' and WITHOUT ANY WARRANTY of any kind;
+# and WITHOUT EXPRESS OR IMPLIED WARRANTY OF SUITABILITY, MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+# LICENSE: This software is licensed under the 'GNU Affero General Public License Version 3'.
+# Please see LICENSE file for full details. Or contact the Free Software Foundation for more details.
+# ***
+# NOTICE: We hope that you will consider contributing to our common source code repository so that
+# others may benefit from your shared work.
+# However, if you distribute this code or serve this application to users in modified form,
+# or as part of a derivative work, you are required to make your modified or derivative work
+# source code available under the same herein described license.
+# Please notify Spring Health Corp <office(at)springhealth.org> where your modified or derivative work
+# source code can be acquired publicly in its latest most up-to-date version, within one month.
+# ***",exit,exit
