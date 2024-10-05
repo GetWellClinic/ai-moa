@@ -36,70 +36,38 @@ from doctr.models import ocr_predictor
 class Workflow:
     def __init__(self, filepath):
         self.patient_name = ''
-        self.fileType = ''
+        self.file_type = ''
         self.demographic_number = ''
         self.mrp = ''
         self.provider_number = []
-        self.logFile = "log_test_20.txt"
+        self.log_file = "log_test_20.txt"
         self.document_description = ''
         self.filepath = filepath
         self.tesseracted_text = None
-        # self.session = session
-        # self.base_url = base_url
-        # self.file_name = file_name
         self.enable_ocr_gpu = True
         self.url = "http://127.0.0.1:5000/v1/chat/completions"
-        # the Authorization qwerty will have to be changed, this for testing
         self.headers = {
             "Authorization": "Bearer qwerty",
             "Content-Type": "application/json"
         }
         self.categories = [
-                            "Lab",
-                            "Consult",
-                            "Insurance",
-                            "Legal",
-                            "Old Chart",
-                            "Radiology",
-                            "Pathology",
-                            "Others",
-                            "Photo",
-                            "Consent",
-                            "Diagnostics",
-                            "Pharmacy",
-                            "Requisition",
-                            "Referral",
-                            "Request"
-                        ]
-
+            "Lab", "Consult", "Insurance", "Legal", "Old Chart", "Radiology",
+            "Pathology", "Others", "Photo", "Consent", "Diagnostics",
+            "Pharmacy", "Requisition", "Referral", "Request"
+        ]
         self.categories_code = [
-                            "Lab",
-                            "Consult",
-                            "Insurance",
-                            "Legal",
-                            "OldChart",
-                            "Radiology",
-                            "Pathology",
-                            "Others",
-                            "Photo",
-                            "Consent",
-                            "Diagnostics",
-                            "Pharmacy",
-                            "Requisition",
-                            "Referral",
-                            "Request"
-                        ]
+            "Lab", "Consult", "Insurance", "Legal", "OldChart", "Radiology",
+            "Pathology", "Others", "Photo", "Consent", "Diagnostics",
+            "Pharmacy", "Requisition", "Referral", "Request"
+        ]
 
-    def find_category_index(self,text):
-        # print("inside find_category_index")
+    def find_category_index(self, text):
         if '.' in text:
             text = text.replace('.', '')
         for index, category in enumerate(self.categories_code):
             for word in text.split():
                 if word.lower() == category.lower():
-                    # print(index)
-                    #set file type
-                    self.fileType = category.lower()
+                    self.file_type = category.lower()
                     self.execute_tasks_from_csv(index)
                     return True
         return False
@@ -516,16 +484,12 @@ class Workflow:
     #     return random.choice([True, True])
 
 
-    def execute_task(self,task, previous_result=None):
+    def execute_task(self, task, previous_result=None):
         task_number, function_name, *params, true_next_row, false_next_row = task
         function_to_call = getattr(self, function_name, None)
         
         if function_to_call and callable(function_to_call):
             print(f"Executing Task {task_number} with function {function_name} and parameters: {', '.join(params)}")
-            
-            # if len(params) != 0:
-            #     self.append_to_file("Prompt:")
-            #     self.append_to_file("Prompt: ".join(params))
             
             if 'additional_param' in function_to_call.__code__.co_varnames:
                 additional_param = previous_result if previous_result is not None else None
@@ -536,17 +500,12 @@ class Workflow:
             print(f"Response from {function_name}: {response}")
 
             if isinstance(response, tuple) and len(response) > 1:
-                if response[0]:
-                    return true_next_row, response[1]
-                else:
-                    return false_next_row,response[1]
-            else:
-                return true_next_row if response else false_next_row 
-        else:
-            print(f"Error: Function {function_name} not found or not callable.")
-            return false_next_row 
+                return (true_next_row, response[1]) if response[0] else (false_next_row, response[1])
+            return true_next_row if response else false_next_row 
+        print(f"Error: Function {function_name} not found or not callable.")
+        return false_next_row 
 
-    def execute_tasks(self,tasks, current_row, previous_result=None):
+    def execute_tasks(self, tasks, current_row, previous_result=None):
         if current_row >= len(tasks):
             print("Reached end of tasks.")
             return
@@ -557,38 +516,32 @@ class Workflow:
             return
 
         if isinstance(next_row, tuple): 
-            #print(next_row)
             next_row_index = int(next_row[0])
             next_result = next_row[1] if len(next_row) > 1 else None
             self.execute_tasks(tasks, next_row_index, previous_result=next_result)
-        else:
-            next_row_parts = next_row.split(",") if next_row else None
-            if next_row_parts:
-                next_row_index = int(next_row_parts[0])
-                next_result = next_row_parts[1] if len(next_row_parts) > 1 else None
-                self.execute_tasks(tasks, next_row_index, previous_result=next_result)
+        elif next_row:
+            next_row_parts = next_row.split(",")
+            next_row_index = int(next_row_parts[0])
+            next_result = next_row_parts[1] if len(next_row_parts) > 1 else None
+            self.execute_tasks(tasks, next_row_index, previous_result=next_result)
 
-
-    def read_tasks_from_csv(self,file_path):
+    def read_tasks_from_csv(self, file_path):
         tasks = []
         with open(file_path, 'r') as file:
             reader = csv.reader(file)
-            for row in reader:
-                tasks.append(row)
+            tasks = list(reader)
         return tasks
 
-    def execute_tasks_from_csv(self,index=None):
-        if index is None:
-            tasks = self.read_tasks_from_csv('workflows/workflow.csv')
-        else:
-            tasks = self.read_tasks_from_csv(f'workflows/{index}.csv')
+    def execute_tasks_from_csv(self, index=None):
+        file_path = 'workflows/workflow.csv' if index is None else f'workflows/{index}.csv'
+        tasks = self.read_tasks_from_csv(file_path)
         print(self.filepath)
         self.execute_tasks(tasks, 0)
 
-    def append_to_file(self,content):
+    def append_to_file(self, content):
         print(content)
-        with open(self.logFile, "a") as file:
-            file.write(content + "\n")
+        with open(self.log_file, "a") as file:
+            file.write(f"{content}\n")
 
 def get_pdf_files(folder_path):
     pdf_files = []

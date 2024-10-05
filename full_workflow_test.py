@@ -33,76 +33,44 @@ import time
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 import guidance
-from guidance import models,gen,select
+from guidance import models, gen, select
 
 class Workflow:
     def __init__(self, filepath):
         self.patient_name = ''
-        self.fileType = ''
+        self.file_type = ''
         self.demographic_number = ''
         self.mrp = ''
         self.provider_number = []
-        self.logFile = "log_test_13_guidance.txt"
+        self.log_file = "log_test_13_guidance.txt"
         self.document_description = ''
         self.filepath = filepath
         self.tesseracted_text = None
         self.mistral = guidance.models.OpenAI("gpt-3.5-turbo-instruct")
-        # self.session = session
-        # self.base_url = base_url
-        # self.file_name = file_name
         self.enable_ocr_gpu = True
         self.url = "http://127.0.0.1:5000/v1/chat/completions"
-        # the Authorization qwerty will have to be changed, this for testing
         self.headers = {
             "Authorization": "Bearer qwerty",
             "Content-Type": "application/json"
         }
         self.categories = [
-                            "Lab",
-                            "Consult",
-                            "Insurance",
-                            "Legal",
-                            "Old Chart",
-                            "Radiology",
-                            "Pathology",
-                            "Others",
-                            "Photo",
-                            "Consent",
-                            "Diagnostics",
-                            "Pharmacy",
-                            "Requisition",
-                            "Referral",
-                            "Request"
-                        ]
-
+            "Lab", "Consult", "Insurance", "Legal", "Old Chart", "Radiology",
+            "Pathology", "Others", "Photo", "Consent", "Diagnostics",
+            "Pharmacy", "Requisition", "Referral", "Request"
+        ]
         self.categories_code = [
-                            "Lab",
-                            "Consult",
-                            "Insurance",
-                            "Legal",
-                            "OldChart",
-                            "Radiology",
-                            "Pathology",
-                            "Others",
-                            "Photo",
-                            "Consent",
-                            "Diagnostics",
-                            "Pharmacy",
-                            "Requisition",
-                            "Referral",
-                            "Request"
-                        ]
+            "Lab", "Consult", "Insurance", "Legal", "OldChart", "Radiology",
+            "Pathology", "Others", "Photo", "Consent", "Diagnostics",
+            "Pharmacy", "Requisition", "Referral", "Request"
+        ]
 
-    def find_category_index(self,text):
-        # print("inside find_category_index")
+    def find_category_index(self, text):
         if '.' in text:
             text = text.replace('.', '')
         for index, category in enumerate(self.categories_code):
             for word in text.split():
                 if word.lower() == category.lower():
-                    # print(index)
-                    #set file type
-                    self.fileType = category.lower()
+                    self.file_type = category.lower()
                     self.execute_tasks_from_csv(index)
                     return True
         return False
@@ -148,35 +116,21 @@ class Workflow:
     def extract_text_doctr(self):
         start_time = time.time()
         pdf_path = self.filepath
-        # print(pdf_path)
         text = ''
         try:
-            if(self.enable_ocr_gpu == True):
+            if self.enable_ocr_gpu:
                 device = torch.device("cuda:0")
                 model = ocr_predictor(pretrained=True).to(device)
             else:
                 model = ocr_predictor(pretrained=True)
-            # PDF
             doc = DocumentFile.from_pdf(pdf_path)
-
-            # Analyze
             result = model(doc)
-            # Iterate through pages
             for page in result.pages:
-                #print(f"Page {page.page_idx}:")
-                
-                # Iterate through blocks
                 for block in page.blocks:
-                    #print("Block:")
-                    
-                    # Iterate through lines
                     for line in block.lines:
                         text += '\n'
-                        
-                        # Print words in the line
                         for word in line.words:
                             text += word.value + ' '
-
             self.tesseracted_text = text
             end_time = time.time()
             elapsed_time = end_time - start_time
@@ -185,7 +139,7 @@ class Workflow:
             self.mistral += text
             return True
         except Exception as e:
-            print("An error occurred:", e)
+            print(f"An error occurred: {e}")
             return False
 
     def extract_text_from_pdf_file(self):
@@ -205,62 +159,29 @@ class Workflow:
             print("An error occurred:", e)
             return False
 
-    def build_prompt(self,prompt):
+    def build_prompt(self, prompt):
         start_time = time.time()
-        # data = {
-        #     "messages": [
-        #         {
-        #             "role": "system",
-        #             "content": "You are a helpful assistant designed to output JSON."
-        #         },
-        #         {
-        #             "role": "user",
-        #             "content": self.tesseracted_text + '. '+ prompt
-        #         }
-        #     ],
-        #     "mode": "instruct",
-        #     #should be a parameter, only if needed else default api values
-        #     "temperature": .1,
-        #     "character": "Assistant",
-        #     #should be a parameter
-        #     "top_p":.1
-        #     #should be a parameter
-        #     #max_tokens:100
-        # }
-        # response = requests.post(self.url, headers=self.headers, json=data)
-        # # print(response.json())
-        # content_value = response.json()['choices'][0]['message']['content']
-        # self.append_to_file("Response:")
-        # self.append_to_file(content_value)
-        # return True
         max_attempts = 5
         attempts = 0
         while attempts < max_attempts:
             try:
                 with guidance.user():
                     lm = self.mistral + prompt
-                    # self.append_to_file("Response before select:")
-                    # self.append_to_file(lm["response"])
                 with guidance.assistant():
-                    lm += select(self.categories,name='ans')
+                    lm += select(self.categories, name='ans')
                 end_time = time.time()
                 elapsed_time = end_time - start_time
-                # self.append_to_file("Response:")
-                # self.append_to_file(lm["response"])
-                # self.append_to_file(response.json()['choices'][0]['message']['content'])
                 self.append_to_file("Time taken for the prompt:")
                 self.append_to_file(str(elapsed_time))
-                self.append_to_file("Document Type: "+lm["ans"])
-                # self.find_category_index(lm["response"])
+                self.append_to_file(f"Document Type: {lm['ans']}")
                 return True
             except guidance.models._model.ConstraintException as e:
                 attempts += 1
                 self.append_to_file(f"Attempt {attempts} failed. Retrying...")
-        else:
-            return False
+        return False
 
 
-    def build_sub_prompt(self,prompt):
+    def build_sub_prompt(self, prompt):
         start_time = time.time()
         data = {
             "messages": [
@@ -270,25 +191,21 @@ class Workflow:
                 },
                 {
                     "role": "user",
-                    "content": self.tesseracted_text + '. '+ prompt
+                    "content": f"{self.tesseracted_text}. {prompt}"
                 }
             ],
             "mode": "instruct",
-            "temperature": .1,
+            "temperature": 0.1,
             "character": "Assistant",
-            "top_p":.1
-            #max_tokens:100
+            "top_p": 0.1
         }
         response = requests.post(self.url, headers=self.headers, json=data)
-        #lm = self.mistral + prompt + gen(stop='.', name="response")
         end_time = time.time()
         elapsed_time = end_time - start_time
         self.append_to_file("Response:")
-        # self.append_to_file(lm["response"])
         self.append_to_file(response.json()['choices'][0]['message']['content'])
         self.append_to_file("Time taken for the prompt:")
         self.append_to_file(str(elapsed_time))
-        # return lm["response"]
         return response.json()['choices'][0]['message']['content']
 
     def get_patient_name(self,prompt):
@@ -514,16 +431,12 @@ class Workflow:
     #     return random.choice([True, True])
 
 
-    def execute_task(self,task, previous_result=None):
+    def execute_task(self, task, previous_result=None):
         task_number, function_name, *params, true_next_row, false_next_row = task
         function_to_call = getattr(self, function_name, None)
         
         if function_to_call and callable(function_to_call):
             print(f"Executing Task {task_number} with function {function_name} and parameters: {', '.join(params)}")
-            
-            # if len(params) != 0:
-            #     self.append_to_file("Prompt:")
-            #     self.append_to_file("Prompt: ".join(params))
             
             if 'additional_param' in function_to_call.__code__.co_varnames:
                 additional_param = previous_result if previous_result is not None else None
@@ -534,17 +447,12 @@ class Workflow:
             print(f"Response from {function_name}: {response}")
 
             if isinstance(response, tuple) and len(response) > 1:
-                if response[0]:
-                    return true_next_row, response[1]
-                else:
-                    return false_next_row,response[1]
-            else:
-                return true_next_row if response else false_next_row 
-        else:
-            print(f"Error: Function {function_name} not found or not callable.")
-            return false_next_row 
+                return (true_next_row, response[1]) if response[0] else (false_next_row, response[1])
+            return true_next_row if response else false_next_row 
+        print(f"Error: Function {function_name} not found or not callable.")
+        return false_next_row 
 
-    def execute_tasks(self,tasks, current_row, previous_result=None):
+    def execute_tasks(self, tasks, current_row, previous_result=None):
         if current_row >= len(tasks):
             print("Reached end of tasks.")
             return
@@ -555,65 +463,51 @@ class Workflow:
             return
 
         if isinstance(next_row, tuple): 
-            #print(next_row)
             next_row_index = int(next_row[0])
             next_result = next_row[1] if len(next_row) > 1 else None
             self.execute_tasks(tasks, next_row_index, previous_result=next_result)
-        else:
-            next_row_parts = next_row.split(",") if next_row else None
-            if next_row_parts:
-                next_row_index = int(next_row_parts[0])
-                next_result = next_row_parts[1] if len(next_row_parts) > 1 else None
-                self.execute_tasks(tasks, next_row_index, previous_result=next_result)
+        elif next_row:
+            next_row_parts = next_row.split(",")
+            next_row_index = int(next_row_parts[0])
+            next_result = next_row_parts[1] if len(next_row_parts) > 1 else None
+            self.execute_tasks(tasks, next_row_index, previous_result=next_result)
 
-
-    def read_tasks_from_csv(self,file_path):
+    def read_tasks_from_csv(self, file_path):
         tasks = []
         with open(file_path, 'r') as file:
             reader = csv.reader(file)
-            for row in reader:
-                tasks.append(row)
+            tasks = list(reader)
         return tasks
 
-    def execute_tasks_from_csv(self,index=None):
-        if index is None:
-            tasks = self.read_tasks_from_csv('workflows/workflow.csv')
-        else:
-            tasks = self.read_tasks_from_csv(f'workflows/{index}.csv')
+    def execute_tasks_from_csv(self, index=None):
+        file_path = 'workflows/workflow.csv' if index is None else f'workflows/{index}.csv'
+        tasks = self.read_tasks_from_csv(file_path)
         print(self.filepath)
         self.execute_tasks(tasks, 0)
 
-    def append_to_file(self,content):
+    def append_to_file(self, content):
         print(content)
-        with open(self.logFile, "a") as file:
-            file.write(content + "\n")
+        with open(self.log_file, "a") as file:
+            file.write(f"{content}\n")
 
 def get_pdf_files(folder_path):
     pdf_files = []
-    files_to_remove = {
-        "Sample-C10-002.pdf"
-    }
-    retrying_files = {
-        
-    }
+    files_to_remove = {"Sample-C10-002.pdf"}
+    retrying_files = set()
     files_to_remove.update(retrying_files)
     for file in os.listdir(folder_path):
         if file.endswith(".pdf") and file not in files_to_remove:
             pdf_files.append(file)
     return pdf_files
-    # return ["Sample-C3-003.pdf"]
 
 if __name__ == "__main__":
     folder_path = "/home/justinjoseph/Documents/AI-MOA/all_files/"
-    #print(folder_path)
     pdf_files = get_pdf_files(folder_path)
     for pdf_file in pdf_files:
         start_time = time.time()
-        workflow = Workflow(folder_path+pdf_file)
-        workflow.append_to_file("File: "+pdf_file)
+        workflow = Workflow(os.path.join(folder_path, pdf_file))
+        workflow.append_to_file(f"File: {pdf_file}")
         workflow.execute_tasks_from_csv()
         end_time = time.time()
         elapsed_time = end_time - start_time
-        workflow.append_to_file("Time taken for the file "+ pdf_file +" : ")
-        workflow.append_to_file(str(elapsed_time))
-        # break
+        workflow.append_to_file(f"Time taken for the file {pdf_file}: {elapsed_time}")
