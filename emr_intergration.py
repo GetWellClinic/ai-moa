@@ -122,27 +122,13 @@ class Workflow:
             print("An error occurred:", e)
             return False
 
+    # This method is not used and relies on pytesseract which is not imported
+    # If needed in the future, uncomment and add necessary imports
+    """
     def extract_text_from_pdf(self):
-        pdf_path = self.filepath
-        try:
-            pdf_document = fitz.open(pdf_path)
-            extracted_text = ''
-            for page_num in range(len(pdf_document)):
-                page = pdf_document.load_page(page_num)
-                image_list = page.get_images(full=True)
-                for img_index, img in enumerate(image_list):
-                    xref = img[0]
-                    base_image = pdf_document.extract_image(xref)
-                    image_bytes = base_image["image"]
-                    image = Image.open(io.BytesIO(image_bytes))
-                    
-                    image_text = pytesseract.image_to_string(image)
-                    extracted_text += image_text + '\n'
-            self.tesseracted_text = extracted_text
-            return True
-        except Exception as e:
-            print("An error occurred:", e)
-            return False
+        # Implementation removed
+        pass
+    """
 
     def extract_text_doctr(self):
         start_time = time.time()

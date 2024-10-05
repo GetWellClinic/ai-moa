@@ -60,27 +60,19 @@ class OscarAutomation:
         login_url = f"{self.base_url}/login.do"
         return self.login.login(driver, login_url)
 
-    def process_pdfs(self):
-        chrome_options = Options()
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
-
-        self.login = Login(self.username, self.password, self.pin, self.base_url)
-        self.pdf_processor = PdfProcessor(self.base_url, self.session, self.last_processed_pdf,self.enable_ocr_gpu)
-        self.config["last_processed_pdf"] = self.pdf_processor.process_pdfs(driver, f"{self.base_url}/login.do", self.login_successful_callback)
-        self.save_config(self.config)
-        driver.quit()
-
     def process_documents(self):
         chrome_options = Options()
+        chrome_options.add_argument("--headless")  # Run in headless mode
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
-        self.login = Login(self.username, self.password, self.pin, self.base_url)
-        self.document_processor = DocumentProcessor(self.base_url, self.session, self.last_pending_doc_file, self.enable_ocr_gpu)
-        self.config["last_pending_doc_file"] = self.document_processor.process_documents(driver, f"{self.base_url}/login.do", self.login_successful_callback)
-        self.save_config(self.config)
-        driver.quit()
+        try:
+            self.login = Login(self.username, self.password, self.pin, self.base_url)
+            self.document_processor = DocumentProcessor(self.base_url, self.session, self.last_pending_doc_file, self.enable_ocr_gpu)
+            self.config["last_pending_doc_file"] = self.document_processor.process_documents(driver, f"{self.base_url}/login.do", self.login_successful_callback)
+            self.save_config(self.config)
+        finally:
+            driver.quit()
 
 if __name__ == "__main__":
     oscar = OscarAutomation()
-    # oscar.process_pdfs()
     oscar.process_documents()

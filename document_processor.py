@@ -32,15 +32,11 @@ class DocumentProcessor:
         file_url = f"{self.base_url}/dms/ManageDocument.do?method=display&doc_no={name}"
         file_response = self.session.get(file_url)
         if file_response.status_code == 200 and file_response.content:
-            # content_type = file_response.headers.get("content-type")
-            # file_extension = content_type.split("/")[-1] if content_type else "txt"
-            # filename = f"{name}.{file_extension}"
-
             with open("downloaded_pdf.pdf", "wb") as file:
                 file.write(file_response.content)
             return True
         else:
-            print("Failed to fetch file content. Status code:", file_response.status_code)
+            print(f"Failed to fetch file content. Status code: {file_response.status_code}")
             return False
 
     def process_documents(self, driver, login_url, login_successful_callback):
