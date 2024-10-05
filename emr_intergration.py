@@ -156,6 +156,7 @@ class Workflow:
     def extract_text_doctr(self):
         start_time = time.time()
         pdf_path = self.filepath
+        self.logger.debug(f"Processing PDF: {pdf_path}")
         self.logger.debug("Processing PDF: %s", pdf_path)
         text = ''
         try:
@@ -878,7 +879,7 @@ class Workflow:
         function_to_call = getattr(self, function_name, None)
         
         if function_to_call and callable(function_to_call):
-            print(f"Executing Task {task_number} with function {function_name} and parameters: {', '.join(params)}")
+            self.logger.info(f"Executing Task {task_number} with function: {function_name} and parameters: {', '.join(params)}")
             
             # if len(params) != 0:
             #     self.append_to_file("Prompt:")
@@ -890,7 +891,7 @@ class Workflow:
             else:
                 response = function_to_call(*params)
 
-            print(f"Response from {function_name}: {response}")
+            self.logger.debug(f"Response from {function_name}: {response}")
 
             if isinstance(response, tuple) and len(response) > 1:
                 if response[0]:
@@ -900,17 +901,17 @@ class Workflow:
             else:
                 return true_next_row if response else false_next_row 
         else:
-            print(f"Error: Function {function_name} not found or not callable.")
+            self.logger.error(f"Error: Function {function_name} not found or not callable.")
             return false_next_row 
 
     def execute_tasks(self,tasks, current_row, previous_result=None):
         if current_row >= len(tasks):
-            print("Reached end of tasks.")
+            self.logger.info("Reached end of tasks.")
             return
 
         next_row = self.execute_task(tasks[current_row], previous_result)
         if next_row == 'exit':
-            print("Exiting task execution.")
+            self.logger.info("Exiting task execution.")
             return
 
         if isinstance(next_row, tuple): 
@@ -940,10 +941,11 @@ class Workflow:
         else:
             tasks = self.read_tasks_from_csv(str(index)+'.csv')
         self.logger.debug("Processing file: %s", self.filepath)
+        self.logger.debug(f"Processing file: {self.filepath}")
         self.execute_tasks(tasks, 0)
 
     def append_to_file(self,content):
-        print(content)
+        self.logger.debug(content)
         with open(self.logFile, "a") as file:
             file.write(content + "\n")
 
