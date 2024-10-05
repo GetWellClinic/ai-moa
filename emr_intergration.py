@@ -99,7 +99,7 @@ class Workflow:
                         ]
 
     def find_category_index(self,text):
-        # print("inside find_category_index")
+        self.logger.debug("Inside find_category_index")
         if '.' in text:
             text = text.replace('.', '')
         for word in text.split():
@@ -109,7 +109,7 @@ class Workflow:
                 if "'" in word:
                     word = word.replace("'", "")
                 if word.lower() == category.lower():
-                    # print(index)
+                    self.logger.debug(f"Category index found: {index}")
                     #set file type
                     self.fileType = category.lower()
                     self.execute_tasks_from_csv(index)
@@ -543,7 +543,7 @@ class Workflow:
                 self.logger.debug("Processing item: %s", item)
                 if isinstance(item, dict):
                     if 'providerNo' in item:
-                        #print(item['providerNo'])
+                        self.logger.debug(f"Provider number: {item['providerNo']}")
                         self.provider_number.append(item['providerNo'])
 
             self.logger.debug("Provider numbers: %s", self.provider_number)
@@ -555,7 +555,7 @@ class Workflow:
 
     def get_doctor_name(self,prompt):
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
-        #print("inside get doctor")
+        self.logger.debug("Getting doctor name")
         self.logger.debug(f"Patient name: {name}")
         array_pattern = r'\[.*?\]'
         #name = "Sokolowski"
@@ -765,7 +765,7 @@ class Workflow:
         if table:
             #print(table)
             # oscar_response = self.build_sub_prompt(self.tesseracted_text + prompt + str(table))
-            #print(oscar_response)
+            self.logger.debug("Oscar response: %s", oscar_response)
             data = {
                 "messages": [
                     {
@@ -962,3 +962,4 @@ def get_pdf_files(folder_path):
     pdf_files_sorted = sorted(pdf_files)
     return pdf_files_sorted
     # return ["Sample-C10-001.pdf"]
+        self.logger.debug(f"Patient name: {name}")

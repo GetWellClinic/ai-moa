@@ -415,7 +415,7 @@ class Workflow:
             #additional_param = '[{"firstName": "Michelle", "lastName": "Liu", "ohipNo": "", "providerNo": "999998"},{"firstName": "John", "lastName": "Doe", "ohipNo": "", "providerNo": "999998"}]'
             self.logger.debug("Additional param: %s", additional_param)
             data = json.loads(additional_param)
-            print(data)
+            self.logger.debug("Provider data: %s", data)
             for item in data:
                 self.logger.debug("Processing item: %s", item)
                 if isinstance(item, dict):
