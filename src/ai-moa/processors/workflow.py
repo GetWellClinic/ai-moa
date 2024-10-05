@@ -12,10 +12,10 @@ def getPatientHTML(self, type_of_query, query):
             "fromMessenger": "False",
             "outofdomain": ""
         }
-        response = self.session.post(url, data=payload)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        table = soup.find_all(class_="odd") + soup.find_all(class_="even")
-        return table
+    response = self.session.post(url, data=payload)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    table = soup.find_all(class_="odd") + soup.find_all(class_="even")
+    return table
     def getProviderListFromOscarFileMode(self):
         file_path = 'providers.csv'
         data = []
