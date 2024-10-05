@@ -175,7 +175,7 @@ class Workflow:
                 
                 # Iterate through blocks
                 for block in page.blocks:
-                self.logger.debug("Processing block")
+                    self.logger.debug("Processing block")
                     
                     # Iterate through lines
                     for line in block.lines:
