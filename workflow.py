@@ -11,10 +11,11 @@ from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 from bs4 import BeautifulSoup
 
+
 class Workflow:
     def __init__(self, filepath, session, base_url, file_name, enable_ocr_gpu):
         self.patient_name = ''
-        self.fileType = ''
+        self.file_type = ''
         self.demographic_number = ''
         self.mrp = ''
         self.provider_number = []
@@ -48,7 +49,7 @@ class Workflow:
             for word in text.split():
                 if word.lower() == category.lower():
                     print(index)
-                    self.fileType = category.lower()
+                    self.file_type = category.lower()
                     self.execute_tasks_from_csv(index)
                     return True
         return False
@@ -87,7 +88,7 @@ class Workflow:
             self.tesseracted_text = text
             return True
         except Exception as e:
-            print("An error occurred:", e)
+            print(f"An error occurred: {e}")
             return False
 
     def extract_text_from_pdf_file(self):
@@ -103,7 +104,7 @@ class Workflow:
             self.tesseracted_text = text
             return True
         except Exception as e:
-            print("An error occurred:", e)
+            print(f"An error occurred: {e}")
             return False
 
     def build_prompt(self, prompt):
@@ -115,13 +116,13 @@ class Workflow:
                 },
                 {
                     "role": "user",
-                    "content": self.tesseracted_text + '. ' + prompt
+                    "content": f"{self.tesseracted_text}. {prompt}"
                 }
             ],
             "mode": "instruct",
-            "temperature": .1,
+            "temperature": 0.1,
             "character": "Assistant",
-            "top_p": .1
+            "top_p": 0.1
         }
         response = requests.post(self.url, headers=self.headers, json=data)
         print(response.json())
@@ -143,15 +144,15 @@ class Workflow:
                 }
             ],
             "mode": "instruct",
-            "temperature": .1,
+            "temperature": 0.1,
             "character": "Assistant",
-            "top_p": .1
+            "top_p": 0.1
         }
         response = requests.post(self.url, headers=self.headers, json=data)
         return response.json()['choices'][0]['message']['content']
 
     def get_patient_name(self, prompt):
-        name = self.build_sub_prompt(self.tesseracted_text + prompt)
+        name = self.build_sub_prompt(f"{self.tesseracted_text}{prompt}")
         if '.' in name:
             name = name.replace('.', '')
         print(name)
@@ -161,13 +162,11 @@ class Workflow:
         }
         response = self.session.post(url, data=payload)
         response_data = json.loads(response.text)
-        if len(response_data["results"]) == 0:
+        if not response_data["results"]:
             return False
-        else:
-            return True, response_data["results"]
+        return True, response_data["results"]
 
     def set_doctor_from_code(self, name):
-        oscar_response = []
         if name:
             if '.' in name:
                 name = name.replace('.', '')
@@ -178,16 +177,13 @@ class Workflow:
             response = self.session.post(url, data=payload)
             data = json.loads(response.text)
             for item in data["results"]:
-                if isinstance(item, dict):
-                    if 'providerNo' in item:
-                        self.provider_number.append(item['providerNo'])
-            if self.provider_number is not None:
-                return True
-            else:
-                return False
+                if isinstance(item, dict) and 'providerNo' in item:
+                    self.provider_number.append(item['providerNo'])
+            return bool(self.provider_number)
+        return False
 
     def get_doctor_name(self, prompt):
-        name = self.build_sub_prompt(self.tesseracted_text + prompt)
+        name = self.build_sub_prompt(f"{self.tesseracted_text}{prompt}")
         print(name)
         oscar_response = []
         if name:
@@ -199,16 +195,13 @@ class Workflow:
             }
             response = self.session.post(url, data=payload)
             response_data = json.loads(response.text)
-            if len(response_data["results"]) != 0:
+            if response_data["results"]:
                 results = response_data["results"]
                 if isinstance(results, list):
-                    for item in results:
-                        if isinstance(item, dict):
-                            oscar_response.append(item)
-            if len(oscar_response) != 0:
+                    oscar_response = [item for item in results if isinstance(item, dict)]
+            if oscar_response:
                 return True, oscar_response
-            else:
-                return False
+        return False
 
     def get_document_description(self, prompt):
         result = self.build_sub_prompt(self.tesseracted_text + prompt)
@@ -308,7 +301,7 @@ class Workflow:
             "pdfAction": "",
             "lastdemographic_no": "1",
             "entryMode": "Fast",
-            "docType": self.fileType,
+            "docType": self.file_type,
             "docClass": "",
             "docSubClass": "",
             "documentDescription": self.document_description,
@@ -322,10 +315,8 @@ class Workflow:
             "ProvKeyword": "",
             "save": "Save & Next"
         }
-        params["flagproviders"] = []
-        for value in self.provider_number:
-            params["flagproviders"].append(value)
-        response = self.session.post(url, data=params)
+        params["flagproviders"] = self.provider_number.copy()
+        self.session.post(url, data=params)
         return True
 
     def execute_task(self, task, previous_result=None):
@@ -346,14 +337,12 @@ class Workflow:
 
                 if isinstance(response, tuple) and len(response) > 1:
                     return (true_next_row, response[1]) if response[0] else (false_next_row, response[1])
-                else:
-                    return true_next_row if response else false_next_row 
+                return true_next_row if response else false_next_row 
             except Exception as e:
                 print(f"Error executing {function_name}: {e}")
                 return false_next_row
-        else:
-            print(f"Error: Function {function_name} not found or not callable.")
-            return false_next_row 
+        print(f"Error: Function {function_name} not found or not callable.")
+        return false_next_row 
 
     def execute_tasks(self, tasks, current_row, previous_result=None):
         if current_row >= len(tasks):
@@ -369,12 +358,11 @@ class Workflow:
             next_row_index = int(next_row[0])
             next_result = next_row[1] if len(next_row) > 1 else None
             self.execute_tasks(tasks, next_row_index, previous_result=next_result)
-        else:
-            next_row_parts = next_row.split(",") if next_row else None
-            if next_row_parts:
-                next_row_index = int(next_row_parts[0])
-                next_result = next_row_parts[1] if len(next_row_parts) > 1 else None
-                self.execute_tasks(tasks, next_row_index, previous_result=next_result)
+        elif next_row:
+            next_row_parts = next_row.split(",")
+            next_row_index = int(next_row_parts[0])
+            next_result = next_row_parts[1] if len(next_row_parts) > 1 else None
+            self.execute_tasks(tasks, next_row_index, previous_result=next_result)
 
     def read_tasks_from_csv(self, file_path):
         tasks = []
