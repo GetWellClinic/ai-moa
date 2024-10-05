@@ -531,6 +531,8 @@ class Workflow:
             # Send the POST request
             response = self.session.post(url, data=payload)
 
+            self.logger.debug(f"Provider search response: {response.text}")
+
             self.logger.debug(f"Patient search response: {response.text}")
 
             data = json.loads(response.text)
@@ -572,6 +574,8 @@ class Workflow:
 
             # Send the POST request
             response = self.session.post(url, data=payload)
+
+            self.logger.debug(f"Provider search response: {response.text}")
 
             self.logger.debug(f"Patient search response: {response.text}")
 
