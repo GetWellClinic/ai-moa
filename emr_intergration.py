@@ -557,7 +557,7 @@ class Workflow:
     def get_doctor_name(self,prompt):
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
         self.logger.debug("Getting doctor name")
-        self.logger.debug("Patient name: %s", name)
+        self.logger.debug("Doctor name: %s", name)
         array_pattern = r'\[.*?\]'
         #name = "Sokolowski"
         #array_match = re.search(array_pattern, names)
