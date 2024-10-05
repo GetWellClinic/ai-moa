@@ -63,15 +63,25 @@ class OscarAutomation:
     def process_documents(self):
         chrome_options = Options()
         chrome_options.add_argument("--headless")  # Run in headless mode
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
 
         try:
+            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
             self.login = Login(self.username, self.password, self.pin, self.base_url)
             self.document_processor = DocumentProcessor(self.base_url, self.session, self.last_pending_doc_file, self.enable_ocr_gpu)
-            self.config["last_pending_doc_file"] = self.document_processor.process_documents(driver, f"{self.base_url}/login.do", self.login_successful_callback)
-            self.save_config(self.config)
+            new_last_pending_doc_file = self.document_processor.process_documents(driver, f"{self.base_url}/login.do", self.login_successful_callback)
+            
+            if new_last_pending_doc_file is not None:
+                self.config["last_pending_doc_file"] = new_last_pending_doc_file
+                self.save_config(self.config)
+            else:
+                print("Document processing failed or no new documents were processed.")
+        except Exception as e:
+            print(f"An error occurred during document processing: {e}")
         finally:
-            driver.quit()
+            if 'driver' in locals():
+                driver.quit()
 
 if __name__ == "__main__":
     oscar = OscarAutomation()

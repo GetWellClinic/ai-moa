@@ -23,13 +23,11 @@ import fitz
 
 def has_ocr(pdf_path):
     try:
-        pdf_document = fitz.open(pdf_path)
-        for page_num in range(len(pdf_document)):
-            page = pdf_document.load_page(page_num)
-            text = page.get_text()
-            if text.strip():
-                return True
+        with fitz.open(pdf_path) as pdf_document:
+            for page in pdf_document:
+                if page.get_text().strip():
+                    return True
         return False
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"An error occurred while checking for OCR: {e}")
         return False

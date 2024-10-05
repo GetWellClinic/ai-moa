@@ -40,6 +40,31 @@ class DocumentProcessor:
             return False
 
     def process_documents(self, driver, login_url, login_successful_callback):
+        try:
+            driver.get(login_url)
+            current_url = login_successful_callback(driver)
+            if current_url == f"{self.base_url}/login.do":
+                print("Login failed.")
+                return
+
+            driver.get(f"{self.base_url}/dms/inboxManage.do?method=getDocumentsInQueues")
+            script_value = driver.execute_script("return typeDocLab;")
+            
+            for item in script_value['DOC']:
+                if int(item) > int(self.last_pending_doc_file):
+                    if self.get_file_content(item):
+                        workflow = Workflow("downloaded_pdf.pdf", self.session, self.base_url, item, self.enable_ocr_gpu)
+                        workflow.execute_tasks_from_csv()
+                        self.last_pending_doc_file = item
+                    else:
+                        print(f"Failed to process document {item}")
+
+            return self.last_pending_doc_file
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return self.last_pending_doc_file
+
+    def process_documents(self, driver, login_url, login_successful_callback):
         driver.get(login_url)
         current_url = login_successful_callback(driver)
         if current_url == f"{self.base_url}/login.do":

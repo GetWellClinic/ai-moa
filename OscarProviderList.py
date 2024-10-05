@@ -38,12 +38,15 @@ class OscarProviderList:
         self.pin = self.config['user_login']['pin']
         self.base_url = self.config['base_url']
         self.session = requests.Session()
-        response = self.session.post(f"{self.base_url}/login.do", data={"username": self.username, "password": self.password, "pin": self.pin})
-        
-        if response.url == f"{self.base_url}/login.do":
-            print("Login failed.")
-        else:
-            print("Login successful!")
+        try:
+            response = self.session.post(f"{self.base_url}/login.do", data={"username": self.username, "password": self.password, "pin": self.pin})
+            response.raise_for_status()
+            if response.url == f"{self.base_url}/login.do":
+                print("Login failed.")
+            else:
+                print("Login successful!")
+        except requests.RequestException as e:
+            print(f"Login request failed: {e}")
 
     def load_config(self, filename):
         with open(filename, 'r') as file:
