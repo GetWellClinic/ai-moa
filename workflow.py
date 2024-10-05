@@ -31,6 +31,7 @@ import datetime
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 from bs4 import BeautifulSoup
+import logging
 
 class Workflow:
     def __init__(self, filepath, session, base_url, file_name, enable_ocr_gpu):
@@ -46,6 +47,7 @@ class Workflow:
         self.base_url = base_url
         self.file_name = file_name
         self.enable_ocr_gpu = enable_ocr_gpu
+        self.logger = logging.getLogger(__name__)
         self.url = "http://127.0.0.1:5000/v1/chat/completions"
         # the Authorization qwerty will have to be changed, this for testing
         self.headers = {
@@ -89,14 +91,14 @@ class Workflow:
                         ]
 
     def find_category_index(self,text):
-        #print("inside find_category_index")
+        self.logger.debug("Inside find_category_index")
         # to find the file type and execute the function based on that
         if '.' in text:
             text = text.replace('.', '')
         for index, category in enumerate(self.categories_code):
             for word in text.split():
                 if word.lower() == category.lower():
-                    print(index)
+                    self.logger.debug(f"Category index found: {index}")
                     #set file type
                     self.fileType = category.lower()
                     self.execute_tasks_from_csv(index)
@@ -115,7 +117,7 @@ class Workflow:
                     return True
             return False
         except Exception as e:
-            print("An error occurred:", e)
+            self.logger.error(f"An error occurred in has_ocr: {e}")
             return False
 
     def extract_text_from_pdf(self):
@@ -138,7 +140,7 @@ class Workflow:
             self.tesseracted_text = extracted_text
             return True
         except Exception as e:
-            print("An error occurred:", e)
+            self.logger.error(f"An error occurred in extract_text_from_pdf: {e}")
             return False
 
     def extract_text_doctr(self):
@@ -176,7 +178,7 @@ class Workflow:
             self.tesseracted_text = text
             return True
         except Exception as e:
-            print("An error occurred:", e)
+            self.logger.error(f"An error occurred in extract_text_doctr: {e}")
             return False
 
     def extract_text_from_pdf_file(self):
@@ -194,7 +196,7 @@ class Workflow:
             #self.tesseracted_text = """"""
             return True
         except Exception as e:
-            print("An error occurred:", e)
+            self.logger.error(f"An error occurred in extract_text_from_pdf_file: {e}")
             return False
 
     def build_prompt(self,prompt):
@@ -220,9 +222,9 @@ class Workflow:
             #max_tokens:100
         }
         response = requests.post(self.url, headers=self.headers, json=data)
-        print(response.json())
+        self.logger.debug(f"LLM response: {response.json()}")
         content_value = response.json()['choices'][0]['message']['content']
-        print(content_value)
+        self.logger.debug(f"Content value: {content_value}")
         # find the file type
         self.find_category_index(content_value)
         return True
@@ -250,13 +252,14 @@ class Workflow:
         return response.json()['choices'][0]['message']['content']
 
     def get_patient_name(self,prompt):
+        self.logger.debug("Getting patient name")
         # to get the patient name based on the prompt and the file content
         # the result from llm will be used to search for the patient in oscar using patient name
         # filter_results() can be used after this to filter the results using llm
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
         if '.' in name:
             name = name.replace('.', '')
-        print(name)
+        self.logger.debug(f"Patient name: {name}")
         url = f"{self.base_url}/demographic/SearchDemographic.do"
 
         # Define the payload data
@@ -265,6 +268,7 @@ class Workflow:
         }
 
         # Send the POST request
+        self.logger.debug("Sending POST request to search for patient")
         response = self.session.post(url, data=payload)
 
         #print(response.text)
@@ -272,12 +276,13 @@ class Workflow:
         response_data = json.loads(response.text)
 
         if len(response_data["results"]) == 0:
+            self.logger.info("No patient found")
             return False
         else:
             return True,response_data["results"]
 
     def set_doctor_from_code(self,name):
-        #print(name)
+        self.logger.debug(f"Setting doctor from code: {name}")
         # directly set provider name from csv using provider name, will search for the
         # provider name in oscar and the resulting provider will be add to the provider
         # list for the current file
@@ -294,6 +299,7 @@ class Workflow:
             }
 
             # Send the POST request
+            self.logger.debug("Sending POST request to search for provider")
             response = self.session.post(url, data=payload)
 
             #print(response.text)
@@ -308,6 +314,7 @@ class Workflow:
                     if 'providerNo' in item:
                         #print(item['providerNo'])
                         self.provider_number.append(item['providerNo'])
+                        self.logger.debug(f"Provider number added: {item['providerNo']}")
 
             #print(self.provider_number)
 
@@ -318,10 +325,10 @@ class Workflow:
 
     def get_doctor_name(self,prompt):
         # can be used to get the provider name using llm
+        self.logger.debug("Getting doctor name")
         # filter_results() can be used after this method to filter the results
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
-        #print("inside get doctor")
-        print(name)
+        self.logger.debug(f"Doctor name: {name}")
         array_pattern = r'\[.*?\]'
         #name = "Sokolowski"
         #array_match = re.search(array_pattern, names)
@@ -338,6 +345,7 @@ class Workflow:
             }
 
             # Send the POST request
+            self.logger.debug("Sending POST request to search for provider")
             response = self.session.post(url, data=payload)
 
             #print(response.text)
@@ -352,6 +360,7 @@ class Workflow:
                             oscar_response.append(item)
 
             if len(oscar_response) != 0:
+                self.logger.info("Provider(s) found")
                 return True,oscar_response
             else:
                 return False
@@ -362,7 +371,7 @@ class Workflow:
         # this method can be used to get document description from the llm based
         # on the format specified in the prompt-0.csv,1.csv,2.csv etc.
         result = self.build_sub_prompt(self.tesseracted_text + prompt)
-        print(result)
+        self.logger.debug(f"Document description: {result}")
         self.document_description = result
         return True
 
@@ -373,6 +382,7 @@ class Workflow:
         # this should be use after the methods get_patient_name, get_doctor_name, patientSearch, getProviderList
         # the above functions will return an array and filter_results will be used to select one from that array
         if additional_param is not None:
+            self.logger.debug("Filtering results")
             details = self.build_sub_prompt(self.tesseracted_text + prompt + str(additional_param))
             #print(details)
             return True,details
@@ -381,6 +391,7 @@ class Workflow:
 
     def set_patient(self,additional_param=None):
         # will be used after filter_results to set the selected value from the array
+        self.logger.debug("Setting patient")
         if additional_param is not None:
             #print(str(additional_param))
             data = json.loads(additional_param)
@@ -389,11 +400,13 @@ class Workflow:
             # Add MRP
             if data[0]['providerNo'] is not None:
                 self.mrp = data[0]['providerNo']
+            self.logger.info(f"Patient set: {self.patient_name}")
             return True
         else:
             return False
 
     def set_doctor(self,additional_param=None):
+        self.logger.debug("Setting doctor")
         # will be used after filter_results to set the selected value from the array
         if additional_param is not None:
             #additional_param = '[{"firstName": "Michelle", "lastName": "Liu", "ohipNo": "", "providerNo": "999998"},{"firstName": "John", "lastName": "Doe", "ohipNo": "", "providerNo": "999998"}]'
@@ -404,17 +417,18 @@ class Workflow:
                 #print(item)
                 if isinstance(item, dict):
                     if 'providerNo' in item:
-                        print(item['providerNo'])
+                        self.logger.debug(f"Provider number: {item['providerNo']}")
                         self.provider_number.append(item['providerNo'])
             #self.provider_number.append(data[0]['providerNo'])
             #self.provider_number.append(data[0]['providerNo'])
             #self.provider_number = data[0]['providerNo']
-            print(self.provider_number)
+            self.logger.info(f"Doctor(s) set: {self.provider_number}")
             return True
         else:
             return False
 
     def patientSearch(self,prompt,type_of_query):
+        self.logger.debug(f"Searching for patient with type: {type_of_query}")
         # to be used to search for a demographic using the below types
         # Type : search_name,search_phone,search_dob,search_address,search_hin,search_chart_no,search_demographic_no
         # filter_results can be used to select one from that array
@@ -441,6 +455,7 @@ class Workflow:
                         }
 
             # Send the POST request
+            self.logger.debug("Sending POST request to search for patient")
             response = self.session.post(url, data=payload)
 
             soup = BeautifulSoup(response.text, 'html.parser')
@@ -449,13 +464,15 @@ class Workflow:
             table += soup.find_all(class_="even")
 
             if table:
-                print(str(table))
+                self.logger.debug("Patient search results found")
                 return True,str(table)
             else:
+                self.logger.info("No patient search results found")
                 return False
 
     def getProviderList(self,prompt):
         # to be used to get all the providers list from oscar.
+        self.logger.debug("Getting provider list")
         # filter_results should be used to select one from that array
         url = f"{self.base_url}/admin/providersearchresults.jsp"
 
@@ -471,6 +488,7 @@ class Workflow:
                     }
 
         # Send the POST request
+        self.logger.debug("Sending POST request to get provider list")
         response = self.session.post(url, data=payload)
 
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -480,9 +498,11 @@ class Workflow:
         if table:
             #print(table)
             oscar_response = self.build_sub_prompt(prompt + str(table))
+            self.logger.debug("Provider list retrieved")
             #print(oscar_response)
             return True,oscar_response
         else:
+            self.logger.info("No provider list found")
             return False
 
     def oscar_update(self):
@@ -491,6 +511,7 @@ class Workflow:
         #print(self.demographic_number)
         #print(self.provider_number)
         #print(self.document_description)
+        self.logger.info("Updating Oscar")
         url = f"{self.base_url}/dms/ManageDocument.do"
 
         # Define the parameters
@@ -527,6 +548,7 @@ class Workflow:
         # print(params)
 
         response = self.session.post(url, data=params)
+        self.logger.debug(f"Oscar update response status: {response.status_code}")
 
         # print(response)
 
@@ -553,10 +575,11 @@ class Workflow:
 
     def execute_task(self,task, previous_result=None):
         task_number, function_name, *params, true_next_row, false_next_row = task
+        self.logger.debug(f"Executing task {task_number}: {function_name}")
         function_to_call = getattr(self, function_name, None)
         
         if function_to_call and callable(function_to_call):
-            print(f"Executing Task {task_number} with function: {function_name} and parameters: {', '.join(params)}")
+            self.logger.info(f"Executing Task {task_number} with function: {function_name} and parameters: {', '.join(params)}")
             
             if 'additional_param' in function_to_call.__code__.co_varnames:
                 additional_param = previous_result if previous_result is not None else None
@@ -564,7 +587,7 @@ class Workflow:
             else:
                 response = function_to_call(*params)
 
-            print(f"Response from {function_name}: {response}")
+            self.logger.debug(f"Response from {function_name}: {response}")
 
             if isinstance(response, tuple) and len(response) > 1:
                 if response[0]:
@@ -574,17 +597,17 @@ class Workflow:
             else:
                 return true_next_row if response else false_next_row 
         else:
-            print(f"Error: Function {function_name} not found or not callable.")
+            self.logger.error(f"Error: Function {function_name} not found or not callable.")
             return false_next_row 
 
     def execute_tasks(self,tasks, current_row, previous_result=None):
         if current_row >= len(tasks):
-            print("Reached end of tasks.")
+            self.logger.info("Reached end of tasks.")
             return
 
         next_row = self.execute_task(tasks[current_row], previous_result)
         if next_row == 'exit':
-            print("Exiting task execution.")
+            self.logger.info("Exiting task execution.")
             return
 
         if isinstance(next_row, tuple): 
@@ -602,6 +625,7 @@ class Workflow:
 
     def read_tasks_from_csv(self,file_path):
         tasks = []
+        self.logger.debug(f"Reading tasks from CSV: {file_path}")
         with open(file_path, 'r') as file:
             reader = csv.reader(file)
             for row in reader:
@@ -609,9 +633,10 @@ class Workflow:
         return tasks
 
     def execute_tasks_from_csv(self,index=None):
+        self.logger.info(f"Executing tasks from CSV, index: {index}")
         if index is None:
             tasks = self.read_tasks_from_csv('workflow.csv')
         else:
             tasks = self.read_tasks_from_csv(str(index)+'.csv')
-        print(self.filepath)
+        self.logger.debug(f"File path: {self.filepath}")
         self.execute_tasks(tasks, 0)

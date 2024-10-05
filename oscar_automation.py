@@ -20,7 +20,7 @@
 # ***
 
 import json
-from config import load_config
+from config import load_config, setup_logging
 from pdf_processor import PdfProcessor
 from document_processor import DocumentProcessor
 import requests
@@ -29,10 +29,13 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from login import Login
+import logging
 
 class OscarAutomation:
-    def __init__(self, config_file='config.json'):
+    def __init__(self, config_file='config.yaml'):
         self.config = load_config(config_file)
+        setup_logging(self.config)
+        self.logger = logging.getLogger(__name__)
         self.username = self.config['user_login']['username']
         self.password = self.config['user_login']['password']
         self.pin = self.config['user_login']['pin']
@@ -45,9 +48,9 @@ class OscarAutomation:
         response = self.session.post(f"{self.base_url}/login.do", data={"username": self.username, "password": self.password, "pin": self.pin})
         
         if response.url == f"{self.base_url}/login.do":
-            print("Login failed.")
+            self.logger.error("Login failed.")
         else:
-            print("Login successful!")
+            self.logger.info("Login successful!")
 
     def load_config(self, filename):
         with open(filename, 'r') as file:
@@ -72,6 +75,7 @@ class OscarAutomation:
         return self.login.login(driver, login_url)
 
     def process_pdfs(self):
+        self.logger.info("Starting PDF processing")
         chrome_options = Options()
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
@@ -80,8 +84,10 @@ class OscarAutomation:
         self.config["last_processed_pdf"] = self.pdf_processor.process_pdfs(driver, f"{self.base_url}/login.do", self.login_successful_callback)
         self.save_config(self.config)
         driver.quit()
+        self.logger.info("PDF processing completed")
 
     def process_documents(self):
+        self.logger.info("Starting document processing")
         chrome_options = Options()
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
@@ -90,6 +96,7 @@ class OscarAutomation:
         self.config["last_pending_doc_file"] = self.document_processor.process_documents(driver, f"{self.base_url}/login.do", self.login_successful_callback)
         self.save_config(self.config)
         driver.quit()
+        self.logger.info("Document processing completed")
 
 if __name__ == "__main__":
     oscar = OscarAutomation()

@@ -22,6 +22,7 @@
 import os
 from ocr_utils import has_ocr, extract_text_doctr, extract_text_from_pdf_file
 from workflow import Workflow
+import logging
 
 class PdfProcessor:
     def __init__(self, base_url, session, last_processed_pdf,enable_ocr_gpu):
@@ -29,24 +30,27 @@ class PdfProcessor:
         self.session = session
         self.last_processed_pdf = last_processed_pdf
         self.enable_ocr_gpu = enable_ocr_gpu
+        self.logger = logging.getLogger(__name__)
 
     def get_pdf_content(self, pdf_name):
+        self.logger.debug(f"Fetching PDF content for: {pdf_name}")
         pdf_url = f"{self.base_url}/dms/ManageDocument.do?method=displayIncomingDocs&curPage=1&pdfDir=File&queueId=1&pdfName={pdf_name}"
         pdf_response = self.session.get(pdf_url)
         if pdf_response.status_code == 200:
             return pdf_response.content
         else:
-            print(f"Failed to fetch PDF content. Status code: {pdf_response.status_code}")
+            self.logger.error(f"Failed to fetch PDF content. Status code: {pdf_response.status_code}")
             return None
 
     def process_pdfs(self, driver, login_url, login_successful_callback):
+        self.logger.info("Starting PDF processing")
         driver.get(login_url)
         current_url = login_successful_callback(driver)
         if current_url == f"{self.base_url}/login.do":
-            print("Login failed.")
+            self.logger.error("Login failed.")
             return self.last_processed_pdf
 
-        print("Login successful!")
+        self.logger.info("Login successful!")
         driver.get(f"{self.base_url}/dms/incomingDocs.jsp")
         driver.execute_script("loadPdf('1', 'File');")
         driver.implicitly_wait(10)
@@ -54,6 +58,7 @@ class PdfProcessor:
         pdf_list = self.get_pdf_list(driver)
         update_time = self.process_pdf_list(pdf_list)
 
+        self.logger.info("PDF processing completed")
         return update_time
 
     def get_pdf_list(self, driver):
@@ -61,6 +66,7 @@ class PdfProcessor:
         return [option for option in select_element.find_elements_by_tag_name('option') if option.get_attribute('value')]
 
     def process_pdf_list(self, pdf_list):
+        self.logger.info("Processing PDF list")
         update_time = self.last_processed_pdf or pdf_list[0].text.split(") ", 1)[1]
 
         for option in pdf_list:
@@ -72,6 +78,7 @@ class PdfProcessor:
         return update_time
 
     def process_single_pdf(self, pdf_name):
+        self.logger.debug(f"Processing single PDF: {pdf_name}")
         pdf_content = self.get_pdf_content(pdf_name)
         if pdf_content:
             with open("downloaded_pdf.pdf", "wb") as f:
