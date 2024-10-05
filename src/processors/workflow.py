@@ -1,7 +1,7 @@
-    def getPatientHTML(self, type_of_query, query):
-        url = f"{self.base_url}/demographic/demographiccontrol.jsp"
-        payload = {
-            "search_mode": type_of_query,
+def getPatientHTML(self, type_of_query, query):
+    url = f"{self.base_url}/demographic/demographiccontrol.jsp"
+    payload = {
+        "search_mode": type_of_query,
             "keyword": f"%{query}%",
             "orderby": ["last_name", "first_name"],
             "dboperation": "search_titlename",

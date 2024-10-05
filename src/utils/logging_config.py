@@ -1,6 +1,9 @@
 import logging
 import os
 from logging.handlers import RotatingFileHandler
+from src.processors.workflow import load_config
+
+config = load_config()
 
 def setup_logging(log_file=config['logging']['file'], log_level=getattr(logging, config['logging']['level'])):
     # Create logs directory if it doesn't exist
