@@ -149,7 +149,7 @@ class Workflow:
     def extract_text_doctr(self):
         # if the pdf doesnt have ocr use doctr for ocr
         pdf_path = self.filepath
-        # print(pdf_path)
+        self.logger.debug(f"Processing PDF: {pdf_path}")
         text = ''
         try:
             if(self.enable_ocr_gpu == True):
@@ -164,11 +164,11 @@ class Workflow:
             result = model(doc)
             # Iterate through pages
             for page in result.pages:
-                #print(f"Page {page.page_idx}:")
+                self.logger.debug(f"Processing page {page.page_idx}")
                 
                 # Iterate through blocks
                 for block in page.blocks:
-                    #print("Block:")
+                    self.logger.debug("Processing block")
                     
                     # Iterate through lines
                     for line in block.lines:
@@ -305,14 +305,14 @@ class Workflow:
             self.logger.debug("Sending POST request to search for provider")
             response = self.session.post(url, data=payload)
 
-            #print(response.text)
+            self.logger.debug(f"Provider search response: {response.text}")
 
             data = json.loads(response.text)
 
             #print(data)
 
             for item in data["results"]:
-                #print(item)
+                self.logger.debug(f"Processing item: {item}")
                 if isinstance(item, dict):
                     if 'providerNo' in item:
                         #print(item['providerNo'])
@@ -351,7 +351,7 @@ class Workflow:
             self.logger.debug("Sending POST request to search for provider")
             response = self.session.post(url, data=payload)
 
-            #print(response.text)
+            self.logger.debug(f"Provider search response: {response.text}")
 
             response_data = json.loads(response.text)
 
@@ -387,7 +387,7 @@ class Workflow:
         if additional_param is not None:
             self.logger.debug("Filtering results")
             details = self.build_sub_prompt(self.tesseracted_text + prompt + str(additional_param))
-            #print(details)
+            self.logger.debug(f"Filtered results: {details}")
             return True,details
         else:
             return False
@@ -396,7 +396,7 @@ class Workflow:
         # will be used after filter_results to set the selected value from the array
         self.logger.debug("Setting patient")
         if additional_param is not None:
-            #print(str(additional_param))
+            self.logger.debug(f"Additional param: {additional_param}")
             data = json.loads(additional_param)
             self.patient_name = data[0]['formattedName'] + '(' + data[0]['fomattedDob'] + ')'
             self.demographic_number = data[0]['demographicNo']
@@ -413,11 +413,11 @@ class Workflow:
         # will be used after filter_results to set the selected value from the array
         if additional_param is not None:
             #additional_param = '[{"firstName": "Michelle", "lastName": "Liu", "ohipNo": "", "providerNo": "999998"},{"firstName": "John", "lastName": "Doe", "ohipNo": "", "providerNo": "999998"}]'
-            #print(str(additional_param))
+            self.logger.debug(f"Additional param: {additional_param}")
             data = json.loads(additional_param)
             print(data)
             for item in data:
-                #print(item)
+                self.logger.debug(f"Processing item: {item}")
                 if isinstance(item, dict):
                     if 'providerNo' in item:
                         self.logger.debug(f"Provider number: {item['providerNo']}")
@@ -509,11 +509,7 @@ class Workflow:
             return False
 
     def oscar_update(self):
-        #print("Document Details:")
-        #print(self.patient_name)
-        #print(self.demographic_number)
-        #print(self.provider_number)
-        #print(self.document_description)
+        self.logger.debug(f"Document Details: Patient: {self.patient_name}, Demographic: {self.demographic_number}, Providers: {self.provider_number}, Description: {self.document_description}")
         self.logger.info("Updating Oscar")
         url = f"{self.base_url}/dms/ManageDocument.do"
 
@@ -548,12 +544,12 @@ class Workflow:
         for value in self.provider_number:
             params["flagproviders"].append(value)
 
-        # print(params)
+        self.logger.debug(f"Oscar update params: {params}")
 
         response = self.session.post(url, data=params)
         self.logger.debug(f"Oscar update response status: {response.status_code}")
 
-        # print(response)
+        self.logger.debug(f"Oscar update response: {response}")
 
         return True
 

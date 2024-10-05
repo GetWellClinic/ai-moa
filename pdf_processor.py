@@ -24,12 +24,15 @@ from ocr_utils import has_ocr, extract_text_doctr, extract_text_from_pdf_file
 from workflow import Workflow
 import logging
 
+import logging
+
 class PdfProcessor:
     def __init__(self, base_url, session, last_processed_pdf,enable_ocr_gpu):
         self.base_url = base_url
         self.session = session
         self.last_processed_pdf = last_processed_pdf
         self.enable_ocr_gpu = enable_ocr_gpu
+        self.logger = logging.getLogger(__name__)
         self.logger = logging.getLogger(__name__)
 
     def get_pdf_content(self, pdf_name):

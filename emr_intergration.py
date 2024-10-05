@@ -35,6 +35,8 @@ from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 from bs4 import BeautifulSoup
 
+import logging
+
 class Workflow:
     def __init__(self, filepath, session, base_url, file_name, enable_ocr_gpu):
         self.patient_name = ''
@@ -51,6 +53,7 @@ class Workflow:
         self.base_url = base_url
         self.file_name = file_name
         self.enable_ocr_gpu = enable_ocr_gpu
+        self.logger = logging.getLogger(__name__)
         self.url = "http://127.0.0.1:5000/v1/chat/completions"
         # the Authorization qwerty will have to be changed, this for testing
         self.headers = {
@@ -153,7 +156,7 @@ class Workflow:
     def extract_text_doctr(self):
         start_time = time.time()
         pdf_path = self.filepath
-        # print(pdf_path)
+        self.logger.debug(f"Processing PDF: {pdf_path}")
         text = ''
         try:
             if(self.enable_ocr_gpu == True):
@@ -168,11 +171,11 @@ class Workflow:
             result = model(doc)
             # Iterate through pages
             for page in result.pages:
-                #print(f"Page {page.page_idx}:")
+                self.logger.debug(f"Processing page {page.page_idx}")
                 
                 # Iterate through blocks
                 for block in page.blocks:
-                    #print("Block:")
+                self.logger.debug("Processing block")
                     
                     # Iterate through lines
                     for line in block.lines:
@@ -259,9 +262,9 @@ class Workflow:
             #max_tokens:100
         }
         response = requests.post(self.url, headers=self.headers, json=data)
-        # print(response.json())
+        self.logger.debug(f"LLM response: {response.json()}")
         content_value = response.json()['choices'][0]['message']['content']
-        # print(content_value)
+        self.logger.debug(f"Content value: {content_value}")
         # end_time = time.time()
         # elapsed_time = end_time - start_time
         self.append_to_file("Response:")
@@ -296,9 +299,9 @@ class Workflow:
         }
 
         response = requests.post(self.url, headers=self.headers, json=data)
-        # print(response.json())
+        self.logger.debug(f"LLM response: {response.json()}")
         content_value = response.json()['choices'][0]['message']['content']
-        # print(content_value)
+        self.logger.debug(f"Content value: {content_value}")
         self.append_to_file("Second Response:")
         self.append_to_file(response.json()['choices'][0]['message']['content'])
         self.append_to_file("Second Document Type: "+content_value)
@@ -341,7 +344,7 @@ class Workflow:
             name = name.replace('.', '')
         # self.append_to_file("Connecting to OSCAR to identify patient using patient name.")
         # self.append_to_file("Test Mode, skipping api call to oscar.")
-        # print(name)
+        self.logger.debug(f"Patient name: {name}")
         url = f"{self.base_url}/demographic/SearchDemographic.do"
 
         # Define the payload data
@@ -528,20 +531,20 @@ class Workflow:
             # Send the POST request
             response = self.session.post(url, data=payload)
 
-            #print(response.text)
+            self.logger.debug(f"Patient search response: {response.text}")
 
             data = json.loads(response.text)
 
-            #print(data)
+            self.logger.debug(f"Provider data: {data}")
 
             for item in data["results"]:
-                #print(item)
+                self.logger.debug(f"Processing item: {item}")
                 if isinstance(item, dict):
                     if 'providerNo' in item:
                         #print(item['providerNo'])
                         self.provider_number.append(item['providerNo'])
 
-            #print(self.provider_number)
+            self.logger.debug(f"Provider numbers: {self.provider_number}")
 
             if self.provider_number is not None:
                 return True
@@ -551,7 +554,7 @@ class Workflow:
     def get_doctor_name(self,prompt):
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
         #print("inside get doctor")
-        # print(name)
+        self.logger.debug(f"Patient name: {name}")
         array_pattern = r'\[.*?\]'
         #name = "Sokolowski"
         #array_match = re.search(array_pattern, names)
@@ -570,7 +573,7 @@ class Workflow:
             # Send the POST request
             response = self.session.post(url, data=payload)
 
-            #print(response.text)
+            self.logger.debug(f"Patient search response: {response.text}")
 
             response_data = json.loads(response.text)
 
@@ -586,7 +589,7 @@ class Workflow:
             else:
                 return False
 
-            print(oscar_response)
+            self.logger.debug(f"Oscar response: {oscar_response}")
 
     def get_document_description(self,prompt):
         result = self.build_sub_prompt(self.tesseracted_text + prompt)
@@ -598,7 +601,7 @@ class Workflow:
         if additional_param is not None:
             details = self.build_sub_prompt(self.tesseracted_text + prompt + str(additional_param))
             cleaned_string = details.replace("[", "").replace("]", "")
-            #print(details)
+            self.logger.debug(f"Filtered results: {details}")
             return True,cleaned_string
         else:
             self.append_to_file("Skipping filtering, not connected to oscar.")
@@ -607,7 +610,7 @@ class Workflow:
     def set_patient(self,additional_param=None):
         self.append_to_file("Storing patient details. ")
         if additional_param is not None:
-            #print(str(additional_param))
+            self.logger.debug(f"Additional param: {additional_param}")
             match = re.search(r'```json\n(.*?)```', additional_param, re.DOTALL)
 
             if match:
@@ -640,19 +643,19 @@ class Workflow:
         self.append_to_file("Storing provider details. ")
         if additional_param is not None:
             #additional_param = '[{"firstName": "Michelle", "lastName": "Liu", "ohipNo": "", "providerNo": "999998"},{"firstName": "John", "lastName": "Doe", "ohipNo": "", "providerNo": "999998"}]'
-            #print(str(additional_param))
+            self.logger.debug(f"Additional param: {additional_param}")
             data = json.loads(additional_param)
-            print(data)
+            self.logger.debug(f"Provider data: {data}")
             for item in data:
-                #print(item)
+                self.logger.debug(f"Processing item: {item}")
                 if isinstance(item, dict):
                     if 'providerNo' in item:
-                        print(item['providerNo'])
+                        self.logger.debug(f"Provider number: {item['providerNo']}")
                         self.provider_number.append(item['providerNo'])
             #self.provider_number.append(data[0]['providerNo'])
             #self.provider_number.append(data[0]['providerNo'])
             #self.provider_number = data[0]['providerNo']
-            print(self.provider_number)
+            self.logger.debug(f"Provider numbers: {self.provider_number}")
             return True
         else:
             self.append_to_file("Skipping in test mode. ")
@@ -691,10 +694,10 @@ class Workflow:
                 #max_tokens:100
             }
             response = requests.post(self.url, headers=self.headers, json=data)
-            # print(response.json())
+            self.logger.debug(f"LLM response: {response.json()}")
             content_value = response.json()['choices'][0]['message']['content']
 
-            # print(content_value)
+            self.logger.debug(f"Content value: {content_value}")
 
             match = re.search(r'\b\d+\b', content_value)
 
@@ -780,21 +783,14 @@ class Workflow:
                 #max_tokens:100
             }
             response = requests.post(self.url, headers=self.headers, json=data)
-            # print(response.json())
+            self.logger.debug(f"LLM response: {response.json()}")
             content_value = response.json()['choices'][0]['message']['content']
             print(content_value)
             return content_value
 
 
     def oscar_update(self):
-        print("================ Document Details ================")
-        print("Patient Name : "+self.patient_name)
-        print("Demographic Number : "+self.demographic_number)
-        print("Provider Number : ")
-        print(self.provider_number)
-        print("Document Type : "+self.fileType)
-        print("Document Description : "+self.document_description)
-        print("================ End of Document Details ================")
+        self.logger.debug(f"Document Details: Patient: {self.patient_name}, Demographic: {self.demographic_number}, Providers: {self.provider_number}, Type: {self.fileType}, Description: {self.document_description}")
         url = f"{self.base_url}/dms/ManageDocument.do"
 
         # Define the parameters for incoming doc
@@ -845,11 +841,11 @@ class Workflow:
         for value in self.provider_number:
             params["flagproviders"].append(value)
 
-        # print(params)
+        self.logger.debug(f"Oscar update params: {params}")
 
         response = self.session.post(url, data=params)
 
-        # print(response)
+        self.logger.debug(f"Oscar update response: {response}")
 
         return True
 
@@ -938,7 +934,7 @@ class Workflow:
             tasks = self.read_tasks_from_csv('workflow.csv')
         else:
             tasks = self.read_tasks_from_csv(str(index)+'.csv')
-        print(self.filepath)
+        self.logger.debug(f"Processing file: {self.filepath}")
         self.execute_tasks(tasks, 0)
 
     def append_to_file(self,content):
