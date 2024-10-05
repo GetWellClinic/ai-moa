@@ -31,9 +31,13 @@ import requests
 import json
 import datetime
 import time
+import logging
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 from bs4 import BeautifulSoup
+from src.utils.logging_config import setup_logging
+
+logger = setup_logging()
 
 class Workflow:
     def __init__(self, filepath, session, base_url, file_name, enable_ocr_gpu):
@@ -43,7 +47,6 @@ class Workflow:
         self.demographic_number = ''
         self.mrp = ''
         self.provider_number = []
-        self.log_file = "log_test_28_emr_test.txt"
         self.document_description = ''
         self.filepath = filepath
         self.tesseracted_text = None
@@ -66,6 +69,7 @@ class Workflow:
             "Pathology", "Others", "Photo", "Consent", "Diagnostics",
             "Pharmacy", "Requisition", "Referral", "Request"
         ]
+        logger.info(f"Workflow initialized for file: {self.file_name}")
 
     def find_category_index(self, text):
         if '.' in text:
@@ -73,9 +77,11 @@ class Workflow:
         for index, category in enumerate(self.categories_code):
             for word in text.split():
                 if word.lower() == category.lower():
+                    logger.info(f"Category found: {category} (index: {index})")
                     self.file_type = category.lower()
                     self.execute_tasks_from_csv(index)
                     return True
+        logger.info("No specific category found, defaulting to 'others'")
         self.file_type = 'others'
         self.execute_tasks_from_csv(7)
 
@@ -87,10 +93,12 @@ class Workflow:
                 page = pdf_document.load_page(page_num)
                 text = page.get_text()
                 if text.strip():
+                    logger.info("OCR text found in the PDF")
                     return True
+            logger.info("No OCR text found in the PDF")
             return False
         except Exception as e:
-            print("An error occurred:", e)
+            logger.error(f"An error occurred while checking for OCR: {e}")
             return False
 
     # This method is not used and relies on pytesseract which is not imported
@@ -109,8 +117,10 @@ class Workflow:
             if self.enable_ocr_gpu:
                 device = torch.device("cuda:0")
                 model = ocr_predictor(pretrained=True).to(device)
+                logger.info("Using GPU for OCR")
             else:
                 model = ocr_predictor(pretrained=True)
+                logger.info("Using CPU for OCR")
             doc = DocumentFile.from_pdf(pdf_path)
             result = model(doc)
             for page in result.pages:
@@ -122,11 +132,11 @@ class Workflow:
             self.tesseracted_text = text
             end_time = time.time()
             elapsed_time = end_time - start_time
-            self.append_to_file("Time taken for the OCR:")
-            self.append_to_file(str(elapsed_time))
+            logger.info(f"OCR completed. Time taken: {elapsed_time:.2f} seconds")
             return True
         except Exception as e:
-            print(f"An error occurred: {e}")
+            logger.error(f"An error occurred during OCR: {e}")
+            logger.info(f"Removing problematic PDF: {pdf_path}")
             os.remove(pdf_path)
             return False
 
@@ -167,8 +177,8 @@ class Workflow:
         }
         response = requests.post(self.url, headers=self.headers, json=data)
         content_value = response.json()['choices'][0]['message']['content']
-        self.append_to_file("Response:")
-        self.append_to_file(content_value)
+        logger.info("First AI response received")
+        logger.debug(f"First AI response: {content_value}")
 
         data = {
             "messages": [
@@ -189,12 +199,13 @@ class Workflow:
 
         response = requests.post(self.url, headers=self.headers, json=data)
         content_value = response.json()['choices'][0]['message']['content']
-        self.append_to_file("Second Response:")
-        self.append_to_file(content_value)
-        self.append_to_file(f"Second Document Type: {content_value}")
+        logger.info("Second AI response received")
+        logger.info(f"Document Type: {content_value}")
 
         self.find_category_index(content_value)
 
+        end_time = time.time()
+        logger.info(f"Total time for build_prompt: {end_time - start_time:.2f} seconds")
         return True
 
     def build_sub_prompt(self, prompt):
@@ -548,20 +559,24 @@ class Workflow:
         function_to_call = getattr(self, function_name, None)
         
         if function_to_call and callable(function_to_call):
-            print(f"Executing Task {task_number} with function {function_name} and parameters: {', '.join(params)}")
+            logger.info(f"Executing Task {task_number} with function {function_name} and parameters: {', '.join(params)}")
             
-            if 'additional_param' in function_to_call.__code__.co_varnames:
-                additional_param = previous_result if previous_result is not None else None
-                response = function_to_call(*params, additional_param=additional_param)
-            else:
-                response = function_to_call(*params)
+            try:
+                if 'additional_param' in function_to_call.__code__.co_varnames:
+                    additional_param = previous_result if previous_result is not None else None
+                    response = function_to_call(*params, additional_param=additional_param)
+                else:
+                    response = function_to_call(*params)
 
-            print(f"Response from {function_name}: {response}")
+                logger.info(f"Response from {function_name}: {response}")
 
-            if isinstance(response, tuple) and len(response) > 1:
-                return (true_next_row, response[1]) if response[0] else (false_next_row, response[1])
-            return true_next_row if response else false_next_row 
-        print(f"Error: Function {function_name} not found or not callable.")
+                if isinstance(response, tuple) and len(response) > 1:
+                    return (true_next_row, response[1]) if response[0] else (false_next_row, response[1])
+                return true_next_row if response else false_next_row 
+            except Exception as e:
+                logger.error(f"Error executing {function_name}: {e}")
+                return false_next_row
+        logger.error(f"Error: Function {function_name} not found or not callable.")
         return false_next_row 
 
     def execute_tasks(self, tasks, current_row, previous_result=None):
