@@ -19,9 +19,8 @@
 # source code can be acquired publicly in its latest most up-to-date version, within one month.
 # ***
 
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select
-from datetime import datetime
+import os
+from ocr_utils import has_ocr, extract_text_doctr, extract_text_from_pdf_file
 from workflow import Workflow
 
 class PdfProcessor:
@@ -31,13 +30,13 @@ class PdfProcessor:
         self.last_processed_pdf = last_processed_pdf
         self.enable_ocr_gpu = enable_ocr_gpu
 
-    def get_pdf_content(self, name):
-        pdf_url = f"{self.base_url}/dms/ManageDocument.do?method=displayIncomingDocs&curPage=1&pdfDir=File&queueId=1&pdfName={name}"
+    def get_pdf_content(self, pdf_name):
+        pdf_url = f"{self.base_url}/dms/ManageDocument.do?method=displayIncomingDocs&curPage=1&pdfDir=File&queueId=1&pdfName={pdf_name}"
         pdf_response = self.session.get(pdf_url)
         if pdf_response.status_code == 200:
             return pdf_response.content
         else:
-            print("Failed to fetch PDF content. Status code:", pdf_response.status_code)
+            print(f"Failed to fetch PDF content. Status code: {pdf_response.status_code}")
             return None
 
     def process_pdfs(self, driver, login_url, login_successful_callback):
@@ -45,84 +44,38 @@ class PdfProcessor:
         current_url = login_successful_callback(driver)
         if current_url == f"{self.base_url}/login.do":
             print("Login failed.")
-            exit()
-        else:
-            print("Login successful!")
+            return self.last_processed_pdf
 
+        print("Login successful!")
         driver.get(f"{self.base_url}/dms/incomingDocs.jsp")
         driver.execute_script("loadPdf('1', 'File');")
         driver.implicitly_wait(10)
-        select_element = Select(driver.find_element(By.ID, "SelectPdfList"))
 
-        update_time = ""
-
-        for option in select_element.options:
-            if(option.get_attribute('value') != ""):
-                split_string = option.get_attribute('text').split(") ", 1)
-                if(self.last_processed_pdf == ""):
-                    update_time = split_string[1]
-                else:
-                    update_time = self.last_processed_pdf
-
-                last_file = datetime.strptime(update_time, "%Y-%m-%d %H:%M:%S")
-                current_file = datetime.strptime(split_string[1], "%Y-%m-%d %H:%M:%S")
-
-                if last_file <= current_file:
-                    update_time = split_string[1]
-
-                    pdf_content = self.get_pdf_content(option.get_attribute('value'))
-                    if pdf_content:
-                        with open("downloaded_pdf.pdf", "wb") as f:
-                            f.write(pdf_content)
-                        print("PDF Content:", pdf_content)
-                        workflow = Workflow("downloaded_pdf.pdf",self.session,self.base_url,option.get_attribute('value'),self.enable_ocr_gpu)
-                        workflow.execute_tasks_from_csv()
-                    # pdf_content = self.get_pdf_content(option.get_attribute('value'))
-                    # if pdf_content:
-                    #     with open("downloaded_pdf.pdf", "wb") as f:
-                    #         f.write(pdf_content)
-                    #     print("PDF Content:", pdf_content)
-
-                    #     url = f"{self.base_url}/demographic/SearchDemographic.do"
-
-                    #     # Define the payload data
-                    #     payload = {
-                    #         "query": "test"
-                    #     }
-
-                    #     # Send the POST request
-                    #     response = self.session.post(url, data=payload)
-
-                    #     url = f"{self.base_url}/dms/ManageDocument.do"
-
-                    #     # Define the parameters
-                    #     params = {
-                    #         "method": "addIncomingDocument",
-                    #         "pdfDir": "File",
-                    #         "pdfName": "sample.pdf",
-                    #         "queueId": "1",
-                    #         "pdfNo": "1",
-                    #         "queue": "1",
-                    #         "pdfAction": "",
-                    #         "lastdemographic_no": "1",
-                    #         "entryMode": "Fast",
-                    #         "docType": "lab",
-                    #         "docClass": "Cardio Respiratory Report",
-                    #         "docSubClass": "",
-                    #         "documentDescription": "this is a test",
-                    #         "observationDate": "2024-02-09",
-                    #         "saved": "false",
-                    #         "demog": "1",
-                    #         "demographicKeyword": "TEST, PATIENT (1961-12-23)",
-                    #         "provi": "999998",
-                    #         "flagproviders":"999998",
-                    #         "MRPNo": "",
-                    #         "MRPName": "undefined",
-                    #         "ProvKeyword": "",
-                    #         "save": "Save & Next"
-                    #     }
-
-                    #     # Send the POST request
-                    #     response = self.session.post(url, data=params)
+        pdf_list = self.get_pdf_list(driver)
+        update_time = self.process_pdf_list(pdf_list)
 
         return update_time
+
+    def get_pdf_list(self, driver):
+        select_element = driver.find_element_by_id("SelectPdfList")
+        return [option for option in select_element.find_elements_by_tag_name('option') if option.get_attribute('value')]
+
+    def process_pdf_list(self, pdf_list):
+        update_time = self.last_processed_pdf or pdf_list[0].text.split(") ", 1)[1]
+
+        for option in pdf_list:
+            current_time = option.text.split(") ", 1)[1]
+            if current_time > update_time:
+                update_time = current_time
+                self.process_single_pdf(option.get_attribute('value'))
+
+        return update_time
+
+    def process_single_pdf(self, pdf_name):
+        pdf_content = self.get_pdf_content(pdf_name)
+        if pdf_content:
+            with open("downloaded_pdf.pdf", "wb") as f:
+                f.write(pdf_content)
+            workflow = Workflow("downloaded_pdf.pdf", self.session, self.base_url, pdf_name, self.enable_ocr_gpu)
+            workflow.execute_tasks_from_csv()
+            os.remove("downloaded_pdf.pdf")

@@ -19,7 +19,7 @@
 # source code can be acquired publicly in its latest most up-to-date version, within one month.
 # ***
 
-from emr_intergration import Workflow
+from workflow import Workflow
 
 class DocumentProcessor:
     def __init__(self, base_url, session, last_pending_doc_file, enable_ocr_gpu):
@@ -28,15 +28,11 @@ class DocumentProcessor:
         self.enable_ocr_gpu = enable_ocr_gpu
         self.last_pending_doc_file = last_pending_doc_file
 
-    def get_file_content(self, name):
-        file_url = f"{self.base_url}/dms/ManageDocument.do?method=display&doc_no={name}"
+    def get_file_content(self, doc_no):
+        file_url = f"{self.base_url}/dms/ManageDocument.do?method=display&doc_no={doc_no}"
         file_response = self.session.get(file_url)
         if file_response.status_code == 200 and file_response.content:
-            # content_type = file_response.headers.get("content-type")
-            # file_extension = content_type.split("/")[-1] if content_type else "txt"
-            # filename = f"{name}.{file_extension}"
-
-            with open("downloaded_pdf.pdf", "wb") as file:
+            with open("downloaded_document.pdf", "wb") as file:
                 file.write(file_response.content)
             return True
         else:
@@ -48,59 +44,22 @@ class DocumentProcessor:
         current_url = login_successful_callback(driver)
         if current_url == f"{self.base_url}/login.do":
             print("Login failed.")
-            return
+            return self.last_pending_doc_file
 
         driver.get(f"{self.base_url}/dms/inboxManage.do?method=getDocumentsInQueues")
         script_value = driver.execute_script("return typeDocLab;")
-        # print(script_value['DOC'])
-        for item in script_value['DOC']:
-            if(item > self.last_pending_doc_file):
-                filename = self.get_file_content(item)
-                if filename:
-                    workflow = Workflow("downloaded_pdf.pdf",self.session,self.base_url,item,self.enable_ocr_gpu)
-                    workflow.execute_tasks_from_csv()
-                    self.last_pending_doc_file = item
-                else:
-                    print("Failed")
+
+        for doc_no in script_value['DOC']:
+            if doc_no > self.last_pending_doc_file:
+                if self.process_single_document(doc_no):
+                    self.last_pending_doc_file = doc_no
 
         return self.last_pending_doc_file
 
-        # filename = self.get_file_content("30")
-        # if filename:
-        #     url = f"{self.base_url}/dms/ManageDocument.do"
-        #     payload = {
-        #         "method": "documentUpdateAjax",
-        #         "documentId": "18",
-        #         "docType": "insurance",
-        #         "documentDescription": "test",
-        #         "observationDate": "2024/01/29",
-        #         "saved": ["false", "false"],
-        #         "demog": "1",
-        #         "demofindName": "TEST, PATIENT",
-        #         "activeOnly": "true",
-        #         "demographicKeyword": ["TEST, PATIENT 1961-12-23 (AC)"],
-        #         "provi": "999998",
-        #         "flagproviders": "999998",
-        #         "save": ["Save", "Save & Next"]
-        #     }
-
-        #     response = self.session.post(url, data=payload)
-
-        #     if response.status_code == 200:
-        #         print("Request successful!")
-        #         print("Response content:", response.text)
-        #         url = f"{self.base_url}/dms/inboxManage.do"
-        #         payload = {
-        #             "docid": "18",
-        #             "method": "updateDocStatusInQueue"
-        #         }
-
-        #         response = self.session.post(url, data=payload)
-
-        #         if response.status_code == 200:
-        #             print("Request successful!")
-        #             print("Response content:", response.text)
-        #         else:
-        #             print("Request failed with status code:", response.status_code)
-        #     else:
-        #         print("Request failed with status code:", response.status_code)
+    def process_single_document(self, doc_no):
+        if self.get_file_content(doc_no):
+            workflow = Workflow("downloaded_document.pdf", self.session, self.base_url, doc_no, self.enable_ocr_gpu)
+            workflow.execute_tasks_from_csv()
+            return True
+        print(f"Failed to process document {doc_no}")
+        return False
