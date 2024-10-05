@@ -2,7 +2,7 @@ import logging
 import os
 from logging.handlers import RotatingFileHandler
 
-def setup_logging(log_file='app.log', log_level=logging.INFO):
+def setup_logging(log_file=config['logging']['file'], log_level=getattr(logging, config['logging']['level'])):
     # Create logs directory if it doesn't exist
     log_dir = 'logs'
     if not os.path.exists(log_dir):
