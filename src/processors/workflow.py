@@ -16,3 +16,21 @@
         soup = BeautifulSoup(response.text, 'html.parser')
         table = soup.find_all(class_="odd") + soup.find_all(class_="even")
         return table
+    def getProviderListFromOscarFileMode(self):
+        file_path = 'providers.csv'
+        data = []
+        try:
+            with open(file_path, 'r') as file:
+                reader = csv.DictReader(file)
+                for row in reader:
+                    transformed_row = {
+                        "lastname": row["last_name"],
+                        "firstname": row["first_name"],
+                        "provider_number": int(row["provider_no"])
+                    }
+                    data.append(transformed_row)
+        except FileNotFoundError as e:
+            print(f"File not found: {e}")
+        except IOError as e:
+            print(f"Error reading the file: {e}")
+        return data
