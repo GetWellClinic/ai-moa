@@ -99,8 +99,12 @@ class Workflow:
         # print("inside find_category_index")
         if '.' in text:
             text = text.replace('.', '')
-        for index, category in enumerate(self.categories_code):
-            for word in text.split():
+        for word in text.split():
+            for index, category in enumerate(self.categories_code):
+                if '"' in word:
+                    word = word.replace('"', '')
+                if "'" in word:
+                    word = word.replace("'", "")
                 if word.lower() == category.lower():
                     # print(index)
                     #set file type
@@ -219,48 +223,28 @@ class Workflow:
                     "content": "Today's Date is : "+str(datetime.datetime.now().date())+'\n'+ self.tesseracted_text + '\n. '+"""
 
                     Act as a helpful medical office assistant to perform the following instructions to identify the correct document category type for documents that you review.
-                     Infer the confidence level for each document category in the CATEGORY LIST based on the definitions in the DOCUMENT DEFINITIONS.
-                     For document categories with more than 30% confidence, output the document category along with the percentage confidence.
-                     If all the document categories have a confidence level less than 30% each, then output ‘Others’.
-                      For your reference, these are the CATEGORY LIST: lab, consult, insurance, legal, oldchart, radiology, photo, consent, diagnostics, pharmacy, requisition, referral, request, advertisement.
+                     Infer the confidence level in percentage for each document category in the CATEGORY LIST based on the definitions in the DOCUMENT DEFINITIONS.
+                     This is very Important: If the documents do not have any information related to patient always give highest priority to the category type 'Advertisement'.
+                      For your reference, these are the CATEGORY LIST: lab, consult, insurance, legal, oldchart, radiology, photo, consent, diagnostics, pharmacy, requisition, referral, request, advertisement, miscellaneous.
                       For your reference, these are the DOCUMENT DEFINITIONS: """+ prompt + """"
-                          Based on this, identify all the document categories that has elements from the 'CATEGORY LIST' with their confidence levels.
+                        Based on this, identify all the document categories that has elements from the 'CATEGORY LIST' with their confidence levels in percentage sorted in descending order without any explanation.
 
-                          Identify the top two document categories based on their confidence levels.
+                        Determine the document category with the highest confidence level percentage for the EMR document using the following rules:
 
-                Determine the document category for the EMR document using the following rules:
+                            Step a. If the confidence level percentage is more than 60% for the category type 'Advertisement', then
+                               the category type is 'Advertisement'. If the confidence level percentage is less than 60% for the category type 'Advertisement', then
+                               go to next step. 
 
-                a. If both of the following conditions are true:
+                            Step b. If there is only one category to select from, select that category as the document category.
+                                If there is more that one category to select from go to next step.
 
-                The top two categories are either 'Referral and Consult' or 'Requisition and Radiology.'
-                Both categories have confidence levels below 60%.
-                Then select 'Others' as the document category.
-                b. If the first condition is not met, check the confidence levels of the top two categories:
+                            Step c. Identify the top two document categories based on their confidence level percentage.
+                            
+                            Step d. If the top two categories are "Requisition" and "Radiology," and both have confidence levels below 60%, select "Miscellaneous" as the document category. Else go to next step.
 
-                If the confidence level difference between the top two categories is 10% or less, then select 'Others' as the document category.
-                c. If neither of the above conditions apply, select the top document category with the highest confidence level.
-
-                Consider the following example: Given the following confidence levels:
-
-                'Radiology': 90%
-                'Requisition': 80%
-                'Old Chart': 70%
-                'Consult': 50%
-                'Others': 0%
-                Let's apply the conditions step by step:
-
-                Identify the top two document categories:
-
-                The top two categories are 'Radiology' (90%) and 'Requisition' (80%).
-                Check the first condition:
-
-                The top two categories are not 'Referral and Consult' or 'Requisition and Radiology' with both below 60%, so this condition does not apply.
-                Check the second condition:
-
-                The confidence level difference between 'Radiology' and 'Requisition' is 10% (90% - 80%). Since this difference is 10% or less, this condition applies.
-                Based on the rules, since the difference between the top two categories is 10% or less, we select 'Others' as the document category.
-
-                So, the document category for the EMR document will be 'Others'
+                            Step e. If the confidence level difference between the top two categories is less than 10%, select "Miscellaneous" as the document category. Else go to next step.
+                            
+                            Step f. If neither of the above conditions apply, select the top document category with the highest confidence level percentage.
 
                           """
                 }
@@ -295,8 +279,10 @@ class Workflow:
                 },
                 {
                     "role": "user",
-                    "content": "EMR Document content:"+content_value + "\n" + """"
-                          Based on this, the document category for the EMR document in one word will be ..."""
+                    "content": "EMR Document content:"+content_value + "\n" + """"                
+
+                Based on this, the document category for the EMR document in one word will be ..."""
+                
                 }
             ],
             "mode": "chat",
