@@ -19,7 +19,7 @@
 # source code can be acquired publicly in its latest most up-to-date version, within one month.
 # ***
 
-from emr_intergration import Workflow
+from emr_integration import Workflow
 
 class DocumentProcessor:
     def __init__(self, base_url, session, last_pending_doc_file, enable_ocr_gpu):
