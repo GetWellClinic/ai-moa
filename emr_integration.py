@@ -32,6 +32,7 @@ import json
 import datetime
 import time
 import logging
+import os
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 from bs4 import BeautifulSoup
