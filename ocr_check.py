@@ -34,9 +34,10 @@ def has_ocr(pdf_path):
         print("An error occurred:", e)
         return False
 
-pdf_path = "sample.pdf"
+if __name__ == "__main__":
+    pdf_path = "sample.pdf"
 
-if has_ocr(pdf_path):
-    print("PDF has OCR layer.")
-else:
-    print("PDF does not have OCR layer.")
+    if has_ocr(pdf_path):
+        print("PDF has OCR layer.")
+    else:
+        print("PDF does not have OCR layer.")

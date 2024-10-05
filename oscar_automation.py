@@ -57,22 +57,8 @@ class OscarAutomation:
         else:
             self.logger.info("Login successful!")
 
-    def load_config(self, filename):
-        with open(filename, 'r') as file:
-            config = json.load(file)
-        return config
-
-    def save_config(self, config):
-        with open('config.json', 'w') as file:
-            json.dump(config, file, indent=4)
-
-    def load_config(self, filename):
-        with open(filename, 'r') as file:
-            config = json.load(file)
-        return config
-
-    def save_config(self, config):
-        with open('config.json', 'w') as file:
+    def save_config(self, config, filename='config.json'):
+        with open(filename, 'w') as file:
             json.dump(config, file, indent=4)
 
     def login_successful_callback(self, driver):
