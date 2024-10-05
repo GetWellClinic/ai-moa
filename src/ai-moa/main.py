@@ -2,11 +2,11 @@ import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-
 from src.processors.document_processor import DocumentProcessor
 from src.utils.config import load_config, save_config
 from src.utils.login import Login
+from webdriver_manager.chrome import ChromeDriverManager
+
 
 class OscarAutomation:
     def __init__(self, config_file='config_main.json'):
@@ -19,8 +19,9 @@ class OscarAutomation:
         self.last_pending_doc_file = self.config['last_pending_doc_file']
         self.enable_ocr_gpu = self.config['enable_ocr_gpu']
         self.session = requests.Session()
-        response = self.session.post(f"{self.base_url}/login.do", data={"username": self.username, "password": self.password, "pin": self.pin})
-        
+        response = self.session.post(f"{self.base_url}/login.do",
+                                     data={"username": self.username, "password": self.password, "pin": self.pin})
+
         if response.url == f"{self.base_url}/login.do":
             print("Login failed.")
         else:
@@ -39,9 +40,11 @@ class OscarAutomation:
         try:
             driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
             self.login = Login(self.username, self.password, self.pin, self.base_url)
-            self.document_processor = DocumentProcessor(self.base_url, self.session, self.last_pending_doc_file, self.enable_ocr_gpu)
-            new_last_pending_doc_file = self.document_processor.process_documents(driver, f"{self.base_url}/login.do", self.login_successful_callback)
-            
+            self.document_processor = DocumentProcessor(self.base_url, self.session, self.last_pending_doc_file,
+                                                        self.enable_ocr_gpu)
+            new_last_pending_doc_file = self.document_processor.process_documents(driver, f"{self.base_url}/login.do",
+                                                                                  self.login_successful_callback)
+
             if new_last_pending_doc_file is not None:
                 self.config["last_pending_doc_file"] = new_last_pending_doc_file
                 save_config(self.config)
@@ -52,6 +55,7 @@ class OscarAutomation:
         finally:
             if 'driver' in locals():
                 driver.quit()
+
 
 if __name__ == "__main__":
     oscar = OscarAutomation()

@@ -27,14 +27,15 @@ import random
 import re
 import time
 
-import fitz
 import PyPDF2
+import fitz
+import guidance
 import requests
 import torch
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
-import guidance
 from guidance import models, select
+
 
 class Workflow:
     def __init__(self, filepath):
@@ -105,7 +106,7 @@ class Workflow:
                     base_image = pdf_document.extract_image(xref)
                     image_bytes = base_image["image"]
                     image = Image.open(io.BytesIO(image_bytes))
-                    
+
                     image_text = pytesseract.image_to_string(image)
                     extracted_text += image_text + '\n'
             self.tesseracted_text = extracted_text
@@ -154,7 +155,7 @@ class Workflow:
                     page = reader.pages[page_num]
                     text += page.extract_text()
             self.tesseracted_text = text
-            #self.tesseracted_text = """"""
+            # self.tesseracted_text = """"""
             return True
         except Exception as e:
             print("An error occurred:", e)
@@ -180,7 +181,6 @@ class Workflow:
                 attempts += 1
                 self.append_to_file(f"Attempt {attempts} failed. Retrying...")
         return False
-
 
     def build_sub_prompt(self, prompt):
         start_time = time.time()
@@ -209,7 +209,7 @@ class Workflow:
         self.append_to_file(str(elapsed_time))
         return response.json()['choices'][0]['message']['content']
 
-    def get_patient_name(self,prompt):
+    def get_patient_name(self, prompt):
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
         if '.' in name:
             name = name.replace('.', '')
@@ -235,8 +235,8 @@ class Workflow:
         # else:
         #     return True,response_data["results"]
 
-    def set_doctor_from_code(self,name):
-        #print(name)
+    def set_doctor_from_code(self, name):
+        # print(name)
         oscar_response = []
         if name:
             if '.' in name:
@@ -272,13 +272,13 @@ class Workflow:
             # else:
             #     return False
 
-    def get_doctor_name(self,prompt):
+    def get_doctor_name(self, prompt):
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
-        #print("inside get doctor")
+        # print("inside get doctor")
         # print(name)
         array_pattern = r'\[.*?\]'
-        #name = "Sokolowski"
-        #array_match = re.search(array_pattern, names)
+        # name = "Sokolowski"
+        # array_match = re.search(array_pattern, names)
         oscar_response = []
         if name:
             if '.' in name:
@@ -310,27 +310,27 @@ class Workflow:
             # else:
             #     return False
 
-            #print(oscar_response)
+            # print(oscar_response)
 
-    def get_document_description(self,prompt):
+    def get_document_description(self, prompt):
         result = self.build_sub_prompt(self.tesseracted_text + prompt)
         self.document_description = result
         return True
 
-    def filter_results(self,prompt,additional_param=None):
+    def filter_results(self, prompt, additional_param=None):
         self.append_to_file("Filtering results: ")
         if additional_param is not None:
             details = self.build_sub_prompt(self.tesseracted_text + prompt + str(additional_param))
-            #print(details)
-            return True,details
+            # print(details)
+            return True, details
         else:
             self.append_to_file("Skipping filtering, not connected to oscar.")
             return False
 
-    def set_patient(self,additional_param=None):
+    def set_patient(self, additional_param=None):
         self.append_to_file("Storing patient details. ")
         if additional_param is not None:
-            #print(str(additional_param))
+            # print(str(additional_param))
             data = json.loads(additional_param)
             self.patient_name = data[0]['formattedName'] + '(' + data[0]['fomattedDob'] + ')'
             self.demographic_number = data[0]['demographicNo']
@@ -342,22 +342,22 @@ class Workflow:
             self.append_to_file("Skipping in test mode. ")
             return False
 
-    def set_doctor(self,additional_param=None):
+    def set_doctor(self, additional_param=None):
         self.append_to_file("Storing provider details. ")
         if additional_param is not None:
-            #additional_param = '[{"firstName": "Michelle", "lastName": "Liu", "ohipNo": "", "providerNo": "999998"},{"firstName": "John", "lastName": "Doe", "ohipNo": "", "providerNo": "999998"}]'
-            #print(str(additional_param))
+            # additional_param = '[{"firstName": "Michelle", "lastName": "Liu", "ohipNo": "", "providerNo": "999998"},{"firstName": "John", "lastName": "Doe", "ohipNo": "", "providerNo": "999998"}]'
+            # print(str(additional_param))
             data = json.loads(additional_param)
             print(data)
             for item in data:
-                #print(item)
+                # print(item)
                 if isinstance(item, dict):
                     if 'providerNo' in item:
                         print(item['providerNo'])
                         self.provider_number.append(item['providerNo'])
-            #self.provider_number.append(data[0]['providerNo'])
-            #self.provider_number.append(data[0]['providerNo'])
-            #self.provider_number = data[0]['providerNo']
+            # self.provider_number.append(data[0]['providerNo'])
+            # self.provider_number.append(data[0]['providerNo'])
+            # self.provider_number = data[0]['providerNo']
             print(self.provider_number)
             return True
         else:
@@ -367,11 +367,11 @@ class Workflow:
     def oscar_update(self):
         self.append_to_file("Updating details in OSCAR. ")
         self.append_to_file("Skipping OSCAR update in test mode. ")
-        #print("Document Details:")
-        #print(self.patient_name)
-        #print(self.demographic_number)
-        #print(self.provider_number)
-        #print(self.document_description)
+        # print("Document Details:")
+        # print(self.patient_name)
+        # print(self.demographic_number)
+        # print(self.provider_number)
+        # print(self.document_description)
         # url = f"{self.base_url}/dms/ManageDocument.do"
 
         # # Define the parameters
@@ -431,14 +431,13 @@ class Workflow:
     #     print(f"Executing update_oscar with parameters: {param1}, {param2}, additional_param={additional_param}")
     #     return random.choice([True, True])
 
-
     def execute_task(self, task, previous_result=None):
         task_number, function_name, *params, true_next_row, false_next_row = task
         function_to_call = getattr(self, function_name, None)
-        
+
         if function_to_call and callable(function_to_call):
             print(f"Executing Task {task_number} with function {function_name} and parameters: {', '.join(params)}")
-            
+
             if 'additional_param' in function_to_call.__code__.co_varnames:
                 additional_param = previous_result if previous_result is not None else None
                 response = function_to_call(*params, additional_param=additional_param)
@@ -449,9 +448,9 @@ class Workflow:
 
             if isinstance(response, tuple) and len(response) > 1:
                 return (true_next_row, response[1]) if response[0] else (false_next_row, response[1])
-            return true_next_row if response else false_next_row 
+            return true_next_row if response else false_next_row
         print(f"Error: Function {function_name} not found or not callable.")
-        return false_next_row 
+        return false_next_row
 
     def execute_tasks(self, tasks, current_row, previous_result=None):
         if current_row >= len(tasks):
@@ -463,7 +462,7 @@ class Workflow:
             print("Exiting task execution.")
             return
 
-        if isinstance(next_row, tuple): 
+        if isinstance(next_row, tuple):
             next_row_index = int(next_row[0])
             next_result = next_row[1] if len(next_row) > 1 else None
             self.execute_tasks(tasks, next_row_index, previous_result=next_result)
@@ -491,6 +490,7 @@ class Workflow:
         with open(self.log_file, "a") as file:
             file.write(f"{content}\n")
 
+
 def get_pdf_files(folder_path):
     pdf_files = []
     files_to_remove = {"Sample-C10-002.pdf"}
@@ -500,6 +500,7 @@ def get_pdf_files(folder_path):
         if file.endswith(".pdf") and file not in files_to_remove:
             pdf_files.append(file)
     return pdf_files
+
 
 if __name__ == "__main__":
     folder_path = "/home/justinjoseph/Documents/AI-MOA/all_files/"

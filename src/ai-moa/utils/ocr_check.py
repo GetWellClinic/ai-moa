@@ -21,6 +21,7 @@
 
 import fitz
 
+
 def has_ocr(pdf_path):
     try:
         with fitz.open(pdf_path) as pdf_document:

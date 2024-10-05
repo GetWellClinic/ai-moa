@@ -1,9 +1,11 @@
 import logging
 import os
 from logging.handlers import RotatingFileHandler
+
 from src.processors.workflow import load_config
 
 config = load_config()
+
 
 def setup_logging(log_file=config['logging']['file'], log_level=getattr(logging, config['logging']['level'])):
     # Create logs directory if it doesn't exist
@@ -23,7 +25,7 @@ def setup_logging(log_file=config['logging']['file'], log_level=getattr(logging,
 
     # Create a rotating file handler
     file_handler = RotatingFileHandler(
-        log_path, maxBytes=10*1024*1024, backupCount=5
+        log_path, maxBytes=10 * 1024 * 1024, backupCount=5
     )
     file_handler.setFormatter(logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s'

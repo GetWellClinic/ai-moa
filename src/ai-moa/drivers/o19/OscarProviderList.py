@@ -22,14 +22,15 @@
 import csv
 import io
 import json
+
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
+from src.utils.login import Login
 from webdriver_manager.chrome import ChromeDriverManager
 
-from src.utils.login import Login
 
 class OscarProviderList:
     def __init__(self, config_file='config_main.json'):
@@ -40,7 +41,8 @@ class OscarProviderList:
         self.base_url = self.config['base_url']
         self.session = requests.Session()
         try:
-            response = self.session.post(f"{self.base_url}/login.do", data={"username": self.username, "password": self.password, "pin": self.pin})
+            response = self.session.post(f"{self.base_url}/login.do",
+                                         data={"username": self.username, "password": self.password, "pin": self.pin})
             response.raise_for_status()
             if response.url == f"{self.base_url}/login.do":
                 print("Login failed.")
@@ -85,19 +87,18 @@ class OscarProviderList:
                 if cell_values[1] == "AI-MOA Config Search Providers (System generated)":
                     print("Template already exists.")
                     return True
-        
+
         url = f"{self.base_url}/oscarReport/reportByTemplate/uploadTemplates.do"
 
         template_file = 'template_providerlist.txt'
 
         files = {
-                    'templateFile': (template_file, open(template_file, 'rb'), 'text/plain')
-                }
+            'templateFile': (template_file, open(template_file, 'rb'), 'text/plain')
+        }
 
         data = {
-                    'action': 'add'
-                }
-
+            'action': 'add'
+        }
 
         response = self.session.post(url, files=files, data=data)
 
@@ -117,9 +118,9 @@ class OscarProviderList:
 
         self.login = Login(self.username, self.password, self.pin, self.base_url)
 
-        upload_template_file = self.upload_template_file(driver,f"{self.base_url}/login.do")
+        upload_template_file = self.upload_template_file(driver, f"{self.base_url}/login.do")
 
-        if(upload_template_file == True):
+        if (upload_template_file == True):
             print("generate_provider_list")
 
             url = f"{self.base_url}/oscarReport/reportByTemplate/homePage.jsp?templates=all"
@@ -142,7 +143,7 @@ class OscarProviderList:
                     cells = row.find_all('td')
                     cell_values = [cell.get_text(strip=True) for cell in cells]
                     cell_id = [cell.get("id") for cell in cells]
-                    if(cell_values[1] == "AI-MOA Config Search Providers (System generated)"):
+                    if (cell_values[1] == "AI-MOA Config Search Providers (System generated)"):
                         template_id = cell_id[3]
 
             if template_id == 0:
@@ -150,14 +151,14 @@ class OscarProviderList:
                 return
 
             url = f"{self.base_url}/oscarReport/reportByTemplate/GenerateReportAction.do"
-            
-            params =  {
+
+            params = {
                 "templateId": template_id,
                 "submitButton": "Run Query"
             }
 
             # Send the POST request
-            response = self.session.post(url,data=params)
+            response = self.session.post(url, data=params)
 
             soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -178,7 +179,7 @@ class OscarProviderList:
                 # Write data to CSV file
                 with open(csv_file_path, mode='w', newline='', encoding='utf-8') as file:
                     writer = csv.writer(file)
-    
+
                     # Write the data
                     writer.writerows(data)
 
@@ -186,9 +187,8 @@ class OscarProviderList:
             else:
                 print('List not found')
 
-            
-
         driver.quit()
+
 
 if __name__ == "__main__":
     oscarPL = OscarProviderList()

@@ -1,6 +1,7 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
+
 class Login:
     def __init__(self, username, password, pin, base_url):
         self.username = username

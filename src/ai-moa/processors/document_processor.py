@@ -1,5 +1,6 @@
 from .workflow import Workflow
 
+
 class DocumentProcessor:
     def __init__(self, base_url, session, last_pending_doc_file, enable_ocr_gpu):
         self.base_url = base_url
@@ -27,11 +28,12 @@ class DocumentProcessor:
 
             driver.get(f"{self.base_url}/dms/inboxManage.do?method=getDocumentsInQueues")
             script_value = driver.execute_script("return typeDocLab;")
-            
+
             for item in script_value['DOC']:
                 if int(item) > int(self.last_pending_doc_file):
                     if self.get_file_content(item):
-                        workflow = Workflow("downloaded_pdf.pdf", self.session, self.base_url, item, self.enable_ocr_gpu)
+                        workflow = Workflow("downloaded_pdf.pdf", self.session, self.base_url, item,
+                                            self.enable_ocr_gpu)
                         workflow.execute_tasks_from_csv()
                         self.last_pending_doc_file = item
                     else:

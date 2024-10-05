@@ -29,17 +29,17 @@ import re
 import time
 from typing import List, Dict, Any, Optional
 
-import fitz
 import PyPDF2
+import fitz
 import requests
 import torch
 from bs4 import BeautifulSoup
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
-
 from src.utils.logging_config import setup_logging
 
 logger = setup_logging()
+
 
 class Workflow:
     def __init__(self, filepath: str, session: requests.Session, base_url: str, file_name: str, enable_ocr_gpu: bool):
@@ -153,7 +153,7 @@ class Workflow:
                     page = reader.pages[page_num]
                     text += page.extract_text()
             self.tesseracted_text = text
-            #self.tesseracted_text = """"""
+            # self.tesseracted_text = """"""
             return True
         except Exception as e:
             print("An error occurred:", e)
@@ -285,7 +285,7 @@ class Workflow:
             if type_of_query == "search_name":
                 parts = query.split(' is ')
                 name_parts = parts[1].split() if len(parts) > 1 else query.split()
-                
+
                 all_combinations = list(itertools.permutations(name_parts))
                 formatted_combinations = [f"%{combo[0]}%,%{'%'.join(combo[1:])}%" for combo in all_combinations]
 
@@ -296,7 +296,6 @@ class Workflow:
                         print(str(table))
                         return True, str(table)
         return False
-
 
     def getPatientHTML(self, type_of_query, query):
         url = f"{self.base_url}/demographic/demographiccontrol.jsp"
@@ -316,7 +315,6 @@ class Workflow:
         soup = BeautifulSoup(response.text, 'html.parser')
         table = soup.find_all(class_="odd") + soup.find_all(class_="even")
         return table
-
 
     def unidentified_patient(self, prompt):
         query = self.build_sub_prompt(f"{self.tesseracted_text}{prompt}")
@@ -360,7 +358,7 @@ class Workflow:
                 return True, oscar_response
         return False
 
-    def get_document_description(self,prompt):
+    def get_document_description(self, prompt):
         result = self.build_sub_prompt(self.tesseracted_text + prompt)
         self.document_description = result
         return True
@@ -466,7 +464,6 @@ class Workflow:
             print(f"Error reading the file: {e}")
         return data
 
-
     def getProviderListFromOscarLLMMode(self):
         url = f"{self.base_url}/admin/providersearchresults.jsp"
         payload = {
@@ -505,7 +502,6 @@ class Workflow:
             return content_value
         return None
 
-
     def oscar_update(self):
         print("Document Details:")
         print(self.patient_name)
@@ -530,39 +526,18 @@ class Workflow:
 
         # Add provider to all
         self.provider_number.append(127)
-
         params["flagproviders"] = self.provider_number.copy()
-
         response = self.session.post(url, data=params)
-
         return True
-
-    # More available funcitons and its usage
-
-    # def ask_ai(self,param,additional_param=None):
-    #     print(f"Executing ask_ai with parameter: {param}, additional_param={additional_param}")
-    #     return random.choice([True, False]),"test"
-
-    # def flag_email(self,param):
-    #     print(f"Executing flag_email with parameter: {param}")
-    #     return random.choice([True, False])
-
-    # def get_patient_details(self,param1, param2,additional_param=None):
-    #     print(f"Executing get_patient_details with parameters: {param1}, {param2}, additional_param={additional_param}")
-    #     return random.choice([True, True]),"1245dsd"
-
-    # def update_oscar(self,param1, param2, additional_param=None):
-    #     print(f"Executing update_oscar with parameters: {param1}, {param2}, additional_param={additional_param}")
-    #     return random.choice([True, True])
-
 
     def execute_task(self, task, previous_result=None):
         task_number, function_name, *params, true_next_row, false_next_row = task
         function_to_call = getattr(self, function_name, None)
-        
+
         if function_to_call and callable(function_to_call):
-            logger.info(f"Executing Task {task_number} with function {function_name} and parameters: {', '.join(params)}")
-            
+            logger.info(
+                f"Executing Task {task_number} with function {function_name} and parameters: {', '.join(params)}")
+
             try:
                 if 'additional_param' in function_to_call.__code__.co_varnames:
                     additional_param = previous_result if previous_result is not None else None
@@ -574,12 +549,12 @@ class Workflow:
 
                 if isinstance(response, tuple) and len(response) > 1:
                     return (true_next_row, response[1]) if response[0] else (false_next_row, response[1])
-                return true_next_row if response else false_next_row 
+                return true_next_row if response else false_next_row
             except Exception as e:
                 logger.error(f"Error executing {function_name}: {e}")
                 return false_next_row
         logger.error(f"Error: Function {function_name} not found or not callable.")
-        return false_next_row 
+        return false_next_row
 
     def execute_tasks(self, tasks, current_row, previous_result=None):
         if current_row >= len(tasks):
@@ -591,7 +566,7 @@ class Workflow:
             print("Exiting task execution.")
             return
 
-        if isinstance(next_row, tuple): 
+        if isinstance(next_row, tuple):
             next_row_index = int(next_row[0])
             next_result = next_row[1] if len(next_row) > 1 else None
             self.execute_tasks(tasks, next_row_index, previous_result=next_result)
@@ -618,6 +593,7 @@ class Workflow:
         print(content)
         with open(self.log_file, "a") as file:
             file.write(f"{content}\n")
+
 
 def get_pdf_files(folder_path):
     files_to_remove = set()

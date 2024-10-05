@@ -19,10 +19,13 @@
 # source code can be acquired publicly in its latest most up-to-date version, within one month.
 # ***
 
+from datetime import datetime
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
-from datetime import datetime
+
 from .workflow import Workflow
+
 
 class PdfProcessor:
     def __init__(self, base_url, session, last_processed_pdf, enable_ocr_gpu):
@@ -67,7 +70,8 @@ class PdfProcessor:
                         if pdf_content:
                             with open("downloaded_pdf.pdf", "wb") as f:
                                 f.write(pdf_content)
-                            workflow = Workflow("downloaded_pdf.pdf", self.session, self.base_url, option.get_attribute('value'), self.enable_ocr_gpu)
+                            workflow = Workflow("downloaded_pdf.pdf", self.session, self.base_url,
+                                                option.get_attribute('value'), self.enable_ocr_gpu)
                             workflow.execute_tasks_from_csv()
 
             return update_time

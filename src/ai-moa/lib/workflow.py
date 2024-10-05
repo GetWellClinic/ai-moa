@@ -6,23 +6,25 @@ import os
 import random
 import re
 
-import fitz
 import PyPDF2
+import fitz
 import requests
 import torch
 from bs4 import BeautifulSoup
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
-
 from src.utils.logging_config import setup_logging
+
 
 def load_config(config_file='config/config_main.json'):
     with open(config_file, 'r') as f:
         return json.load(f)
 
+
 config = load_config()
 
 logger = setup_logging()
+
 
 class Workflow:
     def __init__(self, filepath, session, base_url, file_name):
@@ -296,7 +298,7 @@ class Workflow:
             if type_of_query == "search_name":
                 parts = query.split(' is ')
                 name_parts = parts[1].split() if len(parts) > 1 else query.split()
-                
+
                 all_combinations = list(itertools.permutations(name_parts))
                 formatted_combinations = [f"%{combo[0]}%,%{'%'.join(combo[1:])}%" for combo in all_combinations]
 
@@ -379,10 +381,10 @@ class Workflow:
     def execute_task(self, task, previous_result=None):
         task_number, function_name, *params, true_next_row, false_next_row = task
         function_to_call = getattr(self, function_name, None)
-        
+
         if function_to_call and callable(function_to_call):
             print(f"Executing Task {task_number} with function: {function_name} and parameters: {', '.join(params)}")
-            
+
             try:
                 if 'additional_param' in function_to_call.__code__.co_varnames:
                     additional_param = previous_result if previous_result is not None else None
@@ -394,12 +396,12 @@ class Workflow:
 
                 if isinstance(response, tuple) and len(response) > 1:
                     return (true_next_row, response[1]) if response[0] else (false_next_row, response[1])
-                return true_next_row if response else false_next_row 
+                return true_next_row if response else false_next_row
             except Exception as e:
                 print(f"Error executing {function_name}: {e}")
                 return false_next_row
         print(f"Error: Function {function_name} not found or not callable.")
-        return false_next_row 
+        return false_next_row
 
     def execute_tasks(self, tasks, current_row, previous_result=None):
         if current_row >= len(tasks):
@@ -411,7 +413,7 @@ class Workflow:
             print("Exiting task execution.")
             return
 
-        if isinstance(next_row, tuple): 
+        if isinstance(next_row, tuple):
             next_row_index = int(next_row[0])
             next_result = next_row[1] if len(next_row) > 1 else None
             self.execute_tasks(tasks, next_row_index, previous_result=next_result)
@@ -431,7 +433,7 @@ class Workflow:
 
     def execute_tasks_from_csv(self, index=None):
         if index is None:
-            tasks = self.read_tasks_from_csv('workflows/workflow.csv')
+            tasks = self.read_tasks_from_csv('../../../workflows/workflow.csv')
         else:
             tasks = self.read_tasks_from_csv(f'ai-moa/workflows/{index}.csv')
         print(self.filepath)
