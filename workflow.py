@@ -56,30 +56,25 @@ class Workflow:
         ]
         logger.info(f"Workflow initialized for file: {self.file_name}")
 
-    def find_category_index(self, text):
-        if '.' in text:
-            text = text.replace('.', '')
+    def find_category_index(self, text: str) -> None:
+        text = text.replace('.', '')
         for index, category in enumerate(self.categories_code):
-            for word in text.split():
-                if word.lower() == category.lower():
-                    logger.info(f"Category found: {category} (index: {index})")
-                    self.file_type = category.lower()
-                    self.execute_tasks_from_csv(index)
-                    return True
+            if category.lower() in text.lower().split():
+                logger.info(f"Category found: {category} (index: {index})")
+                self.file_type = category.lower()
+                self.execute_tasks_from_csv(index)
+                return
         logger.info("No specific category found, defaulting to 'others'")
         self.file_type = 'others'
         self.execute_tasks_from_csv(7)
 
-    def has_ocr(self):
-        pdf_path = self.filepath
+    def has_ocr(self) -> bool:
         try:
-            pdf_document = fitz.open(pdf_path)
-            for page_num in range(len(pdf_document)):
-                page = pdf_document.load_page(page_num)
-                text = page.get_text()
-                if text.strip():
-                    logger.info("OCR text found in the PDF")
-                    return True
+            with fitz.open(self.filepath) as pdf_document:
+                for page in pdf_document:
+                    if page.get_text().strip():
+                        logger.info("OCR text found in the PDF")
+                        return True
             logger.info("No OCR text found in the PDF")
             return False
         except Exception as e:
