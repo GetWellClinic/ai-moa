@@ -25,9 +25,9 @@ import itertools
 import json
 import logging
 import os
-import random
 import re
 import time
+from typing import List, Dict, Any, Optional
 
 import fitz
 import PyPDF2
@@ -42,31 +42,31 @@ from src.utils.logging_config import setup_logging
 logger = setup_logging()
 
 class Workflow:
-    def __init__(self, filepath, session, base_url, file_name, enable_ocr_gpu):
-        self.patient_name = ''
-        self.fl_name = ''
-        self.file_type = ''
-        self.demographic_number = ''
-        self.mrp = ''
-        self.provider_number = []
-        self.document_description = ''
-        self.filepath = filepath
-        self.tesseracted_text = None
-        self.session = session
-        self.base_url = base_url
-        self.file_name = file_name
-        self.enable_ocr_gpu = enable_ocr_gpu
-        self.url = "http://127.0.0.1:5000/v1/chat/completions"
-        self.headers = {
+    def __init__(self, filepath: str, session: requests.Session, base_url: str, file_name: str, enable_ocr_gpu: bool):
+        self.patient_name: str = ''
+        self.fl_name: str = ''
+        self.file_type: str = ''
+        self.demographic_number: str = ''
+        self.mrp: str = ''
+        self.provider_number: List[int] = []
+        self.document_description: str = ''
+        self.filepath: str = filepath
+        self.tesseracted_text: Optional[str] = None
+        self.session: requests.Session = session
+        self.base_url: str = base_url
+        self.file_name: str = file_name
+        self.enable_ocr_gpu: bool = enable_ocr_gpu
+        self.url: str = "http://127.0.0.1:5000/v1/chat/completions"
+        self.headers: Dict[str, str] = {
             "Authorization": "Bearer qwerty",
             "Content-Type": "application/json"
         }
-        self.categories = [
+        self.categories: List[str] = [
             "Lab", "Consult", "Insurance", "Legal", "Old Chart", "Radiology",
             "Pathology", "Others", "Photo", "Consent", "Diagnostics",
             "Pharmacy", "Requisition", "Referral", "Request"
         ]
-        self.categories_code = [
+        self.categories_code: List[str] = [
             "Lab", "Consult", "Insurance", "Legal", "OldChart", "Radiology",
             "Pathology", "Others", "Photo", "Consent", "Diagnostics",
             "Pharmacy", "Requisition", "Referral", "Request"

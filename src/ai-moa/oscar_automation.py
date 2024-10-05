@@ -9,7 +9,7 @@ from src.utils.config import load_config, save_config
 from src.utils.login import Login
 
 class OscarAutomation:
-    def __init__(self, config_file='config.json'):
+    def __init__(self, config_file='config_main.json'):
         self.config = load_config(config_file)
         self.username = self.config['user_login']['username']
         self.password = self.config['user_login']['password']

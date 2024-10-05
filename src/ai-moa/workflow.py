@@ -16,7 +16,7 @@ from doctr.models import ocr_predictor
 
 from src.utils.logging_config import setup_logging
 
-def load_config(config_file='config/config.json'):
+def load_config(config_file='config/config_main.json'):
     with open(config_file, 'r') as f:
         return json.load(f)
 
@@ -433,6 +433,6 @@ class Workflow:
         if index is None:
             tasks = self.read_tasks_from_csv('workflows/workflow.csv')
         else:
-            tasks = self.read_tasks_from_csv(f'workflows/{index}.csv')
+            tasks = self.read_tasks_from_csv(f'ai-moa/workflows/{index}.csv')
         print(self.filepath)
         self.execute_tasks(tasks, 0)

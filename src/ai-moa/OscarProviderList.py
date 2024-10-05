@@ -29,10 +29,10 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
-from login import Login
+from src.utils.login import Login
 
 class OscarProviderList:
-    def __init__(self, config_file='config.json'):
+    def __init__(self, config_file='config_main.json'):
         self.config = self.load_config(config_file)
         self.username = self.config['user_login']['username']
         self.password = self.config['user_login']['password']
