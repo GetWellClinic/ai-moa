@@ -262,9 +262,9 @@ class Workflow:
             #max_tokens:100
         }
         response = requests.post(self.url, headers=self.headers, json=data)
-        self.logger.debug(f"LLM response: {response.json()}")
+        self.logger.debug("LLM response: %s", response.json())
         content_value = response.json()['choices'][0]['message']['content']
-        self.logger.debug(f"Content value: {content_value}")
+        self.logger.debug("Content value: %s", content_value)
         # end_time = time.time()
         # elapsed_time = end_time - start_time
         self.append_to_file("Response:")
@@ -299,9 +299,9 @@ class Workflow:
         }
 
         response = requests.post(self.url, headers=self.headers, json=data)
-        self.logger.debug(f"LLM response: {response.json()}")
+        self.logger.debug("LLM response: %s", response.json())
         content_value = response.json()['choices'][0]['message']['content']
-        self.logger.debug(f"Content value: {content_value}")
+        self.logger.debug("Content value: %s", content_value)
         self.append_to_file("Second Response:")
         self.append_to_file(response.json()['choices'][0]['message']['content'])
         self.append_to_file("Second Document Type: "+content_value)
@@ -344,7 +344,7 @@ class Workflow:
             name = name.replace('.', '')
         # self.append_to_file("Connecting to OSCAR to identify patient using patient name.")
         # self.append_to_file("Test Mode, skipping api call to oscar.")
-        self.logger.debug(f"Patient name: {name}")
+        self.logger.debug("Patient name: %s", name)
         url = f"{self.base_url}/demographic/SearchDemographic.do"
 
         # Define the payload data
@@ -531,7 +531,7 @@ class Workflow:
             # Send the POST request
             response = self.session.post(url, data=payload)
 
-            self.logger.debug(f"Provider search response: {response.text}")
+            self.logger.debug("Provider search response: %s", response.text)
 
             self.logger.debug(f"Patient search response: {response.text}")
 
@@ -556,7 +556,7 @@ class Workflow:
     def get_doctor_name(self,prompt):
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
         self.logger.debug("Getting doctor name")
-        self.logger.debug(f"Patient name: {name}")
+        self.logger.debug("Patient name: %s", name)
         array_pattern = r'\[.*?\]'
         #name = "Sokolowski"
         #array_match = re.search(array_pattern, names)
@@ -575,7 +575,7 @@ class Workflow:
             # Send the POST request
             response = self.session.post(url, data=payload)
 
-            self.logger.debug(f"Provider search response: {response.text}")
+            self.logger.debug("Provider search response: %s", response.text)
 
             self.logger.debug(f"Patient search response: {response.text}")
 
@@ -698,10 +698,10 @@ class Workflow:
                 #max_tokens:100
             }
             response = requests.post(self.url, headers=self.headers, json=data)
-            self.logger.debug(f"LLM response: {response.json()}")
+            self.logger.debug("LLM response: %s", response.json())
             content_value = response.json()['choices'][0]['message']['content']
 
-            self.logger.debug(f"Content value: {content_value}")
+            self.logger.debug("Content value: %s", content_value)
 
             match = re.search(r'\b\d+\b', content_value)
 
@@ -787,14 +787,15 @@ class Workflow:
                 #max_tokens:100
             }
             response = requests.post(self.url, headers=self.headers, json=data)
-            self.logger.debug(f"LLM response: {response.json()}")
+            self.logger.debug("LLM response: %s", response.json())
             content_value = response.json()['choices'][0]['message']['content']
             print(content_value)
             return content_value
 
 
     def oscar_update(self):
-        self.logger.debug(f"Document Details: Patient: {self.patient_name}, Demographic: {self.demographic_number}, Providers: {self.provider_number}, Type: {self.fileType}, Description: {self.document_description}")
+        self.logger.debug("Document Details: Patient: %s, Demographic: %s, Providers: %s, Type: %s, Description: %s", 
+                          self.patient_name, self.demographic_number, self.provider_number, self.fileType, self.document_description)
         url = f"{self.base_url}/dms/ManageDocument.do"
 
         # Define the parameters for incoming doc
@@ -845,11 +846,11 @@ class Workflow:
         for value in self.provider_number:
             params["flagproviders"].append(value)
 
-        self.logger.debug(f"Oscar update params: {params}")
+        self.logger.debug("Oscar update params: %s", params)
 
         response = self.session.post(url, data=params)
 
-        self.logger.debug(f"Oscar update response: {response}")
+        self.logger.debug("Oscar update response: %s", response)
 
         return True
 
@@ -962,4 +963,4 @@ def get_pdf_files(folder_path):
     pdf_files_sorted = sorted(pdf_files)
     return pdf_files_sorted
     # return ["Sample-C10-001.pdf"]
-        self.logger.debug(f"Patient name: {name}")
+        self.logger.debug("Patient name: %s", name)

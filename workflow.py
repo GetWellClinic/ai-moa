@@ -101,7 +101,7 @@ class Workflow:
         for index, category in enumerate(self.categories_code):
             for word in text.split():
                 if word.lower() == category.lower():
-                    self.logger.debug(f"Category index found: {index}")
+                    self.logger.debug("Category index found: %d", index)
                     #set file type
                     self.fileType = category.lower()
                     self.execute_tasks_from_csv(index)
@@ -225,9 +225,9 @@ class Workflow:
             #max_tokens:100
         }
         response = requests.post(self.url, headers=self.headers, json=data)
-        self.logger.debug(f"LLM response: {response.json()}")
+        self.logger.debug("LLM response: %s", response.json())
         content_value = response.json()['choices'][0]['message']['content']
-        self.logger.debug(f"Content value: {content_value}")
+        self.logger.debug("Content value: %s", content_value)
         # find the file type
         self.find_category_index(content_value)
         return True
@@ -262,7 +262,7 @@ class Workflow:
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
         if '.' in name:
             name = name.replace('.', '')
-        self.logger.debug(f"Patient name: {name}")
+        self.logger.debug("Patient name: %s", name)
         url = f"{self.base_url}/demographic/SearchDemographic.do"
 
         # Define the payload data
@@ -305,7 +305,7 @@ class Workflow:
             self.logger.debug("Sending POST request to search for provider")
             response = self.session.post(url, data=payload)
 
-            self.logger.debug(f"Provider search response: {response.text}")
+            self.logger.debug("Provider search response: %s", response.text)
 
             data = json.loads(response.text)
 
@@ -331,7 +331,7 @@ class Workflow:
         self.logger.debug("Getting doctor name")
         # filter_results() can be used after this method to filter the results
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
-        self.logger.debug(f"Doctor name: {name}")
+        self.logger.debug("Doctor name: %s", name)
         array_pattern = r'\[.*?\]'
         #name = "Sokolowski"
         #array_match = re.search(array_pattern, names)
@@ -351,7 +351,7 @@ class Workflow:
             self.logger.debug("Sending POST request to search for provider")
             response = self.session.post(url, data=payload)
 
-            self.logger.debug(f"Provider search response: {response.text}")
+            self.logger.debug("Provider search response: %s", response.text)
 
             response_data = json.loads(response.text)
 
@@ -509,7 +509,8 @@ class Workflow:
             return False
 
     def oscar_update(self):
-        self.logger.debug(f"Document Details: Patient: {self.patient_name}, Demographic: {self.demographic_number}, Providers: {self.provider_number}, Description: {self.document_description}")
+        self.logger.debug("Document Details: Patient: %s, Demographic: %s, Providers: %s, Description: %s", 
+                          self.patient_name, self.demographic_number, self.provider_number, self.document_description)
         self.logger.info("Updating Oscar")
         url = f"{self.base_url}/dms/ManageDocument.do"
 
@@ -544,12 +545,12 @@ class Workflow:
         for value in self.provider_number:
             params["flagproviders"].append(value)
 
-        self.logger.debug(f"Oscar update params: {params}")
+        self.logger.debug("Oscar update params: %s", params)
 
         response = self.session.post(url, data=params)
         self.logger.debug(f"Oscar update response status: {response.status_code}")
 
-        self.logger.debug(f"Oscar update response: {response}")
+        self.logger.debug("Oscar update response: %s", response)
 
         return True
 
