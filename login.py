@@ -21,6 +21,6 @@ class Login:
             pin_field.send_keys(Keys.RETURN)
 
             return driver.current_url
-        except Exception as e:
-            print(f"An error occurred during login: {e}")
+        except Exception as error:
+            print(f"An error occurred during login: {error}")
             return login_url

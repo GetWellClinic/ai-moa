@@ -1,17 +1,19 @@
 import csv
-import re
+import datetime
+import json
+import logging
+import os
 import random
-import torch
+import re
+
 import fitz
 import PyPDF2
 import requests
-import json
-import datetime
-import logging
-import os
+import torch
+from bs4 import BeautifulSoup
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
-from bs4 import BeautifulSoup
+
 from src.utils.logging_config import setup_logging
 
 def load_config(config_file='config/config.json'):

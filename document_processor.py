@@ -14,9 +14,8 @@ class DocumentProcessor:
             with open("downloaded_pdf.pdf", "wb") as file:
                 file.write(file_response.content)
             return True
-        else:
-            print(f"Failed to fetch file content. Status code: {file_response.status_code}")
-            return False
+        print(f"Failed to fetch file content. Status code: {file_response.status_code}")
+        return False
 
     def process_documents(self, driver, login_url, login_successful_callback):
         try:

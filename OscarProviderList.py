@@ -19,16 +19,17 @@
 # source code can be acquired publicly in its latest most up-to-date version, within one month.
 # ***
 
-import json
 import csv
 import io
+import json
 import requests
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
-from login import Login
 from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+
+from login import Login
 
 class OscarProviderList:
     def __init__(self, config_file='config.json'):
@@ -81,7 +82,7 @@ class OscarProviderList:
                 # Extract cells from the row
                 cells = row.find_all('td')
                 cell_values = [cell.get_text(strip=True) for cell in cells]
-                if(cell_values[1] == "AI-MOA Config Search Providers (System generated)"):
+                if cell_values[1] == "AI-MOA Config Search Providers (System generated)":
                     print("Template already exists.")
                     return True
         
@@ -144,7 +145,7 @@ class OscarProviderList:
                     if(cell_values[1] == "AI-MOA Config Search Providers (System generated)"):
                         template_id = cell_id[3]
 
-            if(template_id == 0):
+            if template_id == 0:
                 print("Template id cant be zero")
                 return
 

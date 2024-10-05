@@ -19,23 +19,24 @@
 # source code can be acquired publicly in its latest most up-to-date version, within one month.
 # ***
 
-import os
 import csv
-import re
-import random
+import datetime
 import itertools
-import torch
+import json
+import logging
+import os
+import random
+import re
+import time
+
 import fitz
 import PyPDF2
 import requests
-import json
-import datetime
-import time
-import logging
-import os
+import torch
+from bs4 import BeautifulSoup
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
-from bs4 import BeautifulSoup
+
 from src.utils.logging_config import setup_logging
 
 logger = setup_logging()

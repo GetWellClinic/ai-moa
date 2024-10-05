@@ -1,12 +1,12 @@
 import requests
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+
+from src.processors.document_processor import DocumentProcessor
 from src.utils.config import load_config, save_config
 from src.utils.login import Login
-from src.processors.pdf_processor import PdfProcessor
-from src.processors.document_processor import DocumentProcessor
 
 class OscarAutomation:
     def __init__(self, config_file='config.json'):

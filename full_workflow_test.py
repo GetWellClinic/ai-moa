@@ -19,21 +19,22 @@
 # source code can be acquired publicly in its latest most up-to-date version, within one month.
 # ***
 
-import os
 import csv
-import re
+import datetime
+import json
+import os
 import random
-import torch
+import re
+import time
+
 import fitz
 import PyPDF2
 import requests
-import json
-import datetime
-import time
+import torch
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 import guidance
-from guidance import models, gen, select
+from guidance import models, select
 
 class Workflow:
     def __init__(self, filepath):

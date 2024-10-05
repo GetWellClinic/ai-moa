@@ -36,9 +36,8 @@ class PdfProcessor:
         pdf_response = self.session.get(pdf_url)
         if pdf_response.status_code == 200:
             return pdf_response.content
-        else:
-            print(f"Failed to fetch PDF content. Status code: {pdf_response.status_code}")
-            return None
+        print(f"Failed to fetch PDF content. Status code: {pdf_response.status_code}")
+        return None
 
     def process_pdfs(self, driver, login_url, login_successful_callback):
         try:
