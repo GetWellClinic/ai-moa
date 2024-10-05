@@ -19,7 +19,8 @@
 # source code can be acquired publicly in its latest most up-to-date version, within one month.
 # ***
 
-from config import load_config, save_config
+import json
+from config import load_config
 from pdf_processor import PdfProcessor
 from document_processor import DocumentProcessor
 import requests
@@ -38,6 +39,7 @@ class OscarAutomation:
         self.base_url = self.config['base_url']
         self.last_processed_pdf = self.config['last_processed_pdf']
         self.last_pending_doc_file = self.config['last_pending_doc_file']
+        self.last_pending_doc_file = self.config['last_pending_doc_file']
         self.enable_ocr_gpu = self.config['enable_ocr_gpu']
         self.session = requests.Session()
         response = self.session.post(f"{self.base_url}/login.do", data={"username": self.username, "password": self.password, "pin": self.pin})
@@ -46,6 +48,15 @@ class OscarAutomation:
             print("Login failed.")
         else:
             print("Login successful!")
+
+    def load_config(self, filename):
+        with open(filename, 'r') as file:
+            config = json.load(file)
+        return config
+
+    def save_config(self, config):
+        with open('config.json', 'w') as file:
+            json.dump(config, file, indent=4)
 
     def load_config(self, filename):
         with open(filename, 'r') as file:
@@ -67,7 +78,7 @@ class OscarAutomation:
         self.login = Login(self.username, self.password, self.pin, self.base_url)
         self.pdf_processor = PdfProcessor(self.base_url, self.session, self.last_processed_pdf,self.enable_ocr_gpu)
         self.config["last_processed_pdf"] = self.pdf_processor.process_pdfs(driver, f"{self.base_url}/login.do", self.login_successful_callback)
-        save_config(self.config)
+        self.save_config(self.config)
         driver.quit()
 
     def process_documents(self):
@@ -77,7 +88,7 @@ class OscarAutomation:
         self.login = Login(self.username, self.password, self.pin, self.base_url)
         self.document_processor = DocumentProcessor(self.base_url, self.session, self.last_pending_doc_file, self.enable_ocr_gpu)
         self.config["last_pending_doc_file"] = self.document_processor.process_documents(driver, f"{self.base_url}/login.do", self.login_successful_callback)
-        save_config(self.config)
+        self.save_config(self.config)
         driver.quit()
 
 if __name__ == "__main__":
