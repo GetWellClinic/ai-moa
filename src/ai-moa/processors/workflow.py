@@ -1,3 +1,8 @@
+import csv
+
+from bs4 import BeautifulSoup
+
+
 def get_patient_html(self, type_of_query, query):
     url = f"{self.base_url}/demographic/demographiccontrol.jsp"
     payload = {

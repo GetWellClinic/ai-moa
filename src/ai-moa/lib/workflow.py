@@ -5,6 +5,8 @@ import logging
 import os
 import random
 import re
+import time
+import itertools
 
 import PyPDF2
 import fitz
