@@ -20,7 +20,12 @@
 # ***
 
 import json
-from config import load_config, setup_logging
+from src.config.config_loader import load_config
+import logging
+
+def setup_logging(config):
+    logging.basicConfig(level=config.get('logging', {}).get('root', {}).get('level', 'INFO'),
+                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 from pdf_processor import PdfProcessor
 from document_processor import DocumentProcessor
 import requests

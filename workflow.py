@@ -51,7 +51,7 @@ class Workflow:
         self.file_name = file_name
         self.enable_ocr_gpu = enable_ocr_gpu
         self.logger = logging.getLogger(__name__)
-        self.url = "http://127.0.0.1:5000/v1/chat/completions"
+        self.url = "http://localhost:5000/v1/chat/completions"
         # the Authorization qwerty will have to be changed, this for testing
         self.headers = {
             "Authorization": "Bearer qwerty",
