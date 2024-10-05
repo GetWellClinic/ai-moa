@@ -7,14 +7,25 @@ import PyPDF2
 import requests
 import json
 import datetime
+import logging
+import os
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 from bs4 import BeautifulSoup
+from src.utils.logging_config import setup_logging
 
+def load_config(config_file='config/config.json'):
+    with open(config_file, 'r') as f:
+        return json.load(f)
+
+config = load_config()
+
+logger = setup_logging()
 
 class Workflow:
-    def __init__(self, filepath, session, base_url, file_name, enable_ocr_gpu):
+    def __init__(self, filepath, session, base_url, file_name):
         self.patient_name = ''
+        self.fl_name = ''
         self.file_type = ''
         self.demographic_number = ''
         self.mrp = ''
@@ -25,10 +36,10 @@ class Workflow:
         self.session = session
         self.base_url = base_url
         self.file_name = file_name
-        self.enable_ocr_gpu = enable_ocr_gpu
-        self.url = "http://127.0.0.1:5000/v1/chat/completions"
+        self.enable_ocr_gpu = config['ocr']['enable_gpu']
+        self.url = config['api']['url']
         self.headers = {
-            "Authorization": "Bearer qwerty",
+            "Authorization": f"Bearer {config['api']['auth_token']}",
             "Content-Type": "application/json"
         }
         self.categories = [
@@ -41,6 +52,7 @@ class Workflow:
             "Pathology", "Others", "Photo", "Consent", "Diagnostics",
             "Pharmacy", "Requisition", "Referral", "Request"
         ]
+        logger.info(f"Workflow initialized for file: {self.file_name}")
 
     def find_category_index(self, text):
         if '.' in text:
@@ -48,11 +60,13 @@ class Workflow:
         for index, category in enumerate(self.categories_code):
             for word in text.split():
                 if word.lower() == category.lower():
-                    print(index)
+                    logger.info(f"Category found: {category} (index: {index})")
                     self.file_type = category.lower()
                     self.execute_tasks_from_csv(index)
                     return True
-        return False
+        logger.info("No specific category found, defaulting to 'others'")
+        self.file_type = 'others'
+        self.execute_tasks_from_csv(7)
 
     def has_ocr(self):
         pdf_path = self.filepath
@@ -62,21 +76,26 @@ class Workflow:
                 page = pdf_document.load_page(page_num)
                 text = page.get_text()
                 if text.strip():
+                    logger.info("OCR text found in the PDF")
                     return True
+            logger.info("No OCR text found in the PDF")
             return False
         except Exception as e:
-            print("An error occurred:", e)
+            logger.error(f"An error occurred while checking for OCR: {e}")
             return False
 
     def extract_text_doctr(self):
+        start_time = time.time()
         pdf_path = self.filepath
         text = ''
         try:
             if self.enable_ocr_gpu:
                 device = torch.device("cuda:0")
                 model = ocr_predictor(pretrained=True).to(device)
+                logger.info("Using GPU for OCR")
             else:
                 model = ocr_predictor(pretrained=True)
+                logger.info("Using CPU for OCR")
             doc = DocumentFile.from_pdf(pdf_path)
             result = model(doc)
             for page in result.pages:
@@ -86,9 +105,14 @@ class Workflow:
                         for word in line.words:
                             text += word.value + ' '
             self.tesseracted_text = text
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+            logger.info(f"OCR completed. Time taken: {elapsed_time:.2f} seconds")
             return True
         except Exception as e:
-            print(f"An error occurred: {e}")
+            logger.error(f"An error occurred during OCR: {e}")
+            logger.info(f"Removing problematic PDF: {pdf_path}")
+            os.remove(pdf_path)
             return False
 
     def extract_text_from_pdf_file(self):
@@ -242,52 +266,88 @@ class Workflow:
             return False
 
     def patientSearch(self, prompt, type_of_query):
-        query = self.build_sub_prompt(self.tesseracted_text + prompt)
+        query = self.build_sub_prompt(f"{self.tesseracted_text}{prompt}")
+        if "False" in query:
+            return False
+        parts = query.split(':')
+        parts = [part.strip() for part in parts]
+        if len(parts) > 1:
+            query = parts[1]
+
+        if type_of_query == "search_dob":
+            pattern = r'\d{4}-\d{2}-\d{2}'
+            match = re.search(pattern, query)
+            if match:
+                query = match.group()
+                print(query)
+
+        if type_of_query == "search_hin":
+            pattern = r'\b\d+\b'
+            match = re.search(pattern, query)
+            if match:
+                query = match.group()
+                print(query)
+
         if query:
-            if '.' in query:
-                query = query.replace('.', '')
-            url = f"{self.base_url}/demographic/demographiccontrol.jsp"
-            payload = {
-                "search_mode": type_of_query,
-                "keyword": query,
-                "orderby": ["last_name", "first_name"],
-                "dboperation": "search_titlename",
-                "limit1": 0,
-                "limit2": 10,
-                "displaymode": "Search",
-                "ptstatus": "active",
-                "fromMessenger": "False",
-                "outofdomain": ""
-            }
-            response = self.session.post(url, data=payload)
-            soup = BeautifulSoup(response.text, 'html.parser')
-            table = soup.find_all(class_="odd")
-            table += soup.find_all(class_="even")
+            query = query.replace('.', '').replace(',', '')
+            table = self.getPatientHTML(type_of_query, query)
+
             if table:
                 print(str(table))
                 return True, str(table)
-            else:
-                return False
+
+            if type_of_query == "search_name":
+                parts = query.split(' is ')
+                name_parts = parts[1].split() if len(parts) > 1 else query.split()
+                
+                all_combinations = list(itertools.permutations(name_parts))
+                formatted_combinations = [f"%{combo[0]}%,%{'%'.join(combo[1:])}%" for combo in all_combinations]
+
+                for combo in formatted_combinations:
+                    print(combo)
+                    table = self.getPatientHTML(type_of_query, combo)
+                    if table:
+                        print(str(table))
+                        return True, str(table)
+        return False
 
     def getProviderList(self, prompt):
-        url = f"{self.base_url}/admin/providersearchresults.jsp"
-        payload = {
-            "search_mode": "search_providerno",
-            "search_status": "All",
-            "keyword": "",
-            "button": "",
-            "orderby": "last_name",
-            "limit1": 0,
-            "limit2": 10000
+        provider_list = self.getProviderListFromOscarFileMode()
+
+        if provider_list is None:
+            self.provider_number.append(99)
+            return True
+
+        data = {
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant designed to output JSON."
+                },
+                {
+                    "role": "user",
+                    "content": f"{self.tesseracted_text}{prompt}{provider_list}"
+                }
+            ],
+            "mode": "instruct",
+            "temperature": 0.1,
+            "character": "Assistant",
+            "top_p": 0.1
         }
-        response = self.session.post(url, data=payload)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        table = soup.find('table', {'id': 'tblResults'})
-        if table:
-            oscar_response = self.build_sub_prompt(prompt + str(table))
-            return True, oscar_response
+        response = requests.post(self.url, headers=self.headers, json=data)
+        content_value = response.json()['choices'][0]['message']['content']
+
+        print(content_value)
+
+        match = re.search(r'\b\d+\b', content_value)
+
+        if match:
+            numerical_value = int(match.group())
+            self.provider_number.append(numerical_value)
         else:
-            return False
+            self.provider_number.append(99)
+
+        return True
 
     def oscar_update(self):
         url = f"{self.base_url}/dms/ManageDocument.do"

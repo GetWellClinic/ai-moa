@@ -22,10 +22,10 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from datetime import datetime
-from workflow import Workflow
+from .workflow import Workflow
 
 class PdfProcessor:
-    def __init__(self, base_url, session, last_processed_pdf,enable_ocr_gpu):
+    def __init__(self, base_url, session, last_processed_pdf, enable_ocr_gpu):
         self.base_url = base_url
         self.session = session
         self.last_processed_pdf = last_processed_pdf
@@ -37,7 +37,7 @@ class PdfProcessor:
         if pdf_response.status_code == 200:
             return pdf_response.content
         else:
-            print("Failed to fetch PDF content. Status code:", pdf_response.status_code)
+            print(f"Failed to fetch PDF content. Status code: {pdf_response.status_code}")
             return None
 
     def process_pdfs(self, driver, login_url, login_successful_callback):

@@ -489,20 +489,24 @@ class Workflow:
         function_to_call = getattr(self, function_name, None)
         
         if function_to_call and callable(function_to_call):
-            print(f"Executing Task {task_number} with function {function_name} and parameters: {', '.join(params)}")
+            logger.info(f"Executing Task {task_number} with function {function_name} and parameters: {', '.join(params)}")
             
-            if 'additional_param' in function_to_call.__code__.co_varnames:
-                additional_param = previous_result if previous_result is not None else None
-                response = function_to_call(*params, additional_param=additional_param)
-            else:
-                response = function_to_call(*params)
+            try:
+                if 'additional_param' in function_to_call.__code__.co_varnames:
+                    additional_param = previous_result if previous_result is not None else None
+                    response = function_to_call(*params, additional_param=additional_param)
+                else:
+                    response = function_to_call(*params)
 
-            print(f"Response from {function_name}: {response}")
+                logger.info(f"Response from {function_name}: {response}")
 
-            if isinstance(response, tuple) and len(response) > 1:
-                return (true_next_row, response[1]) if response[0] else (false_next_row, response[1])
-            return true_next_row if response else false_next_row 
-        print(f"Error: Function {function_name} not found or not callable.")
+                if isinstance(response, tuple) and len(response) > 1:
+                    return (true_next_row, response[1]) if response[0] else (false_next_row, response[1])
+                return true_next_row if response else false_next_row 
+            except Exception as e:
+                logger.error(f"Error executing {function_name}: {e}")
+                return false_next_row
+        logger.error(f"Error: Function {function_name} not found or not callable.")
         return false_next_row 
 
     def execute_tasks(self, tasks, current_row, previous_result=None):
