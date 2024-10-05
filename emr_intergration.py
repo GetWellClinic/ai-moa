@@ -963,4 +963,3 @@ def get_pdf_files(folder_path):
     pdf_files_sorted = sorted(pdf_files)
     return pdf_files_sorted
     # return ["Sample-C10-001.pdf"]
-        self.logger.debug("Patient name: %s", name)
