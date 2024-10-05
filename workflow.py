@@ -149,7 +149,7 @@ class Workflow:
     def extract_text_doctr(self):
         # if the pdf doesnt have ocr use doctr for ocr
         pdf_path = self.filepath
-        self.logger.debug(f"Processing PDF: {pdf_path}")
+        self.logger.debug("Processing PDF: %s", pdf_path)
         text = ''
         try:
             if(self.enable_ocr_gpu == True):
@@ -164,7 +164,7 @@ class Workflow:
             result = model(doc)
             # Iterate through pages
             for page in result.pages:
-                self.logger.debug(f"Processing page {page.page_idx}")
+                self.logger.debug("Processing page %d", page.page_idx)
                 
                 # Iterate through blocks
                 for block in page.blocks:
@@ -312,7 +312,7 @@ class Workflow:
             #print(data)
 
             for item in data["results"]:
-                self.logger.debug(f"Processing item: {item}")
+                self.logger.debug("Processing item: %s", item)
                 if isinstance(item, dict):
                     if 'providerNo' in item:
                         #print(item['providerNo'])
@@ -387,7 +387,7 @@ class Workflow:
         if additional_param is not None:
             self.logger.debug("Filtering results")
             details = self.build_sub_prompt(self.tesseracted_text + prompt + str(additional_param))
-            self.logger.debug(f"Filtered results: {details}")
+            self.logger.debug("Filtered results: %s", details)
             return True,details
         else:
             return False
@@ -396,7 +396,7 @@ class Workflow:
         # will be used after filter_results to set the selected value from the array
         self.logger.debug("Setting patient")
         if additional_param is not None:
-            self.logger.debug(f"Additional param: {additional_param}")
+            self.logger.debug("Additional param: %s", additional_param)
             data = json.loads(additional_param)
             self.patient_name = data[0]['formattedName'] + '(' + data[0]['fomattedDob'] + ')'
             self.demographic_number = data[0]['demographicNo']
@@ -413,11 +413,11 @@ class Workflow:
         # will be used after filter_results to set the selected value from the array
         if additional_param is not None:
             #additional_param = '[{"firstName": "Michelle", "lastName": "Liu", "ohipNo": "", "providerNo": "999998"},{"firstName": "John", "lastName": "Doe", "ohipNo": "", "providerNo": "999998"}]'
-            self.logger.debug(f"Additional param: {additional_param}")
+            self.logger.debug("Additional param: %s", additional_param)
             data = json.loads(additional_param)
             print(data)
             for item in data:
-                self.logger.debug(f"Processing item: {item}")
+                self.logger.debug("Processing item: %s", item)
                 if isinstance(item, dict):
                     if 'providerNo' in item:
                         self.logger.debug(f"Provider number: {item['providerNo']}")

@@ -156,7 +156,7 @@ class Workflow:
     def extract_text_doctr(self):
         start_time = time.time()
         pdf_path = self.filepath
-        self.logger.debug(f"Processing PDF: {pdf_path}")
+        self.logger.debug("Processing PDF: %s", pdf_path)
         text = ''
         try:
             if(self.enable_ocr_gpu == True):
@@ -171,7 +171,7 @@ class Workflow:
             result = model(doc)
             # Iterate through pages
             for page in result.pages:
-                self.logger.debug(f"Processing page {page.page_idx}")
+                self.logger.debug("Processing page %d", page.page_idx)
                 
                 # Iterate through blocks
                 for block in page.blocks:
@@ -535,16 +535,16 @@ class Workflow:
 
             data = json.loads(response.text)
 
-            self.logger.debug(f"Provider data: {data}")
+            self.logger.debug("Provider data: %s", data)
 
             for item in data["results"]:
-                self.logger.debug(f"Processing item: {item}")
+                self.logger.debug("Processing item: %s", item)
                 if isinstance(item, dict):
                     if 'providerNo' in item:
                         #print(item['providerNo'])
                         self.provider_number.append(item['providerNo'])
 
-            self.logger.debug(f"Provider numbers: {self.provider_number}")
+            self.logger.debug("Provider numbers: %s", self.provider_number)
 
             if self.provider_number is not None:
                 return True
@@ -589,7 +589,7 @@ class Workflow:
             else:
                 return False
 
-            self.logger.debug(f"Oscar response: {oscar_response}")
+            self.logger.debug("Oscar response: %s", oscar_response)
 
     def get_document_description(self,prompt):
         result = self.build_sub_prompt(self.tesseracted_text + prompt)
@@ -601,7 +601,7 @@ class Workflow:
         if additional_param is not None:
             details = self.build_sub_prompt(self.tesseracted_text + prompt + str(additional_param))
             cleaned_string = details.replace("[", "").replace("]", "")
-            self.logger.debug(f"Filtered results: {details}")
+            self.logger.debug("Filtered results: %s", details)
             return True,cleaned_string
         else:
             self.append_to_file("Skipping filtering, not connected to oscar.")
@@ -610,7 +610,7 @@ class Workflow:
     def set_patient(self,additional_param=None):
         self.append_to_file("Storing patient details. ")
         if additional_param is not None:
-            self.logger.debug(f"Additional param: {additional_param}")
+            self.logger.debug("Additional param: %s", additional_param)
             match = re.search(r'```json\n(.*?)```', additional_param, re.DOTALL)
 
             if match:
@@ -643,19 +643,19 @@ class Workflow:
         self.append_to_file("Storing provider details. ")
         if additional_param is not None:
             #additional_param = '[{"firstName": "Michelle", "lastName": "Liu", "ohipNo": "", "providerNo": "999998"},{"firstName": "John", "lastName": "Doe", "ohipNo": "", "providerNo": "999998"}]'
-            self.logger.debug(f"Additional param: {additional_param}")
+            self.logger.debug("Additional param: %s", additional_param)
             data = json.loads(additional_param)
-            self.logger.debug(f"Provider data: {data}")
+            self.logger.debug("Provider data: %s", data)
             for item in data:
-                self.logger.debug(f"Processing item: {item}")
+                self.logger.debug("Processing item: %s", item)
                 if isinstance(item, dict):
                     if 'providerNo' in item:
-                        self.logger.debug(f"Provider number: {item['providerNo']}")
+                        self.logger.debug("Provider number: %s", item['providerNo'])
                         self.provider_number.append(item['providerNo'])
             #self.provider_number.append(data[0]['providerNo'])
             #self.provider_number.append(data[0]['providerNo'])
             #self.provider_number = data[0]['providerNo']
-            self.logger.debug(f"Provider numbers: {self.provider_number}")
+            self.logger.debug("Provider numbers: %s", self.provider_number)
             return True
         else:
             self.append_to_file("Skipping in test mode. ")
@@ -934,7 +934,7 @@ class Workflow:
             tasks = self.read_tasks_from_csv('workflow.csv')
         else:
             tasks = self.read_tasks_from_csv(str(index)+'.csv')
-        self.logger.debug(f"Processing file: {self.filepath}")
+        self.logger.debug("Processing file: %s", self.filepath)
         self.execute_tasks(tasks, 0)
 
     def append_to_file(self,content):
