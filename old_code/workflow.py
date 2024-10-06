@@ -28,6 +28,9 @@ import PyPDF2
 import requests
 import json
 import datetime
+import io
+from PIL import Image
+import pytesseract
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 from bs4 import BeautifulSoup
