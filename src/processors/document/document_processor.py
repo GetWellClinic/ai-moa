@@ -18,6 +18,7 @@ Dependencies:
 from src.config import ConfigManager
 from utils.workflow import Workflow
 from auth import LoginManager, DriverManager
+from src.logging import setup_logging
 
 
 class DocumentProcessor:
