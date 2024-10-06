@@ -35,7 +35,7 @@ from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 from huey import task
 
-from utils.config_manager import ConfigManager
+from src.config import ConfigManager
 
 
 class Workflow:
@@ -73,7 +73,7 @@ class Workflow:
         self.provider_number = []
         self.document_description = ''
         self.session = session
-        self.logger = config.logger
+        self.logger = config.setup_logging()
         self.base_url = config.get('emr',{}).get('base_url')
         self.url = config.get('ai_config', {}).get('url')
         self.headers = {
