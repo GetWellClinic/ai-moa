@@ -24,16 +24,22 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+
 class Login:
+    """Class for handling login operations in the Oscar EMR system."""
+
     def __init__(self, config, session_manager):
+        """Initialize Login with configuration and session manager."""
         self.config = config
         self.session_manager = session_manager
         self.login_url = f"{self.config.base_url}{self.config.get('urls', {}).get('login', '')}"
 
     def login_successful_callback(self, driver):
+        """Callback method to be used after a successful login attempt."""
         return self.login(driver, self.login_url)
 
     def login(self, driver, login_url):
+        """Perform the login operation using Selenium WebDriver."""
         driver.get(login_url)
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.NAME, "username")))
         

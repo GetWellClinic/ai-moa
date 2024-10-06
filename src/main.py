@@ -12,8 +12,12 @@ from processors.pdf_processor import PdfProcessor
 from processors.document_processor import DocumentProcessor
 from processors.workflow_processor import WorkflowProcessor
 
+
 class OscarAutomation:
+    """Main class for automating Oscar EMR tasks."""
+
     def __init__(self):
+        """Initialize OscarAutomation with configuration and necessary components."""
         self.config = ConfigManager('config/config.yaml')
         setup_logging(self.config.config)
         self.logger = logging.getLogger(__name__)
@@ -22,6 +26,7 @@ class OscarAutomation:
         self.ai_config = self.config.ai_config
 
     def process_pdfs(self):
+        """Process PDF documents."""
         self.logger.info("Starting PDF processing")
         with self._get_driver() as driver:
             pdf_processor = PdfProcessor(self.config, self.session_manager)
@@ -31,6 +36,7 @@ class OscarAutomation:
         self.logger.info("PDF processing completed")
 
     def process_documents(self):
+        """Process general documents."""
         self.logger.info("Starting document processing")
         with self._get_driver() as driver:
             document_processor = DocumentProcessor(self.config, self.session_manager)
@@ -40,6 +46,7 @@ class OscarAutomation:
         self.logger.info("Document processing completed")
 
     def _get_driver(self):
+        """Create and configure a Chrome WebDriver instance."""
         chrome_options = Options()
         if self.config.chrome_options['headless']:
             chrome_options.add_argument("--headless")
@@ -49,6 +56,7 @@ class OscarAutomation:
         )
 
     def process_workflow(self):
+        """Process the workflow if a workflow file path is configured."""
         if self.config.workflow_file_path:
             self.logger.info("Starting workflow processing")
             with self._get_driver() as driver:
@@ -59,6 +67,7 @@ class OscarAutomation:
             self.logger.info("Workflow processing completed")
         else:
             self.logger.warning("Workflow file path is not configured. Skipping workflow processing.")
+
 
 if __name__ == "__main__":
     oscar = OscarAutomation()

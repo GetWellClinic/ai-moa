@@ -5,15 +5,21 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from utils.workflow import Workflow
 
+
 class PdfProcessor:
+    """Class for processing PDF documents in the Oscar EMR system."""
+
     def __init__(self, config, session_manager):
+        """Initialize PdfProcessor with configuration and session manager."""
         self.config = config
         self.session_manager = session_manager
         self.logger = logging.getLogger(__name__)
 
     def get_pdf_content(self, pdf_name):
+        """Fetch the content of a PDF file from the Oscar EMR system."""
         self.logger.debug(f"Fetching PDF content for: {pdf_name}")
-        pdf_url = f"{self.config.base_url}/dms/ManageDocument.do?method=displayIncomingDocs&curPage=1&pdfDir=File&queueId=1&pdfName={pdf_name}"
+        pdf_url = (f"{self.config.base_url}/dms/ManageDocument.do?"
+                   f"method=displayIncomingDocs&curPage=1&pdfDir=File&queueId=1&pdfName={pdf_name}")
         pdf_response = self.session_manager.get_session().get(pdf_url)
         if pdf_response.status_code == 200:
             return pdf_response.content
@@ -22,6 +28,7 @@ class PdfProcessor:
             return None
 
     def process_pdfs(self, driver, login_url, login_successful_callback):
+        """Process all PDFs in the Oscar EMR system."""
         self.logger.info("Starting PDF processing")
         driver.get(login_url)
         current_url = login_successful_callback(driver)
@@ -41,6 +48,7 @@ class PdfProcessor:
         return update_time
 
     def get_pdf_list(self, driver):
+        """Get the list of PDFs available for processing."""
         select_element = driver.find_element(By.ID, "SelectPdfList")
         return [
             option for option in select_element.find_elements(By.TAG_NAME, 'option')
@@ -48,6 +56,7 @@ class PdfProcessor:
         ]
 
     def process_pdf_list(self, pdf_list):
+        """Process the list of PDFs, updating the last processed time."""
         self.logger.info("Processing PDF list")
         update_time = self.config.last_processed_pdf or pdf_list[0].text.split(") ", 1)[1]
 
@@ -60,6 +69,7 @@ class PdfProcessor:
         return update_time
 
     def process_single_pdf(self, pdf_name):
+        """Process a single PDF file."""
         self.logger.debug(f"Processing single PDF: {pdf_name}")
         pdf_content = self.get_pdf_content(pdf_name)
         if pdf_content:

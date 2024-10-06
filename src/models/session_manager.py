@@ -1,13 +1,18 @@
 import requests
 import logging
 
+
 class SessionManager:
+    """Class for managing sessions in the Oscar EMR system."""
+
     def __init__(self, config):
+        """Initialize SessionManager with configuration."""
         self.config = config
         self.session = requests.Session()
         self.logger = logging.getLogger(__name__)
 
     def login(self):
+        """Perform login and establish a session."""
         login_url = f"{self.config.base_url}{self.config.get('urls', {}).get('login', '')}"
         response = self.session.post(
             login_url,
@@ -26,4 +31,5 @@ class SessionManager:
             return True
 
     def get_session(self):
+        """Return the current session object."""
         return self.session

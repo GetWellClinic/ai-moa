@@ -1,13 +1,18 @@
 import logging
 from utils.workflow import Workflow
 
+
 class WorkflowProcessor:
+    """Class for processing workflows in the Oscar EMR system."""
+
     def __init__(self, config, session_manager):
+        """Initialize WorkflowProcessor with configuration and session manager."""
         self.config = config
         self.session_manager = session_manager
         self.logger = logging.getLogger(__name__)
 
     def process_workflow(self, driver, login_url, login_successful_callback):
+        """Process the workflow defined in the configuration."""
         self.logger.info("Starting workflow processing")
         driver.get(login_url)
         current_url = login_successful_callback(driver)

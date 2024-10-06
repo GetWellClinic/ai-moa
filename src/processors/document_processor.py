@@ -4,13 +4,18 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from utils.workflow import Workflow
 
+
 class DocumentProcessor:
+    """Class for processing documents in the Oscar EMR system."""
+
     def __init__(self, config, session_manager):
+        """Initialize DocumentProcessor with configuration and session manager."""
         self.config = config
         self.session_manager = session_manager
         self.logger = logging.getLogger(__name__)
 
     def get_file_content(self, doc_no):
+        """Fetch the content of a document file from the Oscar EMR system."""
         self.logger.debug(f"Fetching file content for document number: {doc_no}")
         file_url = f"{self.config.base_url}/dms/ManageDocument.do?method=display&doc_no={doc_no}"
         file_response = self.session_manager.get_session().get(file_url)
@@ -23,6 +28,7 @@ class DocumentProcessor:
             return False
 
     def process_documents(self, driver, login_url, login_successful_callback):
+        """Process all documents in the Oscar EMR system."""
         self.logger.info("Starting document processing")
         driver.get(login_url)
         current_url = login_successful_callback(driver)
@@ -44,6 +50,7 @@ class DocumentProcessor:
         return self.config.last_pending_doc_file
 
     def process_single_document(self, doc_no):
+        """Process a single document file."""
         self.logger.debug(f"Processing single document: {doc_no}")
         if self.get_file_content(doc_no):
             workflow = Workflow(
