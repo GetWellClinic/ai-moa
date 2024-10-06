@@ -15,9 +15,7 @@ The module uses several components:
 
 from huey import MemoryHuey
 from huey.api import task, TaskLock
-from utils.login_manager import LoginManager
-from utils.driver_manager import DriverManager
-from models.session_manager import SessionManager
+from auth import LoginManager, DriverManager, SessionManager
 from models.login import Login
 from processors.document_processor import DocumentProcessor
 from processors.pdf.pdf_processor import PdfProcessor

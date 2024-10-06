@@ -7,7 +7,7 @@ of predefined workflows within the Oscar EMR system using Huey for task manageme
 
 from utils.config_manager import ConfigManager
 from utils.workflow import Workflow
-from utils.login_manager import LoginManager
+from auth import LoginManager
 
 from .step_executor import WorkflowStepExecutor
 from .task_manager import WorkflowTaskManager
