@@ -25,11 +25,13 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 class Login:
-    def __init__(self, username, password, pin, base_url):
-        self.username = username
-        self.password = password
-        self.pin = pin
-        self.base_url = base_url
+    def __init__(self, config, session_manager):
+        self.config = config
+        self.session_manager = session_manager
+        self.login_url = f"{self.config.base_url}{self.config.get('urls', {}).get('login', '')}"
+
+    def login_successful_callback(self, driver):
+        return self.login(driver, self.login_url)
 
     def login(self, driver, login_url):
         driver.get(login_url)
@@ -39,9 +41,9 @@ class Login:
         password_field = driver.find_element(By.NAME, "password")
         pin_field = driver.find_element(By.NAME, "pin")
 
-        username_field.send_keys(self.username)
-        password_field.send_keys(self.password)
-        pin_field.send_keys(self.pin)
+        username_field.send_keys(self.config.user_login['username'])
+        password_field.send_keys(self.config.user_login['password'])
+        pin_field.send_keys(self.config.user_login['pin'])
         pin_field.send_keys(Keys.RETURN)
 
         WebDriverWait(driver, 10).until(EC.url_changes(login_url))

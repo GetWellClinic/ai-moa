@@ -6,17 +6,15 @@ from selenium.webdriver.support import expected_conditions as EC
 from utils.workflow import Workflow
 
 class PdfProcessor:
-    def __init__(self, base_url, session, last_processed_pdf, enable_ocr_gpu):
-        self.base_url = base_url
-        self.session = session
-        self.last_processed_pdf = last_processed_pdf
-        self.enable_ocr_gpu = enable_ocr_gpu
+    def __init__(self, config, session_manager):
+        self.config = config
+        self.session_manager = session_manager
         self.logger = logging.getLogger(__name__)
 
     def get_pdf_content(self, pdf_name):
         self.logger.debug(f"Fetching PDF content for: {pdf_name}")
-        pdf_url = f"{self.base_url}/dms/ManageDocument.do?method=displayIncomingDocs&curPage=1&pdfDir=File&queueId=1&pdfName={pdf_name}"
-        pdf_response = self.session.get(pdf_url)
+        pdf_url = f"{self.config.base_url}/dms/ManageDocument.do?method=displayIncomingDocs&curPage=1&pdfDir=File&queueId=1&pdfName={pdf_name}"
+        pdf_response = self.session_manager.get_session().get(pdf_url)
         if pdf_response.status_code == 200:
             return pdf_response.content
         else:
@@ -27,12 +25,12 @@ class PdfProcessor:
         self.logger.info("Starting PDF processing")
         driver.get(login_url)
         current_url = login_successful_callback(driver)
-        if current_url == f"{self.base_url}/login.do":
+        if current_url == f"{self.config.base_url}/login.do":
             self.logger.error("Login failed.")
-            return self.last_processed_pdf
+            return self.config.last_processed_pdf
 
         self.logger.info("Login successful!")
-        driver.get(f"{self.base_url}/dms/incomingDocs.jsp")
+        driver.get(f"{self.config.base_url}/dms/incomingDocs.jsp")
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "SelectPdfList")))
         driver.execute_script("loadPdf('1', 'File');")
 
@@ -48,7 +46,7 @@ class PdfProcessor:
 
     def process_pdf_list(self, pdf_list):
         self.logger.info("Processing PDF list")
-        update_time = self.last_processed_pdf or pdf_list[0].text.split(") ", 1)[1]
+        update_time = self.config.last_processed_pdf or pdf_list[0].text.split(") ", 1)[1]
 
         for option in pdf_list:
             current_time = option.text.split(") ", 1)[1]
@@ -64,7 +62,7 @@ class PdfProcessor:
         if pdf_content:
             with open("downloaded_pdf.pdf", "wb") as f:
                 f.write(pdf_content)
-            workflow = Workflow("downloaded_pdf.pdf", self.session, self.base_url, pdf_name, self.enable_ocr_gpu)
+            workflow = Workflow("downloaded_pdf.pdf", self.session_manager.get_session(), self.config.base_url, pdf_name, self.config.enable_ocr_gpu)
             workflow.execute_tasks_from_csv()
             os.remove("downloaded_pdf.pdf")
         else:
