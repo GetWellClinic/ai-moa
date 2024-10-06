@@ -20,26 +20,37 @@
 # ***
 
 import fitz
+import logging
 
+logger = logging.getLogger(__name__)
 
 def has_ocr(pdf_path):
+    """
+    Check if a PDF file has an OCR layer.
+
+    Args:
+        pdf_path (str): Path to the PDF file.
+
+    Returns:
+        bool: True if the PDF has an OCR layer, False otherwise.
+    """
     try:
-        pdf_document = fitz.open(pdf_path)
-        for page_num in range(len(pdf_document)):
-            page = pdf_document.load_page(page_num)
-            text = page.get_text()
-            if text.strip():
-                return True
+        with fitz.open(pdf_path) as pdf_document:
+            for page in pdf_document:
+                if page.get_text().strip():
+                    return True
         return False
     except Exception as e:
-        print("An error occurred:", e)
+        logger.error(f"An error occurred while checking OCR: {e}")
         return False
 
-
 if __name__ == "__main__":
-    pdf_path = "sample.pdf"
+    import sys
 
-    if has_ocr(pdf_path):
-        print("PDF has OCR layer.")
-    else:
-        print("PDF does not have OCR layer.")
+    if len(sys.argv) != 2:
+        print("Usage: python ocr_check.py <pdf_file_path>")
+        sys.exit(1)
+
+    pdf_path = sys.argv[1]
+    result = "has" if has_ocr(pdf_path) else "does not have"
+    print(f"The PDF {result} an OCR layer.")
