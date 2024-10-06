@@ -694,7 +694,7 @@ class Workflow:
 
         if table:
             #print(table)
-            oscar_response = self.build_sub_prompt(self.tesseracted_text + prompt + str(table))
+            oscar_response = self.build_sub_prompt(str(table))
             self.logger.debug("Oscar response: %s", oscar_response)
             data = {
                 "messages": [
