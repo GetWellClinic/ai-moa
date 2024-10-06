@@ -205,31 +205,27 @@ class Workflow:
             self.logger.error(f"An error occurred in extract_text_from_pdf_file: {e}")
             return False
 
-    def build_prompt(self,prompt):
-        # will be executed first, workflow starts from workflow.csv
+    def build_prompt(self, prompt):
         data = {
             "messages": [
-                {
-                    "role": "system",
-                    "content": "You are a helpful assistant designed to output JSON."
-                },
-                {
-                    "role": "user",
-                    "content": self.tesseracted_text + '. '+ prompt
-                }
+                {"role": "system", "content": "You are a helpful assistant designed to output JSON."},
+                {"role": "user", "content": f"{self.tesseracted_text}. {prompt}"}
             ],
             "mode": "instruct",
             "temperature": self.config.get('ai_config', {}).get('temperature', 0.1),
             "character": "Assistant",
             "top_p": self.config.get('ai_config', {}).get('top_p', 0.1)
         }
-        response = requests.post(self.url, headers=self.headers, json=data)
-        self.logger.debug("LLM response: %s", response.json())
-        content_value = response.json()['choices'][0]['message']['content']
-        self.logger.debug("Content value: %s", content_value)
-        # find the file type
-        self.find_category_index(content_value)
-        return True
+        try:
+            response = requests.post(self.url, headers=self.headers, json=data, timeout=30)
+            response.raise_for_status()
+            content_value = response.json()['choices'][0]['message']['content']
+            self.logger.debug("LLM response content: %s", content_value)
+            self.find_category_index(content_value)
+            return True
+        except requests.RequestException as e:
+            self.logger.error(f"Error in build_prompt: {e}")
+            return False
 
     def build_sub_prompt(self,prompt):
         data = {
@@ -431,80 +427,70 @@ class Workflow:
 
     def patientSearch(self, prompt, type_of_query):
         self.logger.debug(f"Searching for patient with type: {type_of_query}")
-        # to be used to search for a demographic using the below types
-        # Type : search_name,search_phone,search_dob,search_address,search_hin,search_chart_no,search_demographic_no
-        # filter_results can be used to select one from that array
-        query = self.build_sub_prompt(self.tesseracted_text + prompt)
-        array_pattern = r'\[.*?\]'
-        if query:
-            if '.' in query:
-                query = query.replace('.', '')
+        query = self.build_sub_prompt(f"{self.tesseracted_text} {prompt}")
+        if not query:
+            self.logger.info("No query generated from prompt")
+            return False
 
-            url = f"{self.base_url}/demographic/demographiccontrol.jsp"
+        query = query.replace('.', '')
+        url = f"{self.base_url}/demographic/demographiccontrol.jsp"
+        payload = {
+            "search_mode": type_of_query,
+            "keyword": query,
+            "orderby": ["last_name", "first_name"],
+            "dboperation": "search_titlename",
+            "limit1": 0,
+            "limit2": 10,
+            "displaymode": "Search",
+            "ptstatus": "active",
+            "fromMessenger": "False",
+            "outofdomain": ""
+        }
 
-            # Define the payload data
-            payload = {
-                          "search_mode": type_of_query,
-                          "keyword": query,
-                          "orderby": ["last_name", "first_name"],
-                          "dboperation": "search_titlename",
-                          "limit1": 0,
-                          "limit2": 10,
-                          "displaymode": "Search",
-                          "ptstatus": "active",
-                          "fromMessenger": "False",
-                          "outofdomain": ""
-                        }
-
-            # Send the POST request
-            self.logger.debug("Sending POST request to search for patient")
-            response = self.session.post(url, data=payload)
-
+        try:
+            response = self.session.post(url, data=payload, timeout=30)
+            response.raise_for_status()
             soup = BeautifulSoup(response.text, 'html.parser')
-
-            table = soup.find_all(class_="odd")
-            table += soup.find_all(class_="even")
+            table = soup.find_all(class_=["odd", "even"])
 
             if table:
                 self.logger.debug("Patient search results found")
-                return True,str(table)
+                return True, str(table)
             else:
                 self.logger.info("No patient search results found")
                 return False
+        except requests.RequestException as e:
+            self.logger.error(f"Error in patientSearch: {e}")
+            return False
 
-    def getProviderList(self,prompt):
-        # to be used to get all the providers list from oscar.
+    def getProviderList(self, prompt):
         self.logger.debug("Getting provider list")
-        # filter_results should be used to select one from that array
         url = f"{self.base_url}/admin/providersearchresults.jsp"
-
-        # Define the payload data
         payload = {
-                      "search_mode": "search_providerno",
-                      "search_status": "All",
-                      "keyword": "",
-                      "button": "",
-                      "orderby": "last_name",
-                      "limit1": 0,
-                      "limit2": 10000
-                    }
+            "search_mode": "search_providerno",
+            "search_status": "All",
+            "keyword": "",
+            "button": "",
+            "orderby": "last_name",
+            "limit1": 0,
+            "limit2": 10000
+        }
 
-        # Send the POST request
-        self.logger.debug("Sending POST request to get provider list")
-        response = self.session.post(url, data=payload)
+        try:
+            response = self.session.post(url, data=payload, timeout=30)
+            response.raise_for_status()
+            soup = BeautifulSoup(response.text, 'html.parser')
+            table = soup.find('table', {'id': 'tblResults'})
 
-        soup = BeautifulSoup(response.text, 'html.parser')
-
-        table = soup.find('table', {'id': 'tblResults'})
-
-        if table:
-            #print(table)
-            oscar_response = self.build_sub_prompt(prompt + str(table))
-            self.logger.debug("Provider list retrieved")
-            #print(oscar_response)
-            return True,oscar_response
-        else:
-            self.logger.info("No provider list found")
+            if table:
+                oscar_response = self.build_sub_prompt(f"{prompt} {table}")
+                self.logger.debug("Provider list retrieved")
+                return True, oscar_response
+            else:
+                self.logger.info("No provider list found")
+                return False
+        except requests.RequestException as e:
+            self.logger.error(f"Error in getProviderList: {e}")
             return False
 
     def oscar_update(self):
@@ -512,7 +498,6 @@ class Workflow:
         self.logger.info("Updating Oscar")
         url = f"{self.base_url}/dms/ManageDocument.do"
 
-        # Define the parameters
         params = {
             "method": "addIncomingDocument",
             "pdfDir": "File",
@@ -531,28 +516,25 @@ class Workflow:
             "saved": "false",
             "demog": "1",
             "demographicKeyword": self.patient_name,
-            "provi": self.provider_number[0],
+            "provi": self.provider_number[0] if self.provider_number else "",
             "MRPNo": self.mrp,
             "MRPName": "undefined",
             "ProvKeyword": "",
-            "save": "Save & Next"
+            "save": "Save & Next",
+            "flagproviders": self.provider_number + [127]  # Add provider 127 to all
         }
 
-        params["flagproviders"] = []
-
-        params["flagproviders"] = []
-
-        # Add provider to all
-        self.provider_number.append(127)
-
-        for value in self.provider_number:
-            params["flagproviders"].append(value)
         self.logger.debug(f"Oscar update params: {params}")
-        response = self.session.post(url, data=params)
-        self.logger.debug(f"Oscar update response status: {response.status_code}")
-        self.logger.debug(f"Oscar update response: {response}")
-
-        return True
+        
+        try:
+            response = self.session.post(url, data=params, timeout=30)
+            response.raise_for_status()
+            self.logger.debug(f"Oscar update response status: {response.status_code}")
+            self.logger.debug(f"Oscar update response: {response.text}")
+            return True
+        except requests.RequestException as e:
+            self.logger.error(f"Error in oscar_update: {e}")
+            return False
 
     def execute_task(self,task, previous_result=None):
         task_number, function_name, *params, true_next_row, false_next_row = task
