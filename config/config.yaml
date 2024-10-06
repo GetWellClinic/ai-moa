@@ -1,0 +1,29 @@
+# Huey Configuration
+huey:
+  name: workflow_queue
+  results: True
+  store_none: False
+  always_eager: True  # Set to True for memory-only method
+
+# Logging Configuration
+logging:
+  level: INFO
+  format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+  filename: 'workflow.log'
+
+# EMR Configuration
+emr:
+  base_url: 'http://localhost:8080/oscar'
+  username: 'admin'
+  password: 'admin'
+
+# OCR Configuration
+ocr:
+  enable_gpu: False
+  tesseract_path: '/usr/bin/tesseract'
+
+# File Processing
+file_processing:
+  input_directory: '/path/to/input/files'
+  output_directory: '/path/to/output/files'
+  allowed_extensions: ['.pdf', '.jpg', '.png', '.tiff']
