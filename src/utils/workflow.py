@@ -586,16 +586,23 @@ class Workflow:
 
     def execute_workflow(self):
         self.logger.info("Executing workflow")
-        workflow_steps = self.config.get('workflow_tasks', [])
-        for step in workflow_steps:
-            self.execute_step(step[0], **step[1] if len(step) > 1 else {})
+        current_step = self.workflow_config.workflow_steps[0]['name']
+        while current_step != 'exit':
+            self.logger.info(f"Executing step: {current_step}")
+            result = self.execute_step(current_step)
+            current_step = self.workflow_config.get_next_step(current_step, result)
 
     @task()
-    def execute_step(self, step_name, **params):
+    def execute_step(self, step_name):
         function_to_call = getattr(self, step_name, None)
         if function_to_call and callable(function_to_call):
-            self.logger.info(f"Executing step: {step_name}")
-            return function_to_call(**params)
+            try:
+                result = function_to_call()
+                self.logger.info(f"Step {step_name} completed with result: {result}")
+                return result
+            except Exception as e:
+                self.logger.error(f"Error executing step {step_name}: {str(e)}")
+                return False
         else:
             self.logger.error(f"Error: Function {step_name} not found or not callable.")
-            return None
+            return False

@@ -136,14 +136,30 @@ class WorkflowConfigManager:
         self.save_config()
 
     @property
-    def workflow_steps(self) -> List[Dict[str, str]]:
+    def workflow_steps(self) -> List[Dict[str, Any]]:
         """
         Get the workflow steps.
 
         Returns:
-            List[Dict[str, str]]: List of workflow steps.
+            List[Dict[str, Any]]: List of workflow steps with their decision paths.
         """
         return self.config['workflow']['steps']
+
+    def get_next_step(self, current_step: str, outcome: bool) -> str:
+        """
+        Get the next step based on the current step and its outcome.
+
+        Args:
+            current_step (str): The name of the current step.
+            outcome (bool): The outcome of the current step (True or False).
+
+        Returns:
+            str: The name of the next step.
+        """
+        for step in self.workflow_steps:
+            if step['name'] == current_step:
+                return step['true_next'] if outcome else step['false_next']
+        raise ValueError(f"Step '{current_step}' not found in workflow configuration.")
 
     @property
     def document_categories(self) -> List[str]:

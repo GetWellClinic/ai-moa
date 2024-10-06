@@ -2,16 +2,41 @@
 workflow:
   steps:
     - name: has_ocr
+      true_next: extract_text_from_pdf_file
+      false_next: extract_text_doctr
     - name: extract_text_from_pdf
+      true_next: build_prompt
+      false_next: exit
     - name: extract_text_from_pdf_file
+      true_next: build_prompt
+      false_next: exit
     - name: extract_text_doctr
+      true_next: build_prompt
+      false_next: exit
     - name: build_prompt
+      true_next: get_document_description
+      false_next: exit
     - name: get_document_description
+      true_next: getProviderList
+      false_next: exit
     - name: getProviderList
+      true_next: get_patient_name
+      false_next: exit
     - name: get_patient_name
+      true_next: set_patient
+      false_next: unidentified_patient
     - name: set_patient
+      true_next: set_doctor
+      false_next: exit
     - name: set_doctor
+      true_next: oscar_update
+      false_next: exit
     - name: oscar_update
+      true_next: exit
+      false_next: exit
+    - name: unidentified_patient
+      true_next: set_doctor
+      false_next: exit
 
 # Document Categories
 document_categories:
