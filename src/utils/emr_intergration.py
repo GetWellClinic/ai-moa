@@ -59,7 +59,7 @@ class Workflow:
         self.file_name = file_name
         self.enable_ocr_gpu = enable_ocr_gpu
         self.logger = logging.getLogger(__name__)
-        self.url = "http://localhost:5000/v1/chat/completions"
+        self.url = "http://127.0.0.1:5000/v1/chat/completions"
         self.headers = {
             "Authorization": "Bearer qwerty",
             "Content-Type": "application/json"
@@ -227,7 +227,6 @@ class Workflow:
 
     def build_prompt(self,prompt):
         # will be executed first, workflow starts from workflow.csv
-        start_time = time.time()
         data = {
             "messages": [
                 {
