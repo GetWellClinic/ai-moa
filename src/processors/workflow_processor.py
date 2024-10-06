@@ -3,6 +3,16 @@ Module for processing workflows in the Oscar EMR system using Huey tasks.
 
 This module contains the WorkflowProcessor class which handles the execution
 of predefined workflows within the Oscar EMR system using Huey for task management.
+
+The module provides functionality to:
+1. Process entire workflows
+2. Execute individual workflow steps
+3. Manage task locking to prevent concurrent execution
+
+Dependencies:
+- utils.workflow: For workflow execution
+- utils.config_manager: For accessing configuration settings
+- huey: For task queue management and task locking
 """
 
 from utils.workflow import Workflow
@@ -39,12 +49,17 @@ class WorkflowProcessor:
         Process the workflow defined in the configuration using Huey tasks.
 
         This method logs into the EMR system and executes the workflow
-        defined in the configuration using Huey tasks.
+        defined in the configuration. It uses a TaskLock to ensure that
+        only one instance of the workflow is running at a time.
 
         Args:
             driver: Selenium WebDriver instance.
             login_url (str): URL for logging into the EMR system.
             login_successful_callback: Callback function to execute after successful login.
+
+        Note:
+            This method is decorated as a Huey task, allowing it to be
+            executed asynchronously in the task queue.
         """
         with TaskLock('workflow_processing'):
             print("Starting workflow processing")
@@ -63,11 +78,19 @@ class WorkflowProcessor:
         """
         Execute a specific workflow step as a Huey task.
 
+        This method allows individual steps of a workflow to be executed
+        as separate tasks. It uses a TaskLock to prevent concurrent
+        execution of the same step.
+
         Args:
             step_name (str): Name of the workflow step to execute.
             *args: Variable length argument list for the step.
             **kwargs: Arbitrary keyword arguments for the step.
+
+        Note:
+            This method is decorated as a Huey task, allowing it to be
+            executed asynchronously in the task queue.
         """
         with TaskLock(f'workflow_step_{step_name}'):
-            workflow = Workflow(self.workflow_config, self.session_manager.get_session(), self.config)
+            workflow = Workflow(self.session_manager.get_session(), self.config)
             workflow.execute_step(step_name, *args, **kwargs)

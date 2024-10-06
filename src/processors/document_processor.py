@@ -3,10 +3,19 @@ Module for processing documents in the Oscar EMR system.
 
 This module contains the DocumentProcessor class which handles the retrieval
 and processing of various documents from the Oscar EMR system.
+
+The module provides functionality to:
+1. Fetch individual document content
+2. Process multiple documents in batch
+3. Execute workflows on document files
+
+Dependencies:
+- utils.workflow: For executing document workflows
+- utils.config_manager: For accessing configuration settings
+- selenium: For web automation (implied through the use of WebDriver)
 """
 
 from utils.workflow import Workflow
-
 from utils.config_manager import ConfigManager
 
 class DocumentProcessor:
@@ -19,6 +28,7 @@ class DocumentProcessor:
     Attributes:
         config (ConfigManager): Configuration manager for the system.
         session: Session object for making HTTP requests.
+        base_url (str): Base URL of the EMR system.
     """
 
     def __init__(self, config: ConfigManager, session):
@@ -31,16 +41,23 @@ class DocumentProcessor:
         """
         self.config = config
         self.session = session
+        self.base_url = config.get('base_url')
 
     def get_file_content(self, name):
         """
         Fetch the content of a document file from the Oscar EMR system.
 
+        This method sends a GET request to retrieve the document content and
+        saves it as a PDF file if successful.
+
         Args:
-            name (str): Document name to fetch.
+            name (str): Document name or identifier to fetch.
 
         Returns:
             bool: True if the file was successfully fetched and saved, False otherwise.
+
+        Note:
+            The method saves the fetched document as "downloaded_pdf.pdf" in the current directory.
         """
         file_url = f"{self.base_url}/dms/ManageDocument.do?method=display&doc_no={name}"
         file_response = self.session.get(file_url)
@@ -56,6 +73,9 @@ class DocumentProcessor:
         """
         Process all documents in the Oscar EMR system.
 
+        This method logs into the EMR system, retrieves a list of documents,
+        and processes each document that hasn't been processed before.
+
         Args:
             driver: Selenium WebDriver instance.
             login_url (str): URL for logging into the EMR system.
@@ -63,16 +83,23 @@ class DocumentProcessor:
 
         Returns:
             str: Document number of the last processed document.
+
+        Note:
+            This method updates the 'last_pending_doc_file' configuration value
+            after processing each document.
         """
+        # Attempt to log in
         driver.get(login_url)
         current_url = login_successful_callback(driver)
-        if current_url == f"{self.config.get('base_url')}/login.do":
+        if current_url == f"{self.base_url}/login.do":
             print("Login failed.")
             return self.config.get('last_pending_doc_file')
 
-        driver.get(f"{self.config.get('base_url')}/dms/inboxManage.do?method=getDocumentsInQueues")
+        # Navigate to the documents page
+        driver.get(f"{self.base_url}/dms/inboxManage.do?method=getDocumentsInQueues")
         script_value = driver.execute_script("return typeDocLab;")
 
+        # Process each document
         for item in script_value['DOC']:
             if int(item) > int(self.config.get('last_pending_doc_file')):
                 if self.get_file_content(item):

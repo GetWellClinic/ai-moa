@@ -3,12 +3,21 @@ Module for managing configuration settings.
 
 This module contains the ConfigManager and WorkflowConfigManager classes which handle loading,
 saving, and accessing configuration settings for the application and workflow respectively.
+
+The module provides functionality to:
+1. Load and save configuration from/to YAML files
+2. Access and modify configuration settings
+3. Manage workflow-specific configurations
+
+Dependencies:
+- os: For file path operations
+- yaml: For parsing and dumping YAML files
+- typing: For type hinting
 """
 
 import os
 import yaml
 from typing import Dict, Any, List
-
 
 class ConfigManager:
     """
@@ -38,12 +47,22 @@ class ConfigManager:
 
         Returns:
             Dict[str, Any]: Dictionary containing the configuration settings.
+
+        Raises:
+            FileNotFoundError: If the configuration file is not found.
+            yaml.YAMLError: If there's an error parsing the YAML file.
         """
         with open(self.config_path, 'r') as file:
             return yaml.safe_load(file)
 
     def save_config(self):
-        """Save the current configuration to the YAML file."""
+        """
+        Save the current configuration to the YAML file.
+
+        Raises:
+            IOError: If there's an error writing to the file.
+            yaml.YAMLError: If there's an error dumping the configuration to YAML.
+        """
         with open(self.config_path, 'w') as file:
             yaml.dump(self.config, file)
 
@@ -70,9 +89,6 @@ class ConfigManager:
         """
         self.config[key] = value
         self.save_config()
-
-    # ... (rest of the ConfigManager class remains unchanged)
-
 
 class WorkflowConfigManager:
     """
@@ -102,12 +118,22 @@ class WorkflowConfigManager:
 
         Returns:
             Dict[str, Any]: Dictionary containing the workflow configuration settings.
+
+        Raises:
+            FileNotFoundError: If the configuration file is not found.
+            yaml.YAMLError: If there's an error parsing the YAML file.
         """
         with open(self.config_path, 'r') as file:
             return yaml.safe_load(file)
 
     def save_config(self):
-        """Save the current workflow configuration to the YAML file."""
+        """
+        Save the current workflow configuration to the YAML file.
+
+        Raises:
+            IOError: If there's an error writing to the file.
+            yaml.YAMLError: If there's an error dumping the configuration to YAML.
+        """
         with open(self.config_path, 'w') as file:
             yaml.dump(self.config, file)
 
