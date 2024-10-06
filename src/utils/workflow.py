@@ -153,25 +153,32 @@ class Workflow:
         start_time = time.time()
         pdf_path = self.filepath
         self.logger.debug("Processing PDF: %s", pdf_path)
-        text = ''
         try:
             device = torch.device("cuda:0" if self.enable_ocr_gpu and torch.cuda.is_available() else "cpu")
             model = ocr_predictor(pretrained=True).to(device)
             doc = DocumentFile.from_pdf(pdf_path)
             result = model(doc)
             
-            for page in result.pages:
-                self.logger.debug("Processing page %d", page.page_idx)
-                for block in page.blocks:
-                    for line in block.lines:
-                        text += ' '.join(word.value for word in line.words) + '\n'
-
+            text = self._process_ocr_result(result)
             self.tesseracted_text = text.strip()
-            self.logger.info(f"OCR completed in {time.time() - start_time:.2f} seconds")
+            
+            elapsed_time = time.time() - start_time
+            self.logger.info(f"OCR completed in {elapsed_time:.2f} seconds")
             return True
         except Exception as e:
             self.logger.exception(f"Error in extract_text_doctr: {e}")
             return False
+
+    def _process_ocr_result(self, result):
+        text = []
+        for page in result.pages:
+            self.logger.debug("Processing page %d", page.page_idx)
+            page_text = []
+            for block in page.blocks:
+                for line in block.lines:
+                    page_text.append(' '.join(word.value for word in line.words))
+            text.append('\n'.join(page_text))
+        return '\n\n'.join(text)
 
     def extract_text_from_pdf_file(self):
         #if pdf has ocr get the text, no need to use doctr ocr
@@ -192,7 +199,15 @@ class Workflow:
             return False
 
     def build_prompt(self, prompt):
-        data = {
+        data = self._prepare_prompt_data(prompt)
+        try:
+            return self._send_prompt_request(data)
+        except requests.RequestException as e:
+            self.logger.error(f"Error in build_prompt: {e}")
+            return False
+
+    def _prepare_prompt_data(self, prompt):
+        return {
             "messages": [
                 {"role": "system", "content": "You are a helpful assistant designed to output JSON."},
                 {"role": "user", "content": f"{self.tesseracted_text}. {prompt}"}
@@ -202,16 +217,14 @@ class Workflow:
             "character": "Assistant",
             "top_p": self.config.get('ai_config', {}).get('top_p', 0.1)
         }
-        try:
-            response = requests.post(self.url, headers=self.headers, json=data, timeout=30)
-            response.raise_for_status()
-            content_value = response.json()['choices'][0]['message']['content']
-            self.logger.debug("LLM response content: %s", content_value)
-            self.find_category_index(content_value)
-            return True
-        except requests.RequestException as e:
-            self.logger.error(f"Error in build_prompt: {e}")
-            return False
+
+    def _send_prompt_request(self, data):
+        response = requests.post(self.url, headers=self.headers, json=data, timeout=30)
+        response.raise_for_status()
+        content_value = response.json()['choices'][0]['message']['content']
+        self.logger.debug("LLM response content: %s", content_value)
+        self.find_category_index(content_value)
+        return True
 
     def build_sub_prompt(self,prompt):
         data = {
@@ -413,12 +426,25 @@ class Workflow:
 
     def patientSearch(self, prompt, type_of_query):
         self.logger.debug(f"Searching for patient with type: {type_of_query}")
+        query = self._generate_patient_query(prompt)
+        if not query:
+            return False
+
+        try:
+            response = self._send_patient_search_request(query, type_of_query)
+            return self._process_patient_search_response(response)
+        except requests.RequestException as e:
+            self.logger.error(f"Error in patientSearch: {e}")
+            return False
+
+    def _generate_patient_query(self, prompt):
         query = self.build_sub_prompt(f"{self.tesseracted_text} {prompt}")
         if not query:
             self.logger.info("No query generated from prompt")
-            return False
+            return None
+        return query.replace('.', '')
 
-        query = query.replace('.', '')
+    def _send_patient_search_request(self, query, type_of_query):
         url = f"{self.base_url}/demographic/demographiccontrol.jsp"
         payload = {
             "search_mode": type_of_query,
@@ -432,21 +458,18 @@ class Workflow:
             "fromMessenger": "False",
             "outofdomain": ""
         }
+        response = self.session.post(url, data=payload, timeout=30)
+        response.raise_for_status()
+        return response
 
-        try:
-            response = self.session.post(url, data=payload, timeout=30)
-            response.raise_for_status()
-            soup = BeautifulSoup(response.text, 'html.parser')
-            table = soup.find_all(class_=["odd", "even"])
-
-            if table:
-                self.logger.debug("Patient search results found")
-                return True, str(table)
-            else:
-                self.logger.info("No patient search results found")
-                return False
-        except requests.RequestException as e:
-            self.logger.error(f"Error in patientSearch: {e}")
+    def _process_patient_search_response(self, response):
+        soup = BeautifulSoup(response.text, 'html.parser')
+        table = soup.find_all(class_=["odd", "even"])
+        if table:
+            self.logger.debug("Patient search results found")
+            return True, str(table)
+        else:
+            self.logger.info("No patient search results found")
             return False
 
     def getProviderList(self, prompt):
