@@ -22,8 +22,8 @@ from processors.workflow_processor import WorkflowProcessor
 
 class OscarAutomation:
     def __init__(self):
-        config_path = os.path.join(os.path.dirname(__file__), 'config', 'config.yaml')
-        self.config = load_config(config_path)
+        self.config_path = os.path.join(os.path.dirname(__file__), 'config', 'config.yaml')
+        self.config = load_config(self.config_path)
         setup_logging(self.config)
         self.logger = logging.getLogger(__name__)
         self.username = self.config['user_login']['username']
@@ -58,7 +58,7 @@ class OscarAutomation:
         with self._get_driver() as driver:
             pdf_processor = PdfProcessor(self.base_url, self.session, self.last_processed_pdf, self.enable_ocr_gpu)
             self.config["last_processed_pdf"] = pdf_processor.process_pdfs(driver, f"{self.base_url}/login.do", self.login_successful_callback)
-            save_config(self.config, config_path)
+            save_config(self.config, self.config_path)
         self.logger.info("PDF processing completed")
 
     def process_documents(self):
