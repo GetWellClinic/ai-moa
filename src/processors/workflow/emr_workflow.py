@@ -1,8 +1,8 @@
 from typing import Dict, Any, List
 from huey import crontab, task
-from src.config.config_manager import ConfigManager
+from config import ConfigManager
 
-from src.logging.logging_setup import setup_logging
+from logging import setup_logging
 
 class Workflow:
     def __init__(self, config: ConfigManager):
