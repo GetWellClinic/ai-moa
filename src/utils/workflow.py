@@ -29,6 +29,7 @@ import requests
 import json
 import datetime
 import logging
+import logging
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 from bs4 import BeautifulSoup

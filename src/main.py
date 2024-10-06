@@ -14,7 +14,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 from utils.config_loader import load_config, save_config
 from utils.logging_setup import setup_logging
-from models.login import Login
+from src.models.login import Login
 from processors.pdf_processor import PdfProcessor
 from processors.document_processor import DocumentProcessor
 from processors.workflow_processor import WorkflowProcessor
