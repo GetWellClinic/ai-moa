@@ -29,6 +29,8 @@ from PIL import Image
 
 logger = logging.getLogger(__name__)
 
+from src.config.config_manager import ConfigManager
+
 def extract_text_from_pdf(pdf_path, config: ConfigManager):
     enable_ocr_gpu = config.get('general.enable_ocr_gpu', False)
     tesseract_path = config.get('general.ocr.tesseract_path', '/usr/bin/tesseract')

@@ -34,6 +34,9 @@ from doctr.models import ocr_predictor
 from guidance import select
 
 
+import io
+from PIL import Image
+import pytesseract
 from src.config.config_manager import ConfigManager
 
 class Workflow:
