@@ -32,9 +32,9 @@ from huey import MemoryHuey
 from huey.api import task, TaskLock
 from auth import LoginManager, DriverManager, SessionManager
 from auth import LoginManager
-from processors.document_processor import DocumentProcessor
-from processors.pdf.pdf_processor import PdfProcessor
-from processors.workflow.processor import WorkflowProcessor
+from processors.document import DocumentProcessor
+from processors.pdf import PdfProcessor
+from processors.workflow import WorkflowProcessor
 from config import ConfigManager
 from utils.logging_setup import setup_logging, get_logger
 

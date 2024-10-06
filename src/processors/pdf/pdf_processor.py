@@ -69,6 +69,7 @@ class PdfProcessor:
         self.config = config
         self.session_manager = session_manager
         self.pdf_fetcher = PdfFetcher(config, session_manager.get_session())
+        self.login_manager = LoginManager(config)
 
     def process_pdfs(self, login_url, login_successful_callback):
         """
@@ -101,6 +102,7 @@ class PdfProcessor:
                 update_time = self._process_pdf(option, update_time)
 
         self.config.set('last_processed_pdf', update_time)
+        driver.quit()
         return update_time
 
     def _login(self, driver, login_url):
@@ -134,4 +136,16 @@ class PdfProcessor:
                                 self.session_manager.get_session(), self.config)
             workflow.execute_tasks_from_csv()
         else:
-            self.logger.error("Failed to extract text from PDF")
+            print("Failed to extract text from PDF")
+
+    def get_pdf_content(self, name):
+        """
+        Fetch the content of a PDF file from the Oscar EMR system.
+
+        Args:
+            name (str): PDF name or identifier to fetch.
+
+        Returns:
+            bytes: Content of the PDF file if successful, None otherwise.
+        """
+        return self.pdf_fetcher.get_pdf_content(name)
