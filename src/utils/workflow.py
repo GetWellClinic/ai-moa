@@ -38,10 +38,46 @@ import io
 import pytesseract
 
 import os
+import logging
 from utils.config_manager import ConfigManager
 
 class Workflow:
+    """
+    A class to manage the workflow of processing medical documents.
+
+    This class handles various operations such as OCR, patient information extraction,
+    and interaction with the Oscar EMR system.
+
+    Attributes:
+        config (ConfigManager): Configuration manager instance.
+        patient_name (str): Name of the patient.
+        fileType (str): Type of the file being processed.
+        demographic_number (str): Demographic number of the patient.
+        mrp (str): Most Responsible Provider number.
+        provider_number (list): List of provider numbers.
+        document_description (str): Description of the document.
+        filepath (str): Path to the file being processed.
+        tesseracted_text (str): Text extracted from the document using OCR.
+        session: Session object for making HTTP requests.
+        base_url (str): Base URL for the Oscar EMR system.
+        file_name (str): Name of the file being processed.
+        enable_ocr_gpu (bool): Flag to enable GPU for OCR.
+        logger (logging.Logger): Logger instance.
+        url (str): URL for AI API.
+        headers (dict): Headers for API requests.
+        categories (list): List of document categories.
+        categories_code (list): List of document category codes.
+    """
+
     def __init__(self, filepath, session, config):
+        """
+        Initialize the Workflow instance.
+
+        Args:
+            filepath (str): Path to the file to be processed.
+            session: Session object for making HTTP requests.
+            config (ConfigManager): Configuration manager instance.
+        """
         self.config = config
         self.patient_name = ''
         self.fileType = ''
