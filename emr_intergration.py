@@ -356,7 +356,7 @@ class Workflow:
         # Send the POST request
         response = self.session.post(url, data=payload)
 
-        #print(response.text)
+        self.logger.debug("Response text: %s", response.text)
 
         response_data = json.loads(response.text)
 
