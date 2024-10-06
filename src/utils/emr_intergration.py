@@ -227,6 +227,7 @@ class Workflow:
 
     def build_prompt(self,prompt):
         # will be executed first, workflow starts from workflow.csv
+        start_time = time.time()
         data = {
             "messages": [
                 {
