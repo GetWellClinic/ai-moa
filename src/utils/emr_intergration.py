@@ -58,9 +58,9 @@ class Workflow:
         self.file_name = file_name
         self.enable_ocr_gpu = enable_ocr_gpu
         self.logger = logging.getLogger(__name__)
-        self.url = self.config.get('ai_config', {}).get('url', "http://127.0.0.1:5000/v1/chat/completions")
+        self.url = "http://localhost:5000/v1/chat/completions"
         self.headers = {
-            "Authorization": f"Bearer {self.config.get('ai_config', {}).get('auth_token', 'qwerty')}",
+            "Authorization": "Bearer qwerty",
             "Content-Type": "application/json"
         }
         self.categories = [
@@ -224,8 +224,8 @@ class Workflow:
             self.logger.error(f"An error occurred: {e}")
             return False
 
-    def build_prompt(self, prompt):
-        start_time = time.time()
+    def build_prompt(self,prompt):
+        # will be executed first, workflow starts from workflow.csv
         data = {
             "messages": [
                 {
@@ -234,13 +234,13 @@ class Workflow:
                 },
                 {
                     "role": "user",
-                    "content": f"Today's Date is : {datetime.datetime.now().date()}\n{self.tesseracted_text}\n. {prompt}"
+                    "content": self.tesseracted_text + '. '+ prompt
                 }
             ],
             "mode": "instruct",
-            "temperature": self.config.get('ai_config', {}).get('temperature', 0.1),
+            "temperature": 0.1,
             "character": "Assistant",
-            "top_p": self.config.get('ai_config', {}).get('top_p', 0.1)
+            "top_p": 0.1
         }
         response = requests.post(self.url, headers=self.headers, json=data)
         self.logger.debug("LLM response: %s", response.json())
@@ -257,7 +257,6 @@ class Workflow:
         return True
 
     def build_sub_prompt(self,prompt):
-        start_time = time.time()
         data = {
             "messages": [
                 {
@@ -266,22 +265,15 @@ class Workflow:
                 },
                 {
                     "role": "user",
-                    "content": self.tesseracted_text + '. '+ prompt
+                    "content": prompt
                 }
             ],
             "mode": "instruct",
-            "temperature": .1,
+            "temperature": 0.1,
             "character": "Assistant",
-            "top_p":.1
-            #max_tokens:100
+            "top_p": 0.1
         }
         response = requests.post(self.url, headers=self.headers, json=data)
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-        self.append_to_file("Response:")
-        self.append_to_file(response.json()['choices'][0]['message']['content'])
-        self.append_to_file("Time taken for the prompt:")
-        self.append_to_file(str(elapsed_time))
         return response.json()['choices'][0]['message']['content']
 
     def get_patient_name(self,prompt):
@@ -596,52 +588,39 @@ class Workflow:
             return False
 
     def getProviderList(self,prompt):
+        # to be used to get all the providers list from oscar.
+        self.logger.debug("Getting provider list")
+        # filter_results should be used to select one from that array
+        url = f"{self.base_url}/admin/providersearchresults.jsp"
 
-            # content_value = self.getProviderListFromOscarLLMMode()
-            # provider_list = json.dumps(content_value)
-
-            provider_list = self.getProviderListFromOscarFileMode()
-
-            if provider_list is None:
-                self.provider_number.append(99)
-                return True
-        
-
-            data = {
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": "You are a helpful assistant designed to output JSON."
-                    },
-                    {
-                        "role": "user",
-                        "content": self.tesseracted_text+ prompt + str(provider_list)
+        # Define the payload data
+        payload = {
+                      "search_mode": "search_providerno",
+                      "search_status": "All",
+                      "keyword": "",
+                      "button": "",
+                      "orderby": "last_name",
+                      "limit1": 0,
+                      "limit2": 10000
                     }
-                ],
-                "mode": "instruct",
-                #should be a parameter, only if needed else default api values
-                "temperature": .1,
-                "character": "Assistant",
-                #should be a parameter
-                "top_p":.1
-                #should be a parameter
-                #max_tokens:100
-            }
-            response = requests.post(self.url, headers=self.headers, json=data)
-            self.logger.debug("LLM response: %s", response.json())
-            content_value = response.json()['choices'][0]['message']['content']
 
-            self.logger.debug("Content value: %s", content_value)
+        # Send the POST request
+        self.logger.debug("Sending POST request to get provider list")
+        response = self.session.post(url, data=payload)
 
-            match = re.search(r'\b\d+\b', content_value)
+        soup = BeautifulSoup(response.text, 'html.parser')
 
-            if match:
-                numerical_value = int(match.group())
-                self.provider_number.append(numerical_value)
-            else:
-                self.provider_number.append(99)
+        table = soup.find('table', {'id': 'tblResults'})
 
-            return True
+        if table:
+            #print(table)
+            oscar_response = self.build_sub_prompt(prompt + str(table))
+            self.logger.debug("Provider list retrieved")
+            #print(oscar_response)
+            return True,oscar_response
+        else:
+            self.logger.info("No provider list found")
+            return False
 
     def getProviderListFromOscarFileMode(self):
         file_path = 'providers.csv'
