@@ -47,12 +47,8 @@ class Workflow:
         self.filepath = filepath
         self.tesseracted_text = None
         self.mistral = guidance.models.OpenAI("gpt-3.5-turbo-instruct")
-        # self.session = session
-        # self.base_url = base_url
-        # self.file_name = file_name
         self.enable_ocr_gpu = True
         self.url = "http://127.0.0.1:5000/v1/chat/completions"
-        # the Authorization qwerty will have to be changed, this for testing
         self.headers = {
             "Authorization": "Bearer qwerty",
             "Content-Type": "application/json"
@@ -108,20 +104,7 @@ class Workflow:
         return False
 
     def has_ocr(self):
-        # Error with Sample-C6-002.pdf
         return False
-        pdf_path = self.filepath
-        try:
-            pdf_document = fitz.open(pdf_path)
-            for page_num in range(len(pdf_document)):
-                page = pdf_document.load_page(page_num)
-                text = page.get_text()
-                if text.strip():
-                    return True
-            return False
-        except Exception as e:
-            print("An error occurred:", e)
-            return False
 
     def extract_text_from_pdf(self):
         pdf_path = self.filepath
@@ -207,51 +190,19 @@ class Workflow:
 
     def build_prompt(self,prompt):
         start_time = time.time()
-        # data = {
-        #     "messages": [
-        #         {
-        #             "role": "system",
-        #             "content": "You are a helpful assistant designed to output JSON."
-        #         },
-        #         {
-        #             "role": "user",
-        #             "content": self.tesseracted_text + '. '+ prompt
-        #         }
-        #     ],
-        #     "mode": "instruct",
-        #     #should be a parameter, only if needed else default api values
-        #     "temperature": .1,
-        #     "character": "Assistant",
-        #     #should be a parameter
-        #     "top_p":.1
-        #     #should be a parameter
-        #     #max_tokens:100
-        # }
-        # response = requests.post(self.url, headers=self.headers, json=data)
-        # # print(response.json())
-        # content_value = response.json()['choices'][0]['message']['content']
-        # self.append_to_file("Response:")
-        # self.append_to_file(content_value)
-        # return True
         max_attempts = 5
         attempts = 0
         while attempts < max_attempts:
             try:
                 with guidance.user():
                     lm = self.mistral + prompt
-                    # self.append_to_file("Response before select:")
-                    # self.append_to_file(lm["response"])
                 with guidance.assistant():
                     lm += select(self.categories,name='ans')
                 end_time = time.time()
                 elapsed_time = end_time - start_time
-                # self.append_to_file("Response:")
-                # self.append_to_file(lm["response"])
-                # self.append_to_file(response.json()['choices'][0]['message']['content'])
                 self.append_to_file("Time taken for the prompt:")
                 self.append_to_file(str(elapsed_time))
                 self.append_to_file("Document Type: "+lm["ans"])
-                # self.find_category_index(lm["response"])
                 return True
             except guidance.models._model.ConstraintException as e:
                 attempts += 1
@@ -280,15 +231,12 @@ class Workflow:
             #max_tokens:100
         }
         response = requests.post(self.url, headers=self.headers, json=data)
-        #lm = self.mistral + prompt + gen(stop='.', name="response")
         end_time = time.time()
         elapsed_time = end_time - start_time
         self.append_to_file("Response:")
-        # self.append_to_file(lm["response"])
         self.append_to_file(response.json()['choices'][0]['message']['content'])
         self.append_to_file("Time taken for the prompt:")
         self.append_to_file(str(elapsed_time))
-        # return lm["response"]
         return response.json()['choices'][0]['message']['content']
 
     def get_patient_name(self,prompt):
@@ -298,101 +246,22 @@ class Workflow:
         self.append_to_file("Connecting to OSCAR to identify patient using patient name.")
         self.append_to_file("Test Mode, skipping api call to oscar.")
         self.logger.debug(f"Patient name: {name}")
-        # url = f"{self.base_url}/demographic/SearchDemographic.do"
-
-        # # Define the payload data
-        # payload = {
-        #     "query": name
-        # }
-
-        # # Send the POST request
-        # response = self.session.post(url, data=payload)
-
-        # #print(response.text)
-
-        # response_data = json.loads(response.text)
-
-        # if len(response_data["results"]) == 0:
-        #     return False
-        # else:
-        #     return True,response_data["results"]
 
     def set_doctor_from_code(self,name):
-        #print(name)
         oscar_response = []
         if name:
             if '.' in name:
                 name = name.replace('.', '')
-
-            # url = f"{self.base_url}/provider/SearchProvider.do"
-
-            # # Define the payload data
-            # payload = {
-            #     "query": name
-            # }
-
-            # # Send the POST request
-            # response = self.session.post(url, data=payload)
-
-            # #print(response.text)
-
-            # data = json.loads(response.text)
-
-            # #print(data)
-
-            # for item in data["results"]:
-            #     #print(item)
-            #     if isinstance(item, dict):
-            #         if 'providerNo' in item:
-            #             #print(item['providerNo'])
-            #             self.provider_number.append(item['providerNo'])
-
-            # #print(self.provider_number)
-
-            # if self.provider_number is not None:
-            #     return True
-            # else:
-            #     return False
 
     def get_doctor_name(self,prompt):
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
         self.logger.debug("Getting doctor name")
         self.logger.debug(f"Doctor name: {name}")
         array_pattern = r'\[.*?\]'
-        #name = "Sokolowski"
-        #array_match = re.search(array_pattern, names)
         oscar_response = []
         if name:
             if '.' in name:
                 name = name.replace('.', '')
-
-            # url = f"{self.base_url}/provider/SearchProvider.do"
-
-            # # Define the payload data
-            # payload = {
-            #     "query": name
-            # }
-
-            # # Send the POST request
-            # response = self.session.post(url, data=payload)
-
-            # #print(response.text)
-
-            # response_data = json.loads(response.text)
-
-            # if len(response_data["results"]) != 0:
-            #     results = response_data["results"]
-            #     if isinstance(results, list):
-            #         for item in results:
-            #             if isinstance(item, dict):
-            #                 oscar_response.append(item)
-
-            # if len(oscar_response) != 0:
-            #     return True,oscar_response
-            # else:
-            #     return False
-
-            #print(oscar_response)
 
     def get_document_description(self,prompt):
         result = self.build_sub_prompt(self.tesseracted_text + prompt)
@@ -447,65 +316,7 @@ class Workflow:
         self.append_to_file("Updating details in OSCAR. ")
         self.append_to_file("Skipping OSCAR update in test mode. ")
         self.logger.debug(f"Document Details: Patient: {self.patient_name}, Demographic: {self.demographic_number}, Providers: {self.provider_number}, Type: {self.fileType}, Description: {self.document_description}")
-        # url = f"{self.base_url}/dms/ManageDocument.do"
-
-        # # Define the parameters
-        # params = {
-        #     "method": "addIncomingDocument",
-        #     "pdfDir": "File",
-        #     "pdfName": self.file_name,
-        #     "queueId": "1",
-        #     "pdfNo": "1",
-        #     "queue": "1",
-        #     "pdfAction": "",
-        #     "lastdemographic_no": "1",
-        #     "entryMode": "Fast",
-        #     "docType": self.fileType,
-        #     "docClass": "",
-        #     "docSubClass": "",
-        #     "documentDescription": self.document_description,
-        #     "observationDate": str(datetime.datetime.now().date()),
-        #     "saved": "false",
-        #     "demog": "1",
-        #     "demographicKeyword": self.patient_name,
-        #     "provi": self.provider_number[0],
-        #     "MRPNo": self.mrp,
-        #     "MRPName": "undefined",
-        #     "ProvKeyword": "",
-        #     "save": "Save & Next"
-        # }
-
-        # params["flagproviders"] = []
-
-        # for value in self.provider_number:
-        #     params["flagproviders"].append(value)
-
-        self.logger.debug(f"Oscar update params: {params}")
-
-        # response = self.session.post(url, data=params)
-
-        self.logger.debug(f"Oscar update response: {response}")
-
         return True
-
-    # More available funcitons and its usage
-
-    # def ask_ai(self,param,additional_param=None):
-    #     print(f"Executing ask_ai with parameter: {param}, additional_param={additional_param}")
-    #     return random.choice([True, False]),"test"
-
-    # def flag_email(self,param):
-    #     print(f"Executing flag_email with parameter: {param}")
-    #     return random.choice([True, False])
-
-    # def get_patient_details(self,param1, param2,additional_param=None):
-    #     print(f"Executing get_patient_details with parameters: {param1}, {param2}, additional_param={additional_param}")
-    #     return random.choice([True, True]),"1245dsd"
-
-    # def update_oscar(self,param1, param2, additional_param=None):
-    #     print(f"Executing update_oscar with parameters: {param1}, {param2}, additional_param={additional_param}")
-    #     return random.choice([True, True])
-
 
     def execute_task(self,task, previous_result=None):
         task_number, function_name, *params, true_next_row, false_next_row = task
@@ -513,10 +324,6 @@ class Workflow:
         
         if function_to_call and callable(function_to_call):
             print(f"Executing Task {task_number} with function {function_name} and parameters: {', '.join(params)}")
-            
-            # if len(params) != 0:
-            #     self.append_to_file("Prompt:")
-            #     self.append_to_file("Prompt: ".join(params))
             
             if 'additional_param' in function_to_call.__code__.co_varnames:
                 additional_param = previous_result if previous_result is not None else None

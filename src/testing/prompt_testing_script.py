@@ -44,9 +44,6 @@ class Workflow:
         self.document_description = ''
         self.filepath = filepath
         self.tesseracted_text = None
-        # self.session = session
-        # self.base_url = base_url
-        # self.file_name = file_name
         self.enable_ocr_gpu = True
         self.url = self.config.get('ai_config', {}).get('url', "http://127.0.0.1:5000/v1/chat/completions")
         self.headers = {
@@ -281,7 +278,6 @@ class Workflow:
             "temperature": .1,
             "character": "Assistant",
             "top_p":.1
-            #max_tokens:100
         }
         response = requests.post(self.url, headers=self.headers, json=data)
         end_time = time.time()
@@ -296,17 +292,13 @@ class Workflow:
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
         if '.' in name:
             name = name.replace('.', '')
-        # self.append_to_file("Connecting to OSCAR to identify patient using patient name.")
-        # self.append_to_file("Test Mode, skipping api call to oscar.")
         self.logger.debug(f"Doctor name: {name}")
         url = f"{self.base_url}/demographic/SearchDemographic.do"
 
-        # Define the payload data
         payload = {
             "query": name
         }
 
-        # Send the POST request
         response = self.session.post(url, data=payload)
 
         self.logger.debug(f"Response text: {response.text}")
@@ -448,65 +440,7 @@ class Workflow:
         self.append_to_file("Updating details in OSCAR. ")
         self.append_to_file("Skipping OSCAR update in test mode. ")
         self.logger.debug(f"Document Details: Patient: {self.patient_name}, Demographic: {self.demographic_number}, Providers: {self.provider_number}, Description: {self.document_description}")
-        # url = f"{self.base_url}/dms/ManageDocument.do"
-
-        # # Define the parameters
-        # params = {
-        #     "method": "addIncomingDocument",
-        #     "pdfDir": "File",
-        #     "pdfName": self.file_name,
-        #     "queueId": "1",
-        #     "pdfNo": "1",
-        #     "queue": "1",
-        #     "pdfAction": "",
-        #     "lastdemographic_no": "1",
-        #     "entryMode": "Fast",
-        #     "docType": self.fileType,
-        #     "docClass": "",
-        #     "docSubClass": "",
-        #     "documentDescription": self.document_description,
-        #     "observationDate": str(datetime.datetime.now().date()),
-        #     "saved": "false",
-        #     "demog": "1",
-        #     "demographicKeyword": self.patient_name,
-        #     "provi": self.provider_number[0],
-        #     "MRPNo": self.mrp,
-        #     "MRPName": "undefined",
-        #     "ProvKeyword": "",
-        #     "save": "Save & Next"
-        # }
-
-        # params["flagproviders"] = []
-
-        # for value in self.provider_number:
-        #     params["flagproviders"].append(value)
-
-        self.logger.debug(f"Oscar update params: {params}")
-
-        # response = self.session.post(url, data=params)
-
-        self.logger.debug(f"Oscar update response: {response}")
-
         return True
-
-    # More available funcitons and its usage
-
-    # def ask_ai(self,param,additional_param=None):
-    #     print(f"Executing ask_ai with parameter: {param}, additional_param={additional_param}")
-    #     return random.choice([True, False]),"test"
-
-    # def flag_email(self,param):
-    #     print(f"Executing flag_email with parameter: {param}")
-    #     return random.choice([True, False])
-
-    # def get_patient_details(self,param1, param2,additional_param=None):
-    #     print(f"Executing get_patient_details with parameters: {param1}, {param2}, additional_param={additional_param}")
-    #     return random.choice([True, True]),"1245dsd"
-
-    # def update_oscar(self,param1, param2, additional_param=None):
-    #     print(f"Executing update_oscar with parameters: {param1}, {param2}, additional_param={additional_param}")
-    #     return random.choice([True, True])
-
 
     def execute_task(self,task, previous_result=None):
         task_number, function_name, *params, true_next_row, false_next_row = task
@@ -514,10 +448,6 @@ class Workflow:
         
         if function_to_call and callable(function_to_call):
             print(f"Executing Task {task_number} with function {function_name} and parameters: {', '.join(params)}")
-            
-            # if len(params) != 0:
-            #     self.append_to_file("Prompt:")
-            #     self.append_to_file("Prompt: ".join(params))
             
             if 'additional_param' in function_to_call.__code__.co_varnames:
                 additional_param = previous_result if previous_result is not None else None

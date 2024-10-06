@@ -556,25 +556,6 @@ class Workflow:
 
         return True
 
-    # More available funcitons and its usage
-
-    # def ask_ai(self,param,additional_param=None):
-    #     print(f"Executing ask_ai with parameter: {param}, additional_param={additional_param}")
-    #     return random.choice([True, False]),"test"
-
-    # def flag_email(self,param):
-    #     print(f"Executing flag_email with parameter: {param}")
-    #     return random.choice([True, False])
-
-    # def get_patient_details(self,param1, param2,additional_param=None):
-    #     print(f"Executing get_patient_details with parameters: {param1}, {param2}, additional_param={additional_param}")
-    #     return random.choice([True, True]),"1245dsd"
-
-    # def update_oscar(self,param1, param2, additional_param=None):
-    #     print(f"Executing update_oscar with parameters: {param1}, {param2}, additional_param={additional_param}")
-    #     return random.choice([True, True])
-
-
     def execute_task(self,task, previous_result=None):
         task_number, function_name, *params, true_next_row, false_next_row = task
         self.logger.debug(f"Executing task {task_number}: {function_name}")
