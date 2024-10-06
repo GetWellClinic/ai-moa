@@ -24,10 +24,10 @@ import datetime
 import io
 import itertools
 import json
-import logging
 import os
 import re
 import time
+from src.logging import setup_logging
 
 import PyPDF2
 import fitz
