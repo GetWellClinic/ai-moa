@@ -37,8 +37,11 @@ from PIL import Image
 import io
 import pytesseract
 
+from utils.config_manager import ConfigManager
+
 class Workflow:
-    def __init__(self, filepath, session, base_url, file_name, enable_ocr_gpu):
+    def __init__(self, filepath, session, config):
+        self.config = config
         self.patient_name = ''
         self.fileType = ''
         self.demographic_number = ''
@@ -48,51 +51,17 @@ class Workflow:
         self.filepath = filepath
         self.tesseracted_text = None
         self.session = session
-        self.base_url = base_url
-        self.file_name = file_name
-        self.enable_ocr_gpu = enable_ocr_gpu
+        self.base_url = self.config.get('base_url')
+        self.file_name = os.path.basename(filepath)
+        self.enable_ocr_gpu = self.config.get('enable_ocr_gpu')
         self.logger = logging.getLogger(__name__)
-        self.url = "http://localhost:5000/v1/chat/completions"
-        # the Authorization qwerty will have to be changed, this for testing
+        self.url = self.config.get('ai_config', {}).get('url')
         self.headers = {
-            "Authorization": "Bearer qwerty",
+            "Authorization": f"Bearer {self.config.get('ai_config', {}).get('auth_token')}",
             "Content-Type": "application/json"
         }
-        self.categories = [
-                            "Lab",
-                            "Consult",
-                            "Insurance",
-                            "Legal",
-                            "Old Chart",
-                            "Radiology",
-                            "Pathology",
-                            "Others",
-                            "Photo",
-                            "Consent",
-                            "Diagnostics",
-                            "Pharmacy",
-                            "Requisition",
-                            "Referral",
-                            "Request"
-                        ]
-
-        self.categories_code = [
-                            "Lab",
-                            "Consult",
-                            "Insurance",
-                            "Legal",
-                            "OldChart",
-                            "Radiology",
-                            "Pathology",
-                            "Others",
-                            "Photo",
-                            "Consent",
-                            "Diagnostics",
-                            "Pharmacy",
-                            "Requisition",
-                            "Referral",
-                            "Request"
-                        ]
+        self.categories = self.config.get('categories', [])
+        self.categories_code = self.categories
 
     def find_category_index(self,text):
         self.logger.debug("Inside find_category_index")
