@@ -34,6 +34,6 @@ logging:
       filename: oscar_automation.log
   root:
     level: INFO
-    handlers: [console, file]
+    handlers: [ console, file ]
   filename: log_test_28_emr_test.txt
 
