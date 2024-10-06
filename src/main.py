@@ -26,7 +26,7 @@ class OscarAutomation:
         self.last_processed_pdf = self.config['last_processed_pdf']
         self.last_pending_doc_file = self.config['last_pending_doc_file']
         self.enable_ocr_gpu = self.config['enable_ocr_gpu']
-        self.workflow_file = self.config.get('workflow_file', 'workflow.csv')
+        self.workflow_file_path = self.config.get('workflow_file_path', 'workflow.csv')
         self.login_url = f"{self.base_url}{self.config['urls']['login']}"
         self.session = requests.Session()
         self.login = Login(self.username, self.password, self.pin, self.base_url)
@@ -70,11 +70,14 @@ class OscarAutomation:
         return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
     def process_workflow(self):
-        self.logger.info("Starting workflow processing")
-        with self._get_driver() as driver:
-            workflow_processor = WorkflowProcessor(self.workflow_file, self.session, self.base_url, self.enable_ocr_gpu)
-            workflow_processor.process_workflow(driver, self.login_url, self.login_successful_callback)
-        self.logger.info("Workflow processing completed")
+        if self.workflow_file_path:
+            self.logger.info("Starting workflow processing")
+            with self._get_driver() as driver:
+                workflow_processor = WorkflowProcessor(self.workflow_file_path, self.session, self.base_url, self.enable_ocr_gpu)
+                workflow_processor.process_workflow(driver, self.login_url, self.login_successful_callback)
+            self.logger.info("Workflow processing completed")
+        else:
+            self.logger.warning("Workflow file path is not configured. Skipping workflow processing.")
 
 if __name__ == "__main__":
     oscar = OscarAutomation()
