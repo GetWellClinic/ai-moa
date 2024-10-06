@@ -36,4 +36,5 @@ logging:
   root:
     level: INFO
     handlers: [console, file]
+  filename: log_test_28_emr_test.txt
 
