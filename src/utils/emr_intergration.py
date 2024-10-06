@@ -64,6 +64,16 @@ class Workflow:
             "Content-Type": "application/json"
         }
         self.categories = [
+            "Lab", "Consult", "Insurance", "Legal", "Old Chart", "Radiology",
+            "Pathology", "Others", "Photo", "Consent", "Diagnostics", "Pharmacy",
+            "Requisition", "Referral", "Request", "Advertisement"
+        ]
+        self.categories_code = [
+            "Lab", "Consult", "Insurance", "Legal", "OldChart", "Radiology",
+            "Pathology", "Others", "Photo", "Consent", "Diagnostics", "Pharmacy",
+            "Requisition", "Referral", "Request", "Advertisement"
+        ]
+        self.categories = [
                             "Lab",
                             "Consult",
                             "Insurance",
@@ -101,24 +111,21 @@ class Workflow:
                             "Advertisement"
                         ]
 
-    def find_category_index(self,text):
+    def find_category_index(self, text):
         self.logger.debug("Inside find_category_index")
         if '.' in text:
             text = text.replace('.', '')
         for word in text.split():
+            word = word.replace('"', '').replace("'", "")
             for index, category in enumerate(self.categories_code):
-                if '"' in word:
-                    word = word.replace('"', '')
-                if "'" in word:
-                    word = word.replace("'", "")
                 if word.lower() == category.lower():
                     self.logger.debug(f"Category index found: {index}")
-                    #set file type
                     self.fileType = category.lower()
                     self.execute_tasks_from_csv(index)
                     return True
         self.fileType = 'others'
         self.execute_tasks_from_csv(7)
+        return False
 
     def has_ocr(self):
         pdf_path = self.filepath
@@ -217,7 +224,7 @@ class Workflow:
             self.logger.error(f"An error occurred: {e}")
             return False
 
-    def build_prompt(self,prompt):
+    def build_prompt(self, prompt):
         start_time = time.time()
         data = {
             "messages": [
@@ -227,33 +234,7 @@ class Workflow:
                 },
                 {
                     "role": "user",
-                    "content": "Today's Date is : "+str(datetime.datetime.now().date())+'\n'+ self.tesseracted_text + '\n. '+"""
-
-                    Act as a helpful medical office assistant to perform the following instructions to identify the correct document category type for documents that you review.
-                     Infer the confidence level in percentage for each document category in the CATEGORY LIST based on the definitions in the DOCUMENT DEFINITIONS.
-                     This is very Important: If the documents do not have any information related to patient always give highest priority to the category type 'Advertisement'.
-                      For your reference, these are the CATEGORY LIST: lab, consult, insurance, legal, oldchart, radiology, photo, consent, diagnostics, pharmacy, requisition, referral, request, advertisement, miscellaneous.
-                      For your reference, these are the DOCUMENT DEFINITIONS: """+ prompt + """"
-                        Based on this, identify all the document categories that has elements from the 'CATEGORY LIST' with their confidence levels in percentage sorted in descending order without any explanation.
-
-                        Determine the document category with the highest confidence level percentage for the EMR document using the following rules:
-
-                            Step a. If the confidence level percentage is more than 60% for the category type 'Advertisement', then
-                               the category type is 'Advertisement'. If the confidence level percentage is less than 60% for the category type 'Advertisement', then
-                               go to next step. 
-
-                            Step b. If there is only one category to select from, select that category as the document category.
-                                If there is more that one category to select from go to next step.
-
-                            Step c. Identify the top two document categories based on their confidence level percentage.
-                            
-                            Step d. If the top two categories are "Requisition" and "Radiology," and both have confidence levels below 60%, select "Miscellaneous" as the document category. Else go to next step.
-
-                            Step e. If the confidence level difference between the top two categories is less than 10%, select "Miscellaneous" as the document category. Else go to next step.
-                            
-                            Step f. If neither of the above conditions apply, select the top document category with the highest confidence level percentage.
-
-                          """
+                    "content": f"Today's Date is : {datetime.datetime.now().date()}\n{self.tesseracted_text}\n. {prompt}"
                 }
             ],
             "mode": "instruct",
@@ -266,38 +247,13 @@ class Workflow:
         content_value = response.json()['choices'][0]['message']['content']
         self.logger.debug("Content value: %s", content_value)
         self.append_to_file("Response:")
-        self.append_to_file(response.json()['choices'][0]['message']['content'])
-
-        data = {
-            "messages": [
-                {
-                    "role": "system",
-                    "content": "You are a helpful assistant designed to output JSON."
-                },
-                {
-                    "role": "user",
-                    "content": "EMR Document content:"+content_value + "\n" + """"                
-
-                Based on this, the document category for the EMR document in one word will be ..."""
-                
-                }
-            ],
-            "mode": "chat",
-            "temperature": self.config.get('ai_config', {}).get('temperature', 0.1),
-            "character": "Assistant",
-            "top_p": self.config.get('ai_config', {}).get('top_p', 0.1)
-        }
-
-        response = requests.post(self.url, headers=self.headers, json=data)
-        self.logger.debug("LLM response: %s", response.json())
-        content_value = response.json()['choices'][0]['message']['content']
-        self.logger.debug("Content value: %s", content_value)
-        self.append_to_file("Second Response:")
-        self.append_to_file(response.json()['choices'][0]['message']['content'])
-        self.append_to_file("Second Document Type: "+content_value)
+        self.append_to_file(content_value)
 
         self.find_category_index(content_value)
 
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        self.append_to_file(f"Time taken for the prompt: {elapsed_time}")
         return True
 
     def build_sub_prompt(self,prompt):
@@ -597,31 +553,22 @@ class Workflow:
             self.append_to_file("Skipping filtering, not connected to oscar.")
             return False
 
-    def set_patient(self,additional_param=None):
+    def set_patient(self, additional_param=None):
         self.append_to_file("Storing patient details. ")
         if additional_param is not None:
             self.logger.debug("Additional param: %s", additional_param)
-            match = re.search(r'```json\n(.*?)```', additional_param, re.DOTALL)
-
-            if match:
-                additional_param = match.group(1)
-            
-            additional_param = additional_param.replace("'", '"')
-
             try:
                 data = json.loads(additional_param)
+                self.patient_name = f"{data['formattedName']}({data['formattedDob']})"
+                self.fl_name = data['formattedName']
+                self.demographic_number = data['demographicNo']
+                if data['providerNo'] is not None:
+                    self.mrp = data['providerNo']
+                self.logger.info(f"Patient set: {self.patient_name}")
+                return True
             except json.JSONDecodeError as e:
                 self.logger.error(f"JSON decoding error: {e}")
                 return False
-
-            self.patient_name = data['formattedName'] + '(' + data['formattedDob'] + ')'
-            self.fl_name = data['formattedName']
-            self.demographic_number = data['demographicNo']
-            # Add MRP
-            if data['providerNo'] is not None:
-                self.mrp = data['providerNo']
-            self.logger.info(f"Patient set: {self.patient_name}")
-            return True
         else:
             self.append_to_file("Skipping in test mode. ")
             return False
