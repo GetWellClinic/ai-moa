@@ -65,6 +65,18 @@ class Workflow:
         self.categories_code = self.categories
 
     def find_category_index(self, text):
+        """
+        Find the category index for the given text.
+
+        This method searches for a matching category in the text and sets the fileType accordingly.
+        If no match is found, it sets the fileType to 'others'.
+
+        Args:
+            text (str): The text to search for a category.
+
+        Returns:
+            bool: True if a category was found, False otherwise.
+        """
         self.logger.debug("Inside find_category_index")
         if '.' in text:
             text = text.replace('.', '')
@@ -82,7 +94,15 @@ class Workflow:
         return False
 
     def has_ocr(self):
-        #checks for ocr layer
+        """
+        Check if the PDF file has an OCR layer.
+
+        This method attempts to extract text from each page of the PDF.
+        If any page contains text, it assumes the PDF has an OCR layer.
+
+        Returns:
+            bool: True if the PDF has an OCR layer, False otherwise.
+        """
         pdf_path = self.filepath
         try:
             pdf_document = fitz.open(pdf_path)
