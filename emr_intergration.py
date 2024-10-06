@@ -156,7 +156,7 @@ class Workflow:
     def extract_text_doctr(self):
         start_time = time.time()
         pdf_path = self.filepath
-        self.logger.debug(f"Processing PDF: {pdf_path}")
+        self.logger.debug("Processing PDF: %s", pdf_path)
         self.logger.debug("Processing PDF: %s", pdf_path)
         text = ''
         try:
@@ -544,7 +544,7 @@ class Workflow:
                 self.logger.debug("Processing item: %s", item)
                 if isinstance(item, dict):
                     if 'providerNo' in item:
-                        self.logger.debug(f"Provider number: {item['providerNo']}")
+                        self.logger.debug("Provider number: %s", item['providerNo'])
                         self.provider_number.append(item['providerNo'])
 
             self.logger.debug("Provider numbers: %s", self.provider_number)

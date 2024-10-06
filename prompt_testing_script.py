@@ -414,7 +414,7 @@ class Workflow:
     def set_patient(self,additional_param=None):
         self.append_to_file("Storing patient details. ")
         if additional_param is not None:
-            self.logger.debug(f"Additional param: {additional_param}")
+            self.logger.debug("Additional param: %s", additional_param)
             data = json.loads(additional_param)
             self.patient_name = data[0]['formattedName'] + '(' + data[0]['fomattedDob'] + ')'
             self.demographic_number = data[0]['demographicNo']
@@ -430,7 +430,7 @@ class Workflow:
         self.append_to_file("Storing provider details. ")
         if additional_param is not None:
             #additional_param = '[{"firstName": "Michelle", "lastName": "Liu", "ohipNo": "", "providerNo": "999998"},{"firstName": "John", "lastName": "Doe", "ohipNo": "", "providerNo": "999998"}]'
-            self.logger.debug(f"Additional param: {additional_param}")
+            self.logger.debug("Additional param: %s", additional_param)
             data = json.loads(additional_param)
             self.logger.debug(f"Provider data: {data}")
             for item in data:
