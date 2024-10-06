@@ -70,6 +70,7 @@ class PdfProcessor:
         self.config = config
         self.session_manager = session_manager
         self.pdf_fetcher = PdfFetcher(config, session_manager.get_session())
+        self.logger = setup_logging()
         self.login_manager = LoginManager(config)
 
     def process_pdfs(self, login_url, login_successful_callback):

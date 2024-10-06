@@ -44,6 +44,7 @@ class DocumentProcessor:
         """
         self.config = config
         self.session = session
+        self.logger = setup_logging()
         self.base_url = config.get('base_url')
 
     def get_file_content(self, name):
