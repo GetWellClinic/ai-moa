@@ -143,7 +143,7 @@ class Workflow:
     def extract_text_doctr(self):
         start_time = time.time()
         pdf_path = self.filepath
-        # print(pdf_path)
+        self.logger.debug(f"Processing PDF: {pdf_path}")
         text = ''
         try:
             if(self.enable_ocr_gpu == True):
@@ -158,11 +158,11 @@ class Workflow:
             result = model(doc)
             # Iterate through pages
             for page in result.pages:
-                #print(f"Page {page.page_idx}:")
+                self.logger.debug(f"Processing page {page.page_idx}")
                 
                 # Iterate through blocks
                 for block in page.blocks:
-                    #print("Block:")
+                    self.logger.debug("Processing block")
                     
                     # Iterate through lines
                     for line in block.lines:
@@ -222,9 +222,9 @@ class Workflow:
             #max_tokens:100
         }
         response = requests.post(self.url, headers=self.headers, json=data)
-        # print(response.json())
+        self.logger.debug(f"LLM response: {response.json()}")
         content_value = response.json()['choices'][0]['message']['content']
-        # print(content_value)
+        self.logger.debug(f"Content value: {content_value}")
         # end_time = time.time()
         # elapsed_time = end_time - start_time
         self.append_to_file("Response:")
@@ -256,9 +256,9 @@ class Workflow:
         }
 
         response = requests.post(self.url, headers=self.headers, json=data)
-        # print(response.json())
+        self.logger.debug(f"LLM response: {response.json()}")
         content_value = response.json()['choices'][0]['message']['content']
-        # print(content_value)
+        self.logger.debug(f"Content value: {content_value}")
         self.append_to_file("Second Response:")
         self.append_to_file(response.json()['choices'][0]['message']['content'])
         self.append_to_file("Second Document Type: "+content_value)
@@ -299,7 +299,7 @@ class Workflow:
             name = name.replace('.', '')
         # self.append_to_file("Connecting to OSCAR to identify patient using patient name.")
         # self.append_to_file("Test Mode, skipping api call to oscar.")
-        # print(name)
+        self.logger.debug(f"Doctor name: {name}")
         url = f"{self.base_url}/demographic/SearchDemographic.do"
 
         # Define the payload data
@@ -320,7 +320,7 @@ class Workflow:
             return True,response_data["results"]
 
     def set_doctor_from_code(self,name):
-        #print(name)
+        self.logger.debug(f"Setting doctor from code: {name}")
         oscar_response = []
         if name:
             if '.' in name:
@@ -336,20 +336,20 @@ class Workflow:
             # Send the POST request
             response = self.session.post(url, data=payload)
 
-            #print(response.text)
+            self.logger.debug(f"Provider search response: {response.text}")
 
             data = json.loads(response.text)
 
-            #print(data)
+            self.logger.debug(f"Provider data: {data}")
 
             for item in data["results"]:
-                #print(item)
+                self.logger.debug(f"Processing item: {item}")
                 if isinstance(item, dict):
                     if 'providerNo' in item:
-                        #print(item['providerNo'])
+                        self.logger.debug(f"Provider number: {item['providerNo']}")
                         self.provider_number.append(item['providerNo'])
 
-            #print(self.provider_number)
+            self.logger.debug(f"Provider numbers: {self.provider_number}")
 
             if self.provider_number is not None:
                 return True
@@ -358,8 +358,8 @@ class Workflow:
 
     def get_doctor_name(self,prompt):
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
-        #print("inside get doctor")
-        # print(name)
+        self.logger.debug("Getting doctor name")
+        self.logger.debug(f"Doctor name: {name}")
         array_pattern = r'\[.*?\]'
         #name = "Sokolowski"
         #array_match = re.search(array_pattern, names)
@@ -378,7 +378,7 @@ class Workflow:
             # Send the POST request
             response = self.session.post(url, data=payload)
 
-            #print(response.text)
+            self.logger.debug(f"Provider search response: {response.text}")
 
             response_data = json.loads(response.text)
 
@@ -394,7 +394,7 @@ class Workflow:
             else:
                 return False
 
-            print(oscar_response)
+            self.logger.debug(f"Oscar response: {oscar_response}")
 
     def get_document_description(self,prompt):
         result = self.build_sub_prompt(self.tesseracted_text + prompt)
@@ -405,7 +405,7 @@ class Workflow:
         self.append_to_file("Filtering results: ")
         if additional_param is not None:
             details = self.build_sub_prompt(self.tesseracted_text + prompt + str(additional_param))
-            #print(details)
+            self.logger.debug(f"Filtered results: {details}")
             return True,details
         else:
             self.append_to_file("Skipping filtering, not connected to oscar.")
@@ -414,7 +414,7 @@ class Workflow:
     def set_patient(self,additional_param=None):
         self.append_to_file("Storing patient details. ")
         if additional_param is not None:
-            #print(str(additional_param))
+            self.logger.debug(f"Additional param: {additional_param}")
             data = json.loads(additional_param)
             self.patient_name = data[0]['formattedName'] + '(' + data[0]['fomattedDob'] + ')'
             self.demographic_number = data[0]['demographicNo']
@@ -430,19 +430,16 @@ class Workflow:
         self.append_to_file("Storing provider details. ")
         if additional_param is not None:
             #additional_param = '[{"firstName": "Michelle", "lastName": "Liu", "ohipNo": "", "providerNo": "999998"},{"firstName": "John", "lastName": "Doe", "ohipNo": "", "providerNo": "999998"}]'
-            #print(str(additional_param))
+            self.logger.debug(f"Additional param: {additional_param}")
             data = json.loads(additional_param)
-            print(data)
+            self.logger.debug(f"Provider data: {data}")
             for item in data:
-                #print(item)
+                self.logger.debug(f"Processing item: {item}")
                 if isinstance(item, dict):
                     if 'providerNo' in item:
-                        print(item['providerNo'])
+                        self.logger.debug(f"Provider number: {item['providerNo']}")
                         self.provider_number.append(item['providerNo'])
-            #self.provider_number.append(data[0]['providerNo'])
-            #self.provider_number.append(data[0]['providerNo'])
-            #self.provider_number = data[0]['providerNo']
-            print(self.provider_number)
+            self.logger.debug(f"Provider numbers: {self.provider_number}")
             return True
         else:
             self.append_to_file("Skipping in test mode. ")
@@ -451,11 +448,7 @@ class Workflow:
     def oscar_update(self):
         self.append_to_file("Updating details in OSCAR. ")
         self.append_to_file("Skipping OSCAR update in test mode. ")
-        #print("Document Details:")
-        #print(self.patient_name)
-        #print(self.demographic_number)
-        #print(self.provider_number)
-        #print(self.document_description)
+        self.logger.debug(f"Document Details: Patient: {self.patient_name}, Demographic: {self.demographic_number}, Providers: {self.provider_number}, Description: {self.document_description}")
         # url = f"{self.base_url}/dms/ManageDocument.do"
 
         # # Define the parameters
@@ -489,11 +482,11 @@ class Workflow:
         # for value in self.provider_number:
         #     params["flagproviders"].append(value)
 
-        # print(params)
+        self.logger.debug(f"Oscar update params: {params}")
 
         # response = self.session.post(url, data=params)
 
-        # print(response)
+        self.logger.debug(f"Oscar update response: {response}")
 
         return True
 

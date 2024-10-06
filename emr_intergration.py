@@ -516,7 +516,7 @@ class Workflow:
         return True
 
     def set_doctor_from_code(self,name):
-        #print(name)
+        self.logger.debug(f"Setting doctor from code: {name}")
         oscar_response = []
         if name:
             if '.' in name:
