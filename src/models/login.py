@@ -1,3 +1,10 @@
+"""
+Module for handling login operations in the Oscar EMR system.
+
+This module contains the Login class which manages the authentication
+process for the Oscar EMR system using Selenium WebDriver.
+"""
+
 # COPYRIGHT © 2024 by Spring Health Corporation <office(at)springhealth.org>
 # Toronto, Ontario, Canada
 # SUMMARY: This file is part of the Get Well Clinic's original "AI-MOA" project's collection of software,
@@ -26,20 +33,56 @@ from selenium.webdriver.support import expected_conditions as EC
 
 
 class Login:
-    """Class for handling login operations in the Oscar EMR system."""
+    """
+    Class for handling login operations in the Oscar EMR system.
+
+    This class provides methods for authenticating users in the Oscar EMR system
+    using Selenium WebDriver.
+
+    Attributes:
+        config: Configuration object containing login credentials and URLs.
+        session_manager: SessionManager object for handling EMR sessions.
+        login_url (str): URL for the login page.
+    """
 
     def __init__(self, config, session_manager):
-        """Initialize Login with configuration and session manager."""
+        """
+        Initialize Login with configuration and session manager.
+
+        Args:
+            config: Configuration object containing login credentials and URLs.
+            session_manager: SessionManager object for handling EMR sessions.
+        """
         self.config = config
         self.session_manager = session_manager
         self.login_url = f"{self.config.base_url}{self.config.get('urls', {}).get('login', '')}"
 
     def login_successful_callback(self, driver):
-        """Callback method to be used after a successful login attempt."""
+        """
+        Callback method to be used after a successful login attempt.
+
+        Args:
+            driver: Selenium WebDriver instance.
+
+        Returns:
+            str: The current URL after login attempt.
+        """
         return self.login(driver, self.login_url)
 
     def login(self, driver, login_url):
-        """Perform the login operation using Selenium WebDriver."""
+        """
+        Perform the login operation using Selenium WebDriver.
+
+        This method navigates to the login page, enters the credentials,
+        and submits the login form.
+
+        Args:
+            driver: Selenium WebDriver instance.
+            login_url (str): URL of the login page.
+
+        Returns:
+            str: The current URL after login attempt.
+        """
         driver.get(login_url)
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.NAME, "username")))
         

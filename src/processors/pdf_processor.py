@@ -1,3 +1,10 @@
+"""
+Module for processing PDF documents in the Oscar EMR system.
+
+This module contains the PdfProcessor class which handles the retrieval
+and processing of PDF documents from the Oscar EMR system.
+"""
+
 import os
 import logging
 from selenium.webdriver.common.by import By
@@ -7,16 +14,40 @@ from utils.workflow import Workflow
 
 
 class PdfProcessor:
-    """Class for processing PDF documents in the Oscar EMR system."""
+    """
+    Class for processing PDF documents in the Oscar EMR system.
+
+    This class provides methods for fetching PDF content, processing
+    multiple PDFs, and executing workflows on individual PDF files.
+
+    Attributes:
+        config: Configuration object containing system settings.
+        session_manager: SessionManager object for handling EMR sessions.
+        logger: Logger instance for this class.
+    """
 
     def __init__(self, config, session_manager):
-        """Initialize PdfProcessor with configuration and session manager."""
+        """
+        Initialize PdfProcessor with configuration and session manager.
+
+        Args:
+            config: Configuration object containing system settings.
+            session_manager: SessionManager object for handling EMR sessions.
+        """
         self.config = config
         self.session_manager = session_manager
         self.logger = logging.getLogger(__name__)
 
     def get_pdf_content(self, pdf_name):
-        """Fetch the content of a PDF file from the Oscar EMR system."""
+        """
+        Fetch the content of a PDF file from the Oscar EMR system.
+
+        Args:
+            pdf_name (str): Name of the PDF file to fetch.
+
+        Returns:
+            bytes: Content of the PDF file if successful, None otherwise.
+        """
         self.logger.debug(f"Fetching PDF content for: {pdf_name}")
         pdf_url = (f"{self.config.base_url}/dms/ManageDocument.do?"
                    f"method=displayIncomingDocs&curPage=1&pdfDir=File&queueId=1&pdfName={pdf_name}")
@@ -28,7 +59,17 @@ class PdfProcessor:
             return None
 
     def process_pdfs(self, driver, login_url, login_successful_callback):
-        """Process all PDFs in the Oscar EMR system."""
+        """
+        Process all PDFs in the Oscar EMR system.
+
+        Args:
+            driver: Selenium WebDriver instance.
+            login_url (str): URL for logging into the EMR system.
+            login_successful_callback: Callback function to execute after successful login.
+
+        Returns:
+            str: Timestamp of the last processed PDF.
+        """
         self.logger.info("Starting PDF processing")
         driver.get(login_url)
         current_url = login_successful_callback(driver)
@@ -48,7 +89,15 @@ class PdfProcessor:
         return update_time
 
     def get_pdf_list(self, driver):
-        """Get the list of PDFs available for processing."""
+        """
+        Get the list of PDFs available for processing.
+
+        Args:
+            driver: Selenium WebDriver instance.
+
+        Returns:
+            list: List of WebElements representing available PDFs.
+        """
         select_element = driver.find_element(By.ID, "SelectPdfList")
         return [
             option for option in select_element.find_elements(By.TAG_NAME, 'option')
@@ -56,7 +105,15 @@ class PdfProcessor:
         ]
 
     def process_pdf_list(self, pdf_list):
-        """Process the list of PDFs, updating the last processed time."""
+        """
+        Process the list of PDFs, updating the last processed time.
+
+        Args:
+            pdf_list (list): List of WebElements representing available PDFs.
+
+        Returns:
+            str: Updated timestamp of the last processed PDF.
+        """
         self.logger.info("Processing PDF list")
         update_time = self.config.last_processed_pdf or pdf_list[0].text.split(") ", 1)[1]
 
@@ -69,7 +126,12 @@ class PdfProcessor:
         return update_time
 
     def process_single_pdf(self, pdf_name):
-        """Process a single PDF file."""
+        """
+        Process a single PDF file.
+
+        Args:
+            pdf_name (str): Name of the PDF file to process.
+        """
         self.logger.debug(f"Processing single PDF: {pdf_name}")
         pdf_content = self.get_pdf_content(pdf_name)
         if pdf_content:
