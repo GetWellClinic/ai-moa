@@ -48,21 +48,71 @@ ai_moa/
    - The `PdfProcessor` class in `processors/pdf_processor.py` specifically handles PDF documents.
    - It can download PDFs from the OSCAR system and process them using the `Workflow` class.
 
-5. **Workflow Management**:
-   - The `Workflow` class in `utils/workflow.py` is the core of the system's intelligence.
-   - It executes a series of tasks defined in CSV files, which can include:
-     - Extracting patient information
-     - Identifying document types
-     - Finding relevant healthcare providers
-     - Updating the OSCAR EMR with processed information
+## Workflow Management
 
-6. **AI Integration**:
-   - The system uses a local AI model (accessed via API) to assist in document classification and information extraction.
-   - AI prompts are constructed based on the extracted document text and specific tasks.
+The AI-MOA system uses a flexible and powerful workflow management system to process documents and interact with the OSCAR EMR. Here's a detailed explanation of how it works:
 
-7. **OSCAR EMR Integration**:
-   - The system can search for patients and providers in OSCAR.
-   - It can update OSCAR with processed document information, including attaching documents to patient records.
+### Workflow Structure
+
+1. **CSV-based Task Definition**: Workflows are defined in CSV files (e.g., `workflow.csv`, `0.csv`, `1.csv`, etc.). Each CSV file represents a specific workflow or sub-workflow.
+
+2. **Task Format**: Each row in a CSV file represents a task and contains the following columns:
+   - Task number
+   - Function name to execute
+   - Function parameters (variable number)
+   - Next task number if successful
+   - Next task number if unsuccessful
+
+3. **Workflow Class**: The `Workflow` class in `utils/workflow.py` is the core component that executes these tasks.
+
+### Workflow Execution Process
+
+1. **Initialization**: The `Workflow` class is initialized with document information, session details, and configuration settings.
+
+2. **Task Execution**: The `execute_tasks_from_csv` method is called, which:
+   - Reads tasks from the appropriate CSV file
+   - Starts execution from the first task (row 0)
+
+3. **Task Processing**: For each task, the system:
+   - Calls the specified function with given parameters
+   - Evaluates the result
+   - Determines the next task to execute based on success or failure
+
+4. **Dynamic Flow**: The workflow can branch and jump between tasks based on results, allowing for complex decision-making processes.
+
+5. **Function Mapping**: The `Workflow` class dynamically maps function names from the CSV to actual method calls, allowing for flexible task definitions.
+
+### Key Components
+
+- **Document Processing**: Functions for OCR, text extraction, and document classification.
+- **EMR Interaction**: Methods to search for patients, providers, and update OSCAR EMR.
+- **AI Integration**: Calls to AI models for document analysis and decision-making.
+- **Data Management**: Functions to set and retrieve patient and provider information.
+
+### Customization and Extension
+
+- New workflows can be easily defined by creating new CSV files.
+- Additional functions can be added to the `Workflow` class to extend capabilities.
+- The system supports different workflows for various document types (lab reports, consultations, etc.).
+
+### Benefits
+
+- Highly flexible and easily modifiable workflow definitions
+- Separation of workflow logic (in CSVs) from implementation (in Python code)
+- Easy to add new document types or processing steps without major code changes
+- Supports complex, branching workflows to handle various scenarios
+
+This workflow management system allows AI-MOA to handle a wide variety of document types and processing scenarios, making it adaptable to different medical office needs and EMR systems.
+
+## AI Integration
+
+- The system uses a local AI model (accessed via API) to assist in document classification and information extraction.
+- AI prompts are constructed based on the extracted document text and specific tasks.
+
+## OSCAR EMR Integration
+
+- The system can search for patients and providers in OSCAR.
+- It can update OSCAR with processed document information, including attaching documents to patient records.
 
 ## Setup
 
