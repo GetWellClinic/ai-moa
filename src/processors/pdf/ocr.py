@@ -31,12 +31,12 @@ logger = logging.getLogger(__name__)
 
 from src.config.config_manager import ConfigManager
 
-def extract_text_from_pdf(pdf_path, config: ConfigManager):
+def extract_text_from_bytes(pdf_bytes, config: ConfigManager):
     enable_ocr_gpu = config.get('general.enable_ocr_gpu', False)
     tesseract_path = config.get('general.ocr.tesseract_path', '/usr/bin/tesseract')
     
     try:
-        pdf_document = fitz.open(pdf_path)
+        pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
         extracted_text = ''
         logger.info(f"Processing PDF with {len(pdf_document)} pages")
         for page_num in range(len(pdf_document)):
@@ -69,7 +69,9 @@ if __name__ == "__main__":
         sys.exit(1)
 
     pdf_path = sys.argv[1]
-    extracted_text = extract_text_from_pdf(pdf_path)
+    with open(pdf_path, 'rb') as f:
+        pdf_bytes = f.read()
+    extracted_text = extract_text_from_bytes(pdf_bytes)
     if extracted_text:
         logger.info("Text extracted from PDF:")
         print(extracted_text)

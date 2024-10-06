@@ -6,6 +6,7 @@ class ConfigManager:
     def __init__(self, config_file='config/config.yaml', workflow_config_file='config/workflow-config.yaml'):
         self.config = self.load_config(config_file)
         self.workflow_config = self.load_config(workflow_config_file)
+        self.in_memory_storage = {}
 
     def load_config(self, file_path: str) -> Dict[str, Any]:
         with open(file_path, 'r') as file:
@@ -42,3 +43,9 @@ class ConfigManager:
     @property
     def ai_prompts(self) -> Dict[str, str]:
         return self.get_workflow('ai_prompts', {})
+
+    def set_in_memory(self, key, value):
+        self.in_memory_storage[key] = value
+
+    def get_in_memory(self, key, default=None):
+        return self.in_memory_storage.get(key, default)
