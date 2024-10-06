@@ -64,21 +64,21 @@ class Workflow:
         self.categories = self.config.get('categories', [])
         self.categories_code = self.categories
 
-    def find_category_index(self,text):
-        self.logger.debug("Inside find_category_index")
-        # to find the file type and execute the function based on that
+    def find_category_index(self, text):
         self.logger.debug("Inside find_category_index")
         if '.' in text:
             text = text.replace('.', '')
-        for index, category in enumerate(self.categories_code):
-            for word in text.split():
+        for word in text.split():
+            word = word.replace('"', '').replace("'", "")
+            for index, category in enumerate(self.categories_code):
                 if word.lower() == category.lower():
                     self.logger.debug(f"Category index found: {index}")
-                    self.logger.debug("Category index found: %d", index)
-                    #set file type
                     self.fileType = category.lower()
                     self.execute_tasks_from_csv(index)
                     return True
+        self.logger.debug("No category found, setting to 'others'")
+        self.fileType = 'others'
+        self.execute_tasks_from_csv(7)
         return False
 
     def has_ocr(self):
@@ -216,28 +216,21 @@ class Workflow:
         response = requests.post(self.url, headers=self.headers, json=data)
         return response.json()['choices'][0]['message']['content']
 
-    def get_patient_name(self,prompt):
+    def get_patient_name(self, prompt):
         self.logger.debug("Getting patient name")
-        # to get the patient name based on the prompt and the file content
-        # the result from llm will be used to search for the patient in oscar using patient name
-        # filter_results() can be used after this to filter the results using llm
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
-        self.logger.debug(f"Doctor name: {name}")
-        self.logger.debug(f"Doctor name: {name}")
         if '.' in name:
             name = name.replace('.', '')
         self.logger.debug("Patient name: %s", name)
         url = f"{self.base_url}/demographic/SearchDemographic.do"
 
-        # Define the payload data
         payload = {
-            "query": name
+            "query": f"%{name}%"
         }
 
-        # Send the POST request
         self.logger.debug("Sending POST request to search for patient")
         response = self.session.post(url, data=payload)
-        self.logger.debug(f"Response text: {response.text}")
+        self.logger.debug("Response text: %s", response.text)
 
         response_data = json.loads(response.text)
 
@@ -245,7 +238,8 @@ class Workflow:
             self.logger.info("No patient found")
             return False
         else:
-            return True,response_data["results"]
+            self.logger.info("Patient(s) found")
+            return True, response_data["results"]
 
     def set_doctor_from_code(self,name):
         self.logger.debug("Setting doctor from code: %s", name)
@@ -356,20 +350,24 @@ class Workflow:
             return False
 
     def set_patient(self, additional_param=None):
-        # will be used after filter_results to set the selected value from the array
         self.logger.debug("Setting patient")
         self.append_to_file("Storing patient details. ")
         if additional_param is not None:
             self.logger.debug("Additional param: %s", additional_param)
-            data = json.loads(additional_param)
-            self.patient_name = data[0]['formattedName'] + '(' + data[0]['fomattedDob'] + ')'
-            self.demographic_number = data[0]['demographicNo']
-            # Add MRP
-            if data[0]['providerNo'] is not None:
-                self.mrp = data[0]['providerNo']
-            self.logger.info(f"Patient set: {self.patient_name}")
-            return True
+            try:
+                data = json.loads(additional_param)
+                self.patient_name = f"{data['formattedName']}({data['formattedDob']})"
+                self.fl_name = data['formattedName']
+                self.demographic_number = data['demographicNo']
+                if data['providerNo'] is not None:
+                    self.mrp = data['providerNo']
+                self.logger.info(f"Patient set: {self.patient_name}")
+                return True
+            except json.JSONDecodeError as e:
+                self.logger.error(f"JSON decoding error: {e}")
+                return False
         else:
+            self.logger.info("No additional param provided, skipping patient set")
             return False
 
     def set_doctor(self, additional_param=None):
