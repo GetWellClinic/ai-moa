@@ -8,6 +8,13 @@ huey:
     minute: '*/5'  # Run every 5 minutes
   filename: '/app/oscar_tasks.db'
 
+logging:
+  level: INFO
+  format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+  filename: 'workflow.log'
+  file_level: DEBUG
+  console_level: INFO
+
 # Logging Configuration
 logging:
   level: INFO
