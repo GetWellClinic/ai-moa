@@ -232,7 +232,6 @@ class Workflow:
         return True
 
     def build_sub_prompt(self,prompt):
-        #will used for llm api call, this doesnt have call to find_category_index()
         data = {
             "messages": [
                 {
@@ -245,10 +244,9 @@ class Workflow:
                 }
             ],
             "mode": "instruct",
-            "temperature": .1,
+            "temperature": self.config.get('ai_config', {}).get('temperature', 0.1),
             "character": "Assistant",
-            "top_p":.1
-            #max_tokens:100
+            "top_p": self.config.get('ai_config', {}).get('top_p', 0.1)
         }
         response = requests.post(self.url, headers=self.headers, json=data)
         return response.json()['choices'][0]['message']['content']
