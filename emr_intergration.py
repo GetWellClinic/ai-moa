@@ -128,7 +128,7 @@ class Workflow:
                     return True
             return False
         except Exception as e:
-            print("An error occurred:", e)
+            self.logger.error(f"An error occurred: {e}")
             return False
 
     def extract_text_from_pdf(self):
@@ -150,7 +150,7 @@ class Workflow:
             self.tesseracted_text = extracted_text
             return True
         except Exception as e:
-            print("An error occurred:", e)
+            self.logger.error(f"An error occurred: {e}")
             return False
 
     def extract_text_doctr(self):
@@ -193,7 +193,7 @@ class Workflow:
             self.append_to_file(str(elapsed_time))
             return True
         except Exception as e:
-            print("An error occurred:", e)
+            self.logger.error(f"An error occurred: {e}")
             os.remove(pdf_path)
             return False
 
@@ -211,7 +211,7 @@ class Workflow:
             #self.tesseracted_text = """"""
             return True
         except Exception as e:
-            print("An error occurred:", e)
+            self.logger.error(f"An error occurred: {e}")
             return False
 
     def build_prompt(self,prompt):
