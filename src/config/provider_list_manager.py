@@ -11,12 +11,12 @@ from src.config import ConfigManager
 from src.auth import Login
 
 class ProviderListManager:
-    def __init__(self, config_file: str = 'config/config.yaml'):
-        self.config = ConfigManager(config_file)
-        self.username = self.config.get('user_login', {}).get('username')
-        self.password = self.config.get('user_login', {}).get('password')
-        self.pin = self.config.get('user_login', {}).get('pin')
-        self.base_url = self.config.get('base_url')
+    def __init__(self, config: ConfigManager):
+        self.config = config
+        self.username = config.get('general.user_login.username')
+        self.password = config.get('general.user_login.password')
+        self.pin = config.get('general.user_login.pin')
+        self.base_url = config.get('general.base_url')
         self.session = requests.Session()
         self.login()
 

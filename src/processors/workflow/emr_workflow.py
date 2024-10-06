@@ -5,7 +5,7 @@ from src.config.config_manager import ConfigManager
 class Workflow:
     def __init__(self, config: ConfigManager):
         self.config = config
-        self.logger = config.logger
+        self.logger = setup_logging(config)
         self.task_results = {}
         self.steps = config.workflow_steps
         self.document_categories = config.document_categories

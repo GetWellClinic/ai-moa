@@ -34,41 +34,28 @@ from doctr.models import ocr_predictor
 from guidance import select
 
 
+from src.config.config_manager import ConfigManager
+
 class Workflow:
     def __init__(self, filepath):
+        self.config = ConfigManager()
         self.patient_name = ''
         self.fileType = ''
         self.demographic_number = ''
         self.mrp = ''
         self.provider_number = []
-        self.logFile = "log_test_13_guidance.txt"
+        self.logFile = self.config.get('general.logging.filename', 'log_test.txt')
         self.document_description = ''
         self.filepath = filepath
         self.tesseracted_text = None
-        self.mistral = guidance.models.OpenAI("gpt-3.5-turbo-instruct")
-        self.enable_ocr_gpu = True
-        self.url = "http://127.0.0.1:5000/v1/chat/completions"
+        self.mistral = guidance.models.OpenAI(self.config.get('general.ai_config.model', "gpt-3.5-turbo-instruct"))
+        self.enable_ocr_gpu = self.config.get('general.enable_ocr_gpu', True)
+        self.url = self.config.get('general.ai_config.url', "http://127.0.0.1:5000/v1/chat/completions")
         self.headers = {
-            "Authorization": "Bearer qwerty",
+            "Authorization": f"Bearer {self.config.get('general.ai_config.auth_token', 'qwerty')}",
             "Content-Type": "application/json"
         }
-        self.categories = [
-            "Lab",
-            "Consult",
-            "Insurance",
-            "Legal",
-            "Old Chart",
-            "Radiology",
-            "Pathology",
-            "Others",
-            "Photo",
-            "Consent",
-            "Diagnostics",
-            "Pharmacy",
-            "Requisition",
-            "Referral",
-            "Request"
-        ]
+        self.categories = self.config.document_categories
 
         self.categories_code = [
             "Lab",

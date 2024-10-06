@@ -29,7 +29,10 @@ from PIL import Image
 
 logger = logging.getLogger(__name__)
 
-def extract_text_from_pdf(pdf_path):
+def extract_text_from_pdf(pdf_path, config: ConfigManager):
+    enable_ocr_gpu = config.get('general.enable_ocr_gpu', False)
+    tesseract_path = config.get('general.ocr.tesseract_path', '/usr/bin/tesseract')
+    
     try:
         pdf_document = fitz.open(pdf_path)
         extracted_text = ''
@@ -43,7 +46,13 @@ def extract_text_from_pdf(pdf_path):
                 image_bytes = base_image["image"]
                 image = Image.open(io.BytesIO(image_bytes))
 
-                image_text = pytesseract.image_to_string(image)
+                if enable_ocr_gpu:
+                    # Use GPU-enabled OCR logic here
+                    pass
+                else:
+                    pytesseract.pytesseract.tesseract_cmd = tesseract_path
+                    image_text = pytesseract.image_to_string(image)
+                
                 extracted_text += image_text + '\n'
                 logger.debug(f"Extracted text from image {img_index} on page {page_num}")
         return extracted_text
