@@ -263,6 +263,7 @@ class Workflow:
         # filter_results() can be used after this to filter the results using llm
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
         self.logger.debug(f"Doctor name: {name}")
+        self.logger.debug(f"Doctor name: {name}")
         if '.' in name:
             name = name.replace('.', '')
         self.logger.debug("Patient name: %s", name)
@@ -334,6 +335,7 @@ class Workflow:
         self.logger.debug("Getting doctor name")
         # filter_results() can be used after this method to filter the results
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
+        self.logger.debug(f"Doctor name: {name}")
         self.logger.debug(f"Doctor name: {name}")
         self.logger.debug("Doctor name: %s", name)
         array_pattern = r'\[.*?\]'
