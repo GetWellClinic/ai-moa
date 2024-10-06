@@ -10,6 +10,7 @@ from utils.logging_setup import setup_logging
 from models.login import Login
 from processors.pdf_processor import PdfProcessor
 from processors.document_processor import DocumentProcessor
+from processors.workflow_processor import WorkflowProcessor
 
 class OscarAutomation:
     def __init__(self, config_file='config/config.yaml'):
@@ -23,6 +24,7 @@ class OscarAutomation:
         self.last_processed_pdf = self.config['last_processed_pdf']
         self.last_pending_doc_file = self.config['last_pending_doc_file']
         self.enable_ocr_gpu = self.config['enable_ocr_gpu']
+        self.workflow_file = self.config.get('workflow_file', 'workflow.csv')
         self.session = requests.Session()
         self._login()
 
@@ -64,6 +66,16 @@ class OscarAutomation:
         chrome_options = Options()
         return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
+    def process_workflow(self):
+        self.logger.info("Starting workflow processing")
+        with self._get_driver() as driver:
+            self.login = Login(self.username, self.password, self.pin, self.base_url)
+            self.workflow_processor = WorkflowProcessor(self.workflow_file, self.session, self.base_url, "workflow.csv", self.enable_ocr_gpu)
+            self.workflow_processor.process_workflow(driver, f"{self.base_url}/login.do", self.login_successful_callback)
+        self.logger.info("Workflow processing completed")
+
 if __name__ == "__main__":
     oscar = OscarAutomation()
     oscar.process_documents()
+    oscar.process_pdfs()
+    oscar.process_workflow()
