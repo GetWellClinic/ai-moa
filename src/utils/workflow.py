@@ -28,6 +28,7 @@ import fitz
 import PyPDF2
 import requests
 import torch
+import pytesseract
 from PIL import Image
 from bs4 import BeautifulSoup
 from doctr.io import DocumentFile
@@ -81,6 +82,17 @@ class Workflow:
         }
         self.categories = config.document_categories
         self.categories_code = [cat.replace(' ', '') for cat in self.categories]
+        self._setup_pytesseract()
+
+    def _setup_pytesseract(self):
+        """
+        Set up pytesseract with the configured path.
+        """
+        tesseract_path = self.config.get('ocr', {}).get('tesseract_path')
+        if tesseract_path:
+            pytesseract.pytesseract.tesseract_cmd = tesseract_path
+        else:
+            self.logger.warning("Tesseract path not configured. Using default path.")
 
     def find_category_index(self, text: str) -> bool:
         """
