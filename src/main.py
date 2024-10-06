@@ -18,10 +18,8 @@ from processors.pdf_processor import PdfProcessor
 from processors.document_processor import DocumentProcessor
 from processors.workflow_processor import WorkflowProcessor
 from utils.config_manager import ConfigManager
-from huey import MemoryHuey
+from huey import RedisHuey
 from huey.api import task, TaskLock
-
-huey = MemoryHuey()
 
 class OscarAutomation:
     """
@@ -35,20 +33,23 @@ class OscarAutomation:
         logger (logging.Logger): Logger instance for this class.
         session_manager (SessionManager): Session manager for handling EMR sessions.
         login (Login): Login handler for EMR authentication.
+        huey (RedisHuey): Huey instance for task management.
     """
 
-    def __init__(self, config_file='config/config.yaml'):
+    def __init__(self, config_file='config/config.yaml', workflow_config_file='config/workflow-config.yaml'):
         """
         Initialize OscarAutomation with configuration and necessary components.
 
         Args:
-            config_file (str): Path to the configuration file.
+            config_file (str): Path to the main configuration file.
+            workflow_config_file (str): Path to the workflow configuration file.
         """
         self.config = ConfigManager(config_file)
         self.logger = setup_logging(self.config.config)
         self.session_manager = SessionManager(self.config)
         self.login = Login(self.config, self.session_manager)
-        self.workflow_config = self.load_workflow_config()
+        self.workflow_config = self.load_workflow_config(workflow_config_file)
+        self.huey = self.setup_huey()
 
     def _get_driver(self):
         """
@@ -65,15 +66,34 @@ class OscarAutomation:
             options=chrome_options
         )
 
-    def load_workflow_config(self):
+    def load_workflow_config(self, filename):
         """
         Load the workflow configuration from YAML file.
+
+        Args:
+            filename (str): Path to the workflow configuration file.
 
         Returns:
             dict: Workflow configuration.
         """
-        with open('config/workflow-config.yaml', 'r') as file:
+        with open(filename, 'r') as file:
             return yaml.safe_load(file)
+
+    def setup_huey(self):
+        """
+        Set up Huey instance based on configuration.
+
+        Returns:
+            RedisHuey: Configured Huey instance.
+        """
+        huey_config = self.workflow_config.get('huey', {})
+        return RedisHuey(
+            huey_config.get('name', 'workflow_queue'),
+            host=huey_config.get('connection', {}).get('host', 'localhost'),
+            port=huey_config.get('connection', {}).get('port', 6379),
+            results=huey_config.get('results', True),
+            store_none=huey_config.get('store_none', False)
+        )
 
     @task()
     def process_pdfs(self):

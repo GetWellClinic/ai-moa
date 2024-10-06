@@ -42,12 +42,6 @@ import logging
 from utils.config_manager import ConfigManager
 from huey import task
 
-from huey import RedisHuey
-from src.utils.config_manager import ConfigManager
-
-config = ConfigManager('src/config/workflow-config.yaml')
-huey = RedisHuey('workflow_queue', host=config.get('huey.connection.host'), port=config.get('huey.connection.port'))
-
 class Workflow:
     """
     A class to manage the workflow of processing medical documents.
@@ -97,14 +91,14 @@ class Workflow:
         self.session = session
         self.base_url = self.config.get('base_url')
         self.file_name = os.path.basename(filepath)
-        self.enable_ocr_gpu = self.config.get('enable_ocr_gpu')
+        self.enable_ocr_gpu = self.config.get('ocr', {}).get('enable_gpu', False)
         self.logger = logging.getLogger(__name__)
         self.url = self.config.get('ai_config', {}).get('url')
         self.headers = {
             "Authorization": f"Bearer {self.config.get('ai_config', {}).get('auth_token')}",
             "Content-Type": "application/json"
         }
-        self.categories = self.config.get('categories', [])
+        self.categories = self.config.get('document_categories', [])
         self.categories_code = self.categories
 
     def find_category_index(self, text):
@@ -225,7 +219,6 @@ class Workflow:
                     page = reader.pages[page_num]
                     text += page.extract_text()
             self.tesseracted_text = text
-            #self.tesseracted_text = """"""
             return True
         except Exception as e:
             self.logger.error(f"An error occurred in extract_text_from_pdf_file: {e}")
@@ -259,7 +252,7 @@ class Workflow:
         self.find_category_index(content_value)
         return True
 
-    def build_sub_prompt(self,prompt):
+    def build_sub_prompt(self, prompt):
         data = {
             "messages": [
                 {
@@ -272,9 +265,9 @@ class Workflow:
                 }
             ],
             "mode": "instruct",
-            "temperature": 0.1,
+            "temperature": self.config.get('ai_config', {}).get('temperature', 0.1),
             "character": "Assistant",
-            "top_p": 0.1
+            "top_p": self.config.get('ai_config', {}).get('top_p', 0.1)
         }
         response = requests.post(self.url, headers=self.headers, json=data)
         return response.json()['choices'][0]['message']['content']
@@ -304,11 +297,8 @@ class Workflow:
             self.logger.info("Patient(s) found")
             return True, response_data["results"]
 
-    def set_doctor_from_code(self,name):
+    def set_doctor_from_code(self, name):
         self.logger.debug("Setting doctor from code: %s", name)
-        # directly set provider name from csv using provider name, will search for the
-        # provider name in oscar and the resulting provider will be add to the provider
-        # list for the current file
         oscar_response = []
         if name:
             if '.' in name:
@@ -316,12 +306,10 @@ class Workflow:
 
             url = f"{self.base_url}/provider/SearchProvider.do"
 
-            # Define the payload data
             payload = {
                 "query": name
             }
 
-            # Send the POST request
             self.logger.debug("Sending POST request to search for provider")
             response = self.session.post(url, data=payload)
 
@@ -329,12 +317,8 @@ class Workflow:
 
             data = json.loads(response.text)
 
-            #print(data)
-
             for item in data["results"]:
                 self.logger.debug("Processing item: %s", item)
-            for item in data["results"]:
-                self.logger.debug(f"Processing item: {item}")
                 if isinstance(item, dict):
                     if 'providerNo' in item:
                         self.logger.debug("Provider number: %s", item['providerNo'])
@@ -342,20 +326,15 @@ class Workflow:
                         self.logger.debug(f"Provider number added: {item['providerNo']}")
             self.logger.debug(f"Provider numbers: {self.provider_number}")
 
-            if self.provider_number is not None:
+            if self.provider_number:
                 return True
             else:
                 return False
 
-    def get_doctor_name(self,prompt):
-        # can be used to get the provider name using llm
+    def get_doctor_name(self, prompt):
         self.logger.debug("Getting doctor name")
-        # filter_results() can be used after this method to filter the results
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
-        self.logger.debug(f"Doctor name: {name}")
-        self.logger.debug(f"Doctor name: {name}")
         self.logger.debug("Doctor name: %s", name)
-        array_pattern = r'\[.*?\]'
         oscar_response = []
         if name:
             if '.' in name:
@@ -363,12 +342,10 @@ class Workflow:
 
             url = f"{self.base_url}/provider/SearchProvider.do"
 
-            # Define the payload data
             payload = {
                 "query": name
             }
 
-            # Send the POST request
             self.logger.debug("Sending POST request to search for provider")
             response = self.session.post(url, data=payload)
 
@@ -385,25 +362,17 @@ class Workflow:
 
             if len(oscar_response) != 0:
                 self.logger.info("Provider(s) found")
-                return True,oscar_response
+                return True, oscar_response
             else:
                 return False
-            self.logger.debug(f"Oscar response: {oscar_response}")
 
-    def get_document_description(self,prompt):
-        # this method can be used to get document description from the llm based
-        # on the format specified in the prompt-0.csv,1.csv,2.csv etc.
+    def get_document_description(self, prompt):
         result = self.build_sub_prompt(self.tesseracted_text + prompt)
         self.logger.debug(f"Document description: {result}")
         self.document_description = result
         return True
 
     def filter_results(self, prompt, additional_param=None):
-        # this method can be used to filter the results if we have an array of results
-        # this array will be passed to the llm along with ocr text, the prompt will set
-        # the criteria for selecting one value from the array.
-        # this should be use after the methods get_patient_name, get_doctor_name, patientSearch, getProviderList
-        # the above functions will return an array and filter_results will be used to select one from that array
         if additional_param is not None:
             self.logger.debug("Filtering results")
             details = self.build_sub_prompt(self.tesseracted_text + prompt + str(additional_param))
@@ -414,7 +383,6 @@ class Workflow:
 
     def set_patient(self, additional_param=None):
         self.logger.debug("Setting patient")
-        self.append_to_file("Storing patient details. ")
         if additional_param is not None:
             self.logger.debug("Additional param: %s", additional_param)
             try:
@@ -435,15 +403,12 @@ class Workflow:
 
     def set_doctor(self, additional_param=None):
         self.logger.debug("Setting doctor")
-        self.append_to_file("Storing provider details. ")
         if additional_param is not None:
             self.logger.debug("Additional param: %s", additional_param)
             data = json.loads(additional_param)
             self.logger.debug("Provider data: %s", data)
             for item in data:
                 self.logger.debug("Processing item: %s", item)
-            for item in data["results"]:
-                self.logger.debug(f"Processing item: {item}")
                 if isinstance(item, dict):
                     if 'providerNo' in item:
                         self.logger.debug("Provider number: %s", item['providerNo'])
@@ -451,7 +416,6 @@ class Workflow:
             self.logger.debug("Provider numbers: %s", self.provider_number)
             return True
         else:
-            self.append_to_file("Skipping in test mode. ")
             self.logger.info(f"Doctor(s) set: {self.provider_number}")
             return True
 
@@ -554,7 +518,7 @@ class Workflow:
             "documentDescription": self.document_description,
             "observationDate": str(datetime.datetime.now().date()),
             "saved": "false",
-            "demog": "1",
+            "demog": self.demographic_number,
             "demographicKeyword": self.patient_name,
             "provi": self.provider_number[0] if self.provider_number else "",
             "MRPNo": self.mrp,
@@ -576,7 +540,7 @@ class Workflow:
             self.logger.error(f"Error in oscar_update: {e}")
             return False
 
-    @huey.task()
+    @task()
     def execute_task(self, task, previous_result=None):
         task_number, function_name, *params, true_next_row, false_next_row = task
         self.logger.debug(f"Executing task {task_number}: {function_name}")
@@ -597,7 +561,7 @@ class Workflow:
                 if response[0]:
                     return true_next_row, response[1]
                 else:
-                    return false_next_row,response[1]
+                    return false_next_row, response[1]
             else:
                 return true_next_row if response else false_next_row 
         else:
@@ -609,7 +573,7 @@ class Workflow:
             self.logger.info("Reached end of tasks.")
             return
 
-        next_row = self.execute_task(tasks[current_row], previous_result).get()  # .get() waits for the task to complete
+        next_row = self.execute_task(tasks[current_row], previous_result)
         if next_row == 'exit':
             self.logger.info("Exiting task execution.")
             return
@@ -625,8 +589,7 @@ class Workflow:
                 next_result = next_row_parts[1] if len(next_row_parts) > 1 else None
                 self.execute_tasks(tasks, next_row_index, previous_result=next_result)
 
-
-    def read_tasks_from_csv(self,file_path):
+    def read_tasks_from_csv(self, file_path):
         tasks = []
         self.logger.debug(f"Reading tasks from CSV: {file_path}")
         with open(file_path, 'r') as file:
@@ -635,11 +598,19 @@ class Workflow:
                 tasks.append(row)
         return tasks
 
+    def execute_tasks_from_csv(self, index=None):
+        if index is None:
+            tasks = self.read_tasks_from_csv(self.config.get('workflow', {}).get('file_path', 'workflow.csv'))
+        else:
+            tasks = self.read_tasks_from_csv(f"{index}.csv")
+        self.logger.debug(f"Processing file: {self.filepath}")
+        self.execute_tasks(tasks, 0)
+
     def execute_workflow(self):
         self.logger.info("Executing workflow")
-        workflow_steps = self.workflow_config.get('workflow_steps', [])
+        workflow_steps = self.config.get('workflow', {}).get('steps', [])
         for step in workflow_steps:
-            self.execute_step.schedule(args=(step['name'],), kwargs=step.get('params', {}))
+            self.execute_step(step['name'], **step.get('params', {}))
 
     @task()
     def execute_step(self, step_name, **params):
@@ -650,30 +621,3 @@ class Workflow:
         else:
             self.logger.error(f"Error: Function {step_name} not found or not callable.")
             return None
-
-    # Implement all the workflow steps as methods here
-    def get_document_description(self, prompt):
-        # Implementation
-        pass
-
-    def getProviderList(self, prompt):
-        # Implementation
-        pass
-
-    def get_patient_name(self, prompt):
-        # Implementation
-        pass
-
-    def set_patient(self, additional_param=None):
-        # Implementation
-        pass
-
-    def set_doctor(self, additional_param=None):
-        # Implementation
-        pass
-
-    def oscar_update(self):
-        # Implementation
-        pass
-
-    # Add other workflow step methods as needed
