@@ -28,10 +28,10 @@ import PyPDF2
 import requests
 import json
 import datetime
+import logging
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 from bs4 import BeautifulSoup
-import logging
 from PIL import Image
 import io
 import pytesseract
