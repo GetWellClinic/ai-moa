@@ -1,6 +1,6 @@
 import yaml
 from typing import Dict, Any, List
-import logging
+from src.logging import setup_logging
 
 class ConfigManager:
     """
