@@ -38,13 +38,14 @@ from bs4 import BeautifulSoup
 import logging
 
 class Workflow:
-    def __init__(self, filepath, session, base_url, file_name, enable_ocr_gpu):
+    def __init__(self, filepath, session, base_url, file_name, enable_ocr_gpu, config):
         self.patient_name = ''
         self.fl_name = ''
         self.fileType = ''
         self.demographic_number = ''
         self.mrp = ''
         self.provider_number = []
+        self.config = config
         self.logFile = self.config.get('logging', {}).get('filename', "log_test_28_emr_test.txt")
         self.document_description = ''
         self.filepath = filepath
@@ -253,26 +254,16 @@ class Workflow:
                 }
             ],
             "mode": "instruct",
-            #should be a parameter, only if needed else default api values
-            "temperature": .1,
+            "temperature": self.config.get('ai_config', {}).get('temperature', 0.1),
             "character": "Assistant",
-            #should be a parameter
-            "top_p":.1
-            #should be a parameter
-            #max_tokens:100
+            "top_p": self.config.get('ai_config', {}).get('top_p', 0.1)
         }
         response = requests.post(self.url, headers=self.headers, json=data)
         self.logger.debug("LLM response: %s", response.json())
         content_value = response.json()['choices'][0]['message']['content']
         self.logger.debug("Content value: %s", content_value)
-        # end_time = time.time()
-        # elapsed_time = end_time - start_time
         self.append_to_file("Response:")
         self.append_to_file(response.json()['choices'][0]['message']['content'])
-        # self.append_to_file("Time taken for the prompt:")
-        # self.append_to_file(str(elapsed_time))
-        # self.append_to_file("Document Type: "+content_value)
-        # self.find_category_index(content_value)
 
         data = {
             "messages": [
@@ -289,13 +280,9 @@ class Workflow:
                 }
             ],
             "mode": "chat",
-            #should be a parameter, only if needed else default api values
-            "temperature": .1,
+            "temperature": self.config.get('ai_config', {}).get('temperature', 0.1),
             "character": "Assistant",
-            #should be a parameter
-            "top_p":.1
-            #should be a parameter
-            #max_tokens:100
+            "top_p": self.config.get('ai_config', {}).get('top_p', 0.1)
         }
 
         response = requests.post(self.url, headers=self.headers, json=data)
@@ -621,7 +608,7 @@ class Workflow:
             try:
                 data = json.loads(additional_param)
             except json.JSONDecodeError as e:
-                print(f"JSON decoding error: {e}")
+                self.logger.error(f"JSON decoding error: {e}")
                 return False
 
             self.patient_name = data['formattedName'] + '(' + data['formattedDob'] + ')'
@@ -630,14 +617,11 @@ class Workflow:
             # Add MRP
             if data['providerNo'] is not None:
                 self.mrp = data['providerNo']
+            self.logger.info(f"Patient set: {self.patient_name}")
             return True
         else:
             self.append_to_file("Skipping in test mode. ")
             return False
-        # self.patient_name = "CONFIDENTIAL, UNATTACHED (2000-01-01)"
-        # self.demographic_number = "55"
-        # self.mrp = ""
-        # return True
 
     def set_doctor(self,additional_param=None):
         self.append_to_file("Storing provider details. ")
@@ -792,18 +776,32 @@ class Workflow:
     def oscar_update(self):
         self.logger.debug("Document Details: Patient: %s, Demographic: %s, Providers: %s, Type: %s, Description: %s", 
                           self.patient_name, self.demographic_number, self.provider_number, self.fileType, self.document_description)
+        self.logger.info("Updating Oscar")
         url = f"{self.base_url}/dms/ManageDocument.do"
 
         params = {
-            "method": "documentUpdateAjax",
-            "documentId": self.file_name,
+            "method": "addIncomingDocument",
+            "pdfDir": "File",
+            "pdfName": self.file_name,
+            "queueId": "1",
+            "pdfNo": "1",
+            "queue": "1",
+            "pdfAction": "",
+            "lastdemographic_no": "1",
+            "entryMode": "Fast",
             "docType": self.fileType,
+            "docClass": "",
+            "docSubClass": "",
             "documentDescription": self.document_description,
             "observationDate": str(datetime.datetime.now().date()),
+            "saved": "false",
             "demog": self.demographic_number,
-            "demofindName": self.fl_name,
-            "demoName": self.fl_name,
-            "demographicKeyword": self.patient_name
+            "demographicKeyword": self.patient_name,
+            "provi": self.provider_number[0] if self.provider_number else "",
+            "MRPNo": self.mrp,
+            "MRPName": "undefined",
+            "ProvKeyword": "",
+            "save": "Save & Next"
         }
 
         params["flagproviders"] = []
@@ -818,7 +816,8 @@ class Workflow:
 
         response = self.session.post(url, data=params)
 
-        self.logger.debug("Oscar update response: %s", response)
+        self.logger.debug("Oscar update response status: %s", response.status_code)
+        self.logger.debug("Oscar update response: %s", response.text)
 
         return True
 

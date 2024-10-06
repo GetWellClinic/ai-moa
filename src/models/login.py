@@ -97,3 +97,42 @@ class Login:
 
         WebDriverWait(driver, 10).until(EC.url_changes(login_url))
         return driver.current_url
+
+    def upload_template_file(self, driver, login_url):
+        """
+        Upload a template file after successful login.
+
+        Args:
+            driver: Selenium WebDriver instance.
+            login_url (str): URL of the login page.
+
+        Returns:
+            bool: True if upload was successful, False otherwise.
+        """
+        try:
+            # Navigate to the upload page
+            upload_url = f"{self.config.base_url}/dms/documentUploader.jsp"
+            driver.get(upload_url)
+
+            # Wait for the file input element to be present
+            file_input = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.NAME, "docfile"))
+            )
+
+            # Send the file path to the file input element
+            file_path = os.path.abspath("template.pdf")
+            file_input.send_keys(file_path)
+
+            # Find and click the upload button
+            upload_button = driver.find_element(By.XPATH, "//input[@value='Upload']")
+            upload_button.click()
+
+            # Wait for the upload to complete (you may need to adjust this based on the actual page behavior)
+            WebDriverWait(driver, 30).until(
+                EC.presence_of_element_located((By.XPATH, "//div[contains(text(), 'Upload successful')]"))
+            )
+
+            return True
+        except Exception as e:
+            print(f"Error during file upload: {e}")
+            return False
