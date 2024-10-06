@@ -128,6 +128,10 @@ class PdfProcessor:
     def _save_and_process_pdf(self, pdf_content):
         with open("downloaded_pdf.pdf", "wb") as f:
             f.write(pdf_content)
-        workflow = Workflow("downloaded_pdf.pdf",
-                            self.session_manager.get_session(), self.config)
-        workflow.execute_tasks_from_csv()
+        extracted_text = extract_text_from_pdf("downloaded_pdf.pdf")
+        if extracted_text:
+            workflow = Workflow(extracted_text,
+                                self.session_manager.get_session(), self.config)
+            workflow.execute_tasks_from_csv()
+        else:
+            self.logger.error("Failed to extract text from PDF")

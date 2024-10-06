@@ -21,17 +21,19 @@
 
 import io
 import sys
+import logging
 
 import fitz
 import pytesseract
 from PIL import Image
 
+logger = logging.getLogger(__name__)
 
 def extract_text_from_pdf(pdf_path):
     try:
         pdf_document = fitz.open(pdf_path)
         extracted_text = ''
-        print(len(pdf_document))
+        logger.info(f"Processing PDF with {len(pdf_document)} pages")
         for page_num in range(len(pdf_document)):
             page = pdf_document.load_page(page_num)
             image_list = page.get_images(full=True)
@@ -43,22 +45,22 @@ def extract_text_from_pdf(pdf_path):
 
                 image_text = pytesseract.image_to_string(image)
                 extracted_text += image_text + '\n'
-                print(image_text)
+                logger.debug(f"Extracted text from image {img_index} on page {page_num}")
         return extracted_text
     except Exception as e:
-        print("An error occurred:", e)
+        logger.error(f"An error occurred while extracting text: {e}")
         return None
 
-
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     if len(sys.argv) != 2:
-        print("Usage: python script_name.py <pdf_file>")
+        logger.error("Usage: python script_name.py <pdf_file>")
         sys.exit(1)
 
     pdf_path = sys.argv[1]
     extracted_text = extract_text_from_pdf(pdf_path)
     if extracted_text:
-        print("Text extracted from PDF:")
+        logger.info("Text extracted from PDF:")
         print(extracted_text)
     else:
-        print("Failed to extract text from PDF.")
+        logger.error("Failed to extract text from PDF.")
