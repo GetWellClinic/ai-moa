@@ -7,7 +7,7 @@ of predefined workflows within the Oscar EMR system using Huey for task manageme
 
 from src.config import ConfigManager
 from src.logging import setup_logging
-from utils.workflow import Workflow
+from .emr_workflow import EMRWorkflow
 
 from .step_executor import WorkflowStepExecutor
 from .task_manager import WorkflowTaskManager
@@ -79,7 +79,7 @@ class WorkflowProcessor:
             print("Login failed.")
             return
 
-        workflow = Workflow(self.session_manager.get_session(), self.config)
+        workflow = EMRWorkflow(self.session_manager.get_session(), self.config)
         workflow.execute_workflow()
         print("Workflow processing completed")
 
