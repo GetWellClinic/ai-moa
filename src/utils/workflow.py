@@ -381,27 +381,24 @@ class Workflow:
         self.document_description = result
         return True
 
-    def filter_results(self,prompt,additional_param=None):
+    def filter_results(self, prompt, additional_param=None):
         # this method can be used to filter the results if we have an array of results
         # this array will be passed to the llm along with ocr text, the prompt will set
         # the criteria for selecting one value from the array.
         # this should be use after the methods get_patient_name, get_doctor_name, patientSearch, getProviderList
         # the above functions will return an array and filter_results will be used to select one from that array
-    def set_doctor(self,additional_param=None):
-        self.append_to_file("Storing provider details. ")
         if additional_param is not None:
             self.logger.debug("Filtering results")
             details = self.build_sub_prompt(self.tesseracted_text + prompt + str(additional_param))
             self.logger.debug("Filtered results: %s", details)
-            return True,details
+            return True, details
         else:
             return False
 
-    def set_patient(self,additional_param=None):
+    def set_patient(self, additional_param=None):
         # will be used after filter_results to set the selected value from the array
         self.logger.debug("Setting patient")
-    def set_doctor(self,additional_param=None):
-        self.append_to_file("Storing provider details. ")
+        self.append_to_file("Storing patient details. ")
         if additional_param is not None:
             self.logger.debug("Additional param: %s", additional_param)
             data = json.loads(additional_param)
@@ -415,10 +412,8 @@ class Workflow:
         else:
             return False
 
-    def set_doctor(self,additional_param=None):
+    def set_doctor(self, additional_param=None):
         self.logger.debug("Setting doctor")
-        # will be used after filter_results to set the selected value from the array
-    def set_doctor(self,additional_param=None):
         self.append_to_file("Storing provider details. ")
         if additional_param is not None:
             self.logger.debug("Additional param: %s", additional_param)
@@ -438,10 +433,8 @@ class Workflow:
             self.append_to_file("Skipping in test mode. ")
             self.logger.info(f"Doctor(s) set: {self.provider_number}")
             return True
-        else:
-            return False
 
-    def patientSearch(self,prompt,type_of_query):
+    def patientSearch(self, prompt, type_of_query):
         self.logger.debug(f"Searching for patient with type: {type_of_query}")
         # to be used to search for a demographic using the below types
         # Type : search_name,search_phone,search_dob,search_address,search_hin,search_chart_no,search_demographic_no
