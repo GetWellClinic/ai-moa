@@ -1,23 +1,28 @@
-# COPYRIGHT © 2024 by Spring Health Corporation <office(at)springhealth.org>
-# Toronto, Ontario, Canada
-# SUMMARY: This file is part of the Get Well Clinic's original "AI-MOA" project's collection of software,
-# documentation, and configuration files.
-# These programs, documentation, and configuration files are made available to you as open source
-# in the hopes that your clinic or organization may find it useful and improve your care to the public
-# by reducing administrative burden for your staff and service providers. 
-# NO WARRANTY: This software and related documentation is provided "AS IS" and WITHOUT ANY WARRANTY of any kind;
-# and WITHOUT EXPRESS OR IMPLIED WARRANTY OF SUITABILITY, MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-# LICENSE: This software is licensed under the "GNU Affero General Public License Version 3".
-# Please see LICENSE file for full details. Or contact the Free Software Foundation for more details.
-# ***
-# NOTICE: We hope that you will consider contributing to our common source code repository so that
-# others may benefit from your shared work.
-# However, if you distribute this code or serve this application to users in modified form,
-# or as part of a derivative work, you are required to make your modified or derivative work
-# source code available under the same herein described license.
-# Please notify Spring Health Corp <office(at)springhealth.org> where your modified or derivative work
-# source code can be acquired publicly in its latest most up-to-date version, within one month.
-# ***
+"""
+Full Workflow Test Module for AI-MOA
+
+This module contains the implementation of a full workflow test for the AI-MOA (AI-powered Medical Office Assistant) project.
+It includes classes and functions to simulate and test the entire document processing workflow, from PDF extraction to AI analysis and EMR updates.
+
+Copyright © 2024 by Spring Health Corporation <office(at)springhealth.org>
+Toronto, Ontario, Canada
+
+This file is part of the Get Well Clinic's original "AI-MOA" project's collection of software, documentation, and configuration files.
+These programs, documentation, and configuration files are made available to you as open source in the hopes that your clinic or organization
+may find it useful and improve your care to the public by reducing administrative burden for your staff and service providers.
+
+NO WARRANTY: This software and related documentation is provided "AS IS" and WITHOUT ANY WARRANTY of any kind;
+and WITHOUT EXPRESS OR IMPLIED WARRANTY OF SUITABILITY, MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+
+LICENSE: This software is licensed under the "GNU Affero General Public License Version 3".
+Please see LICENSE file for full details. Or contact the Free Software Foundation for more details.
+
+NOTICE: We hope that you will consider contributing to our common source code repository so that others may benefit from your shared work.
+However, if you distribute this code or serve this application to users in modified form, or as part of a derivative work,
+you are required to make your modified or derivative work source code available under the same herein described license.
+Please notify Spring Health Corp <office(at)springhealth.org> where your modified or derivative work source code can be acquired publicly
+in its latest most up-to-date version, within one month.
+"""
 
 import csv
 import json
@@ -40,7 +45,37 @@ import pytesseract
 from src.config.config_manager import ConfigManager
 
 class Workflow:
+    """
+    Represents a workflow for processing medical documents in the AI-MOA system.
+
+    This class encapsulates the entire process of document analysis, from OCR to AI-powered classification and EMR updates.
+
+    Attributes:
+        config (ConfigManager): Configuration manager for the workflow.
+        patient_name (str): Name of the patient associated with the document.
+        fileType (str): Type of the document being processed.
+        demographic_number (str): Demographic number of the patient.
+        mrp (str): Most Responsible Provider number.
+        provider_number (list): List of provider numbers associated with the document.
+        logFile (str): Path to the log file.
+        document_description (str): Description of the document.
+        filepath (str): Path to the document file being processed.
+        tesseracted_text (str): Extracted text from the document using OCR.
+        mistral (guidance.models.OpenAI): OpenAI model for AI analysis.
+        enable_ocr_gpu (bool): Flag to enable GPU for OCR processing.
+        url (str): URL for the AI API.
+        headers (dict): Headers for API requests.
+        categories (list): List of document categories.
+        categories_code (list): List of category codes.
+    """
+
     def __init__(self, filepath):
+        """
+        Initialize the Workflow instance.
+
+        Args:
+            filepath (str): Path to the document file to be processed.
+        """
         self.config = ConfigManager()
         self.patient_name = ''
         self.fileType = ''
@@ -118,34 +153,35 @@ class Workflow:
             return False
 
     def extract_text_doctr(self):
+        """
+        Extract text from a PDF file using the DocTR OCR model.
+
+        This method processes the PDF file specified in self.filepath, extracts text from each page,
+        and stores the result in self.tesseracted_text. It also measures and logs the time taken for OCR.
+
+        Returns:
+            bool: True if text extraction was successful, False otherwise.
+        """
         start_time = time.time()
         pdf_path = self.filepath
         self.logger.debug(f"Processing PDF: {pdf_path}")
         text = ''
         try:
-            if self.enable_ocr_gpu == True:
+            if self.enable_ocr_gpu:
                 device = torch.device("cuda:0")
                 model = ocr_predictor(pretrained=True).to(device)
             else:
                 model = ocr_predictor(pretrained=True)
-            # PDF
+            
             doc = DocumentFile.from_pdf(pdf_path)
-
-            # Analyze
             result = model(doc)
-            # Iterate through pages
+            
             for page in result.pages:
                 self.logger.debug(f"Processing page {page.page_idx}")
-
-                # Iterate through blocks
                 for block in page.blocks:
                     self.logger.debug("Processing block")
-
-                    # Iterate through lines
                     for line in block.lines:
                         text += '\n'
-
-                        # Print words in the line
                         for word in line.words:
                             text += word.value + ' '
 
@@ -178,6 +214,19 @@ class Workflow:
             return False
 
     def build_prompt(self, prompt):
+        """
+        Build and execute an AI prompt to classify the document.
+
+        This method uses the Mistral AI model to classify the document based on the given prompt.
+        It attempts the classification multiple times in case of failures.
+
+        Args:
+            prompt (str): The prompt to be used for document classification.
+
+        Returns:
+            bool: True if the prompt was successfully executed and a classification was obtained,
+                  False if all attempts failed.
+        """
         start_time = time.time()
         max_attempts = 5
         attempts = 0
