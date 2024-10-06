@@ -45,7 +45,7 @@ class Workflow:
         self.demographic_number = ''
         self.mrp = ''
         self.provider_number = []
-        self.logFile = "log_test_28_emr_test.txt"
+        self.logFile = self.config.get('logging', {}).get('filename', "log_test_28_emr_test.txt")
         self.document_description = ''
         self.filepath = filepath
         self.tesseracted_text = None
@@ -54,10 +54,9 @@ class Workflow:
         self.file_name = file_name
         self.enable_ocr_gpu = enable_ocr_gpu
         self.logger = logging.getLogger(__name__)
-        self.url = "http://127.0.0.1:5000/v1/chat/completions"
-        # the Authorization qwerty will have to be changed, this for testing
+        self.url = self.config.get('ai_config', {}).get('url', "http://127.0.0.1:5000/v1/chat/completions")
         self.headers = {
-            "Authorization": "Bearer qwerty",
+            "Authorization": f"Bearer {self.config.get('ai_config', {}).get('auth_token', 'qwerty')}",
             "Content-Type": "application/json"
         }
         self.categories = [
@@ -343,17 +342,13 @@ class Workflow:
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
         if '.' in name:
             name = name.replace('.', '')
-        # self.append_to_file("Connecting to OSCAR to identify patient using patient name.")
-        # self.append_to_file("Test Mode, skipping api call to oscar.")
         self.logger.debug("Patient name: %s", name)
         url = f"{self.base_url}/demographic/SearchDemographic.do"
 
-        # Define the payload data
         payload = {
             "query": "%"+name+"%"
         }
 
-        # Send the POST request
         response = self.session.post(url, data=payload)
 
         self.logger.debug("Response text: %s", response.text)
@@ -799,34 +794,6 @@ class Workflow:
                           self.patient_name, self.demographic_number, self.provider_number, self.fileType, self.document_description)
         url = f"{self.base_url}/dms/ManageDocument.do"
 
-        # Define the parameters for incoming doc
-        # params = {
-        #     "method": "addIncomingDocument",
-        #     "pdfDir": "File",
-        #     "pdfName": self.file_name,
-        #     "queueId": "1",
-        #     "pdfNo": "1",
-        #     "queue": "1",
-        #     "pdfAction": "",
-        #     "lastdemographic_no": "1",
-        #     "entryMode": "Fast",
-        #     "docType": self.fileType,
-        #     "docClass": "",
-        #     "docSubClass": "",
-        #     "documentDescription": self.document_description,
-        #     "observationDate": str(datetime.datetime.now().date()),
-        #     "saved": "false",
-        #     "demog": self.demographic_number,
-        #     "demographicKeyword": self.patient_name,
-        #     "provi": self.provider_number[0],
-        #     "MRPNo": self.mrp,
-        #     "MRPName": "undefined",
-        #     "ProvKeyword": "",
-        #     "flagproviders":self.provider_number[0],
-        #     "save": "Save & Next"
-        # }
-
-        # Define the parameters for pending doc
         params = {
             "method": "documentUpdateAjax",
             "documentId": self.file_name,
@@ -880,10 +847,6 @@ class Workflow:
         
         if function_to_call and callable(function_to_call):
             self.logger.info(f"Executing Task {task_number} with function: {function_name} and parameters: {', '.join(params)}")
-            
-            # if len(params) != 0:
-            #     self.append_to_file("Prompt:")
-            #     self.append_to_file("Prompt: ".join(params))
             
             if 'additional_param' in function_to_call.__code__.co_varnames:
                 additional_param = previous_result if previous_result is not None else None
