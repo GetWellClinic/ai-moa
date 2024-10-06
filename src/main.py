@@ -13,6 +13,7 @@ from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 
 from config.config_loader import load_config, save_config
+import os
 from utils.logging_setup import setup_logging
 from src.models.login import Login
 from processors.pdf_processor import PdfProcessor
@@ -21,7 +22,8 @@ from processors.workflow_processor import WorkflowProcessor
 
 class OscarAutomation:
     def __init__(self):
-        self.config = load_config()
+        config_path = os.path.join(os.path.dirname(__file__), 'config', 'config.yaml')
+        self.config = load_config(config_path)
         setup_logging(self.config)
         self.logger = logging.getLogger(__name__)
         self.username = self.config['user_login']['username']
@@ -56,7 +58,7 @@ class OscarAutomation:
         with self._get_driver() as driver:
             pdf_processor = PdfProcessor(self.base_url, self.session, self.last_processed_pdf, self.enable_ocr_gpu)
             self.config["last_processed_pdf"] = pdf_processor.process_pdfs(driver, f"{self.base_url}/login.do", self.login_successful_callback)
-            save_config(self.config)
+            save_config(self.config, config_path)
         self.logger.info("PDF processing completed")
 
     def process_documents(self):
