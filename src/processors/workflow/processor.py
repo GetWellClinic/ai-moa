@@ -11,6 +11,7 @@ from utils.workflow import Workflow
 from .step_executor import WorkflowStepExecutor
 from .task_manager import WorkflowTaskManager
 from utils.login_manager import LoginManager
+from utils.driver_manager import DriverManager
 
 
 class WorkflowProcessor:
@@ -40,7 +41,7 @@ class WorkflowProcessor:
         self.task_manager = WorkflowTaskManager()
         self.step_executor = WorkflowStepExecutor(session_manager, config)
 
-    def process_workflow(self, driver, login_url, login_successful_callback):
+    def process_workflow(self, login_url, login_successful_callback):
         """
         Process the workflow defined in the configuration using Huey tasks.
 
@@ -48,29 +49,29 @@ class WorkflowProcessor:
         defined in the configuration.
 
         Args:
-            driver: Selenium WebDriver instance.
             login_url (str): URL for logging into the EMR system.
             login_successful_callback: Callback function to execute after successful login.
         """
         return self.task_manager.process_workflow_task(
             self._process_workflow_internal,
-            driver,
             login_url,
             login_successful_callback
         )
 
-    def _process_workflow_internal(self, driver, login_url, login_successful_callback):
+    def _process_workflow_internal(self, login_url, login_successful_callback):
         """
         Internal method to process the workflow.
 
         This method is called by the task manager and performs the actual workflow processing.
 
         Args:
-            driver: Selenium WebDriver instance.
             login_url (str): URL for logging into the EMR system.
             login_successful_callback: Callback function to execute after successful login.
         """
         print("Starting workflow processing")
+        driver_manager = DriverManager(self.config)
+        driver = driver_manager.get_driver()
+
         login_manager = LoginManager(self.config)
         current_url = login_manager.login_with_selenium(driver)
         if not login_manager.is_login_successful(current_url):

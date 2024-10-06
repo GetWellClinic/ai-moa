@@ -15,12 +15,8 @@ The module uses several components:
 
 from huey import MemoryHuey
 from huey.api import task, TaskLock
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-
 from utils.login_manager import LoginManager
+from utils.driver_manager import DriverManager
 from models.session_manager import SessionManager
 from models.login import Login
 from processors.document_processor import DocumentProcessor
@@ -63,22 +59,16 @@ class OscarAutomation:
 
     def _get_driver(self):
         """
-        Create and configure a Chrome WebDriver instance.
+        Get a configured Chrome WebDriver instance.
 
-        This method sets up a Chrome WebDriver with options specified in the
-        configuration. It uses the webdriver_manager to automatically manage
-        the ChromeDriver binary.
+        This method uses the DriverManager to create and configure a
+        Chrome WebDriver instance.
 
         Returns:
             webdriver.Chrome: Configured Chrome WebDriver instance.
         """
-        chrome_options = Options()
-        if self.config.get('chrome_options', {}).get('headless', False):
-            chrome_options.add_argument("--headless")
-        return webdriver.Chrome(
-            service=Service(ChromeDriverManager().install()),
-            options=chrome_options
-        )
+        driver_manager = DriverManager(self.config)
+        return driver_manager.get_driver()
 
     def setup_huey(self):
         """

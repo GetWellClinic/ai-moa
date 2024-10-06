@@ -18,6 +18,7 @@ Dependencies:
 from utils.config_manager import ConfigManager
 from utils.workflow import Workflow
 from utils.login_manager import LoginManager
+from utils.driver_manager import DriverManager
 
 
 class DocumentProcessor:
@@ -76,7 +77,7 @@ class DocumentProcessor:
                   f"Status code: {file_response.status_code}")
             return False
 
-    def process_documents(self, driver, login_url, login_successful_callback):
+    def process_documents(self, login_url, login_successful_callback):
         """
         Process all documents in the Oscar EMR system.
 
@@ -84,7 +85,6 @@ class DocumentProcessor:
         and processes each document that hasn't been processed before.
 
         Args:
-            driver: Selenium WebDriver instance.
             login_url (str): URL for logging into the EMR system.
             login_successful_callback: Callback function to execute after
                                        successful login.
@@ -96,6 +96,9 @@ class DocumentProcessor:
             This method updates the 'last_pending_doc_file' configuration value
             after processing each document.
         """
+        driver_manager = DriverManager(self.config)
+        driver = driver_manager.get_driver()
+
         # Attempt to log in
         login_manager = LoginManager(self.config)
         current_url = login_manager.login_with_selenium(driver)

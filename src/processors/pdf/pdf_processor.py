@@ -23,6 +23,7 @@ from selenium.webdriver.support.ui import Select
 from utils.config_manager import ConfigManager
 from utils.workflow import Workflow
 from utils.login_manager import LoginManager
+from utils.driver_manager import DriverManager
 
 from .pdf_fetcher import PdfFetcher
 
@@ -54,12 +55,11 @@ class PdfProcessor:
         self.session_manager = session_manager
         self.pdf_fetcher = PdfFetcher(config, session_manager.get_session())
 
-    def process_pdfs(self, driver, login_url, login_successful_callback):
+    def process_pdfs(self, login_url, login_successful_callback):
         """
         Process all PDFs in the Oscar EMR system.
 
         Args:
-            driver: Selenium WebDriver instance.
             login_url (str): URL for logging into the EMR system.
             login_successful_callback: Callback function to execute after
                                        successful login.
@@ -67,7 +67,11 @@ class PdfProcessor:
         Returns:
             str: Timestamp of the last processed PDF.
         """
+        driver_manager = DriverManager(self.config)
+        driver = driver_manager.get_driver()
+
         if not self._login(driver, login_url, login_successful_callback):
+            driver.quit()
             return self.config.get('last_processed_pdf')
 
         driver.get(f"{self.config.get('base_url')}/dms/incomingDocs.jsp")
