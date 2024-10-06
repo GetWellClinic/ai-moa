@@ -17,6 +17,7 @@ Dependencies:
 
 from utils.config_manager import ConfigManager
 from utils.workflow import Workflow
+from utils.login_manager import LoginManager
 
 
 class DocumentProcessor:

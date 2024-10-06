@@ -22,6 +22,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from utils.config_manager import ConfigManager
 from utils.workflow import Workflow
+from utils.login_manager import LoginManager
 
 from .pdf_fetcher import PdfFetcher
 

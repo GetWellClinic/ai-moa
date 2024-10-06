@@ -22,6 +22,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 from utils.login_manager import LoginManager
 from models.session_manager import SessionManager
+from models.login import Login
 from processors.document_processor import DocumentProcessor
 from processors.pdf.pdf_processor import PdfProcessor
 from processors.workflow.processor import WorkflowProcessor

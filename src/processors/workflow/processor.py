@@ -10,6 +10,7 @@ from utils.workflow import Workflow
 
 from .step_executor import WorkflowStepExecutor
 from .task_manager import WorkflowTaskManager
+from utils.login_manager import LoginManager
 
 
 class WorkflowProcessor:
