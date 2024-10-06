@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  oscar_automation:
+  ai_moa:
     build: .
     volumes:
       - ./src:/app/src
