@@ -21,6 +21,8 @@
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 class Login:
     def __init__(self, username, password, pin, base_url):
@@ -31,6 +33,8 @@ class Login:
 
     def login(self, driver, login_url):
         driver.get(login_url)
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.NAME, "username")))
+        
         username_field = driver.find_element(By.NAME, "username")
         password_field = driver.find_element(By.NAME, "password")
         pin_field = driver.find_element(By.NAME, "pin")
@@ -40,4 +44,5 @@ class Login:
         pin_field.send_keys(self.pin)
         pin_field.send_keys(Keys.RETURN)
 
+        WebDriverWait(driver, 10).until(EC.url_changes(login_url))
         return driver.current_url

@@ -644,13 +644,11 @@ class Workflow:
                 tasks.append(row)
         return tasks
 
-    def execute_tasks_from_csv(self,index=None):
+    def execute_tasks_from_csv(self, index=None):
         self.logger.info(f"Executing tasks from CSV, index: {index}")
-    def execute_tasks_from_csv(self,index=None):
         if index is None:
             tasks = self.read_tasks_from_csv('workflow.csv')
         else:
-            tasks = self.read_tasks_from_csv(str(index)+'.csv')
+            tasks = self.read_tasks_from_csv(f'{index}.csv')
         self.logger.debug(f"Processing file: {self.filepath}")
-        self.logger.debug(f"File path: {self.filepath}")
         self.execute_tasks(tasks, 0)

@@ -1,5 +1,8 @@
 import logging
-from models.workflow import Workflow
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from utils.workflow import Workflow
 
 class DocumentProcessor:
     def __init__(self, base_url, session, last_pending_doc_file, enable_ocr_gpu):
@@ -30,11 +33,12 @@ class DocumentProcessor:
             return self.last_pending_doc_file
 
         driver.get(f"{self.base_url}/dms/inboxManage.do?method=getDocumentsInQueues")
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "typeDocLab")))
         script_value = driver.execute_script("return typeDocLab;")
 
         for doc_no in script_value['DOC']:
             self.logger.debug(f"Processing document number: {doc_no}")
-            if doc_no > self.last_pending_doc_file:
+            if int(doc_no) > int(self.last_pending_doc_file):
                 if self.process_single_document(doc_no):
                     self.last_pending_doc_file = doc_no
 

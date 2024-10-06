@@ -1,74 +1,22 @@
-import csv
-import json
-import requests
-from bs4 import BeautifulSoup
-from datetime import datetime
+import logging
+from utils.workflow import Workflow
 
 class WorkflowProcessor:
-    def __init__(self, filepath, session, base_url, file_name, enable_ocr_gpu):
-        self.filepath = filepath
+    def __init__(self, workflow_file, session, base_url, enable_ocr_gpu):
+        self.workflow_file = workflow_file
         self.session = session
         self.base_url = base_url
-        self.file_name = file_name
         self.enable_ocr_gpu = enable_ocr_gpu
-        self.patient_name = ''
-        self.fileType = ''
-        self.demographic_number = ''
-        self.mrp = ''
-        self.provider_number = []
-        self.document_description = ''
-        self.tesseracted_text = None
-        self.url = "http://127.0.0.1:5000/v1/chat/completions"
-        self.headers = {
-            "Authorization": "Bearer qwerty",
-            "Content-Type": "application/json"
-        }
-        self.categories = [
-            "Lab", "Consult", "Insurance", "Legal", "Old Chart", "Radiology",
-            "Pathology", "Others", "Photo", "Consent", "Diagnostics", "Pharmacy",
-            "Requisition", "Referral", "Request"
-        ]
-        self.categories_code = [
-            "Lab", "Consult", "Insurance", "Legal", "OldChart", "Radiology",
-            "Pathology", "Others", "Photo", "Consent", "Diagnostics", "Pharmacy",
-            "Requisition", "Referral", "Request"
-        ]
+        self.logger = logging.getLogger(__name__)
 
-    # Add other methods from the original Workflow class here
-import csv
-import json
-import requests
-from bs4 import BeautifulSoup
-from datetime import datetime
+    def process_workflow(self, driver, login_url, login_successful_callback):
+        self.logger.info("Starting workflow processing")
+        driver.get(login_url)
+        current_url = login_successful_callback(driver)
+        if current_url == f"{self.base_url}/login.do":
+            self.logger.error("Login failed.")
+            return
 
-class WorkflowProcessor:
-    def __init__(self, filepath, session, base_url, file_name, enable_ocr_gpu):
-        self.filepath = filepath
-        self.session = session
-        self.base_url = base_url
-        self.file_name = file_name
-        self.enable_ocr_gpu = enable_ocr_gpu
-        self.patient_name = ''
-        self.fileType = ''
-        self.demographic_number = ''
-        self.mrp = ''
-        self.provider_number = []
-        self.document_description = ''
-        self.tesseracted_text = None
-        self.url = "http://127.0.0.1:5000/v1/chat/completions"
-        self.headers = {
-            "Authorization": "Bearer qwerty",
-            "Content-Type": "application/json"
-        }
-        self.categories = [
-            "Lab", "Consult", "Insurance", "Legal", "Old Chart", "Radiology",
-            "Pathology", "Others", "Photo", "Consent", "Diagnostics", "Pharmacy",
-            "Requisition", "Referral", "Request"
-        ]
-        self.categories_code = [
-            "Lab", "Consult", "Insurance", "Legal", "OldChart", "Radiology",
-            "Pathology", "Others", "Photo", "Consent", "Diagnostics", "Pharmacy",
-            "Requisition", "Referral", "Request"
-        ]
-
-    # Add other methods from the original Workflow class here
+        workflow = Workflow(self.workflow_file, self.session, self.base_url, "workflow.csv", self.enable_ocr_gpu)
+        workflow.execute_tasks_from_csv()
+        self.logger.info("Workflow processing completed")

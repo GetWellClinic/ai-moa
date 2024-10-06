@@ -1,7 +1,9 @@
 import os
 import logging
-from models.workflow import Workflow
-from utils.ocr_utils import has_ocr, extract_text_doctr, extract_text_from_pdf_file
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from utils.workflow import Workflow
 
 class PdfProcessor:
     def __init__(self, base_url, session, last_processed_pdf, enable_ocr_gpu):
@@ -31,8 +33,8 @@ class PdfProcessor:
 
         self.logger.info("Login successful!")
         driver.get(f"{self.base_url}/dms/incomingDocs.jsp")
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "SelectPdfList")))
         driver.execute_script("loadPdf('1', 'File');")
-        driver.implicitly_wait(10)
 
         pdf_list = self.get_pdf_list(driver)
         update_time = self.process_pdf_list(pdf_list)
@@ -41,8 +43,8 @@ class PdfProcessor:
         return update_time
 
     def get_pdf_list(self, driver):
-        select_element = driver.find_element_by_id("SelectPdfList")
-        return [option for option in select_element.find_elements_by_tag_name('option') if option.get_attribute('value')]
+        select_element = driver.find_element(By.ID, "SelectPdfList")
+        return [option for option in select_element.find_elements(By.TAG_NAME, 'option') if option.get_attribute('value')]
 
     def process_pdf_list(self, pdf_list):
         self.logger.info("Processing PDF list")
