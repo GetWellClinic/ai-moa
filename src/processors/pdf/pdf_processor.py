@@ -40,7 +40,7 @@ from utils.workflow import Workflow
 from auth import LoginManager, DriverManager
 
 from .pdf_fetcher import PdfFetcher
-from .tesseract_utils import extract_text_from_pdf
+from .ocr import extract_text_from_pdf
 
 
 class PdfProcessor:
