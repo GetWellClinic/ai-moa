@@ -36,7 +36,7 @@ from processors.document import DocumentProcessor
 from processors.pdf import PdfProcessor
 from processors.workflow import WorkflowProcessor
 from src.config import ConfigManager
-from src.utils import logging_setup
+from src.logging import setup_logging
 class OscarAutomation:
     """
     Main class for automating Oscar EMR tasks.
@@ -63,7 +63,7 @@ class OscarAutomation:
             config_file (str): Path to the workflow configuration file.
         """
         self.config = ConfigManager(config_file)
-        self.logger = logging_setup.setup_logging()
+        self.logger = setup_logging()
         self.session_manager = SessionManager(self.config)
         self.login_manager = LoginManager(self.config)
         self.huey = self.setup_huey()
