@@ -6,8 +6,6 @@ creation and management for interactions with the Oscar EMR system.
 """
 
 import requests
-import logging
-
 
 class SessionManager:
     """
@@ -17,9 +15,8 @@ class SessionManager:
     with the Oscar EMR system, including login functionality.
 
     Attributes:
-        config: Configuration object containing login credentials and URLs.
+        config (dict): Configuration dictionary containing login credentials and URLs.
         session (requests.Session): Session object for making HTTP requests.
-        logger (logging.Logger): Logger instance for this class.
     """
 
     def __init__(self, config):
@@ -27,11 +24,15 @@ class SessionManager:
         Initialize SessionManager with configuration.
 
         Args:
-            config: Configuration object containing login credentials and URLs.
+            config (dict): Configuration dictionary containing login credentials and URLs.
         """
         self.config = config
         self.session = requests.Session()
-        self.logger = logging.getLogger(__name__)
+        self.username = config['user_login']['username']
+        self.password = config['user_login']['password']
+        self.pin = config['user_login']['pin']
+        self.base_url = config['base_url']
+        self.login()
 
     def login(self):
         """
@@ -43,21 +44,20 @@ class SessionManager:
         Returns:
             bool: True if login was successful, False otherwise.
         """
-        login_url = f"{self.config.base_url}{self.config.get('urls', {}).get('login', '')}"
         response = self.session.post(
-            login_url,
+            f"{self.base_url}/login.do",
             data={
-                "username": self.config.user_login['username'],
-                "password": self.config.user_login['password'],
-                "pin": self.config.user_login['pin']
+                "username": self.username,
+                "password": self.password,
+                "pin": self.pin
             }
         )
         
-        if response.url == login_url:
-            self.logger.error("Login failed.")
+        if response.url == f"{self.base_url}/login.do":
+            print("Login failed.")
             return False
         else:
-            self.logger.info("Login successful!")
+            print("Login successful!")
             return True
 
     def get_session(self):

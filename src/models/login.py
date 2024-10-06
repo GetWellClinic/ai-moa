@@ -5,32 +5,8 @@ This module contains the Login class which manages the authentication
 process for the Oscar EMR system using Selenium WebDriver.
 """
 
-# COPYRIGHT © 2024 by Spring Health Corporation <office(at)springhealth.org>
-# Toronto, Ontario, Canada
-# SUMMARY: This file is part of the Get Well Clinic's original "AI-MOA" project's collection of software,
-# documentation, and configuration files.
-# These programs, documentation, and configuration files are made available to you as open source
-# in the hopes that your clinic or organization may find it useful and improve your care to the public
-# by reducing administrative burden for your staff and service providers. 
-# NO WARRANTY: This software and related documentation is provided "AS IS" and WITHOUT ANY WARRANTY of any kind;
-# and WITHOUT EXPRESS OR IMPLIED WARRANTY OF SUITABILITY, MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-# LICENSE: This software is licensed under the "GNU Affero General Public License Version 3".
-# Please see LICENSE file for full details. Or contact the Free Software Foundation for more details.
-# ***
-# NOTICE: We hope that you will consider contributing to our common source code repository so that
-# others may benefit from your shared work.
-# However, if you distribute this code or serve this application to users in modified form,
-# or as part of a derivative work, you are required to make your modified or derivative work
-# source code available under the same herein described license.
-# Please notify Spring Health Corp <office(at)springhealth.org> where your modified or derivative work
-# source code can be acquired publicly in its latest most up-to-date version, within one month.
-# ***
-
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-
 
 class Login:
     """
@@ -40,9 +16,8 @@ class Login:
     using Selenium WebDriver.
 
     Attributes:
-        config: Configuration object containing login credentials and URLs.
+        config (dict): Configuration dictionary containing login credentials and URLs.
         session_manager: SessionManager object for handling EMR sessions.
-        login_url (str): URL for the login page.
     """
 
     def __init__(self, config, session_manager):
@@ -50,12 +25,15 @@ class Login:
         Initialize Login with configuration and session manager.
 
         Args:
-            config: Configuration object containing login credentials and URLs.
+            config (dict): Configuration dictionary containing login credentials and URLs.
             session_manager: SessionManager object for handling EMR sessions.
         """
         self.config = config
         self.session_manager = session_manager
-        self.login_url = f"{self.config.base_url}{self.config.get('urls', {}).get('login', '')}"
+        self.username = config['user_login']['username']
+        self.password = config['user_login']['password']
+        self.pin = config['user_login']['pin']
+        self.base_url = config['base_url']
 
     def login_successful_callback(self, driver):
         """
@@ -67,7 +45,8 @@ class Login:
         Returns:
             str: The current URL after login attempt.
         """
-        return self.login(driver, self.login_url)
+        login_url = f"{self.base_url}/login.do"
+        return self.login(driver, login_url)
 
     def login(self, driver, login_url):
         """
@@ -84,55 +63,13 @@ class Login:
             str: The current URL after login attempt.
         """
         driver.get(login_url)
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.NAME, "username")))
-        
         username_field = driver.find_element(By.NAME, "username")
         password_field = driver.find_element(By.NAME, "password")
         pin_field = driver.find_element(By.NAME, "pin")
 
-        username_field.send_keys(self.config.user_login['username'])
-        password_field.send_keys(self.config.user_login['password'])
-        pin_field.send_keys(self.config.user_login['pin'])
+        username_field.send_keys(self.username)
+        password_field.send_keys(self.password)
+        pin_field.send_keys(self.pin)
         pin_field.send_keys(Keys.RETURN)
 
-        WebDriverWait(driver, 10).until(EC.url_changes(login_url))
         return driver.current_url
-
-    def upload_template_file(self, driver, login_url):
-        """
-        Upload a template file after successful login.
-
-        Args:
-            driver: Selenium WebDriver instance.
-            login_url (str): URL of the login page.
-
-        Returns:
-            bool: True if upload was successful, False otherwise.
-        """
-        try:
-            # Navigate to the upload page
-            upload_url = f"{self.config.base_url}/dms/documentUploader.jsp"
-            driver.get(upload_url)
-
-            # Wait for the file input element to be present
-            file_input = WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.NAME, "docfile"))
-            )
-
-            # Send the file path to the file input element
-            file_path = os.path.abspath("template.pdf")
-            file_input.send_keys(file_path)
-
-            # Find and click the upload button
-            upload_button = driver.find_element(By.XPATH, "//input[@value='Upload']")
-            upload_button.click()
-
-            # Wait for the upload to complete (you may need to adjust this based on the actual page behavior)
-            WebDriverWait(driver, 30).until(
-                EC.presence_of_element_located((By.XPATH, "//div[contains(text(), 'Upload successful')]"))
-            )
-
-            return True
-        except Exception as e:
-            print(f"Error during file upload: {e}")
-            return False

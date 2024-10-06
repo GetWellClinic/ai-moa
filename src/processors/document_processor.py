@@ -5,12 +5,7 @@ This module contains the DocumentProcessor class which handles the retrieval
 and processing of various documents from the Oscar EMR system.
 """
 
-import logging
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from utils.workflow import Workflow
-
 
 class DocumentProcessor:
     """
@@ -20,42 +15,43 @@ class DocumentProcessor:
     multiple documents, and executing workflows on individual document files.
 
     Attributes:
-        config: Configuration object containing system settings.
-        session_manager: SessionManager object for handling EMR sessions.
-        logger: Logger instance for this class.
+        base_url (str): Base URL for the Oscar EMR system.
+        session: Session object for making HTTP requests.
+        last_pending_doc_file (str): Document number of the last processed document.
+        enable_ocr_gpu (bool): Flag to enable GPU for OCR processing.
     """
 
-    def __init__(self, config, session_manager):
+    def __init__(self, config, session):
         """
-        Initialize DocumentProcessor with configuration and session manager.
+        Initialize DocumentProcessor with configuration and session.
 
         Args:
-            config: Configuration object containing system settings.
-            session_manager: SessionManager object for handling EMR sessions.
+            config (dict): Configuration dictionary containing system settings.
+            session: Session object for making HTTP requests.
         """
-        self.config = config
-        self.session_manager = session_manager
-        self.logger = logging.getLogger(__name__)
+        self.base_url = config['base_url']
+        self.session = session
+        self.last_pending_doc_file = config['last_pending_doc_file']
+        self.enable_ocr_gpu = config['enable_ocr_gpu']
 
-    def get_file_content(self, doc_no):
+    def get_file_content(self, name):
         """
         Fetch the content of a document file from the Oscar EMR system.
 
         Args:
-            doc_no (str): Document number to fetch.
+            name (str): Document name to fetch.
 
         Returns:
             bool: True if the file was successfully fetched and saved, False otherwise.
         """
-        self.logger.debug(f"Fetching file content for document number: {doc_no}")
-        file_url = f"{self.config.base_url}/dms/ManageDocument.do?method=display&doc_no={doc_no}"
-        file_response = self.session_manager.get_session().get(file_url)
+        file_url = f"{self.base_url}/dms/ManageDocument.do?method=display&doc_no={name}"
+        file_response = self.session.get(file_url)
         if file_response.status_code == 200 and file_response.content:
-            with open("downloaded_document.pdf", "wb") as file:
+            with open("downloaded_pdf.pdf", "wb") as file:
                 file.write(file_response.content)
             return True
         else:
-            self.logger.error(f"Failed to fetch file content. Status code: {file_response.status_code}")
+            print(f"Failed to fetch file content. Status code: {file_response.status_code}")
             return False
 
     def process_documents(self, driver, login_url, login_successful_callback):
@@ -70,46 +66,20 @@ class DocumentProcessor:
         Returns:
             str: Document number of the last processed document.
         """
-        self.logger.info("Starting document processing")
         driver.get(login_url)
         current_url = login_successful_callback(driver)
-        if current_url == f"{self.config.base_url}/login.do":
-            self.logger.error("Login failed.")
-            return self.config.last_pending_doc_file
+        if current_url == f"{self.base_url}/login.do":
+            print("Login failed.")
+            return self.last_pending_doc_file
 
-        driver.get(f"{self.config.base_url}/dms/inboxManage.do?method=getDocumentsInQueues")
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "typeDocLab")))
+        driver.get(f"{self.base_url}/dms/inboxManage.do?method=getDocumentsInQueues")
         script_value = driver.execute_script("return typeDocLab;")
 
-        for doc_no in script_value['DOC']:
-            self.logger.debug(f"Processing document number: {doc_no}")
-            if int(doc_no) > int(self.config.last_pending_doc_file):
-                if self.process_single_document(doc_no):
-                    self.config.last_pending_doc_file = doc_no
+        for item in script_value['DOC']:
+            if int(item) > int(self.last_pending_doc_file):
+                if self.get_file_content(item):
+                    workflow = Workflow("downloaded_pdf.pdf", self.session, self.base_url, item, self.enable_ocr_gpu)
+                    workflow.execute_tasks_from_csv()
+                    self.last_pending_doc_file = item
 
-        self.logger.info("Document processing completed")
-        return self.config.last_pending_doc_file
-
-    def process_single_document(self, doc_no):
-        """
-        Process a single document file.
-
-        Args:
-            doc_no (str): Document number to process.
-
-        Returns:
-            bool: True if the document was successfully processed, False otherwise.
-        """
-        self.logger.debug(f"Processing single document: {doc_no}")
-        if self.get_file_content(doc_no):
-            workflow = Workflow(
-                "downloaded_document.pdf",
-                self.session_manager.get_session(),
-                self.config.base_url,
-                doc_no,
-                self.config.enable_ocr_gpu
-            )
-            workflow.execute_tasks_from_csv()
-            return True
-        self.logger.error(f"Failed to process document {doc_no}")
-        return False
+        return self.last_pending_doc_file
