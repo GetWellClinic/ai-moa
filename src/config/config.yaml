@@ -6,7 +6,6 @@ user_login:
 last_processed_pdf: ""
 enable_ocr_gpu: true
 last_pending_doc_file: ''
-workflow_file_path: workflow.csv
 urls:
   login: /login.do
 chrome_options:
@@ -54,4 +53,11 @@ categories:
   - Referral
   - Request
   - Advertisement
+workflow_tasks:
+  - ["get_document_description", "Analyze the document and provide a description"]
+  - ["getProviderList", "Get the list of providers"]
+  - ["get_patient_name", "Extract the patient name from the document"]
+  - ["set_patient", "Set the patient information"]
+  - ["set_doctor", "Set the doctor information"]
+  - ["oscar_update", "Update the Oscar EMR system"]
 

@@ -628,11 +628,24 @@ class Workflow:
                 tasks.append(row)
         return tasks
 
-    def execute_tasks_from_csv(self, index=None):
-        self.logger.info(f"Executing tasks from CSV, index: {index}")
-        if index is None:
-            tasks = self.read_tasks_from_csv('workflow.csv')
+    def execute_tasks(self):
+        self.logger.info("Executing tasks")
+        tasks = self.get_tasks_from_config()
+        for task in tasks:
+            self.execute_task.schedule(args=(task,))
+
+    @task()
+    def execute_task(self, task):
+        task_name, *params = task
+        function_to_call = getattr(self, task_name, None)
+        if function_to_call and callable(function_to_call):
+            self.logger.info(f"Executing task: {task_name}")
+            return function_to_call(*params)
         else:
-            tasks = self.read_tasks_from_csv(f'{index}.csv')
-        self.logger.debug(f"Processing file: {self.filepath}")
-        self.execute_tasks(tasks, 0)
+            self.logger.error(f"Error: Function {task_name} not found or not callable.")
+            return None
+
+    def get_tasks_from_config(self):
+        # Implement logic to get tasks from configuration
+        # This replaces the CSV file reading logic
+        return self.config.get('workflow_tasks', [])

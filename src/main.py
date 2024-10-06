@@ -3,7 +3,7 @@ Main module for automating Oscar EMR tasks.
 
 This module contains the OscarAutomation class which orchestrates the automation
 of various tasks in the Oscar EMR system, including PDF processing, document
-processing, and workflow execution.
+processing, and workflow execution using Huey for task management.
 """
 
 import json
@@ -19,16 +19,18 @@ from models.session_manager import SessionManager
 from processors.pdf_processor import PdfProcessor
 from processors.document_processor import DocumentProcessor
 from processors.workflow_processor import WorkflowProcessor
-
-
 from utils.config_manager import ConfigManager
+from huey import MemoryHuey, crontab
+from tasks import process_pdfs_task, process_documents_task, process_workflow_task
+
+huey = MemoryHuey()
 
 class OscarAutomation:
     """
     Main class for automating Oscar EMR tasks.
 
     This class initializes the necessary components and provides methods
-    for processing PDFs, documents, and workflows.
+    for processing PDFs, documents, and workflows using Huey for task management.
 
     Attributes:
         config (ConfigManager): Configuration manager instance.
@@ -50,38 +52,6 @@ class OscarAutomation:
         self.session_manager = SessionManager(self.config)
         self.login = Login(self.config, self.session_manager)
 
-    def process_pdfs(self):
-        """
-        Process PDF documents.
-
-        This method initializes a PDF processor and processes PDF documents
-        using the configured settings and login credentials.
-        """
-        self.logger.info("Starting PDF processing")
-        with self._get_driver() as driver:
-            pdf_processor = PdfProcessor(self.config, self.session_manager)
-            self.config["last_processed_pdf"] = pdf_processor.process_pdfs(
-                driver, f"{self.config['base_url']}/login.do", self.login.login_successful_callback
-            )
-        save_config(self.config)
-        self.logger.info("PDF processing completed")
-
-    def process_documents(self):
-        """
-        Process general documents.
-
-        This method initializes a document processor and processes general
-        documents using the configured settings and login credentials.
-        """
-        self.logger.info("Starting document processing")
-        with self._get_driver() as driver:
-            document_processor = DocumentProcessor(self.config, self.session_manager)
-            self.config["last_pending_doc_file"] = document_processor.process_documents(
-                driver, f"{self.config['base_url']}/login.do", self.login.login_successful_callback
-            )
-        save_config(self.config)
-        self.logger.info("Document processing completed")
-
     def _get_driver(self):
         """
         Create and configure a Chrome WebDriver instance.
@@ -97,28 +67,18 @@ class OscarAutomation:
             options=chrome_options
         )
 
-    def process_workflow(self):
+    @huey.task()
+    def schedule_tasks(self):
         """
-        Process the workflow if a workflow file path is configured.
+        Schedule and run tasks using Huey.
 
-        This method initializes a workflow processor and executes the defined
-        workflow if a valid workflow file path is provided in the configuration.
+        This method schedules PDF processing, document processing, and workflow processing tasks.
         """
-        workflow_file_path = self.config.get('workflow_file_path')
-        if workflow_file_path:
-            self.logger.info("Starting workflow processing")
-            with self._get_driver() as driver:
-                workflow_processor = WorkflowProcessor(self.config, self.session_manager)
-                workflow_processor.process_workflow(
-                    driver, f"{self.config['base_url']}/login.do", self.login.login_successful_callback
-                )
-            self.logger.info("Workflow processing completed")
-        else:
-            self.logger.warning("Workflow file path is not configured. Skipping workflow processing.")
-
+        self.logger.info("Scheduling tasks")
+        process_documents_task(self.config, self.session_manager, self.login)
+        process_pdfs_task(self.config, self.session_manager, self.login)
+        process_workflow_task(self.config, self.session_manager, self.login)
 
 if __name__ == "__main__":
     oscar = OscarAutomation()
-    oscar.process_documents()
-    oscar.process_pdfs()
-    oscar.process_workflow()
+    oscar.schedule_tasks()
