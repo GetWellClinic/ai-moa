@@ -9,11 +9,14 @@ class SessionManager:
 
     def login(self):
         login_url = f"{self.config.base_url}{self.config.get('urls', {}).get('login', '')}"
-        response = self.session.post(login_url, data={
-            "username": self.config.user_login['username'],
-            "password": self.config.user_login['password'],
-            "pin": self.config.user_login['pin']
-        })
+        response = self.session.post(
+            login_url,
+            data={
+                "username": self.config.user_login['username'],
+                "password": self.config.user_login['password'],
+                "pin": self.config.user_login['pin']
+            }
+        )
         
         if response.url == login_url:
             self.logger.error("Login failed.")

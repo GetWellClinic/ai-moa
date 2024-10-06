@@ -36,6 +36,7 @@ def extract_text_doctr(pdf_path, enable_ocr_gpu=True):
         print(f"An error occurred during OCR: {e}")
         return None
 
+
 def extract_text_from_pdf_file(pdf_path):
     try:
         with fitz.open(pdf_path) as pdf_document:

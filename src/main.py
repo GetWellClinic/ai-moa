@@ -25,28 +25,37 @@ class OscarAutomation:
         self.logger.info("Starting PDF processing")
         with self._get_driver() as driver:
             pdf_processor = PdfProcessor(self.config, self.session_manager)
-            self.config.last_processed_pdf = pdf_processor.process_pdfs(driver, self.login.login_url, self.login.login_successful_callback)
+            self.config.last_processed_pdf = pdf_processor.process_pdfs(
+                driver, self.login.login_url, self.login.login_successful_callback
+            )
         self.logger.info("PDF processing completed")
 
     def process_documents(self):
         self.logger.info("Starting document processing")
         with self._get_driver() as driver:
             document_processor = DocumentProcessor(self.config, self.session_manager)
-            self.config.last_pending_doc_file = document_processor.process_documents(driver, self.login.login_url, self.login.login_successful_callback)
+            self.config.last_pending_doc_file = document_processor.process_documents(
+                driver, self.login.login_url, self.login.login_successful_callback
+            )
         self.logger.info("Document processing completed")
 
     def _get_driver(self):
         chrome_options = Options()
         if self.config.chrome_options['headless']:
             chrome_options.add_argument("--headless")
-        return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+        return webdriver.Chrome(
+            service=Service(ChromeDriverManager().install()),
+            options=chrome_options
+        )
 
     def process_workflow(self):
         if self.config.workflow_file_path:
             self.logger.info("Starting workflow processing")
             with self._get_driver() as driver:
                 workflow_processor = WorkflowProcessor(self.config, self.session_manager)
-                workflow_processor.process_workflow(driver, self.login.login_url, self.login.login_successful_callback)
+                workflow_processor.process_workflow(
+                    driver, self.login.login_url, self.login.login_successful_callback
+                )
             self.logger.info("Workflow processing completed")
         else:
             self.logger.warning("Workflow file path is not configured. Skipping workflow processing.")

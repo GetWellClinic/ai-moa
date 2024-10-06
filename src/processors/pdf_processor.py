@@ -42,7 +42,10 @@ class PdfProcessor:
 
     def get_pdf_list(self, driver):
         select_element = driver.find_element(By.ID, "SelectPdfList")
-        return [option for option in select_element.find_elements(By.TAG_NAME, 'option') if option.get_attribute('value')]
+        return [
+            option for option in select_element.find_elements(By.TAG_NAME, 'option')
+            if option.get_attribute('value')
+        ]
 
     def process_pdf_list(self, pdf_list):
         self.logger.info("Processing PDF list")
@@ -62,7 +65,13 @@ class PdfProcessor:
         if pdf_content:
             with open("downloaded_pdf.pdf", "wb") as f:
                 f.write(pdf_content)
-            workflow = Workflow("downloaded_pdf.pdf", self.session_manager.get_session(), self.config.base_url, pdf_name, self.config.enable_ocr_gpu)
+            workflow = Workflow(
+                "downloaded_pdf.pdf",
+                self.session_manager.get_session(),
+                self.config.base_url,
+                pdf_name,
+                self.config.enable_ocr_gpu
+            )
             workflow.execute_tasks_from_csv()
             os.remove("downloaded_pdf.pdf")
         else:

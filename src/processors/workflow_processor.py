@@ -15,6 +15,12 @@ class WorkflowProcessor:
             self.logger.error("Login failed.")
             return
 
-        workflow = Workflow(self.config.workflow_file_path, self.session_manager.get_session(), self.config.base_url, "workflow.csv", self.config.enable_ocr_gpu)
+        workflow = Workflow(
+            self.config.workflow_file_path,
+            self.session_manager.get_session(),
+            self.config.base_url,
+            "workflow.csv",
+            self.config.enable_ocr_gpu
+        )
         workflow.execute_tasks_from_csv()
         self.logger.info("Workflow processing completed")

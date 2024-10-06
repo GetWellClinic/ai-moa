@@ -46,7 +46,13 @@ class DocumentProcessor:
     def process_single_document(self, doc_no):
         self.logger.debug(f"Processing single document: {doc_no}")
         if self.get_file_content(doc_no):
-            workflow = Workflow("downloaded_document.pdf", self.session_manager.get_session(), self.config.base_url, doc_no, self.config.enable_ocr_gpu)
+            workflow = Workflow(
+                "downloaded_document.pdf",
+                self.session_manager.get_session(),
+                self.config.base_url,
+                doc_no,
+                self.config.enable_ocr_gpu
+            )
             workflow.execute_tasks_from_csv()
             return True
         self.logger.error(f"Failed to process document {doc_no}")
