@@ -12,7 +12,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 
-from utils.config_loader import load_config, save_config
+from config.config_loader import load_config, save_config
 from utils.logging_setup import setup_logging
 from src.models.login import Login
 from processors.pdf_processor import PdfProcessor
@@ -20,8 +20,8 @@ from processors.document_processor import DocumentProcessor
 from processors.workflow_processor import WorkflowProcessor
 
 class OscarAutomation:
-    def __init__(self, config_file='config/config.yaml'):
-        self.config = load_config(config_file)
+    def __init__(self):
+        self.config = load_config()
         setup_logging(self.config)
         self.logger = logging.getLogger(__name__)
         self.username = self.config['user_login']['username']
