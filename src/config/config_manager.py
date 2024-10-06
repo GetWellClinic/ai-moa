@@ -1,10 +1,11 @@
 import yaml
+import os
 from typing import Dict, Any, List
 from src.utils.logging_setup import setup_logging
 
 class ConfigManager:
     def __init__(self, config_path: str):
-        self.config_path = config_path
+        self.config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '..', 'config', config_path)
         self.config = self.load_config()
         self.logger = setup_logging(self)
 

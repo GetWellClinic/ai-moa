@@ -107,7 +107,7 @@ class OscarAutomation:
         self.process_files()
 
 def main():
-    oscar = OscarAutomation()
+    oscar = OscarAutomation(config_file='workflow-config.yaml')
     oscar.schedule_tasks()
 
 if __name__ == "__main__":
