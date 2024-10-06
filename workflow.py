@@ -96,11 +96,13 @@ class Workflow:
     def find_category_index(self,text):
         self.logger.debug("Inside find_category_index")
         # to find the file type and execute the function based on that
+        self.logger.debug("Inside find_category_index")
         if '.' in text:
             text = text.replace('.', '')
         for index, category in enumerate(self.categories_code):
             for word in text.split():
                 if word.lower() == category.lower():
+                    self.logger.debug(f"Category index found: {index}")
                     self.logger.debug("Category index found: %d", index)
                     #set file type
                     self.fileType = category.lower()
@@ -260,6 +262,7 @@ class Workflow:
         # the result from llm will be used to search for the patient in oscar using patient name
         # filter_results() can be used after this to filter the results using llm
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
+        self.logger.debug(f"Doctor name: {name}")
         if '.' in name:
             name = name.replace('.', '')
         self.logger.debug("Patient name: %s", name)
@@ -273,8 +276,7 @@ class Workflow:
         # Send the POST request
         self.logger.debug("Sending POST request to search for patient")
         response = self.session.post(url, data=payload)
-
-        #print(response.text)
+        self.logger.debug(f"Response text: {response.text}")
 
         response_data = json.loads(response.text)
 
@@ -313,13 +315,14 @@ class Workflow:
 
             for item in data["results"]:
                 self.logger.debug("Processing item: %s", item)
+            for item in data["results"]:
+                self.logger.debug(f"Processing item: {item}")
                 if isinstance(item, dict):
                     if 'providerNo' in item:
-                        #print(item['providerNo'])
+                        self.logger.debug(f"Provider number: {item['providerNo']}")
                         self.provider_number.append(item['providerNo'])
                         self.logger.debug(f"Provider number added: {item['providerNo']}")
-
-            #print(self.provider_number)
+            self.logger.debug(f"Provider numbers: {self.provider_number}")
 
             if self.provider_number is not None:
                 return True
@@ -331,10 +334,9 @@ class Workflow:
         self.logger.debug("Getting doctor name")
         # filter_results() can be used after this method to filter the results
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
+        self.logger.debug(f"Doctor name: {name}")
         self.logger.debug("Doctor name: %s", name)
         array_pattern = r'\[.*?\]'
-        #name = "Sokolowski"
-        #array_match = re.search(array_pattern, names)
         oscar_response = []
         if name:
             if '.' in name:
@@ -367,8 +369,7 @@ class Workflow:
                 return True,oscar_response
             else:
                 return False
-
-            #print(oscar_response)
+            self.logger.debug(f"Oscar response: {oscar_response}")
 
     def get_document_description(self,prompt):
         # this method can be used to get document description from the llm based
@@ -418,6 +419,8 @@ class Workflow:
             self.logger.debug("Provider data: %s", data)
             for item in data:
                 self.logger.debug("Processing item: %s", item)
+            for item in data["results"]:
+                self.logger.debug(f"Processing item: {item}")
                 if isinstance(item, dict):
                     if 'providerNo' in item:
                         self.logger.debug(f"Provider number: {item['providerNo']}")
@@ -509,8 +512,7 @@ class Workflow:
             return False
 
     def oscar_update(self):
-        self.logger.debug("Document Details: Patient: %s, Demographic: %s, Providers: %s, Description: %s", 
-                          self.patient_name, self.demographic_number, self.provider_number, self.document_description)
+        self.logger.debug(f"Document Details: Patient: {self.patient_name}, Demographic: {self.demographic_number}, Providers: {self.provider_number}, Type: {self.fileType}, Description: {self.document_description}")
         self.logger.info("Updating Oscar")
         url = f"{self.base_url}/dms/ManageDocument.do"
 
@@ -542,15 +544,17 @@ class Workflow:
 
         params["flagproviders"] = []
 
+        params["flagproviders"] = []
+
+        # Add provider to all
+        self.provider_number.append(127)
+
         for value in self.provider_number:
             params["flagproviders"].append(value)
-
-        self.logger.debug("Oscar update params: %s", params)
-
+        self.logger.debug(f"Oscar update params: {params}")
         response = self.session.post(url, data=params)
         self.logger.debug(f"Oscar update response status: {response.status_code}")
-
-        self.logger.debug("Oscar update response: %s", response)
+        self.logger.debug(f"Oscar update response: {response}")
 
         return True
 
@@ -634,9 +638,11 @@ class Workflow:
 
     def execute_tasks_from_csv(self,index=None):
         self.logger.info(f"Executing tasks from CSV, index: {index}")
+    def execute_tasks_from_csv(self,index=None):
         if index is None:
             tasks = self.read_tasks_from_csv('workflow.csv')
         else:
             tasks = self.read_tasks_from_csv(str(index)+'.csv')
+        self.logger.debug(f"Processing file: {self.filepath}")
         self.logger.debug(f"File path: {self.filepath}")
         self.execute_tasks(tasks, 0)
