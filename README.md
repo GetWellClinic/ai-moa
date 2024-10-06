@@ -47,129 +47,122 @@ ai_moa/
 ## How It Works
 
 1. **Initialization**: The `OscarAutomation` class in `main.py` initializes the system, loading configurations and setting up logging.
-
 2. **Login**: The `Login` class in `models/login.py` handles automated login to the OSCAR EMR system using Selenium WebDriver.
-
 3. **Session Management**: The `SessionManager` class in `models/session_manager.py` maintains the session for interacting with the OSCAR EMR system.
+4. **Document Processing**: The `DocumentProcessor` class in `processors/document_processor.py` handles incoming documents.
+5. **PDF Processing**: The `PdfProcessor` class in `processors/pdf_processor.py` specifically handles PDF documents.
+6. **Workflow Management**: The `WorkflowProcessor` class in `processors/workflow_processor.py` manages the execution of workflows.
 
-4. **Document Processing**:
-   - The `DocumentProcessor` class in `processors/document_processor.py` handles incoming documents.
-   - It uses OCR (Optical Character Recognition) to extract text from documents if needed.
-   - The extracted text is then processed to classify the document and extract relevant information.
+## Configuration and Workflow Management
 
-5. **PDF Processing**:
-   - The `PdfProcessor` class in `processors/pdf_processor.py` specifically handles PDF documents.
-   - It can download PDFs from the OSCAR system and process them using the `Workflow` class.
+### Configuration (config/config.yaml)
 
-6. **Workflow Management**:
-   - The `WorkflowProcessor` class in `processors/workflow_processor.py` manages the execution of workflows.
-   - Workflows are defined in CSV files in the `workflows/` directory.
+The `config/config.yaml` file contains the following key configurations:
 
-## Workflow Management
+- `base_url`: OSCAR EMR base URL
+- `user_login`: Credentials for OSCAR EMR
+- `last_processed_pdf`: Timestamp of the last processed PDF
+- `enable_ocr_gpu`: Boolean to enable/disable GPU for OCR
+- `workflow_file_path`: Path to the main workflow file
+- `chrome_options`: Options for Chrome WebDriver
+- `ai_config`: Configuration for the AI model API
+- `logging`: Logging configuration
+- `categories`: List of document categories
 
-The AI-MOA system uses a flexible and powerful workflow management system to process documents and interact with the OSCAR EMR. Here's a detailed explanation of how it works:
+### Workflow Configurations (src/workflows/*.csv)
 
-### Workflow Structure
+Workflows are defined in CSV files in the `src/workflows/` directory. Each CSV file represents a specific workflow for different document types. The main workflow files are:
 
-1. **CSV-based Task Definition**: Workflows are defined in CSV files (e.g., `workflow.csv`, `0.csv`, `1.csv`, etc.) in the `workflows/` directory. Each CSV file represents a specific workflow or sub-workflow.
+1. `0.csv`: Initial document classification workflow
+2. `1.csv`: Consultation letter processing workflow
+3. `2.csv`: Insurance and legal document processing workflow
+4. `3.csv`: Medical records processing workflow
+5. `4.csv`: Health records processing workflow
+5. `5.csv`: Diagnostic imaging report processing workflow
+6. `6.csv`: Pathology report processing workflow
+7. `7.csv`: Communication and notification processing workflow
+8. `8.csv`: Lab result processing workflow
+9. `9.csv`: Consent form processing workflow
+10. `10.csv`: Diagnostic test result processing workflow
+11. `11.csv`: Pharmacy-related document processing workflow
+12. `12.csv`: Referral and requisition processing workflow
+13. `13.csv`: Referral processing workflow
+14. `14.csv`: Request for medical records processing workflow
+15. `15.csv`: Advertisement and announcement processing workflow
 
-2. **Task Format**: Each row in a CSV file represents a task and contains the following columns:
-   - Task number
-   - Function name to execute
-   - Function parameters (variable number)
-   - Next task number if successful
-   - Next task number if unsuccessful
+Each CSV file contains rows with the following structure:
+- Task number
+- Function name to execute
+- Function parameters
+- Next task number if successful
+- Next task number if unsuccessful
 
-3. **Workflow Class**: The `Workflow` class in `utils/workflow.py` is the core component that executes these tasks.
+### Current Behavior and Workflow
 
-### Workflow Execution Process
+The AI-MOA system follows these general steps:
 
-1. **Initialization**: The `Workflow` class is initialized with document information, session details, and configuration settings.
+1. **Document Intake**: 
+   - The system processes new documents as they are added to the system.
 
-2. **Task Execution**: The `execute_tasks_from_csv` method is called, which:
-   - Reads tasks from the appropriate CSV file
-   - Starts execution from the first task (row 0)
+2. **Initial Classification** (`0.csv`):
+   - OCR is performed if necessary using `extract_text_doctr()` or `extract_text_from_pdf_file()`.
+   - The document is classified using AI analysis with `build_prompt()`.
+   - Based on the classification, the appropriate sub-workflow is selected.
 
-3. **Task Processing**: For each task, the system:
-   - Calls the specified function with given parameters
-   - Evaluates the result
-   - Determines the next task to execute based on success or failure
+3. **Specific Document Processing**:
+   - Each document type (1.csv to 15.csv) has its own workflow for extracting relevant information.
+   - Common steps across workflows include:
+     - Extracting document description with `get_document_description()`
+     - Identifying the requesting provider with `getProviderList()`
+     - Searching for patient information with various methods like `get_patient_name()`, `patientSearch()`
+     - Filtering and setting patient and doctor information with `filter_results()`, `set_patient()`, `set_doctor()`
 
-4. **Dynamic Flow**: The workflow can branch and jump between tasks based on results, allowing for complex decision-making processes.
+4. **EMR Update**:
+   - After processing, the document information is updated in the OSCAR EMR using `oscar_update()`.
 
-5. **Function Mapping**: The `Workflow` class dynamically maps function names from the CSV to actual method calls, allowing for flexible task definitions.
-
-### Key Components
-
-- **Document Processing**: Functions for OCR, text extraction, and document classification.
-- **EMR Interaction**: Methods to search for patients, providers, and update OSCAR EMR.
-- **AI Integration**: Calls to AI models for document analysis and decision-making.
-- **Data Management**: Functions to set and retrieve patient and provider information.
-
-### Customization and Extension
-
-- New workflows can be easily defined by creating new CSV files in the `workflows/` directory.
-- Additional functions can be added to the `Workflow` class to extend capabilities.
-- The system supports different workflows for various document types (lab reports, consultations, etc.).
+5. **Error Handling and Logging**:
+   - Extensive error handling and logging are implemented throughout the workflow.
 
 ## AI Integration
 
-- The system uses a local AI model (accessed via API) to assist in document classification and information extraction.
+- The system uses a local AI model accessed via API (configured in `ai_config` in config.yaml).
 - AI prompts are constructed based on the extracted document text and specific tasks.
-- The AI integration is configurable through the `config.yaml` file.
+- The `build_prompt()` and `build_sub_prompt()` methods in the `Workflow` class handle AI interactions.
 
 ## OSCAR EMR Integration
 
-- The system can search for patients and providers in OSCAR.
-- It can update OSCAR with processed document information, including attaching documents to patient records.
-- The `OscarProviderList` class in `utils/OscarProviderList.py` manages the retrieval and caching of provider information from OSCAR.
+- The system interacts with OSCAR EMR for patient and provider searches, and document updates.
+- The `OscarProviderList` class in `utils/OscarProviderList.py` manages provider information.
 
-## Setup
+## Setup and Usage
 
 1. Clone the repository
-2. Install the required dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-3. Configure the `config/config.yaml` file with your OSCAR EMR settings and other configurations
-4. Ensure you have Chrome WebDriver installed for Selenium
-5. Set up the local AI model API (instructions should be provided separately)
+2. Install dependencies: `pip install -r requirements.txt`
+3. Configure `config/config.yaml`
+4. Ensure Chrome WebDriver is installed
+5. Run the system: `python src/main.py`
 
-## Usage
+## Error Handling and Logging
 
-To run the AI-MOA:
-
-```
-python src/main.py
-```
-
-This will start the automation process, including document processing, PDF processing, and workflow management.
-
-## Configuration
-
-Edit the `config/config.yaml` file to set up your:
-
-- OSCAR EMR base URL
-- Login credentials
-- OCR settings (GPU enabled/disabled)
-- File paths for documents and workflows
-- Logging settings
-- AI model configuration
-- Chrome WebDriver options
-
-The `ConfigManager` class in `utils/config_manager.py` provides a centralized way to access and manage these configuration settings throughout the application.
-
-## Logging
-
-The application uses Python's built-in logging module, configured in `utils/logging_setup.py`. Logs are written to both console and file, with configurable log levels and formats.
-
-## Error Handling
-
-Extensive error handling is implemented throughout the application to ensure robustness and provide detailed error information for troubleshooting.
+- Logging is configured in `utils/logging_setup.py`
+- Logs are written to both console and file
+- Extensive error handling is implemented throughout the application
 
 ## Testing
 
-While not explicitly shown in the provided structure, it's recommended to add a `tests/` directory and implement unit tests for the various components of the system.
+It's recommended to add a `tests/` directory and implement unit tests for the various components of the system.
+
+## Contributing
+
+Contributions to improve AI-MOA are welcome. Please follow the standard fork, branch, and pull request workflow.
+
+## License
+
+This project is licensed under the GNU Affero General Public License v3.0. See the LICENSE file for details.
+
+## Disclaimer
+
+This software is provided "AS IS" without warranty of any kind. Ensure compliance with all relevant medical data privacy regulations when using this software.
 
 ## Contributing
 
