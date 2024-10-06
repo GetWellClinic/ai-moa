@@ -35,7 +35,7 @@ from datetime import datetime
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
-from utils.config_manager import ConfigManager
+from src.config import ConfigManager
 from utils.workflow import Workflow
 from auth import LoginManager, DriverManager
 

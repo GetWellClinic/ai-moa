@@ -15,7 +15,7 @@ Dependencies:
 - selenium: For web automation (implied through the use of WebDriver)
 """
 
-from config import ConfigManager
+from src.config import ConfigManager
 from utils.workflow import Workflow
 from auth import LoginManager, DriverManager
 

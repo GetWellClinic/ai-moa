@@ -35,7 +35,7 @@ from auth import LoginManager
 from processors.document import DocumentProcessor
 from processors.pdf import PdfProcessor
 from processors.workflow import WorkflowProcessor
-from config import ConfigManager
+from src.config import ConfigManager
 class OscarAutomation:
     """
     Main class for automating Oscar EMR tasks.

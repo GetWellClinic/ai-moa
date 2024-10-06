@@ -1,5 +1,5 @@
 import yaml
-from typing import Dict, Any
+from typing import Dict, Any, List
 import logging
 
 class ConfigManager:
@@ -11,8 +11,8 @@ class ConfigManager:
 
     Attributes:
         config_path (str): Path to the configuration file.
-        config (Dict[str, Any]): Dictionary containing the configuration
-                                 settings.
+        config (Dict[str, Any]): Dictionary containing the configuration settings.
+        logger (logging.Logger): Logger instance for this class.
     """
 
     def __init__(self, config_path: str):
@@ -24,6 +24,7 @@ class ConfigManager:
         """
         self.config_path = config_path
         self.config = self.load_config()
+        self.logger = self.setup_logging()
 
     def load_config(self) -> Dict[str, Any]:
         """
@@ -80,3 +81,46 @@ class ConfigManager:
         """
         with open(self.config_path, 'w') as config_file:
             yaml.dump(self.config, config_file)
+
+    @property
+    def workflow_steps(self) -> List[Dict[str, Any]]:
+        """
+        Get the workflow steps.
+
+        Returns:
+            List[Dict[str, Any]]: List of workflow steps with their decision paths.
+        """
+        return self.config['workflow']['steps']
+
+    def get_tasks_for_category(self, category_index: int) -> List[Dict[str, Any]]:
+        """
+        Get the tasks for a specific document category.
+
+        Args:
+            category_index (int): Index of the document category.
+
+        Returns:
+            List[Dict[str, Any]]: List of tasks for the specified category.
+        """
+        category_tasks = self.config.get('category_tasks', {})
+        return category_tasks.get(str(category_index), [])
+
+    @property
+    def document_categories(self) -> List[str]:
+        """
+        Get the document categories.
+
+        Returns:
+            List[str]: List of document categories.
+        """
+        return self.config['document_categories']
+
+    @property
+    def ai_prompts(self) -> Dict[str, str]:
+        """
+        Get the AI prompts.
+
+        Returns:
+            Dict[str, str]: Dictionary of AI prompts.
+        """
+        return self.config['ai_prompts']
