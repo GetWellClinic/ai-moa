@@ -5,7 +5,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
-from processors.document_processor import DocumentProcessor
+from processors.document import DocumentProcessor
 from processors.workflow import WorkflowProcessor
 
 
