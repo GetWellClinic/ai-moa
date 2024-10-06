@@ -3,7 +3,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
-from utils.config_manager import ConfigManager
+from config import ConfigManager
 
 
 class DriverManager:

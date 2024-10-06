@@ -1,4 +1,4 @@
-from utils.config_manager import ConfigManager
+from config import ConfigManager
 from .login_manager import LoginManager
 
 
