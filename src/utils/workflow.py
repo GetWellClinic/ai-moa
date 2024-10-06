@@ -244,9 +244,9 @@ class Workflow:
                 }
             ],
             "mode": "instruct",
-            "temperature": self.config.get('ai_config', {}).get('temperature', 0.1),
+            "temperature": 0.1,
             "character": "Assistant",
-            "top_p": self.config.get('ai_config', {}).get('top_p', 0.1)
+            "top_p": 0.1
         }
         response = requests.post(self.url, headers=self.headers, json=data)
         return response.json()['choices'][0]['message']['content']
