@@ -36,20 +36,6 @@ class ConfigManager:
         with open(self.config_path, 'r') as config_file:
             return yaml.safe_load(config_file)
 
-    def setup_logging(self) -> logging.Logger:
-        """
-        Set up logging based on the configuration.
-
-        Returns:
-            logging.Logger: Configured logger instance.
-        """
-        logging_config = self.config.get('logging', {})
-        logging.basicConfig(
-            level=logging_config.get('level', 'INFO'),
-            format=logging_config.get('format', '%(asctime)s - %(name)s - %(levelname)s - %(message)s'),
-            filename=logging_config.get('filename')
-        )
-        return logging.getLogger(__name__)
 
     def get(self, key: str, default: Any = None) -> Any:
         """
