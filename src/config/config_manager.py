@@ -124,3 +124,18 @@ class ConfigManager:
             Dict[str, str]: Dictionary of AI prompts.
         """
         return self.config['ai_prompts']
+
+    def setup_logging(self) -> logging.Logger:
+        """
+        Set up logging based on the configuration.
+
+        Returns:
+            logging.Logger: Configured logger instance.
+        """
+        logging_config = self.config.get('logging', {})
+        logging.basicConfig(
+            level=logging_config.get('level', 'INFO'),
+            format=logging_config.get('format', '%(asctime)s - %(name)s - %(levelname)s - %(message)s'),
+            filename=logging_config.get('filename')
+        )
+        return logging.getLogger(__name__)
