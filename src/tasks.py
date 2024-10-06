@@ -1,11 +1,12 @@
 from huey.contrib.djhuey import task
 from processors.pdf_processor import PdfProcessor
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+
 from processors.document_processor import DocumentProcessor
 from processors.workflow_processor import WorkflowProcessor
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
 
 
 def _get_driver(config):

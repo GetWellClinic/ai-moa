@@ -15,11 +15,6 @@ import torch
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 
-import fitz
-import torch
-from doctr.io import DocumentFile
-from doctr.models import ocr_predictor
-
 
 def has_ocr(pdf_path):
     """
@@ -67,7 +62,7 @@ def extract_text_doctr(pdf_path, enable_ocr_gpu=True):
     """
     try:
         device = torch.device("cuda:0" if enable_ocr_gpu and
-                              torch.cuda.is_available() else "cpu")
+                                          torch.cuda.is_available() else "cpu")
         model = ocr_predictor(pretrained=True).to(device)
 
         doc = DocumentFile.from_pdf(pdf_path)

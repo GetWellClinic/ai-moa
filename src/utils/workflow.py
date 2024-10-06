@@ -20,6 +20,7 @@ Dependencies:
 - huey for task queuing
 """
 
+
 # [Your existing import statements here]
 
 class Workflow:
@@ -154,14 +155,15 @@ class Workflow:
         pdf_path = self.filepath
         self.logger.debug(f"Processing PDF: {pdf_path}")
         try:
-            device = torch.device("cuda:0" if self.config.get('enable_ocr_gpu') and torch.cuda.is_available() else "cpu")
+            device = torch.device(
+                "cuda:0" if self.config.get('enable_ocr_gpu') and torch.cuda.is_available() else "cpu")
             model = ocr_predictor(pretrained=True).to(device)
             doc = DocumentFile.from_pdf(pdf_path)
             result = model(doc)
-            
+
             text = self._process_ocr_result(result)
             self.tesseracted_text = text.strip()
-            
+
             elapsed_time = time.time() - start_time
             self.logger.info(f"OCR completed in {elapsed_time:.2f} seconds")
             return True
@@ -292,10 +294,11 @@ class Workflow:
         task_number, function_name, *params, true_next_row, false_next_row = task
         self.logger.debug(f"Executing task {task_number}: {function_name}")
         function_to_call = getattr(self, function_name, None)
-        
+
         if function_to_call and callable(function_to_call):
-            self.logger.info(f"Executing Task {task_number} with function: {function_name} and parameters: {', '.join(params)}")
-            
+            self.logger.info(
+                f"Executing Task {task_number} with function: {function_name} and parameters: {', '.join(params)}")
+
             try:
                 if 'additional_param' in function_to_call.__code__.co_varnames:
                     response = function_to_call(*params, additional_param=previous_result)

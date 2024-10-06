@@ -15,11 +15,9 @@ Dependencies:
 - typing: For type hinting
 """
 
-import yaml
 from typing import Dict, Any, List
 
 import yaml
-from typing import Dict, Any, List
 
 
 class ConfigManager:

@@ -19,27 +19,26 @@
 # source code can be acquired publicly in its latest most up-to-date version, within one month.
 # ***
 
-import os
 import csv
-import re
-import random
-import itertools
-import torch
-import fitz
-import PyPDF2
-import requests
-import json
 import datetime
-import time
-import time
 import io
-from PIL import Image
+import itertools
+import json
+import logging
+import os
+import re
+import time
+
+import PyPDF2
+import fitz
 import pytesseract
+import requests
+import torch
+from PIL import Image
+from bs4 import BeautifulSoup
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
-from bs4 import BeautifulSoup
 
-import logging
 
 class Workflow:
     def __init__(self, filepath, session, base_url, file_name, enable_ocr_gpu, config):
@@ -75,42 +74,42 @@ class Workflow:
             "Requisition", "Referral", "Request", "Advertisement"
         ]
         self.categories = [
-                            "Lab",
-                            "Consult",
-                            "Insurance",
-                            "Legal",
-                            "Old Chart",
-                            "Radiology",
-                            "Pathology",
-                            "Others",
-                            "Photo",
-                            "Consent",
-                            "Diagnostics",
-                            "Pharmacy",
-                            "Requisition",
-                            "Referral",
-                            "Request",
-                            "Advertisement"
-                        ]
+            "Lab",
+            "Consult",
+            "Insurance",
+            "Legal",
+            "Old Chart",
+            "Radiology",
+            "Pathology",
+            "Others",
+            "Photo",
+            "Consent",
+            "Diagnostics",
+            "Pharmacy",
+            "Requisition",
+            "Referral",
+            "Request",
+            "Advertisement"
+        ]
 
         self.categories_code = [
-                            "Lab",
-                            "Consult",
-                            "Insurance",
-                            "Legal",
-                            "OldChart",
-                            "Radiology",
-                            "Pathology",
-                            "Others",
-                            "Photo",
-                            "Consent",
-                            "Diagnostics",
-                            "Pharmacy",
-                            "Requisition",
-                            "Referral",
-                            "Request",
-                            "Advertisement"
-                        ]
+            "Lab",
+            "Consult",
+            "Insurance",
+            "Legal",
+            "OldChart",
+            "Radiology",
+            "Pathology",
+            "Others",
+            "Photo",
+            "Consent",
+            "Diagnostics",
+            "Pharmacy",
+            "Requisition",
+            "Referral",
+            "Request",
+            "Advertisement"
+        ]
 
     def find_category_index(self, text):
         self.logger.debug("Inside find_category_index")
@@ -155,7 +154,7 @@ class Workflow:
                     base_image = pdf_document.extract_image(xref)
                     image_bytes = base_image["image"]
                     image = Image.open(io.BytesIO(image_bytes))
-                    
+
                     image_text = pytesseract.image_to_string(image)
                     extracted_text += image_text + '\n'
             self.tesseracted_text = extracted_text
@@ -171,7 +170,7 @@ class Workflow:
         self.logger.debug("Processing PDF: %s", pdf_path)
         text = ''
         try:
-            if(self.enable_ocr_gpu == True):
+            if self.enable_ocr_gpu == True:
                 device = torch.device("cuda:0")
                 model = ocr_predictor(pretrained=True).to(device)
             else:
@@ -184,15 +183,15 @@ class Workflow:
             # Iterate through pages
             for page in result.pages:
                 self.logger.debug("Processing page %d", page.page_idx)
-                
+
                 # Iterate through blocks
                 for block in page.blocks:
                     self.logger.debug("Processing block")
-                    
+
                     # Iterate through lines
                     for line in block.lines:
                         text += '\n'
-                        
+
                         # Print words in the line
                         for word in line.words:
                             text += word.value + ' '
@@ -219,13 +218,13 @@ class Workflow:
                     page = reader.pages[page_num]
                     text += page.extract_text()
             self.tesseracted_text = text
-            #self.tesseracted_text = """"""
+            # self.tesseracted_text = """"""
             return True
         except Exception as e:
             self.logger.error(f"An error occurred: {e}")
             return False
 
-    def build_prompt(self,prompt):
+    def build_prompt(self, prompt):
         # will be executed first, workflow starts from workflow.csv
         start_time = time.time()
         data = {
@@ -236,7 +235,7 @@ class Workflow:
                 },
                 {
                     "role": "user",
-                    "content": self.tesseracted_text + '. '+ prompt
+                    "content": self.tesseracted_text + '. ' + prompt
                 }
             ],
             "mode": "instruct",
@@ -258,7 +257,7 @@ class Workflow:
         self.append_to_file(f"Time taken for the prompt: {elapsed_time}")
         return True
 
-    def build_sub_prompt(self,prompt):
+    def build_sub_prompt(self, prompt):
         data = {
             "messages": [
                 {
@@ -278,7 +277,7 @@ class Workflow:
         response = requests.post(self.url, headers=self.headers, json=data)
         return response.json()['choices'][0]['message']['content']
 
-    def get_patient_name(self,prompt):
+    def get_patient_name(self, prompt):
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
         if '.' in name:
             name = name.replace('.', '')
@@ -286,7 +285,7 @@ class Workflow:
         url = f"{self.base_url}/demographic/SearchDemographic.do"
 
         payload = {
-            "query": "%"+name+"%"
+            "query": "%" + name + "%"
         }
 
         response = self.session.post(url, data=payload)
@@ -298,9 +297,9 @@ class Workflow:
         if len(response_data["results"]) == 0:
             return False
         else:
-            return True,response_data["results"]
+            return True, response_data["results"]
 
-    def patientSearch(self,prompt,type_of_query):
+    def patientSearch(self, prompt, type_of_query):
         # to be used to search for a demographic using the below types
         # Type : search_name,search_phone,search_dob,search_address,search_hin,search_chart_no,search_demographic_no
         # filter_results can be used to select one from that array
@@ -343,7 +342,6 @@ class Workflow:
                 query = match.group()
                 query = query[:-2]
 
-
         if type_of_query == "search_name":
             pattern = r'\bfull name of the patient\b.*?[.!?]'
             match = re.search(pattern, query)
@@ -360,11 +358,11 @@ class Workflow:
 
             if type_of_query != "search_name":
 
-                table = self.getPatientHTML(type_of_query,query)
+                table = self.getPatientHTML(type_of_query, query)
 
                 if table:
                     # print(str(table))
-                    return True,str(table)
+                    return True, str(table)
                 else:
                     return False
 
@@ -376,7 +374,7 @@ class Workflow:
 
             if len(name_parts) > 5:
                 return False
-            
+
             # print(name_parts)
 
             all_combinations = list(itertools.permutations(name_parts))
@@ -384,15 +382,15 @@ class Workflow:
 
             for combo in formatted_combinations:
                 # print(combo)
-                table = self.getPatientHTML(type_of_query,combo)
+                table = self.getPatientHTML(type_of_query, combo)
 
                 if table:
                     # print(str(table))
-                    return True,str(table)
+                    return True, str(table)
 
         return False
 
-    def convert_date(self,query):
+    def convert_date(self, query):
         # Split the string into components
         month_str, day_str, year_str = query.split()
         day = int(day_str[:-1])  # Remove the comma and convert to integer
@@ -410,26 +408,25 @@ class Workflow:
 
         # Format the date as YYYY-MM-DD
         formatted_date = f"{year}-{month}-{day:02d}"
-        
+
         return formatted_date
 
-
-    def getPatientHTML(self,type_of_query,query):
+    def getPatientHTML(self, type_of_query, query):
         url = f"{self.base_url}/demographic/demographiccontrol.jsp"
 
         # Define the payload data
         payload = {
-                      "search_mode": type_of_query,
-                      "keyword": "%"+query+"%",
-                      "orderby": ["last_name", "first_name"],
-                      "dboperation": "search_titlename",
-                      "limit1": 0,
-                      "limit2": 10,
-                      "displaymode": "Search",
-                      "ptstatus": "active",
-                      "fromMessenger": "False",
-                      "outofdomain": ""
-                    }
+            "search_mode": type_of_query,
+            "keyword": "%" + query + "%",
+            "orderby": ["last_name", "first_name"],
+            "dboperation": "search_titlename",
+            "limit1": 0,
+            "limit2": 10,
+            "displaymode": "Search",
+            "ptstatus": "active",
+            "fromMessenger": "False",
+            "outofdomain": ""
+        }
 
         # Send the POST request
         response = self.session.post(url, data=payload)
@@ -441,16 +438,15 @@ class Workflow:
 
         return table
 
-
-    def unidentified_patient(self,prompt):
+    def unidentified_patient(self, prompt):
         query = self.build_sub_prompt(self.tesseracted_text + prompt)
         self.patient_name = "CONFIDENTIAL, UNATTACHED (2016-10-17)"
         self.demographic_number = "285"
         self.mrp = ""
-        self.document_description = query +" "+ self.document_description
+        self.document_description = query + " " + self.document_description
         return True
 
-    def set_doctor_from_code(self,name):
+    def set_doctor_from_code(self, name):
         self.logger.debug(f"Setting doctor from code: {name}")
         oscar_response = []
         if name:
@@ -489,13 +485,13 @@ class Workflow:
             else:
                 return False
 
-    def get_doctor_name(self,prompt):
+    def get_doctor_name(self, prompt):
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
         self.logger.debug("Getting doctor name")
         self.logger.debug("Doctor name: %s", name)
         array_pattern = r'\[.*?\]'
-        #name = "Sokolowski"
-        #array_match = re.search(array_pattern, names)
+        # name = "Sokolowski"
+        # array_match = re.search(array_pattern, names)
         oscar_response = []
         if name:
             if '.' in name:
@@ -525,24 +521,24 @@ class Workflow:
                             oscar_response.append(item)
 
             if len(oscar_response) != 0:
-                return True,oscar_response
+                return True, oscar_response
             else:
                 return False
 
             self.logger.debug("Oscar response: %s", oscar_response)
 
-    def get_document_description(self,prompt):
+    def get_document_description(self, prompt):
         result = self.build_sub_prompt(self.tesseracted_text + prompt)
         self.document_description = result
         return True
 
-    def filter_results(self,prompt,additional_param=None):
+    def filter_results(self, prompt, additional_param=None):
         self.append_to_file("Filtering results: ")
         if additional_param is not None:
             details = self.build_sub_prompt(self.tesseracted_text + prompt + str(additional_param))
             cleaned_string = details.replace("[", "").replace("]", "")
             self.logger.debug("Filtered results: %s", details)
-            return True,cleaned_string
+            return True, cleaned_string
         else:
             self.append_to_file("Skipping filtering, not connected to oscar.")
             return False
@@ -567,10 +563,10 @@ class Workflow:
             self.append_to_file("Skipping in test mode. ")
             return False
 
-    def set_doctor(self,additional_param=None):
+    def set_doctor(self, additional_param=None):
         self.append_to_file("Storing provider details. ")
         if additional_param is not None:
-            #additional_param = '[{"firstName": "Michelle", "lastName": "Liu", "ohipNo": "", "providerNo": "999998"},{"firstName": "John", "lastName": "Doe", "ohipNo": "", "providerNo": "999998"}]'
+            # additional_param = '[{"firstName": "Michelle", "lastName": "Liu", "ohipNo": "", "providerNo": "999998"},{"firstName": "John", "lastName": "Doe", "ohipNo": "", "providerNo": "999998"}]'
             self.logger.debug("Additional param: %s", additional_param)
             data = json.loads(additional_param)
             self.logger.debug("Provider data: %s", data)
@@ -580,16 +576,16 @@ class Workflow:
                     if 'providerNo' in item:
                         self.logger.debug("Provider number: %s", item['providerNo'])
                         self.provider_number.append(item['providerNo'])
-            #self.provider_number.append(data[0]['providerNo'])
-            #self.provider_number.append(data[0]['providerNo'])
-            #self.provider_number = data[0]['providerNo']
+            # self.provider_number.append(data[0]['providerNo'])
+            # self.provider_number.append(data[0]['providerNo'])
+            # self.provider_number = data[0]['providerNo']
             self.logger.debug("Provider numbers: %s", self.provider_number)
             return True
         else:
             self.append_to_file("Skipping in test mode. ")
             return False
 
-    def getProviderList(self,prompt):
+    def getProviderList(self, prompt):
         # to be used to get all the providers list from oscar.
         self.logger.debug("Getting provider list")
         # filter_results should be used to select one from that array
@@ -597,14 +593,14 @@ class Workflow:
 
         # Define the payload data
         payload = {
-                      "search_mode": "search_providerno",
-                      "search_status": "All",
-                      "keyword": "",
-                      "button": "",
-                      "orderby": "last_name",
-                      "limit1": 0,
-                      "limit2": 10000
-                    }
+            "search_mode": "search_providerno",
+            "search_status": "All",
+            "keyword": "",
+            "button": "",
+            "orderby": "last_name",
+            "limit1": 0,
+            "limit2": 10000
+        }
 
         # Send the POST request
         self.logger.debug("Sending POST request to get provider list")
@@ -615,11 +611,11 @@ class Workflow:
         table = soup.find('table', {'id': 'tblResults'})
 
         if table:
-            #print(table)
+            # print(table)
             oscar_response = self.build_sub_prompt(prompt + str(table))
             self.logger.debug("Provider list retrieved")
-            #print(oscar_response)
-            return True,oscar_response
+            # print(oscar_response)
+            return True, oscar_response
         else:
             self.logger.info("No provider list found")
             return False
@@ -632,14 +628,14 @@ class Workflow:
                 reader = csv.DictReader(file)
                 for row in reader:
                     transformed_row = {
-                        "lastname": row["last_name"], 
-                        "firstname": row["first_name"],    
-                        "provider_number": int(row["provider_no"]) 
+                        "lastname": row["last_name"],
+                        "firstname": row["first_name"],
+                        "provider_number": int(row["provider_no"])
                     }
 
                     data.append(transformed_row)
         except FileNotFoundError as e:
-        # Handle the case where the file is not found
+            # Handle the case where the file is not found
             print(f"File not found: {e}")
         except IOError as e:
             # Handle other I/O errors (e.g., file read/write errors)
@@ -649,7 +645,6 @@ class Workflow:
 
         return data
 
-
     def getProviderListFromOscarLLMMode(self):
         # to be used to get all the providers list from oscar.
         # filter_results should be used to select one from that array
@@ -657,14 +652,14 @@ class Workflow:
 
         # Define the payload data
         payload = {
-                      "search_mode": "search_providerno",
-                      "search_status": "All",
-                      "keyword": "",
-                      "button": "",
-                      "orderby": "last_name",
-                      "limit1": 0,
-                      "limit2": 10000
-                    }
+            "search_mode": "search_providerno",
+            "search_status": "All",
+            "keyword": "",
+            "button": "",
+            "orderby": "last_name",
+            "limit1": 0,
+            "limit2": 10000
+        }
 
         # Send the POST request
         response = self.session.post(url, data=payload)
@@ -674,7 +669,7 @@ class Workflow:
         table = soup.find('table', {'id': 'tblResults'})
 
         if table:
-            #print(table)
+            # print(table)
             oscar_response = self.build_sub_prompt(str(table))
             self.logger.debug("Oscar response: %s", oscar_response)
             data = {
@@ -685,17 +680,18 @@ class Workflow:
                     },
                     {
                         "role": "user",
-                        "content": "From the below html content list the lastname, firstname and provider number for all the providers and return the list as a json array. Only return the json array nothing else."+ str(table)
+                        "content": "From the below html content list the lastname, firstname and provider number for all the providers and return the list as a json array. Only return the json array nothing else." + str(
+                            table)
                     }
                 ],
                 "mode": "instruct",
-                #should be a parameter, only if needed else default api values
+                # should be a parameter, only if needed else default api values
                 "temperature": .1,
                 "character": "Assistant",
-                #should be a parameter
-                "top_p":.1
-                #should be a parameter
-                #max_tokens:100
+                # should be a parameter
+                "top_p": .1
+                # should be a parameter
+                # max_tokens:100
             }
             response = requests.post(self.url, headers=self.headers, json=data)
             self.logger.debug("LLM response: %s", response.json())
@@ -703,10 +699,10 @@ class Workflow:
             print(content_value)
             return content_value
 
-
     def oscar_update(self):
-        self.logger.debug("Document Details: Patient: %s, Demographic: %s, Providers: %s, Type: %s, Description: %s", 
-                          self.patient_name, self.demographic_number, self.provider_number, self.fileType, self.document_description)
+        self.logger.debug("Document Details: Patient: %s, Demographic: %s, Providers: %s, Type: %s, Description: %s",
+                          self.patient_name, self.demographic_number, self.provider_number, self.fileType,
+                          self.document_description)
         self.logger.info("Updating Oscar")
         url = f"{self.base_url}/dms/ManageDocument.do"
 
@@ -770,14 +766,14 @@ class Workflow:
     #     print(f"Executing update_oscar with parameters: {param1}, {param2}, additional_param={additional_param}")
     #     return random.choice([True, True])
 
-
-    def execute_task(self,task, previous_result=None):
+    def execute_task(self, task, previous_result=None):
         task_number, function_name, *params, true_next_row, false_next_row = task
         function_to_call = getattr(self, function_name, None)
-        
+
         if function_to_call and callable(function_to_call):
-            self.logger.info(f"Executing Task {task_number} with function: {function_name} and parameters: {', '.join(params)}")
-            
+            self.logger.info(
+                f"Executing Task {task_number} with function: {function_name} and parameters: {', '.join(params)}")
+
             if 'additional_param' in function_to_call.__code__.co_varnames:
                 additional_param = previous_result if previous_result is not None else None
                 response = function_to_call(*params, additional_param=additional_param)
@@ -790,14 +786,14 @@ class Workflow:
                 if response[0]:
                     return true_next_row, response[1]
                 else:
-                    return false_next_row,response[1]
+                    return false_next_row, response[1]
             else:
-                return true_next_row if response else false_next_row 
+                return true_next_row if response else false_next_row
         else:
             self.logger.error(f"Error: Function {function_name} not found or not callable.")
-            return false_next_row 
+            return false_next_row
 
-    def execute_tasks(self,tasks, current_row, previous_result=None):
+    def execute_tasks(self, tasks, current_row, previous_result=None):
         if current_row >= len(tasks):
             self.logger.info("Reached end of tasks.")
             return
@@ -807,8 +803,8 @@ class Workflow:
             self.logger.info("Exiting task execution.")
             return
 
-        if isinstance(next_row, tuple): 
-            #print(next_row)
+        if isinstance(next_row, tuple):
+            # print(next_row)
             next_row_index = int(next_row[0])
             next_result = next_row[1] if len(next_row) > 1 else None
             self.execute_tasks(tasks, next_row_index, previous_result=next_result)
@@ -819,8 +815,7 @@ class Workflow:
                 next_result = next_row_parts[1] if len(next_row_parts) > 1 else None
                 self.execute_tasks(tasks, next_row_index, previous_result=next_result)
 
-
-    def read_tasks_from_csv(self,file_path):
+    def read_tasks_from_csv(self, file_path):
         tasks = []
         with open(file_path, 'r') as file:
             reader = csv.reader(file)
@@ -828,19 +823,20 @@ class Workflow:
                 tasks.append(row)
         return tasks
 
-    def execute_tasks_from_csv(self,index=None):
+    def execute_tasks_from_csv(self, index=None):
         if index is None:
             tasks = self.read_tasks_from_csv('workflow.csv')
         else:
-            tasks = self.read_tasks_from_csv(str(index)+'.csv')
+            tasks = self.read_tasks_from_csv(str(index) + '.csv')
         self.logger.debug("Processing file: %s", self.filepath)
         self.logger.debug(f"Processing file: {self.filepath}")
         self.execute_tasks(tasks, 0)
 
-    def append_to_file(self,content):
+    def append_to_file(self, content):
         self.logger.debug(content)
         with open(self.logFile, "a") as file:
             file.write(content + "\n")
+
 
 def get_pdf_files(folder_path):
     pdf_files = []
@@ -848,7 +844,7 @@ def get_pdf_files(folder_path):
 
     }
     retrying_files = {
-        
+
     }
     files_to_remove.update(retrying_files)
     for file in os.listdir(folder_path):

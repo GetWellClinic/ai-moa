@@ -18,10 +18,6 @@ import requests
 
 from utils.config_manager import ConfigManager
 
-import requests
-
-from utils.config_manager import ConfigManager
-
 
 class SessionManager:
     """

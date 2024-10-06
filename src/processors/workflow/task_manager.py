@@ -7,8 +7,6 @@ and management of Huey tasks for workflow processing.
 
 from huey.api import task, TaskLock
 
-from huey.api import task, TaskLock
-
 
 class WorkflowTaskManager:
     """

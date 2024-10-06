@@ -115,4 +115,4 @@ ocr:
 file_processing:
   input_directory: '/path/to/input/files'
   output_directory: '/path/to/output/files'
-  allowed_extensions: ['.pdf', '.jpg', '.png', '.tiff']
+  allowed_extensions: [ '.pdf', '.jpg', '.png', '.tiff' ]

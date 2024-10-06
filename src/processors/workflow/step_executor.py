@@ -7,8 +7,6 @@ of individual steps within a workflow.
 
 from utils.workflow import Workflow
 
-from utils.workflow import Workflow
-
 
 class WorkflowStepExecutor:
     """

@@ -19,11 +19,13 @@
 # source code can be acquired publicly in its latest most up-to-date version, within one month.
 # ***
 
-import pytesseract
-from PIL import Image
-import fitz
 import io
 import sys
+
+import fitz
+import pytesseract
+from PIL import Image
+
 
 def extract_text_from_pdf(pdf_path):
     try:
@@ -38,7 +40,7 @@ def extract_text_from_pdf(pdf_path):
                 base_image = pdf_document.extract_image(xref)
                 image_bytes = base_image["image"]
                 image = Image.open(io.BytesIO(image_bytes))
-                
+
                 image_text = pytesseract.image_to_string(image)
                 extracted_text += image_text + '\n'
                 print(image_text)
@@ -46,6 +48,7 @@ def extract_text_from_pdf(pdf_path):
     except Exception as e:
         print("An error occurred:", e)
         return None
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

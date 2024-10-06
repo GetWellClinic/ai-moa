@@ -14,8 +14,6 @@ Dependencies:
 
 import logging
 
-import logging
-
 
 def setup_logging(config):
     """

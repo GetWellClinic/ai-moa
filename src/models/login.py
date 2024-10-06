@@ -19,11 +19,6 @@ from selenium.webdriver.common.keys import Keys
 
 from utils.config_manager import ConfigManager
 
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-
-from utils.config_manager import ConfigManager
-
 
 class Login:
     """

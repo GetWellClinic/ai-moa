@@ -15,11 +15,8 @@ Dependencies:
 - selenium: For web automation (implied through the use of WebDriver)
 """
 
-from utils.workflow import Workflow
 from utils.config_manager import ConfigManager
-
 from utils.workflow import Workflow
-from utils.config_manager import ConfigManager
 
 
 class DocumentProcessor:

@@ -16,18 +16,13 @@ Dependencies:
 - utils.config_manager: For accessing configuration settings
 """
 
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select
 from datetime import datetime
-from utils.workflow import Workflow
-from utils.config_manager import ConfigManager
-from pdf_fetcher import PdfFetcher
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
-from datetime import datetime
-from utils.workflow import Workflow
 from utils.config_manager import ConfigManager
+from utils.workflow import Workflow
+
 from .pdf_fetcher import PdfFetcher
 
 

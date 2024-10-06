@@ -5,15 +5,11 @@ This module contains the WorkflowProcessor class which handles the execution
 of predefined workflows within the Oscar EMR system using Huey for task management.
 """
 
-from utils.workflow import Workflow
 from utils.config_manager import ConfigManager
-from .task_manager import WorkflowTaskManager
-from .step_executor import WorkflowStepExecutor
+from utils.workflow import Workflow
 
-from utils.workflow import Workflow
-from utils.config_manager import ConfigManager
-from .task_manager import WorkflowTaskManager
 from .step_executor import WorkflowStepExecutor
+from .task_manager import WorkflowTaskManager
 
 
 class WorkflowProcessor:

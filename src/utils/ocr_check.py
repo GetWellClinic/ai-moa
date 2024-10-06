@@ -21,6 +21,7 @@
 
 import fitz
 
+
 def has_ocr(pdf_path):
     try:
         pdf_document = fitz.open(pdf_path)
@@ -33,6 +34,7 @@ def has_ocr(pdf_path):
     except Exception as e:
         print("An error occurred:", e)
         return False
+
 
 if __name__ == "__main__":
     pdf_path = "sample.pdf"

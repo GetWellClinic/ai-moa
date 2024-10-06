@@ -4,8 +4,6 @@ Module for fetching PDF content from the Oscar EMR system.
 
 from utils.config_manager import ConfigManager
 
-from utils.config_manager import ConfigManager
-
 
 class PdfFetcher:
     """
