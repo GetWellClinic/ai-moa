@@ -31,6 +31,7 @@ import requests
 import json
 import datetime
 import time
+import time
 import io
 from PIL import Image
 import pytesseract
@@ -226,6 +227,7 @@ class Workflow:
 
     def build_prompt(self,prompt):
         # will be executed first, workflow starts from workflow.csv
+        start_time = time.time()
         data = {
             "messages": [
                 {
