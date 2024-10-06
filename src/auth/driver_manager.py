@@ -1,3 +1,10 @@
+"""
+Module for managing WebDriver instances for Selenium automation.
+
+This module provides a DriverManager class that handles the creation and
+configuration of WebDriver instances, specifically for Chrome browsers.
+"""
+
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -7,10 +14,37 @@ from config import ConfigManager
 
 
 class DriverManager:
+    """
+    A class for managing WebDriver instances.
+
+    This class is responsible for creating and configuring WebDriver
+    instances based on the provided configuration.
+
+    Attributes:
+        config (ConfigManager): An instance of ConfigManager containing
+                                the configuration settings.
+    """
+
     def __init__(self, config: ConfigManager):
+        """
+        Initialize the DriverManager with a configuration.
+
+        Args:
+            config (ConfigManager): An instance of ConfigManager containing
+                                    the configuration settings.
+        """
         self.config = config
 
     def get_driver(self):
+        """
+        Create and return a configured WebDriver instance.
+
+        This method creates a Chrome WebDriver instance with options
+        set according to the configuration.
+
+        Returns:
+            webdriver.Chrome: A configured Chrome WebDriver instance.
+        """
         chrome_options = Options()
         if self.config.get('chrome_options', {}).get('headless', False):
             chrome_options.add_argument("--headless")
