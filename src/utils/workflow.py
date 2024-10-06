@@ -37,6 +37,7 @@ from PIL import Image
 import io
 import pytesseract
 
+import os
 from utils.config_manager import ConfigManager
 
 class Workflow:
