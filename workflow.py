@@ -288,7 +288,7 @@ class Workflow:
             return True,response_data["results"]
 
     def set_doctor_from_code(self,name):
-        self.logger.debug(f"Setting doctor from code: {name}")
+        self.logger.debug("Setting doctor from code: %s", name)
         # directly set provider name from csv using provider name, will search for the
         # provider name in oscar and the resulting provider will be add to the provider
         # list for the current file
@@ -320,7 +320,7 @@ class Workflow:
                 self.logger.debug(f"Processing item: {item}")
                 if isinstance(item, dict):
                     if 'providerNo' in item:
-                        self.logger.debug(f"Provider number: {item['providerNo']}")
+                        self.logger.debug("Provider number: %s", item['providerNo'])
                         self.provider_number.append(item['providerNo'])
                         self.logger.debug(f"Provider number added: {item['providerNo']}")
             self.logger.debug(f"Provider numbers: {self.provider_number}")
@@ -387,6 +387,8 @@ class Workflow:
         # the criteria for selecting one value from the array.
         # this should be use after the methods get_patient_name, get_doctor_name, patientSearch, getProviderList
         # the above functions will return an array and filter_results will be used to select one from that array
+    def set_doctor(self,additional_param=None):
+        self.append_to_file("Storing provider details. ")
         if additional_param is not None:
             self.logger.debug("Filtering results")
             details = self.build_sub_prompt(self.tesseracted_text + prompt + str(additional_param))
@@ -398,6 +400,8 @@ class Workflow:
     def set_patient(self,additional_param=None):
         # will be used after filter_results to set the selected value from the array
         self.logger.debug("Setting patient")
+    def set_doctor(self,additional_param=None):
+        self.append_to_file("Storing provider details. ")
         if additional_param is not None:
             self.logger.debug("Additional param: %s", additional_param)
             data = json.loads(additional_param)
@@ -414,8 +418,9 @@ class Workflow:
     def set_doctor(self,additional_param=None):
         self.logger.debug("Setting doctor")
         # will be used after filter_results to set the selected value from the array
+    def set_doctor(self,additional_param=None):
+        self.append_to_file("Storing provider details. ")
         if additional_param is not None:
-            #additional_param = '[{"firstName": "Michelle", "lastName": "Liu", "ohipNo": "", "providerNo": "999998"},{"firstName": "John", "lastName": "Doe", "ohipNo": "", "providerNo": "999998"}]'
             self.logger.debug("Additional param: %s", additional_param)
             data = json.loads(additional_param)
             self.logger.debug("Provider data: %s", data)
@@ -425,11 +430,12 @@ class Workflow:
                 self.logger.debug(f"Processing item: {item}")
                 if isinstance(item, dict):
                     if 'providerNo' in item:
-                        self.logger.debug(f"Provider number: {item['providerNo']}")
+                        self.logger.debug("Provider number: %s", item['providerNo'])
                         self.provider_number.append(item['providerNo'])
-            #self.provider_number.append(data[0]['providerNo'])
-            #self.provider_number.append(data[0]['providerNo'])
-            #self.provider_number = data[0]['providerNo']
+            self.logger.debug("Provider numbers: %s", self.provider_number)
+            return True
+        else:
+            self.append_to_file("Skipping in test mode. ")
             self.logger.info(f"Doctor(s) set: {self.provider_number}")
             return True
         else:
