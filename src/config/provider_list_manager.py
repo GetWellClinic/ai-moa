@@ -1,0 +1,98 @@
+import yaml
+import json
+import requests
+from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+
+from src.config import ConfigManager
+from src.auth import Login
+
+class ProviderListManager:
+    def __init__(self, config_file='config/config.yaml'):
+        self.config = ConfigManager(config_file)
+        self.username = self.config.get('user_login', {}).get('username')
+        self.password = self.config.get('user_login', {}).get('password')
+        self.pin = self.config.get('user_login', {}).get('pin')
+        self.base_url = self.config.get('base_url')
+        self.session = requests.Session()
+        self.login()
+
+    def login(self):
+        response = self.session.post(f"{self.base_url}/login.do",
+                                     data={"username": self.username, "password": self.password, "pin": self.pin})
+        if response.url == f"{self.base_url}/login.do":
+            print("Login failed.")
+        else:
+            print("Login successful!")
+
+    def upload_template_file(self):
+        url = f"{self.base_url}/oscarReport/reportByTemplate/uploadTemplates.do"
+        template_file = 'config/template_providerlist.txt'
+        files = {'templateFile': (template_file, open(template_file, 'rb'), 'text/plain')}
+        data = {'action': 'add'}
+        response = self.session.post(url, files=files, data=data)
+        return response.status_code == 200
+
+    def generate_provider_list(self):
+        chrome_options = Options()
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+        login = Login(self.username, self.password, self.pin, self.base_url)
+        
+        if self.upload_template_file():
+            url = f"{self.base_url}/oscarReport/reportByTemplate/homePage.jsp?templates=all"
+            response = self.session.get(url)
+            soup = BeautifulSoup(response.text, 'html.parser')
+            tbody = soup.find('tbody', id='tableData')
+            template_id = self.find_template_id(tbody)
+            
+            if template_id:
+                provider_data = self.fetch_provider_data(template_id)
+                self.save_provider_list(provider_data)
+            else:
+                print("Template id not found")
+        
+        driver.quit()
+
+    def find_template_id(self, tbody):
+        if tbody:
+            for row in tbody.find_all('tr'):
+                cells = row.find_all('td')
+                if cells[1].get_text(strip=True) == "AI-MOA Config Search Providers (System generated)":
+                    return cells[3].get('id')
+        return None
+
+    def fetch_provider_data(self, template_id):
+        url = f"{self.base_url}/oscarReport/reportByTemplate/GenerateReportAction.do"
+        params = {"templateId": template_id, "submitButton": "Run Query"}
+        response = self.session.post(url, data=params)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        input_element = soup.find('input', {'type': 'hidden', 'class': 'btn', 'name': 'csv'})
+        if input_element:
+            return input_element.get('value').replace('"', '')
+        return None
+
+    def save_provider_list(self, provider_data):
+        if provider_data:
+            providers = []
+            for row in provider_data.split('\n')[1:]:  # Skip header row
+                fields = row.split(',')
+                if len(fields) >= 3:
+                    providers.append({
+                        'last_name': fields[0],
+                        'first_name': fields[1],
+                        'provider_no': fields[2]
+                    })
+            
+            provider_list = {'providers': providers}
+            with open('config/provider_list.yaml', 'w') as file:
+                yaml.dump(provider_list, file, default_flow_style=False)
+            print('Provider list has been saved to config/provider_list.yaml')
+        else:
+            print('No provider data to save')
+
+if __name__ == "__main__":
+    manager = ProviderListManager()
+    manager.generate_provider_list()
