@@ -4,8 +4,10 @@ from typing import Dict, Any, List
 from src.utils.logging_setup import setup_logging
 
 class ConfigManager:
-    def __init__(self, config_path: str):
-        self.config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '..', 'config', config_path)
+    def __init__(self, env: str = 'development'):
+        config_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), '..', 'config')
+        config_file = f'{env}.yaml'
+        self.config_path = os.path.join(config_dir, config_file)
         self.config = self.load_config()
         self.logger = setup_logging(self)
 

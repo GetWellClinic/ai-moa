@@ -1,2 +1,4 @@
 .idea
 .aid*
+config/*.yaml
+!config/example.yaml

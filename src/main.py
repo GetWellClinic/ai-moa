@@ -106,8 +106,12 @@ class OscarAutomation:
         self.process_workflow()
         self.process_files()
 
+import os
+
 def main():
-    oscar = OscarAutomation(config_file='workflow-config.yaml')
+    env = os.environ.get('APP_ENV', 'development')
+    config = ConfigManager(env)
+    oscar = OscarAutomation(config)
     oscar.schedule_tasks()
 
 if __name__ == "__main__":
