@@ -40,6 +40,7 @@ import pytesseract
 import os
 import logging
 from utils.config_manager import ConfigManager
+from huey import task
 
 class Workflow:
     """
