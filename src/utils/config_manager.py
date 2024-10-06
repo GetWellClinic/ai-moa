@@ -12,11 +12,12 @@ The module provides functionality to:
 Dependencies:
 - yaml: For parsing YAML files
 - typing: For type hinting
+- logging: For logging configuration and usage
 """
 
 from typing import Dict, Any, List
-
 import yaml
+import logging
 
 
 class ConfigManager:
@@ -30,6 +31,7 @@ class ConfigManager:
         config_path (str): Path to the configuration file.
         config (Dict[str, Any]): Dictionary containing the configuration
                                  settings.
+        logger (logging.Logger): Logger instance for this class.
     """
 
     def __init__(self, config_path: str):
@@ -41,6 +43,7 @@ class ConfigManager:
         """
         self.config_path = config_path
         self.config = self.load_config()
+        self.logger = self.setup_logging()
 
     def load_config(self) -> Dict[str, Any]:
         """
@@ -55,6 +58,21 @@ class ConfigManager:
         """
         with open(self.config_path, 'r') as file:
             return yaml.safe_load(file)
+
+    def setup_logging(self) -> logging.Logger:
+        """
+        Set up logging based on the configuration.
+
+        Returns:
+            logging.Logger: Configured logger instance.
+        """
+        logging_config = self.config.get('logging', {})
+        logging.basicConfig(
+            level=logging_config.get('level', 'INFO'),
+            format=logging_config.get('format', '%(asctime)s - %(name)s - %(levelname)s - %(message)s'),
+            filename=logging_config.get('filename')
+        )
+        return logging.getLogger(__name__)
 
     def get(self, key: str, default: Any = None) -> Any:
         """
@@ -81,21 +99,18 @@ class ConfigManager:
         """
         return self.config['workflow']['steps']
 
-    def get_next_step(self, current_step: str, outcome: bool) -> str:
+    def get_tasks_for_category(self, category_index: int) -> List[Dict[str, Any]]:
         """
-        Get the next step based on the current step and its outcome.
+        Get the tasks for a specific document category.
 
         Args:
-            current_step (str): The name of the current step.
-            outcome (bool): The outcome of the current step (True or False).
+            category_index (int): Index of the document category.
 
         Returns:
-            str: The name of the next step, or None if not found.
+            List[Dict[str, Any]]: List of tasks for the specified category.
         """
-        for step in self.workflow_steps:
-            if step['name'] == current_step:
-                return step['true_next'] if outcome else step['false_next']
-        return None
+        category_tasks = self.config.get('category_tasks', {})
+        return category_tasks.get(str(category_index), [])
 
     @property
     def document_categories(self) -> List[str]:

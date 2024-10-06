@@ -172,6 +172,16 @@ document_categories:
   - Request
   - Advertisement
 
+# Category-specific tasks
+category_tasks:
+  "0":  # Lab
+    - name: extract_lab_details
+    - name: update_lab_results
+  "1":  # Consult
+    - name: extract_consultation_details
+    - name: update_patient_record
+  # Add tasks for other categories...
+
 # AI Prompts
 ai_prompts:
   get_document_description: >

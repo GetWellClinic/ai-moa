@@ -9,10 +9,10 @@ The module provides functionality to:
 2. Perform OCR on PDF files
 3. Extract patient and doctor information
 4. Interact with the Oscar EMR system
-5. Execute workflow tasks based on CSV configurations
+5. Execute workflow tasks based on configuration
 
 Dependencies:
-- Various Python libraries including csv, re, torch, fitz, PyPDF2, requests, json, datetime, logging, time
+- Various Python libraries including re, torch, fitz, PyPDF2, requests, json, datetime, logging, time
 - doctr for OCR
 - BeautifulSoup for HTML parsing
 - PIL and pytesseract for image processing
@@ -20,8 +20,22 @@ Dependencies:
 - huey for task queuing
 """
 
+import re
+import time
+from typing import Dict, Any, List
 
-# [Your existing import statements here]
+import fitz
+import PyPDF2
+import requests
+import torch
+from PIL import Image
+from bs4 import BeautifulSoup
+from doctr.io import DocumentFile
+from doctr.models import ocr_predictor
+from huey import task
+
+from utils.config_manager import ConfigManager
+
 
 class Workflow:
     """
@@ -58,8 +72,8 @@ class Workflow:
         self.provider_number = []
         self.document_description = ''
         self.session = session
-        self.logger = logging.getLogger(__name__)
-        self.base_url = config.get('emr', {}).get('base_url')
+        self.logger = config.logger
+        self.base_url = config.get('emr',{}).get('base_url')
         self.url = config.get('ai_config', {}).get('url')
         self.headers = {
             "Authorization": f"Bearer {config.get('ai_config', {}).get('auth_token')}",
@@ -68,7 +82,7 @@ class Workflow:
         self.categories = config.document_categories
         self.categories_code = [cat.replace(' ', '') for cat in self.categories]
 
-    def find_category_index(self, text):
+    def find_category_index(self, text: str) -> bool:
         """
         Find the category index for the given text.
 
@@ -89,14 +103,14 @@ class Workflow:
                 if word == category.lower():
                     self.logger.debug(f"Category index found: {index}")
                     self.fileType = category.lower()
-                    self.execute_tasks_from_csv(index)
+                    self.execute_tasks_from_config(index)
                     return True
         self.logger.debug("No category found, setting to 'others'")
         self.fileType = 'others'
-        self.execute_tasks_from_csv(self.categories_code.index('Others'))
+        self.execute_tasks_from_config(self.categories_code.index('Others'))
         return False
 
-    def has_ocr(self):
+    def has_ocr(self) -> bool:
         """
         Check if the PDF file has an OCR layer.
 
@@ -117,7 +131,7 @@ class Workflow:
             self.logger.error(f"An error occurred in has_ocr: {e}")
             return False
 
-    def extract_text_from_pdf(self):
+    def extract_text_from_pdf(self) -> bool:
         """
         Extract text from PDF using pytesseract OCR.
 
@@ -141,7 +155,7 @@ class Workflow:
             self.logger.error(f"An error occurred in extract_text_from_pdf: {e}")
             return False
 
-    def extract_text_doctr(self):
+    def extract_text_doctr(self) -> bool:
         """
         Extract text from PDF using doctr OCR.
 
@@ -156,7 +170,7 @@ class Workflow:
         self.logger.debug(f"Processing PDF: {pdf_path}")
         try:
             device = torch.device(
-                "cuda:0" if self.config.get('enable_ocr_gpu') and torch.cuda.is_available() else "cpu")
+                "cuda:0" if self.config.get('ocr', {}).get('enable_gpu') and torch.cuda.is_available() else "cpu")
             model = ocr_predictor(pretrained=True).to(device)
             doc = DocumentFile.from_pdf(pdf_path)
             result = model(doc)
@@ -171,7 +185,7 @@ class Workflow:
             self.logger.exception(f"Error in extract_text_doctr: {e}")
             return False
 
-    def _process_ocr_result(self, result):
+    def _process_ocr_result(self, result) -> str:
         """
         Process the OCR result from doctr.
 
@@ -193,7 +207,7 @@ class Workflow:
             text.append('\n'.join(page_text))
         return '\n\n'.join(text)
 
-    def extract_text_from_pdf_file(self):
+    def extract_text_from_pdf_file(self) -> bool:
         """
         Extract text from PDF file using PyPDF2.
 
@@ -213,7 +227,7 @@ class Workflow:
             self.logger.error(f"An error occurred in extract_text_from_pdf_file: {e}")
             return False
 
-    def build_prompt(self, prompt):
+    def build_prompt(self, prompt: str) -> bool:
         """
         Build and send a prompt to the AI model.
 
@@ -233,7 +247,7 @@ class Workflow:
             self.logger.error(f"Error in build_prompt: {e}")
             return False
 
-    def _prepare_prompt_data(self, prompt):
+    def _prepare_prompt_data(self, prompt: str) -> Dict[str, Any]:
         """
         Prepare the data for the AI model prompt.
 
@@ -241,7 +255,7 @@ class Workflow:
             prompt (str): The prompt to include in the data.
 
         Returns:
-            dict: Prepared data for the AI model request.
+            Dict[str, Any]: Prepared data for the AI model request.
         """
         return {
             "messages": [
@@ -254,12 +268,12 @@ class Workflow:
             "top_p": self.config.get('ai_config', {}).get('top_p', 0.1)
         }
 
-    def _send_prompt_request(self, data):
+    def _send_prompt_request(self, data: Dict[str, Any]) -> bool:
         """
         Send the prompt request to the AI model and process the response.
 
         Args:
-            data (dict): The prepared data for the AI model request.
+            data (Dict[str, Any]): The prepared data for the AI model request.
 
         Returns:
             bool: True if the request was successful and processed, False otherwise.
@@ -274,10 +288,8 @@ class Workflow:
         self.find_category_index(content_value)
         return True
 
-    # [Rest of your methods here, each with detailed docstrings]
-
     @task()
-    def execute_task(self, task, previous_result=None):
+    def execute_task(self, task: Dict[str, Any], previous_result: Any = None) -> Any:
         """
         Execute a single task in the workflow.
 
@@ -285,19 +297,19 @@ class Workflow:
         method based on the task definition and handles the task's outcome.
 
         Args:
-            task (tuple): A tuple containing task details (number, function name, parameters, next steps).
+            task (Dict[str, Any]): A dictionary containing task details.
             previous_result: The result from the previous task, if any.
 
         Returns:
-            tuple or str: The next task number and any additional results, or just the next task number.
+            Any: The result of the task execution.
         """
-        task_number, function_name, *params, true_next_row, false_next_row = task
-        self.logger.debug(f"Executing task {task_number}: {function_name}")
+        function_name = task['name']
+        params = task.get('params', [])
+        self.logger.debug(f"Executing task: {function_name}")
         function_to_call = getattr(self, function_name, None)
 
         if function_to_call and callable(function_to_call):
-            self.logger.info(
-                f"Executing Task {task_number} with function: {function_name} and parameters: {', '.join(params)}")
+            self.logger.info(f"Executing function: {function_name} with parameters: {params}")
 
             try:
                 if 'additional_param' in function_to_call.__code__.co_varnames:
@@ -306,80 +318,13 @@ class Workflow:
                     response = function_to_call(*params)
 
                 self.logger.debug(f"Response from {function_name}: {response}")
-
-                if isinstance(response, tuple) and len(response) > 1:
-                    return (true_next_row, response[1]) if response[0] else (false_next_row, response[1])
-                else:
-                    return true_next_row if response else false_next_row
+                return response
             except Exception as e:
                 self.logger.error(f"Error executing function {function_name}: {str(e)}")
-                return false_next_row
+                return False
         else:
             self.logger.error(f"Error: Function {function_name} not found or not callable.")
-            return false_next_row
-
-    def execute_tasks(self, tasks, current_row, previous_result=None):
-        """
-        Execute a series of tasks in the workflow.
-
-        This method recursively executes tasks based on their outcomes and the defined workflow.
-
-        Args:
-            tasks (list): List of tasks to execute.
-            current_row (int): The index of the current task in the tasks list.
-            previous_result: The result from the previous task, if any.
-        """
-        if current_row >= len(tasks):
-            self.logger.info("Reached end of tasks.")
-            return
-
-        next_row = self.execute_task(tasks[current_row], previous_result)
-        if next_row == 'exit':
-            self.logger.info("Exiting task execution.")
-            return
-
-        if isinstance(next_row, tuple):
-            next_row_index, next_result = next_row
-            self.execute_tasks(tasks, int(next_row_index), previous_result=next_result)
-        elif next_row:
-            next_row_parts = next_row.split(",")
-            next_row_index = int(next_row_parts[0])
-            next_result = next_row_parts[1] if len(next_row_parts) > 1 else None
-            self.execute_tasks(tasks, next_row_index, previous_result=next_result)
-
-    def read_tasks_from_csv(self, file_path):
-        """
-        Read tasks from a CSV file.
-
-        Args:
-            file_path (str): Path to the CSV file containing task definitions.
-
-        Returns:
-            list: List of tasks read from the CSV file.
-        """
-        tasks = []
-        self.logger.debug(f"Reading tasks from CSV: {file_path}")
-        with open(file_path, 'r') as file:
-            reader = csv.reader(file)
-            for row in reader:
-                tasks.append(row)
-        return tasks
-
-    def execute_tasks_from_csv(self, index=None):
-        """
-        Execute tasks defined in a CSV file.
-
-        This method reads tasks from a CSV file and executes them.
-
-        Args:
-            index (int, optional): Index to determine which CSV file to use.
-        """
-        if index is None:
-            tasks = self.read_tasks_from_csv(self.config.get('workflow', {}).get('file_path', 'workflow.csv'))
-        else:
-            tasks = self.read_tasks_from_csv(f"{index}.csv")
-        self.logger.debug(f"Processing file: {self.filepath}")
-        self.execute_tasks(tasks, 0)
+            return False
 
     def execute_workflow(self):
         """
@@ -389,39 +334,47 @@ class Workflow:
         until reaching the 'exit' step or encountering an error.
         """
         self.logger.info("Executing workflow")
-        current_step = self.workflow_config.workflow_steps[0]['name']
-        while current_step != 'exit':
-            self.logger.info(f"Executing step: {current_step}")
-            result = self.execute_step(current_step)
-            current_step = self.workflow_config.get_next_step(current_step, result)
+        workflow_steps = self.config.workflow_steps
+        current_step = workflow_steps[0]
+        while current_step['name'] != 'exit':
+            self.logger.info(f"Executing step: {current_step['name']}")
+            result = self.execute_task(current_step)
+            current_step = self._get_next_step(current_step, result)
             if current_step is None:
-                self.logger.error(f"No next step defined for {current_step}")
+                self.logger.error(f"No next step defined for {current_step['name']}")
                 break
         self.logger.info("Workflow execution completed")
 
-    @task()
-    def execute_step(self, step_name):
+    def _get_next_step(self, current_step: Dict[str, Any], outcome: bool) -> Dict[str, Any]:
         """
-        Execute a single step in the workflow.
-
-        This method is decorated as a Huey task. It dynamically calls the method
-        corresponding to the step name.
+        Get the next step based on the current step and its outcome.
 
         Args:
-            step_name (str): Name of the step to execute.
+            current_step (Dict[str, Any]): The current step information.
+            outcome (bool): The outcome of the current step (True or False).
 
         Returns:
-            bool: True if the step executed successfully, False otherwise.
+            Dict[str, Any]: The next step information, or None if not found.
         """
-        function_to_call = getattr(self, step_name, None)
-        if function_to_call and callable(function_to_call):
-            try:
-                result = function_to_call()
-                self.logger.info(f"Step {step_name} completed with result: {result}")
-                return result
-            except Exception as e:
-                self.logger.error(f"Error executing step {step_name}: {str(e)}")
-                return False
-        else:
-            self.logger.error(f"Error: Function {step_name} not found or not callable.")
-            return False
+        next_step_name = current_step['true_next'] if outcome else current_step['false_next']
+        workflow_steps = self.config.workflow_steps
+        for step in workflow_steps:
+            if step['name'] == next_step_name:
+                return step
+        return None
+
+    def execute_tasks_from_config(self, index: int):
+        """
+        Execute tasks defined in the configuration.
+
+        This method reads tasks from the configuration and executes them.
+
+        Args:
+            index (int): Index to determine which set of tasks to execute.
+        """
+        tasks = self.config.get_tasks_for_category(index)
+        self.logger.debug(f"Processing file: {self.filepath}")
+        for task in tasks:
+            self.execute_task(task)
+
+    # Add other methods as needed, each with proper type hints and docstrings
