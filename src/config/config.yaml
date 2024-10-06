@@ -7,3 +7,7 @@ last_processed_pdf: ''
 last_pending_doc_file: ''
 enable_ocr_gpu: false
 workflow_file: workflow.csv
+urls:
+  login: /login.do
+chrome_options:
+  headless: true
