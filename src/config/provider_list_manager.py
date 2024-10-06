@@ -1,5 +1,6 @@
 import yaml
 import requests
+from typing import List, Dict, Optional
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -10,7 +11,7 @@ from src.config import ConfigManager
 from src.auth import Login
 
 class ProviderListManager:
-    def __init__(self, config_file='config/config.yaml'):
+    def __init__(self, config_file: str = 'config/config.yaml'):
         self.config = ConfigManager(config_file)
         self.username = self.config.get('user_login', {}).get('username')
         self.password = self.config.get('user_login', {}).get('password')
@@ -19,7 +20,7 @@ class ProviderListManager:
         self.session = requests.Session()
         self.login()
 
-    def login(self):
+    def login(self) -> None:
         response = self.session.post(f"{self.base_url}/login.do",
                                      data={"username": self.username, "password": self.password, "pin": self.pin})
         if response.url == f"{self.base_url}/login.do":
@@ -27,15 +28,23 @@ class ProviderListManager:
         else:
             print("Login successful!")
 
-    def upload_template_file(self):
+    def upload_template_file(self) -> bool:
         url = f"{self.base_url}/oscarReport/reportByTemplate/uploadTemplates.do"
         template_file = 'config/template_providerlist.txt'
-        files = {'templateFile': (template_file, open(template_file, 'rb'), 'text/plain')}
-        data = {'action': 'add'}
-        response = self.session.post(url, files=files, data=data)
-        return response.status_code == 200
+        try:
+            with open(template_file, 'rb') as file:
+                files = {'templateFile': (template_file, file, 'text/plain')}
+                data = {'action': 'add'}
+                response = self.session.post(url, files=files, data=data)
+                return response.status_code == 200
+        except FileNotFoundError:
+            print(f"Template file not found: {template_file}")
+            return False
+        except requests.RequestException as e:
+            print(f"Error uploading template file: {e}")
+            return False
 
-    def generate_provider_list(self):
+    def generate_provider_list(self) -> None:
         chrome_options = Options()
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
         login = Login(self.username, self.password, self.pin, self.base_url)
@@ -55,7 +64,7 @@ class ProviderListManager:
         
         driver.quit()
 
-    def find_template_id(self, tbody):
+    def find_template_id(self, tbody: BeautifulSoup) -> Optional[str]:
         if tbody:
             for row in tbody.find_all('tr'):
                 cells = row.find_all('td')
@@ -63,19 +72,22 @@ class ProviderListManager:
                     return cells[3].get('id')
         return None
 
-    def fetch_provider_data(self, template_id):
+    def fetch_provider_data(self, template_id: str) -> Optional[str]:
         url = f"{self.base_url}/oscarReport/reportByTemplate/GenerateReportAction.do"
         params = {"templateId": template_id, "submitButton": "Run Query"}
-        response = self.session.post(url, data=params)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        input_element = soup.find('input', {'type': 'hidden', 'class': 'btn', 'name': 'csv'})
-        if input_element:
-            return input_element.get('value').replace('"', '')
+        try:
+            response = self.session.post(url, data=params)
+            soup = BeautifulSoup(response.text, 'html.parser')
+            input_element = soup.find('input', {'type': 'hidden', 'class': 'btn', 'name': 'csv'})
+            if input_element:
+                return input_element.get('value').replace('"', '')
+        except requests.RequestException as e:
+            print(f"Error fetching provider data: {e}")
         return None
 
-    def save_provider_list(self, provider_data):
+    def save_provider_list(self, provider_data: Optional[str]) -> None:
         if provider_data:
-            providers = []
+            providers: List[Dict[str, str]] = []
             for row in provider_data.split('\n')[1:]:  # Skip header row
                 fields = row.split(',')
                 if len(fields) >= 3:
@@ -86,9 +98,12 @@ class ProviderListManager:
                     })
             
             provider_list = {'providers': providers}
-            with open('config/provider_list.yaml', 'w') as file:
-                yaml.dump(provider_list, file, default_flow_style=False)
-            print('Provider list has been saved to config/provider_list.yaml')
+            try:
+                with open('config/provider_list.yaml', 'w') as file:
+                    yaml.dump(provider_list, file, default_flow_style=False)
+                print('Provider list has been saved to config/provider_list.yaml')
+            except IOError as e:
+                print(f"Error saving provider list: {e}")
         else:
             print('No provider data to save')
 
