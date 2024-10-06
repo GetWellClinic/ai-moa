@@ -52,6 +52,7 @@ class Workflow:
             "Authorization": "Bearer qwerty",
             "Content-Type": "application/json"
         }
+        self.task_results = {}
         self.categories = [
                             "Lab",
                             "Consult",
@@ -551,7 +552,7 @@ class Workflow:
     #     return random.choice([True, True])
 
 
-    def execute_task(self,task, previous_result=None):
+    def execute_task(self, task, previous_result=None):
         task_number, function_name, *params, true_next_row, false_next_row = task
         function_to_call = getattr(self, function_name, None)
         
@@ -566,29 +567,38 @@ class Workflow:
 
             print(f"Response from {function_name}: {response}")
 
+            self.task_results[task_number] = response
+
             if isinstance(response, tuple) and len(response) > 1:
                 if response[0]:
                     return true_next_row, response[1]
                 else:
-                    return false_next_row,response[1]
+                    return false_next_row, response[1]
             else:
                 return true_next_row if response else false_next_row 
         else:
             print(f"Error: Function {function_name} not found or not callable.")
             return false_next_row 
 
-    def execute_tasks(self,tasks, current_row, previous_result=None):
+    def get_task_result(self, task_number):
+        return self.task_results.get(task_number)
+
+    def execute_tasks(self, tasks, current_row, previous_result=None):
         if current_row >= len(tasks):
             print("Reached end of tasks.")
             return
 
-        next_row = self.execute_task(tasks[current_row], previous_result)
+        current_task = tasks[current_row]
+        previous_task_number = current_task.get('previous_task')
+        if previous_task_number:
+            previous_result = self.get_task_result(previous_task_number)
+
+        next_row = self.execute_task(current_task, previous_result)
         if next_row == 'exit':
             print("Exiting task execution.")
             return
 
         if isinstance(next_row, tuple): 
-            #print(next_row)
             next_row_index = int(next_row[0])
             next_result = next_row[1] if len(next_row) > 1 else None
             self.execute_tasks(tasks, next_row_index, previous_result=next_result)
