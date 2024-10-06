@@ -62,7 +62,7 @@ class OscarAutomation:
             config_file (str): Path to the workflow configuration file.
         """
         self.config = ConfigManager(config_file)
-        self.logger = self.config.setup_logging()
+        self.logger = logging_setup.setup_logging()
         self.session_manager = SessionManager(self.config)
         self.login_manager = LoginManager(self.config)
         self.huey = self.setup_huey()
