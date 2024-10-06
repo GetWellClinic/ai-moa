@@ -12,12 +12,12 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
+along with this program.  If not, see <htstps://www.gnu.org/licenses/>.
 
-Module for processing PDF documents in the Oscar EMR system.
+Module for processing PDF documents in the AI MOA system.
 
 This module contains the PdfProcessor class which handles the retrieval
-and processing of PDF documents from the Oscar EMR system.
+and processing of PDF documents from the AI MOA system.
 
 The module provides functionality to:
 1. Fetch individual PDF content
@@ -49,7 +49,7 @@ logger = logging.getLogger(__name__)
 
 class PdfProcessor:
     """
-    Class for processing PDF documents in the Oscar EMR system.
+    Class for processing PDF documents in the AI MOA system.
 
     This class provides methods for fetching PDF content, processing
     multiple PDFs, and executing workflows on individual PDF files.
@@ -68,7 +68,7 @@ class PdfProcessor:
         Args:
             config (ConfigManager): Configuration manager containing system
                                     settings.
-            session_manager: SessionManager object for handling EMR sessions.
+            session_manager: SessionManager object for handling O19 EMR sessions.
         """
         self.config = config
         self.session_manager = session_manager
@@ -80,7 +80,7 @@ class PdfProcessor:
 
     def process_pdfs(self, login_url, login_successful_callback):
         """
-        Process all PDFs in the Oscar EMR system.
+        Process all PDFs in the O19 EMR system.
 
         Args:
             login_url (str): URL for logging into the EMR system.
@@ -158,7 +158,7 @@ class PdfProcessor:
 
     def get_pdf_content(self, name):
         """
-        Fetch the content of a PDF file from the Oscar EMR system.
+        Fetch the content of a PDF file from the AI MOA system.
 
         Args:
             name (str): PDF name or identifier to fetch.

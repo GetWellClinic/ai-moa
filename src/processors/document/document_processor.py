@@ -1,8 +1,8 @@
 """
-Module for processing documents in the Oscar EMR system.
+Module for processing documents in the AI MOA system.
 
 This module contains the DocumentProcessor class which handles the retrieval
-and processing of various documents from the Oscar EMR system.
+and processing of various documents from the AI MOA system.
 
 The module provides functionality to:
 1. Fetch individual document content
@@ -16,8 +16,8 @@ Dependencies:
 """
 
 import logging
-from src.config import ConfigManager
-from utils.workflow import Workflow
+from ../../config import ConfigManager
+from workflow import Workflow
 from auth import LoginManager, DriverManager
 from src.logging import setup_logging
 
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 class DocumentProcessor:
     """
-    Class for processing documents in the Oscar EMR system.
+    Class for processing documents in the AI MOA system.
 
     This class provides methods for fetching document content, processing
     multiple documents, and executing workflows on individual document files.
@@ -50,12 +50,11 @@ class DocumentProcessor:
         setup_logging(config)
         self.logger = logging.getLogger(__name__)
         self.base_url = config.get('base_url')
-        self.temp_pdf_name = config.get('file_processing.temp_pdf_name', 'downloaded_pdf.pdf')
         logger.debug(f"DocumentProcessor initialized with base_url: {self.base_url}")
 
     def get_file_content(self, name):
         """
-        Fetch the content of a document file from the Oscar EMR system.
+        Fetch the content of a document file from the AI MOA system.
 
         This method sends a GET request to retrieve the document content and
         stores it in memory if successful.
@@ -85,7 +84,7 @@ class DocumentProcessor:
 
     def process_documents(self, login_url, login_successful_callback):
         """
-        Process all documents in the Oscar EMR system.
+        Process all documents in the AI MOA system.
 
         This method logs into the EMR system, retrieves a list of documents,
         and processes each document that hasn't been processed before.

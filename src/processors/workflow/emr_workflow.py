@@ -86,6 +86,6 @@ class Workflow:
         # Implementation
         pass
 
-    def oscar_update(self, previous_result):
+    def o19_update(self, previous_result):
         # Implementation
         pass

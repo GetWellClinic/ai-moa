@@ -1,5 +1,5 @@
 """
-Module for executing individual workflow steps in the Oscar EMR system.
+Module for executing individual workflow steps in the AI MOA system.
 
 This module contains the WorkflowStepExecutor class which handles the execution
 of individual steps within a workflow.

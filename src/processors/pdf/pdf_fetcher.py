@@ -1,5 +1,5 @@
 """
-Module for fetching PDF content from the Oscar EMR system.
+Module for fetching PDF content from the AI MOA system.
 """
 
 from src.config import ConfigManager
@@ -7,8 +7,7 @@ from src.config import ConfigManager
 
 class PdfFetcher:
     """
-    Class for fetching PDF content from the Oscar EMR system.
-
+    Class for fetching PDF content from the O19 EMR system.
     Attributes:
         config (ConfigManager): Configuration manager for the system.
         session: Session object for making HTTP requests.
@@ -22,7 +21,7 @@ class PdfFetcher:
 
     def get_pdf_content(self, name):
         """
-        Fetch the content of a PDF file from the Oscar EMR system.
+        Fetch the content of a PDF file from the O19 EMR system.
 
         Args:
             name (str): Name or identifier of the PDF file to fetch.

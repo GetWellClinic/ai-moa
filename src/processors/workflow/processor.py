@@ -1,8 +1,8 @@
 """
-Module for processing workflows in the Oscar EMR system using Huey tasks.
+Module for processing workflows in the AI MOA system using Huey tasks.
 
 This module contains the WorkflowProcessor class which handles the execution
-of predefined workflows within the Oscar EMR system using Huey for task management.
+of predefined workflows within the AI MOA system using Huey for task management.
 """
 
 from src.config import ConfigManager
@@ -17,7 +17,7 @@ from utils.driver_manager import DriverManager
 
 class WorkflowProcessor:
     """
-    Class for processing workflows in the Oscar EMR system using Huey tasks.
+    Class for processing workflows in the AI MOA system using Huey tasks.
 
     This class provides methods for executing predefined workflows
     based on the configuration settings using Huey for task management.
@@ -101,10 +101,10 @@ class WorkflowProcessor:
             **kwargs
         )
 """
-Module for processing workflows in the Oscar EMR system using Huey tasks.
+Module for processing workflows in the AI MOA system using Huey tasks.
 
 This module contains the WorkflowProcessor class which handles the execution
-of predefined workflows within the Oscar EMR system using Huey for task management.
+of predefined workflows within the AI MOA system using Huey for task management.
 """
 
 from config import ConfigManager
@@ -118,7 +118,7 @@ from utils.driver_manager import DriverManager
 
 class WorkflowProcessor:
     """
-    Class for processing workflows in the Oscar EMR system using Huey tasks.
+    Class for processing workflows in the AI MOA system using Huey tasks.
 
     This class provides methods for executing predefined workflows
     based on the configuration settings using Huey for task management.

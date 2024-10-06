@@ -1,5 +1,5 @@
 """
-Module for managing sessions in the Oscar EMR system.
+Module for managing sessions in the AI MOA system.
 
 This module provides a SessionManager class that handles the creation
 and management of sessions, including login functionality.
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 class SessionManager:
     """
-    A class for managing sessions in the Oscar EMR system.
+    A class for managing sessions in the AI MOA system.
 
     This class is responsible for creating and maintaining sessions,
     including handling the login process.

@@ -29,9 +29,9 @@ workflow:
       true_next: set_doctor
       false_next: exit
     - name: set_doctor
-      true_next: oscar_update
+      true_next: o19_update
       false_next: exit
-    - name: oscar_update
+    - name: o19_update
       true_next: exit
       false_next: exit
 
@@ -44,7 +44,7 @@ document_categories:
       - name: get_document_description
         prompt: >
           Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document.
-          Review the above document and provide only the output using in the specified output format, without labeling it as output format:,
+          Review the above document and provide onl ythe output using in the specified output format, without labeling it as output format:,
           after review perform through the following steps. 1. Select pathology type from PATHOLOGY TESTS LIST provided below.
           If the provided laboratory tests list does not provide a strong match display the word 'Other'.
           2. Identify the name of laboratory/hospital/department that performed the test.

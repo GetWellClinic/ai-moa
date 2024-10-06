@@ -1,8 +1,8 @@
 """
-Main module for automating Oscar EMR tasks using Huey for task management.
+Main module for automating AI-MOA tasks using Huey for task management.
 
-This module initializes the OscarAutomation class and sets up periodic tasks
-for processing documents, PDFs, and workflows in the Oscar EMR system.
+This module initializes the AIMOAAuthomation class and sets up periodic tasks
+for processing documents, PDFs, and workflows in the AI MOA system.
 
 Copyright (C) 2024 Spring Health Corporation
 
@@ -32,13 +32,13 @@ from src.config import ConfigManager
 from src.logging import setup_logging
 
 # Initialize Huey with SQLite backend
-huey = SqliteHuey('oscar_automation', filename='/app/oscar_tasks.db')
+huey = SqliteHuey('aimoa_automation', filename='/app/aimoa_tasks.db')
 
 logger = logging.getLogger(__name__)
 
-class OscarAutomation:
+class AIMOAAutomation:
     """
-    Main class for automating tasks in the Oscar EMR system.
+    Main class for automating tasks with the AI-MOA system.
 
     This class initializes the necessary components and provides methods
     for processing PDFs, documents, workflows, and files.
@@ -50,19 +50,19 @@ class OscarAutomation:
         login_manager (LoginManager): Manager for EMR login.
     """
 
-    def __init__(self, config_file='src/config.yaml'):
+    def __init__(self, config_file='config.yaml'):
         """
-        Initialize the OscarAutomation instance.
+        Initialize the AIMOAAAutomation instance.
 
         Args:
             config_file (str): Path to the main configuration file.
         """
-        self.config = ConfigManager(config_file, 'src/workflow-config.yaml')
+        self.config = ConfigManager(config_file, 'workflow-config.yaml')
         setup_logging(self.config)
         self.logger = logging.getLogger(__name__)
-        self.session_manager = SessionManager(self.config)
+        self.session_manager = SessionManager(self.config
         self.login_manager = LoginManager(self.config)
-        self.logger.info("OscarAutomation initialized")
+        self.logger.info("AIMOAAutomation initialized")
 
     def _get_driver(self):
         """
@@ -158,16 +158,16 @@ def schedule_tasks():
     Periodic task to schedule and execute various EMR processing tasks.
 
     This function is decorated as a Huey periodic task and runs at intervals
-    specified in the configuration. It initializes an OscarAutomation instance
+    specified in the configuration. It initializes an AIMOAAutomation instance
     and triggers the processing of documents, PDFs, workflows, and files.
     """
     logger.info("Starting scheduled tasks")
-    oscar = OscarAutomation()
-    oscar.process_documents()
-    oscar.process_pdfs()
-    oscar.process_workflow()
-    oscar.process_files()
+    ai_moa = AIMOAAutomation()
+    ai_moa.process_documents()
+    ai_moa.process_pdfs()
+    ai_moa.process_workflow()
+    ai_moa.process_files()
     logger.info("Scheduled tasks completed")
 
 if __name__ == "__main__":
-    logger.info("Oscar Automation started. Waiting for scheduled tasks...")
+    logger.info("AIMOA Automation started. Waiting for scheduled tasks...")
