@@ -33,7 +33,7 @@ huey = SqliteHuey('oscar_automation', filename='/app/oscar_tasks.db')
 class OscarAutomation:
     def __init__(self, config_file='src/config.yaml'):
         self.config = ConfigManager(config_file, 'src/workflow-config.yaml')
-        self.logger = setup_logging()
+        self.logger = setup_logging(self.config)
         self.session_manager = SessionManager(self.config)
         self.login_manager = LoginManager(self.config)
 
@@ -46,7 +46,6 @@ class OscarAutomation:
         pdf_processor = PdfProcessor(self.config, self.session_manager)
         driver = self._get_driver()
         pdf_processor.process_pdfs(
-            driver,
             f"{self.config.get('emr', {}).get('base_url')}/login.do",
             self.login_manager.login_successful_callback
         )
@@ -57,7 +56,6 @@ class OscarAutomation:
         document_processor = DocumentProcessor(self.config, self.session_manager)
         driver = self._get_driver()
         document_processor.process_documents(
-            driver,
             f"{self.config.get('emr', {}).get('base_url')}/login.do",
             self.login_manager.login_successful_callback
         )
@@ -68,7 +66,6 @@ class OscarAutomation:
         workflow_processor = WorkflowProcessor(self.config, self.session_manager)
         driver = self._get_driver()
         workflow_processor.process_workflow(
-            driver,
             f"{self.config.get('emr', {}).get('base_url')}/login.do",
             self.login_manager.login_successful_callback
         )
