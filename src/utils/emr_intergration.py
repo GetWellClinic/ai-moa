@@ -31,12 +31,14 @@ import requests
 import json
 import datetime
 import time
+import io
+from PIL import Image
+import pytesseract
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 from bs4 import BeautifulSoup
 
 import logging
-import os
 
 class Workflow:
     def __init__(self, filepath, session, base_url, file_name, enable_ocr_gpu, config):
