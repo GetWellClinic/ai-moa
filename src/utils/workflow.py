@@ -629,24 +629,45 @@ class Workflow:
                 tasks.append(row)
         return tasks
 
-    def execute_tasks(self):
-        self.logger.info("Executing tasks")
-        tasks = self.get_tasks_from_config()
-        for task in tasks:
-            self.execute_task.schedule(args=(task,))
+    def execute_workflow(self):
+        self.logger.info("Executing workflow")
+        workflow_steps = self.workflow_config.get('workflow_steps', [])
+        for step in workflow_steps:
+            self.execute_step.schedule(args=(step['name'],), kwargs=step.get('params', {}))
 
     @task()
-    def execute_task(self, task):
-        task_name, *params = task
-        function_to_call = getattr(self, task_name, None)
+    def execute_step(self, step_name, **params):
+        function_to_call = getattr(self, step_name, None)
         if function_to_call and callable(function_to_call):
-            self.logger.info(f"Executing task: {task_name}")
-            return function_to_call(*params)
+            self.logger.info(f"Executing step: {step_name}")
+            return function_to_call(**params)
         else:
-            self.logger.error(f"Error: Function {task_name} not found or not callable.")
+            self.logger.error(f"Error: Function {step_name} not found or not callable.")
             return None
 
-    def get_tasks_from_config(self):
-        # Implement logic to get tasks from configuration
-        # This replaces the CSV file reading logic
-        return self.config.get('workflow_tasks', [])
+    # Implement all the workflow steps as methods here
+    def get_document_description(self, prompt):
+        # Implementation
+        pass
+
+    def getProviderList(self, prompt):
+        # Implementation
+        pass
+
+    def get_patient_name(self, prompt):
+        # Implementation
+        pass
+
+    def set_patient(self, additional_param=None):
+        # Implementation
+        pass
+
+    def set_doctor(self, additional_param=None):
+        # Implementation
+        pass
+
+    def oscar_update(self):
+        # Implementation
+        pass
+
+    # Add other workflow step methods as needed

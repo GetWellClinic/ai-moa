@@ -6,13 +6,11 @@ of various tasks in the Oscar EMR system, including PDF processing, document
 processing, and workflow execution using Huey for task management.
 """
 
-import json
-import requests
+import yaml
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
-from utils.config_loader import load_config, save_config
 from utils.logging_setup import setup_logging
 from models.login import Login
 from models.session_manager import SessionManager
@@ -20,8 +18,8 @@ from processors.pdf_processor import PdfProcessor
 from processors.document_processor import DocumentProcessor
 from processors.workflow_processor import WorkflowProcessor
 from utils.config_manager import ConfigManager
-from huey import MemoryHuey, crontab
-from tasks import process_pdfs_task, process_documents_task, process_workflow_task
+from huey import MemoryHuey
+from huey.api import task, TaskLock
 
 huey = MemoryHuey()
 
@@ -47,10 +45,10 @@ class OscarAutomation:
             config_file (str): Path to the configuration file.
         """
         self.config = ConfigManager(config_file)
-        setup_logging(self.config.config)
         self.logger = setup_logging(self.config.config)
         self.session_manager = SessionManager(self.config)
         self.login = Login(self.config, self.session_manager)
+        self.workflow_config = self.load_workflow_config()
 
     def _get_driver(self):
         """
@@ -67,7 +65,44 @@ class OscarAutomation:
             options=chrome_options
         )
 
-    @huey.task()
+    def load_workflow_config(self):
+        """
+        Load the workflow configuration from YAML file.
+
+        Returns:
+            dict: Workflow configuration.
+        """
+        with open('config/workflow-config.yaml', 'r') as file:
+            return yaml.safe_load(file)
+
+    @task()
+    def process_pdfs(self):
+        """Process PDFs using Huey task."""
+        with TaskLock('pdf_processing'):
+            pdf_processor = PdfProcessor(self.config, self.session_manager)
+            driver = self._get_driver()
+            pdf_processor.process_pdfs(driver, f"{self.config['base_url']}/login.do", self.login.login_successful_callback)
+            driver.quit()
+
+    @task()
+    def process_documents(self):
+        """Process documents using Huey task."""
+        with TaskLock('document_processing'):
+            document_processor = DocumentProcessor(self.config, self.session_manager)
+            driver = self._get_driver()
+            document_processor.process_documents(driver, f"{self.config['base_url']}/login.do", self.login.login_successful_callback)
+            driver.quit()
+
+    @task()
+    def process_workflow(self):
+        """Process workflow using Huey task."""
+        with TaskLock('workflow_processing'):
+            workflow_processor = WorkflowProcessor(self.config, self.session_manager, self.workflow_config)
+            driver = self._get_driver()
+            workflow_processor.process_workflow(driver, f"{self.config['base_url']}/login.do", self.login.login_successful_callback)
+            driver.quit()
+
+    @task()
     def schedule_tasks(self):
         """
         Schedule and run tasks using Huey.
@@ -75,9 +110,9 @@ class OscarAutomation:
         This method schedules PDF processing, document processing, and workflow processing tasks.
         """
         self.logger.info("Scheduling tasks")
-        process_documents_task(self.config, self.session_manager, self.login)
-        process_pdfs_task(self.config, self.session_manager, self.login)
-        process_workflow_task(self.config, self.session_manager, self.login)
+        self.process_documents()
+        self.process_pdfs()
+        self.process_workflow()
 
 if __name__ == "__main__":
     oscar = OscarAutomation()
