@@ -21,6 +21,8 @@ from processors.document_processor import DocumentProcessor
 from processors.workflow_processor import WorkflowProcessor
 
 
+from utils.config_manager import ConfigManager
+
 class OscarAutomation:
     """
     Main class for automating Oscar EMR tasks.
@@ -29,7 +31,7 @@ class OscarAutomation:
     for processing PDFs, documents, and workflows.
 
     Attributes:
-        config (dict): Configuration dictionary.
+        config (ConfigManager): Configuration manager instance.
         logger (logging.Logger): Logger instance for this class.
         session_manager (SessionManager): Session manager for handling EMR sessions.
         login (Login): Login handler for EMR authentication.
@@ -42,9 +44,9 @@ class OscarAutomation:
         Args:
             config_file (str): Path to the configuration file.
         """
-        self.config = load_config(config_file)
-        setup_logging(self.config)
-        self.logger = setup_logging(self.config)
+        self.config = ConfigManager(config_file)
+        setup_logging(self.config.config)
+        self.logger = setup_logging(self.config.config)
         self.session_manager = SessionManager(self.config)
         self.login = Login(self.config, self.session_manager)
 

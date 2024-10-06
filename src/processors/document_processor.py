@@ -7,6 +7,8 @@ and processing of various documents from the Oscar EMR system.
 
 from utils.workflow import Workflow
 
+from utils.config_manager import ConfigManager
+
 class DocumentProcessor:
     """
     Class for processing documents in the Oscar EMR system.
@@ -15,24 +17,20 @@ class DocumentProcessor:
     multiple documents, and executing workflows on individual document files.
 
     Attributes:
-        base_url (str): Base URL for the Oscar EMR system.
+        config (ConfigManager): Configuration manager for the system.
         session: Session object for making HTTP requests.
-        last_pending_doc_file (str): Document number of the last processed document.
-        enable_ocr_gpu (bool): Flag to enable GPU for OCR processing.
     """
 
-    def __init__(self, config, session):
+    def __init__(self, config: ConfigManager, session):
         """
         Initialize DocumentProcessor with configuration and session.
 
         Args:
-            config (dict): Configuration dictionary containing system settings.
+            config (ConfigManager): Configuration manager containing system settings.
             session: Session object for making HTTP requests.
         """
-        self.base_url = config['base_url']
+        self.config = config
         self.session = session
-        self.last_pending_doc_file = config['last_pending_doc_file']
-        self.enable_ocr_gpu = config['enable_ocr_gpu']
 
     def get_file_content(self, name):
         """
@@ -68,18 +66,18 @@ class DocumentProcessor:
         """
         driver.get(login_url)
         current_url = login_successful_callback(driver)
-        if current_url == f"{self.base_url}/login.do":
+        if current_url == f"{self.config.get('base_url')}/login.do":
             print("Login failed.")
-            return self.last_pending_doc_file
+            return self.config.get('last_pending_doc_file')
 
-        driver.get(f"{self.base_url}/dms/inboxManage.do?method=getDocumentsInQueues")
+        driver.get(f"{self.config.get('base_url')}/dms/inboxManage.do?method=getDocumentsInQueues")
         script_value = driver.execute_script("return typeDocLab;")
 
         for item in script_value['DOC']:
-            if int(item) > int(self.last_pending_doc_file):
+            if int(item) > int(self.config.get('last_pending_doc_file')):
                 if self.get_file_content(item):
-                    workflow = Workflow("downloaded_pdf.pdf", self.session, self.base_url, item, self.enable_ocr_gpu)
+                    workflow = Workflow("downloaded_pdf.pdf", self.session, self.config)
                     workflow.execute_tasks_from_csv()
-                    self.last_pending_doc_file = item
+                    self.config.set('last_pending_doc_file', item)
 
-        return self.last_pending_doc_file
+        return self.config.get('last_pending_doc_file')

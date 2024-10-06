@@ -10,6 +10,8 @@ from selenium.webdriver.support.ui import Select
 from datetime import datetime
 from utils.workflow import Workflow
 
+from utils.config_manager import ConfigManager
+
 class PdfProcessor:
     """
     Class for processing PDF documents in the Oscar EMR system.
@@ -18,24 +20,20 @@ class PdfProcessor:
     multiple PDFs, and executing workflows on individual PDF files.
 
     Attributes:
-        base_url (str): Base URL for the Oscar EMR system.
+        config (ConfigManager): Configuration manager for the system.
         session: Session object for making HTTP requests.
-        last_processed_pdf (str): Timestamp of the last processed PDF.
-        enable_ocr_gpu (bool): Flag to enable GPU for OCR processing.
     """
 
-    def __init__(self, config, session):
+    def __init__(self, config: ConfigManager, session):
         """
         Initialize PdfProcessor with configuration and session.
 
         Args:
-            config (dict): Configuration dictionary containing system settings.
+            config (ConfigManager): Configuration manager containing system settings.
             session: Session object for making HTTP requests.
         """
-        self.base_url = config['base_url']
+        self.config = config
         self.session = session
-        self.last_processed_pdf = config['last_processed_pdf']
-        self.enable_ocr_gpu = config['enable_ocr_gpu']
 
     def get_pdf_content(self, name):
         """
@@ -69,16 +67,16 @@ class PdfProcessor:
         """
         driver.get(login_url)
         current_url = login_successful_callback(driver)
-        if current_url == f"{self.base_url}/login.do":
+        if current_url == f"{self.config.get('base_url')}/login.do":
             print("Login failed.")
-            return self.last_processed_pdf
+            return self.config.get('last_processed_pdf')
 
-        driver.get(f"{self.base_url}/dms/incomingDocs.jsp")
+        driver.get(f"{self.config.get('base_url')}/dms/incomingDocs.jsp")
         driver.execute_script("loadPdf('1', 'File');")
         driver.implicitly_wait(10)
         select_element = Select(driver.find_element(By.ID, "SelectPdfList"))
 
-        update_time = self.last_processed_pdf
+        update_time = self.config.get('last_processed_pdf')
 
         for option in select_element.options:
             if option.get_attribute('value') != "":
@@ -92,7 +90,8 @@ class PdfProcessor:
                     if pdf_content:
                         with open("downloaded_pdf.pdf", "wb") as f:
                             f.write(pdf_content)
-                        workflow = Workflow("downloaded_pdf.pdf", self.session, self.base_url, option.get_attribute('value'), self.enable_ocr_gpu)
+                        workflow = Workflow("downloaded_pdf.pdf", self.session, self.config)
                         workflow.execute_tasks_from_csv()
 
+        self.config.set('last_processed_pdf', update_time)
         return update_time

@@ -8,6 +8,8 @@ process for the Oscar EMR system using Selenium WebDriver.
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
+from utils.config_manager import ConfigManager
+
 class Login:
     """
     Class for handling login operations in the Oscar EMR system.
@@ -16,24 +18,24 @@ class Login:
     using Selenium WebDriver.
 
     Attributes:
-        config (dict): Configuration dictionary containing login credentials and URLs.
+        config (ConfigManager): Configuration manager containing login credentials and URLs.
         session_manager: SessionManager object for handling EMR sessions.
     """
 
-    def __init__(self, config, session_manager):
+    def __init__(self, config: ConfigManager, session_manager):
         """
         Initialize Login with configuration and session manager.
 
         Args:
-            config (dict): Configuration dictionary containing login credentials and URLs.
+            config (ConfigManager): Configuration manager containing login credentials and URLs.
             session_manager: SessionManager object for handling EMR sessions.
         """
         self.config = config
         self.session_manager = session_manager
-        self.username = config['user_login']['username']
-        self.password = config['user_login']['password']
-        self.pin = config['user_login']['pin']
-        self.base_url = config['base_url']
+        self.username = config.get('user_login', {}).get('username')
+        self.password = config.get('user_login', {}).get('password')
+        self.pin = config.get('user_login', {}).get('pin')
+        self.base_url = config.get('base_url')
 
     def login_successful_callback(self, driver):
         """

@@ -7,6 +7,8 @@ creation and management for interactions with the Oscar EMR system.
 
 import requests
 
+from utils.config_manager import ConfigManager
+
 class SessionManager:
     """
     Class for managing sessions in the Oscar EMR system.
@@ -15,23 +17,23 @@ class SessionManager:
     with the Oscar EMR system, including login functionality.
 
     Attributes:
-        config (dict): Configuration dictionary containing login credentials and URLs.
+        config (ConfigManager): Configuration manager containing login credentials and URLs.
         session (requests.Session): Session object for making HTTP requests.
     """
 
-    def __init__(self, config):
+    def __init__(self, config: ConfigManager):
         """
         Initialize SessionManager with configuration.
 
         Args:
-            config (dict): Configuration dictionary containing login credentials and URLs.
+            config (ConfigManager): Configuration manager containing login credentials and URLs.
         """
         self.config = config
         self.session = requests.Session()
-        self.username = config['user_login']['username']
-        self.password = config['user_login']['password']
-        self.pin = config['user_login']['pin']
-        self.base_url = config['base_url']
+        self.username = config.get('user_login', {}).get('username')
+        self.password = config.get('user_login', {}).get('password')
+        self.pin = config.get('user_login', {}).get('pin')
+        self.base_url = config.get('base_url')
         self.login()
 
     def login(self):

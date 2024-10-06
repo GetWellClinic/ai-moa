@@ -7,6 +7,8 @@ of predefined workflows within the Oscar EMR system.
 
 from utils.workflow import Workflow
 
+from utils.config_manager import ConfigManager
+
 class WorkflowProcessor:
     """
     Class for processing workflows in the Oscar EMR system.
@@ -15,16 +17,16 @@ class WorkflowProcessor:
     based on the configuration settings.
 
     Attributes:
-        config (dict): Configuration dictionary containing system settings.
+        config (ConfigManager): Configuration manager containing system settings.
         session_manager: SessionManager object for handling EMR sessions.
     """
 
-    def __init__(self, config, session_manager):
+    def __init__(self, config: ConfigManager, session_manager):
         """
         Initialize WorkflowProcessor with configuration and session manager.
 
         Args:
-            config (dict): Configuration dictionary containing system settings.
+            config (ConfigManager): Configuration manager containing system settings.
             session_manager: SessionManager object for handling EMR sessions.
         """
         self.config = config
@@ -52,9 +54,7 @@ class WorkflowProcessor:
         workflow = Workflow(
             self.config.get('workflow_file_path', 'workflow.csv'),
             self.session_manager.get_session(),
-            self.config['base_url'],
-            "workflow.csv",
-            self.config['enable_ocr_gpu']
+            self.config
         )
         workflow.execute_tasks_from_csv()
         print("Workflow processing completed")
