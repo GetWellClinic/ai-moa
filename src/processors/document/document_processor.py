@@ -15,11 +15,13 @@ Dependencies:
 - selenium: For web automation (implied through the use of WebDriver)
 """
 
+import logging
 from src.config import ConfigManager
 from utils.workflow import Workflow
 from auth import LoginManager, DriverManager
 from src.logging import setup_logging
 
+logger = logging.getLogger(__name__)
 
 class DocumentProcessor:
     """
@@ -45,9 +47,11 @@ class DocumentProcessor:
         """
         self.config = config
         self.session = session
-        self.logger = setup_logging()
+        setup_logging(config)
+        self.logger = logging.getLogger(__name__)
         self.base_url = config.get('base_url')
         self.temp_pdf_name = config.get('file_processing.temp_pdf_name', 'downloaded_pdf.pdf')
+        logger.debug(f"DocumentProcessor initialized with base_url: {self.base_url}")
 
     def get_file_content(self, name):
         """
@@ -67,16 +71,17 @@ class DocumentProcessor:
             The method saves the fetched document as "downloaded_pdf.pdf" in
             the current directory.
         """
+        logger.info(f"Fetching file content for document: {name}")
         file_url = (f"{self.base_url}/dms/ManageDocument.do?"
                     f"method=display&doc_no={name}")
         file_response = self.session.get(file_url)
         if file_response.status_code == 200 and file_response.content:
             with open(self.temp_pdf_name, "wb") as file:
                 file.write(file_response.content)
+            logger.debug(f"File content saved to {self.temp_pdf_name}")
             return True
         else:
-            print(f"Failed to fetch file content. "
-                  f"Status code: {file_response.status_code}")
+            logger.error(f"Failed to fetch file content. Status code: {file_response.status_code}")
             return False
 
     def process_documents(self, login_url, login_successful_callback):
@@ -98,6 +103,7 @@ class DocumentProcessor:
             This method updates the 'last_pending_doc_file' configuration value
             after processing each document.
         """
+        logger.info("Starting document processing")
         driver_manager = DriverManager(self.config)
         driver = driver_manager.get_driver()
 
@@ -105,10 +111,11 @@ class DocumentProcessor:
         login_manager = LoginManager(self.config)
         current_url = login_manager.login_with_selenium(driver)
         if not login_manager.is_login_successful(current_url):
-            print("Login failed.")
+            logger.error("Login failed.")
             return self.config.get('last_pending_doc_file')
 
         # Navigate to the documents page
+        logger.debug(f"Navigating to documents page: {self.base_url}/dms/inboxManage.do?method=getDocumentsInQueues")
         driver.get(f"{self.base_url}/dms/inboxManage.do?"
                    f"method=getDocumentsInQueues")
         script_value = driver.execute_script("return typeDocLab;")
@@ -116,10 +123,13 @@ class DocumentProcessor:
         # Process each document
         for item in script_value['DOC']:
             if int(item) > int(self.config.get('last_pending_doc_file')):
+                logger.info(f"Processing document: {item}")
                 if self.get_file_content(item):
                     workflow = Workflow("downloaded_pdf.pdf",
                                         self.session, self.config)
                     workflow.execute_tasks_from_csv()
                     self.config.set('last_pending_doc_file', item)
+                    logger.debug(f"Updated last_pending_doc_file to {item}")
 
+        logger.info(f"Document processing completed. Last processed document: {self.config.get('last_pending_doc_file')}")
         return self.config.get('last_pending_doc_file')

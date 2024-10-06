@@ -5,6 +5,7 @@ This module provides a DriverManager class that handles the creation and
 configuration of WebDriver instances, specifically for Chrome browsers.
 """
 
+import logging
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -12,6 +13,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 from config import ConfigManager
 
+logger = logging.getLogger(__name__)
 
 class DriverManager:
     """
@@ -34,6 +36,7 @@ class DriverManager:
                                     the configuration settings.
         """
         self.config = config
+        logger.debug("DriverManager initialized")
 
     def get_driver(self):
         """
@@ -45,9 +48,11 @@ class DriverManager:
         Returns:
             webdriver.Chrome: A configured Chrome WebDriver instance.
         """
+        logger.info("Creating new WebDriver instance")
         chrome_options = Options()
         if self.config.get('chrome.options.headless', False):
             chrome_options.add_argument("--headless")
+            logger.debug("Chrome headless mode enabled")
         return webdriver.Chrome(
             service=Service(ChromeDriverManager().install()),
             options=chrome_options

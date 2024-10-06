@@ -5,9 +5,11 @@ This module provides a SessionManager class that handles the creation
 and management of sessions, including login functionality.
 """
 
+import logging
 from config import ConfigManager
 from .login_manager import LoginManager
 
+logger = logging.getLogger(__name__)
 
 class SessionManager:
     """
@@ -39,9 +41,10 @@ class SessionManager:
         self.login_manager = LoginManager(config)
         self.session, login_successful = self.login_manager.login_with_requests()
         if login_successful:
-            print("Login successful!")
+            logger.info("Login successful!")
         else:
-            print("Login failed.")
+            logger.error("Login failed.")
+        logger.debug("SessionManager initialized")
 
     def login(self):
         """
@@ -50,6 +53,7 @@ class SessionManager:
         Returns:
             bool: True if login was successful, False otherwise.
         """
+        logger.info("Attempting to log in and create a new session")
         self.session, login_successful = self.login_manager.login_with_requests()
         return login_successful
 
@@ -60,4 +64,5 @@ class SessionManager:
         Returns:
             The current session object.
         """
+        logger.debug("Retrieving current session")
         return self.session

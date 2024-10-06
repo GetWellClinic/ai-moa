@@ -31,6 +31,7 @@ Dependencies:
 - utils.config_manager: For accessing configuration settings
 """
 
+import logging
 from datetime import datetime
 
 from selenium.webdriver.common.by import By
@@ -43,6 +44,7 @@ from auth import LoginManager, DriverManager
 from .pdf_fetcher import PdfFetcher
 from .ocr import extract_text_from_pdf
 
+logger = logging.getLogger(__name__)
 
 class PdfProcessor:
     """
@@ -70,8 +72,10 @@ class PdfProcessor:
         self.config = config
         self.session_manager = session_manager
         self.pdf_fetcher = PdfFetcher(config, session_manager.get_session())
-        self.logger = setup_logging()
+        setup_logging(config)
+        self.logger = logging.getLogger(__name__)
         self.login_manager = LoginManager(config)
+        logger.debug("PdfProcessor initialized")
 
     def process_pdfs(self, login_url, login_successful_callback):
         """
@@ -85,13 +89,16 @@ class PdfProcessor:
         Returns:
             str: Timestamp of the last processed PDF.
         """
+        logger.info("Starting PDF processing")
         driver_manager = DriverManager(self.config)
         driver = driver_manager.get_driver()
 
         if not self._login(driver, login_url):
             driver.quit()
+            logger.error("Login failed, aborting PDF processing")
             return self.config.get('last_processed_pdf')
 
+        logger.debug(f"Navigating to incoming documents page: {self.config.get('base_url')}/dms/incomingDocs.jsp")
         driver.get(f"{self.config.get('base_url')}/dms/incomingDocs.jsp")
         driver.execute_script("loadPdf('1', 'File');")
         driver.implicitly_wait(10)
@@ -104,14 +111,17 @@ class PdfProcessor:
                 update_time = self._process_pdf(option, update_time)
 
         self.config.set('last_processed_pdf', update_time)
+        logger.info(f"PDF processing completed. Last processed PDF timestamp: {update_time}")
         driver.quit()
         return update_time
 
     def _login(self, driver, login_url):
+        logger.info("Attempting to log in")
         current_url = self.login_manager.login_with_selenium(driver)
         if not self.login_manager.is_login_successful(current_url):
-            print("Login failed.")
+            logger.error("Login failed")
             return False
+        logger.debug("Login successful")
         return True
 
     def _process_pdf(self, option, update_time):
@@ -121,26 +131,31 @@ class PdfProcessor:
                      if update_time else current_file)
 
         if last_file <= current_file:
+            logger.info(f"Processing PDF: {split_string[1]}")
             update_time = split_string[1]
             pdf_content = self.pdf_fetcher.get_pdf_content(
                 option.get_attribute('value'))
             if pdf_content:
                 self._save_and_process_pdf(pdf_content)
+            else:
+                logger.warning(f"Failed to fetch PDF content for {split_string[1]}")
 
         return update_time
 
     def _save_and_process_pdf(self, pdf_content):
         temp_pdf_name = self.config.get('file_processing.temp_pdf_name', 'downloaded_pdf.pdf')
+        logger.debug(f"Saving PDF content to {temp_pdf_name}")
         with open(temp_pdf_name, "wb") as f:
             f.write(pdf_content)
         temp_pdf_name = self.config.get('file_processing.temp_pdf_name', 'downloaded_pdf.pdf')
         extracted_text = extract_text_from_pdf(temp_pdf_name)
         if extracted_text:
+            logger.debug("Text extracted from PDF, executing workflow")
             workflow = Workflow(extracted_text,
                                 self.session_manager.get_session(), self.config)
             workflow.execute_tasks_from_csv()
         else:
-            print("Failed to extract text from PDF")
+            logger.error("Failed to extract text from PDF")
 
     def get_pdf_content(self, name):
         """
@@ -152,4 +167,5 @@ class PdfProcessor:
         Returns:
             bytes: Content of the PDF file if successful, None otherwise.
         """
+        logger.info(f"Fetching PDF content for: {name}")
         return self.pdf_fetcher.get_pdf_content(name)
