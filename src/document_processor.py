@@ -1,0 +1,51 @@
+import logging
+from models.workflow import Workflow
+
+class DocumentProcessor:
+    def __init__(self, base_url, session, last_pending_doc_file, enable_ocr_gpu):
+        self.base_url = base_url
+        self.session = session
+        self.enable_ocr_gpu = enable_ocr_gpu
+        self.last_pending_doc_file = last_pending_doc_file
+        self.logger = logging.getLogger(__name__)
+
+    def get_file_content(self, doc_no):
+        self.logger.debug(f"Fetching file content for document number: {doc_no}")
+        file_url = f"{self.base_url}/dms/ManageDocument.do?method=display&doc_no={doc_no}"
+        file_response = self.session.get(file_url)
+        if file_response.status_code == 200 and file_response.content:
+            with open("downloaded_document.pdf", "wb") as file:
+                file.write(file_response.content)
+            return True
+        else:
+            self.logger.error(f"Failed to fetch file content. Status code: {file_response.status_code}")
+            return False
+
+    def process_documents(self, driver, login_url, login_successful_callback):
+        self.logger.info("Starting document processing")
+        driver.get(login_url)
+        current_url = login_successful_callback(driver)
+        if current_url == f"{self.base_url}/login.do":
+            self.logger.error("Login failed.")
+            return self.last_pending_doc_file
+
+        driver.get(f"{self.base_url}/dms/inboxManage.do?method=getDocumentsInQueues")
+        script_value = driver.execute_script("return typeDocLab;")
+
+        for doc_no in script_value['DOC']:
+            self.logger.debug(f"Processing document number: {doc_no}")
+            if doc_no > self.last_pending_doc_file:
+                if self.process_single_document(doc_no):
+                    self.last_pending_doc_file = doc_no
+
+        self.logger.info("Document processing completed")
+        return self.last_pending_doc_file
+
+    def process_single_document(self, doc_no):
+        self.logger.debug(f"Processing single document: {doc_no}")
+        if self.get_file_content(doc_no):
+            workflow = Workflow("downloaded_document.pdf", self.session, self.base_url, doc_no, self.enable_ocr_gpu)
+            workflow.execute_tasks_from_csv()
+            return True
+        self.logger.error(f"Failed to process document {doc_no}")
+        return False
