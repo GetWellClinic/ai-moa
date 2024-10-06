@@ -6,7 +6,7 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
 from processors.document_processor import DocumentProcessor
-from processors.workflow_processor import WorkflowProcessor
+from processors.workflow import WorkflowProcessor
 
 
 def _get_driver(config):
