@@ -5,7 +5,6 @@ This module contains the WorkflowTaskManager class which handles the creation
 and management of Huey tasks for workflow processing.
 """
 
-from huey import crontab
 from huey.api import task, TaskLock
 
 class WorkflowTaskManager:

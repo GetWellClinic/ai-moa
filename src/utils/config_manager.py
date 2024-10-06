@@ -15,7 +15,6 @@ Dependencies:
 - typing: For type hinting
 """
 
-import os
 import yaml
 from typing import Dict, Any, List
 
