@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  oscar_automation:
+    build: .
+    volumes:
+      - ./src:/app/src
+      - ./src/config.yaml:/app/src/config.yaml
+      - ./src/workflow-config.yaml:/app/src/workflow-config.yaml
+      - ./input:/app/input
+      - ./output:/app/output
+    ports:
+      - "8000:8000"
+    restart: always
+    command: sh -c "python src/main.py & uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload"

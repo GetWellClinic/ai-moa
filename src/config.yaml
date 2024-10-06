@@ -4,6 +4,8 @@ huey:
   results: True
   store_none: False
   always_eager: True  # Set to True for memory-only method
+  schedule:
+    minute: '*/5'  # Run every 5 minutes
 
 # Logging Configuration
 logging:
@@ -24,6 +26,6 @@ ocr:
 
 # File Processing
 file_processing:
-  input_directory: '/path/to/input/files'
-  output_directory: '/path/to/output/files'
+  input_directory: '/app/input'
+  output_directory: '/app/output'
   allowed_extensions: ['.pdf', '.jpg', '.png', '.tiff']
