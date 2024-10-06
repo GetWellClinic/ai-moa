@@ -33,6 +33,7 @@ Dependencies:
 
 import logging
 from datetime import datetime
+import io
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
@@ -42,7 +43,7 @@ from utils.workflow import Workflow
 from auth import LoginManager, DriverManager
 
 from .pdf_fetcher import PdfFetcher
-from .ocr import extract_text_from_pdf
+from .ocr import extract_text_from_pdf, extract_text_from_bytes
 
 logger = logging.getLogger(__name__)
 
