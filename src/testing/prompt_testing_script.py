@@ -23,6 +23,9 @@ import csv
 import json
 import os
 import time
+import io
+from PIL import Image
+import pytesseract
 
 import PyPDF2
 import fitz
@@ -30,6 +33,7 @@ import requests
 import torch
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
+from src.config.config_manager import ConfigManager
 
 
 class Workflow:
