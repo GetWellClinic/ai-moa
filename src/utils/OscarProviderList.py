@@ -27,7 +27,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
-from login import Login
+from src.models.login import Login
 from bs4 import BeautifulSoup
 
 class OscarProviderList:

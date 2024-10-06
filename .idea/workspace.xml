@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="e1da8eda-0b22-4d54-bb0f-e70b112a3e3d" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/src/OscarProviderList.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/OscarProviderList.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/config/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/document_processor.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/emr_intergration.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/emr_intergration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/full_workflow_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/testing/full_workflow_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/login.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/login.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/login.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ocr_check.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/ocr_check.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ocr_utils.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/oscar_automation.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pdf_processor.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/processors/document_processor.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/processors/document_processor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/processors/pdf_processor.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/processors/pdf_processor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/prompt_testing_script.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/testing/prompt_testing_script.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tesseract.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/tesseract.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/ocr_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/ocr_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/workflow.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/workflow.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 0
+}]]></component>
+  <component name="ProjectId" id="2n2cYakaO2tPyXbHJm0Y7E1avj0" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "last_opened_file_path": "C:/Users/Myingbull/artp2/ai-moa",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Myingbull\artp2\ai-moa\src\utils" />
+      <recent name="C:\Users\Myingbull\artp2\ai-moa\src\testing" />
+      <recent name="C:\Users\Myingbull\artp2\ai-moa\src\processors" />
+      <recent name="C:\Users\Myingbull\artp2\ai-moa\src\config" />
+      <recent name="C:\Users\Myingbull\artp2\ai-moa\src\models" />
+    </key>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-python-sdk-d68999036c7f-b11f5e8da5ad-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-233.14475.56" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="e1da8eda-0b22-4d54-bb0f-e70b112a3e3d" name="Changes" comment="" />
+      <created>1728174660214</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1728174660214</updated>
+      <workItem from="1728174661278" duration="1112000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
