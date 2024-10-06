@@ -30,7 +30,7 @@ class ProviderListManager:
 
     def upload_template_file(self) -> bool:
         url = f"{self.base_url}/oscarReport/reportByTemplate/uploadTemplates.do"
-        template_file = 'config/template_providerlist.txt'
+        template_file = self.config.get('provider_list.template_file', 'config/template_providerlist.txt')
         try:
             with open(template_file, 'rb') as file:
                 files = {'templateFile': (template_file, file, 'text/plain')}
@@ -99,7 +99,8 @@ class ProviderListManager:
             
             provider_list = {'providers': providers}
             try:
-                with open('config/provider_list.yaml', 'w') as file:
+                output_file = self.config.get('provider_list.output_file', 'config/provider_list.yaml')
+                with open(output_file, 'w') as file:
                     yaml.dump(provider_list, file, default_flow_style=False)
                 print('Provider list has been saved to config/provider_list.yaml')
             except IOError as e:

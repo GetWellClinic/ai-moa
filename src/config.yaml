@@ -6,6 +6,7 @@ huey:
   always_eager: True  # Set to True for memory-only method
   schedule:
     minute: '*/5'  # Run every 5 minutes
+  filename: '/app/oscar_tasks.db'
 
 # Logging Configuration
 logging:
@@ -29,3 +30,22 @@ file_processing:
   input_directory: '/app/input'
   output_directory: '/app/output'
   allowed_extensions: ['.pdf', '.jpg', '.png', '.tiff']
+  temp_pdf_name: "downloaded_pdf.pdf"
+
+# Chrome Configuration
+chrome:
+  options:
+    headless: false
+
+# Provider List Configuration
+provider_list:
+  template_file: 'config/template_providerlist.txt'
+  output_file: 'config/provider_list.yaml'
+
+# Testing Configuration
+testing:
+  full_workflow:
+    folder_path: "/home/justinjoseph/Documents/AI-MOA/all_files/"
+  prompt:
+    folder_path: "/home/justinjoseph/Documents/AI-MOA/new/"
+    log_file: "log_test_20.txt"

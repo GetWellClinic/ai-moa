@@ -34,12 +34,13 @@ from doctr.models import ocr_predictor
 
 class Workflow:
     def __init__(self, filepath):
+        self.config = ConfigManager()
         self.patient_name = ''
         self.fileType = ''
         self.demographic_number = ''
         self.mrp = ''
         self.provider_number = []
-        self.logFile = "log_test_20.txt"
+        self.logFile = self.config.get('testing.prompt.log_file', "log_test_20.txt")
         self.document_description = ''
         self.filepath = filepath
         self.tesseracted_text = None
@@ -531,7 +532,8 @@ def get_pdf_files(folder_path):
 
 
 if __name__ == "__main__":
-    folder_path = "/home/justinjoseph/Documents/AI-MOA/new/"
+    config = ConfigManager()
+    folder_path = config.get('testing.prompt.folder_path', "/home/justinjoseph/Documents/AI-MOA/new/")
     # print(folder_path)
     pdf_files = get_pdf_files(folder_path)
     for pdf_file in pdf_files:

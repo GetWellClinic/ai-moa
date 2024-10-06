@@ -46,7 +46,7 @@ class DriverManager:
             webdriver.Chrome: A configured Chrome WebDriver instance.
         """
         chrome_options = Options()
-        if self.config.get('chrome_options', {}).get('headless', False):
+        if self.config.get('chrome.options.headless', False):
             chrome_options.add_argument("--headless")
         return webdriver.Chrome(
             service=Service(ChromeDriverManager().install()),

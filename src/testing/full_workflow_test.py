@@ -443,7 +443,8 @@ def get_pdf_files(folder_path):
 
 
 if __name__ == "__main__":
-    folder_path = "/home/justinjoseph/Documents/AI-MOA/all_files/"
+    config = ConfigManager()
+    folder_path = config.get('testing.full_workflow.folder_path', "/home/justinjoseph/Documents/AI-MOA/all_files/")
     # print(folder_path)
     pdf_files = get_pdf_files(folder_path)
     for pdf_file in pdf_files:

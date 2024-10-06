@@ -47,6 +47,7 @@ class DocumentProcessor:
         self.session = session
         self.logger = setup_logging()
         self.base_url = config.get('base_url')
+        self.temp_pdf_name = config.get('file_processing.temp_pdf_name', 'downloaded_pdf.pdf')
 
     def get_file_content(self, name):
         """
@@ -70,7 +71,7 @@ class DocumentProcessor:
                     f"method=display&doc_no={name}")
         file_response = self.session.get(file_url)
         if file_response.status_code == 200 and file_response.content:
-            with open("downloaded_pdf.pdf", "wb") as file:
+            with open(self.temp_pdf_name, "wb") as file:
                 file.write(file_response.content)
             return True
         else:

@@ -130,9 +130,11 @@ class PdfProcessor:
         return update_time
 
     def _save_and_process_pdf(self, pdf_content):
-        with open("downloaded_pdf.pdf", "wb") as f:
+        temp_pdf_name = self.config.get('file_processing.temp_pdf_name', 'downloaded_pdf.pdf')
+        with open(temp_pdf_name, "wb") as f:
             f.write(pdf_content)
-        extracted_text = extract_text_from_pdf("downloaded_pdf.pdf")
+        temp_pdf_name = self.config.get('file_processing.temp_pdf_name', 'downloaded_pdf.pdf')
+        extracted_text = extract_text_from_pdf(temp_pdf_name)
         if extracted_text:
             workflow = Workflow(extracted_text,
                                 self.session_manager.get_session(), self.config)
