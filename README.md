@@ -10,17 +10,26 @@ ai_moa/
 │   └── config.yaml
 ├── src/
 │   ├── models/
-│   │   └── login.py
+│   │   ├── login.py
+│   │   └── session_manager.py
 │   ├── processors/
 │   │   ├── document_processor.py
 │   │   ├── pdf_processor.py
 │   │   └── workflow_processor.py
 │   ├── utils/
 │   │   ├── config_loader.py
+│   │   ├── config_manager.py
 │   │   ├── logging_setup.py
 │   │   ├── ocr_utils.py
+│   │   ├── OscarProviderList.py
+│   │   ├── tesseract.py
 │   │   └── workflow.py
+│   ├── workflows/
+│   │   ├── 0.csv
+│   │   ├── 1.csv
+│   │   └── ...
 │   └── main.py
+├── LICENSE
 └── README.md
 ```
 
@@ -32,6 +41,8 @@ ai_moa/
 - Integration with OSCAR EMR system
 - Automated login and session management
 - Configurable settings and workflows
+- Provider list management
+- Extensive error handling and logging
 
 ## How It Works
 
@@ -39,14 +50,20 @@ ai_moa/
 
 2. **Login**: The `Login` class in `models/login.py` handles automated login to the OSCAR EMR system using Selenium WebDriver.
 
-3. **Document Processing**:
+3. **Session Management**: The `SessionManager` class in `models/session_manager.py` maintains the session for interacting with the OSCAR EMR system.
+
+4. **Document Processing**:
    - The `DocumentProcessor` class in `processors/document_processor.py` handles incoming documents.
    - It uses OCR (Optical Character Recognition) to extract text from documents if needed.
    - The extracted text is then processed to classify the document and extract relevant information.
 
-4. **PDF Processing**:
+5. **PDF Processing**:
    - The `PdfProcessor` class in `processors/pdf_processor.py` specifically handles PDF documents.
    - It can download PDFs from the OSCAR system and process them using the `Workflow` class.
+
+6. **Workflow Management**:
+   - The `WorkflowProcessor` class in `processors/workflow_processor.py` manages the execution of workflows.
+   - Workflows are defined in CSV files in the `workflows/` directory.
 
 ## Workflow Management
 
@@ -54,7 +71,7 @@ The AI-MOA system uses a flexible and powerful workflow management system to pro
 
 ### Workflow Structure
 
-1. **CSV-based Task Definition**: Workflows are defined in CSV files (e.g., `workflow.csv`, `0.csv`, `1.csv`, etc.). Each CSV file represents a specific workflow or sub-workflow.
+1. **CSV-based Task Definition**: Workflows are defined in CSV files (e.g., `workflow.csv`, `0.csv`, `1.csv`, etc.) in the `workflows/` directory. Each CSV file represents a specific workflow or sub-workflow.
 
 2. **Task Format**: Each row in a CSV file represents a task and contains the following columns:
    - Task number
@@ -91,28 +108,21 @@ The AI-MOA system uses a flexible and powerful workflow management system to pro
 
 ### Customization and Extension
 
-- New workflows can be easily defined by creating new CSV files.
+- New workflows can be easily defined by creating new CSV files in the `workflows/` directory.
 - Additional functions can be added to the `Workflow` class to extend capabilities.
 - The system supports different workflows for various document types (lab reports, consultations, etc.).
-
-### Benefits
-
-- Highly flexible and easily modifiable workflow definitions
-- Separation of workflow logic (in CSVs) from implementation (in Python code)
-- Easy to add new document types or processing steps without major code changes
-- Supports complex, branching workflows to handle various scenarios
-
-This workflow management system allows AI-MOA to handle a wide variety of document types and processing scenarios, making it adaptable to different medical office needs and EMR systems.
 
 ## AI Integration
 
 - The system uses a local AI model (accessed via API) to assist in document classification and information extraction.
 - AI prompts are constructed based on the extracted document text and specific tasks.
+- The AI integration is configurable through the `config.yaml` file.
 
 ## OSCAR EMR Integration
 
 - The system can search for patients and providers in OSCAR.
 - It can update OSCAR with processed document information, including attaching documents to patient records.
+- The `OscarProviderList` class in `utils/OscarProviderList.py` manages the retrieval and caching of provider information from OSCAR.
 
 ## Setup
 
@@ -123,6 +133,7 @@ This workflow management system allows AI-MOA to handle a wide variety of docume
    ```
 3. Configure the `config/config.yaml` file with your OSCAR EMR settings and other configurations
 4. Ensure you have Chrome WebDriver installed for Selenium
+5. Set up the local AI model API (instructions should be provided separately)
 
 ## Usage
 
@@ -143,10 +154,22 @@ Edit the `config/config.yaml` file to set up your:
 - OCR settings (GPU enabled/disabled)
 - File paths for documents and workflows
 - Logging settings
+- AI model configuration
+- Chrome WebDriver options
 
-## Workflow Customization
+The `ConfigManager` class in `utils/config_manager.py` provides a centralized way to access and manage these configuration settings throughout the application.
 
-Workflows are defined in CSV files (e.g., `workflow.csv`, `0.csv`, `1.csv`, etc.). These files contain a series of tasks that the system executes, allowing for customization of the document processing pipeline.
+## Logging
+
+The application uses Python's built-in logging module, configured in `utils/logging_setup.py`. Logs are written to both console and file, with configurable log levels and formats.
+
+## Error Handling
+
+Extensive error handling is implemented throughout the application to ensure robustness and provide detailed error information for troubleshooting.
+
+## Testing
+
+While not explicitly shown in the provided structure, it's recommended to add a `tests/` directory and implement unit tests for the various components of the system.
 
 ## Contributing
 
@@ -158,10 +181,16 @@ Contributions to improve AI-MOA are welcome. Please follow these steps:
 4. Push to the branch
 5. Create a new Pull Request
 
+Please ensure that your code adheres to the existing style conventions and includes appropriate tests and documentation.
+
 ## License
 
 This project is licensed under the GNU Affero General Public License v3.0. See the LICENSE file for details.
 
 ## Disclaimer
 
-This software is provided "AS IS" without warranty of any kind. It is intended for use in medical office settings but should be thoroughly tested and validated before use in any critical systems.
+This software is provided "AS IS" without warranty of any kind. It is intended for use in medical office settings but should be thoroughly tested and validated before use in any critical systems. Ensure compliance with all relevant medical data privacy regulations (e.g., HIPAA) when using this software.
+
+## Support
+
+For questions, bug reports, or feature requests, please open an issue on the GitHub repository.
