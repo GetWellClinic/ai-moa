@@ -16,7 +16,7 @@ The module uses several components:
 from huey import MemoryHuey
 from huey.api import task, TaskLock
 from auth import LoginManager, DriverManager, SessionManager
-from models.login import Login
+from auth import LoginManager
 from processors.document_processor import DocumentProcessor
 from processors.pdf.pdf_processor import PdfProcessor
 from processors.workflow.processor import WorkflowProcessor
@@ -52,7 +52,7 @@ class OscarAutomation:
         self.config = ConfigManager(config_file)
         self.logger = setup_logging(self.config.config)
         self.session_manager = SessionManager(self.config)
-        self.login = Login(self.config, self.session_manager)
+        self.login_manager = LoginManager(self.config)
         self.huey = self.setup_huey()
 
     def _get_driver(self):
