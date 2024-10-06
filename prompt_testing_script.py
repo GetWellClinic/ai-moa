@@ -91,13 +91,13 @@ class Workflow:
                         ]
 
     def find_category_index(self,text):
-        # print("inside find_category_index")
+        self.logger.debug("Inside find_category_index")
         if '.' in text:
             text = text.replace('.', '')
         for index, category in enumerate(self.categories_code):
             for word in text.split():
                 if word.lower() == category.lower():
-                    # print(index)
+                    self.logger.debug(f"Category index found: {index}")
                     #set file type
                     self.fileType = category.lower()
                     self.execute_tasks_from_csv(index)
@@ -310,7 +310,7 @@ class Workflow:
         # Send the POST request
         response = self.session.post(url, data=payload)
 
-        #print(response.text)
+        self.logger.debug(f"Response text: {response.text}")
 
         response_data = json.loads(response.text)
 
@@ -575,7 +575,7 @@ class Workflow:
             tasks = self.read_tasks_from_csv('workflow.csv')
         else:
             tasks = self.read_tasks_from_csv(str(index)+'.csv')
-        print(self.filepath)
+        self.logger.debug(f"Processing file: {self.filepath}")
         self.execute_tasks(tasks, 0)
 
     def append_to_file(self,content):
