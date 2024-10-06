@@ -28,15 +28,16 @@ The module uses several components:
 - Huey for task queue management (memory-only method)
 """
 
+import os
 from huey import MemoryHuey
 from huey.api import task, TaskLock
 from auth import LoginManager, DriverManager, SessionManager
-from auth import LoginManager
 from processors.document import DocumentProcessor
 from processors.pdf import PdfProcessor
-from processors.workflow import WorkflowProcessor, EMRWorkflow
+from processors.workflow import WorkflowProcessor, Workflow
 from src.config import ConfigManager
 from src.logging import setup_logging
+
 class OscarAutomation:
     """
     Main class for automating Oscar EMR tasks.
@@ -114,7 +115,7 @@ class OscarAutomation:
             pdf_processor.process_pdfs(
                 driver,
                 f"{self.config.get('emr', {}).get('base_url')}/login.do",
-                self.login.login_successful_callback
+                self.login_manager.login_successful_callback
             )
             driver.quit()
 
@@ -133,7 +134,7 @@ class OscarAutomation:
             document_processor.process_documents(
                 driver,
                 f"{self.config.get('emr', {}).get('base_url')}/login.do",
-                self.login.login_successful_callback
+                self.login_manager.login_successful_callback
             )
             driver.quit()
 
@@ -152,9 +153,30 @@ class OscarAutomation:
             workflow_processor.process_workflow(
                 driver,
                 f"{self.config.get('emr', {}).get('base_url')}/login.do",
-                self.login.login_successful_callback
+                self.login_manager.login_successful_callback
             )
             driver.quit()
+
+    @task()
+    def process_files(self):
+        """
+        Process files using Huey task.
+
+        This method is decorated as a Huey task. It processes files from the
+        input directory specified in the configuration. The TaskLock ensures
+        that only one instance of this task runs at a time.
+        """
+        with TaskLock('file_processing'):
+            input_directory = self.config.get('file_processing', {}).get('input_directory')
+            allowed_extensions = self.config.get('file_processing', {}).get('allowed_extensions')
+            
+            for file_name in os.listdir(input_directory):
+                if any(file_name.endswith(ext) for ext in allowed_extensions):
+                    file_path = os.path.join(input_directory, file_name)
+                    workflow = Workflow(self.session_manager.get_session(), self.config)
+                    workflow.filepath = file_path
+                    workflow.file_name = file_name
+                    workflow.execute_workflow()
 
     @task()
     def schedule_tasks(self):
@@ -162,13 +184,14 @@ class OscarAutomation:
         Schedule and run tasks using Huey.
 
         This method is the main entry point for task scheduling. It schedules
-        the document processing, PDF processing, and workflow processing tasks.
+        the document processing, PDF processing, workflow processing, and file processing tasks.
         Each task is added to the Huey task queue for execution.
         """
         self.logger.info("Scheduling tasks")
         self.process_documents()
         self.process_pdfs()
         self.process_workflow()
+        self.process_files()
 
 
 if __name__ == "__main__":
