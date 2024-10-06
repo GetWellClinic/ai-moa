@@ -1,19 +1,19 @@
 """
 Module for setting up logging configuration.
 
-This module provides a function to set up logging based on the
+This module provides functions to set up logging based on the
 provided configuration settings.
 
 The module offers functionality to:
 1. Configure the root logger with specified settings
 2. Set up logging format and level
+3. Create and configure a logger instance
 
 Dependencies:
 - logging: Python's built-in logging module
 """
 
 import logging
-
 
 def setup_logging(config):
     """
@@ -28,25 +28,39 @@ def setup_logging(config):
                        Expected structure:
                        {
                            'logging': {
-                               'root': {
-                                   'level': 'INFO'  # or DEBUG, WARNING, ERROR,
-                                                    # CRITICAL
-                               }
+                               'level': 'INFO',  # or DEBUG, WARNING, ERROR, CRITICAL
+                               'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                               'filename': 'app.log'  # optional
                            }
                        }
 
     Returns:
-        None
-
-    Note:
-        If the logging configuration is not found in the config dictionary,
-        it defaults to INFO level logging.
+        logging.Logger: Configured root logger instance
     """
+    logging_config = config.get('logging', {})
+    
     logging.basicConfig(
-        level=config.get('logging', {}).get('root', {}).get('level', 'INFO'),
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        level=logging_config.get('level', 'INFO'),
+        format=logging_config.get('format', '%(asctime)s - %(name)s - %(levelname)s - %(message)s'),
+        filename=logging_config.get('filename')
     )
 
-    # Optionally, you can add more sophisticated logging setup here
-    # For example, setting up file handlers, configuring loggers for different
-    # modules, etc.
+    return logging.getLogger()
+
+def get_logger(name, config):
+    """
+    Create and configure a logger instance.
+
+    This function creates a new logger instance with the given name
+    and configures it based on the provided config.
+
+    Args:
+        name (str): Name of the logger
+        config (dict): Configuration dictionary containing logging settings
+
+    Returns:
+        logging.Logger: Configured logger instance
+    """
+    logger = logging.getLogger(name)
+    logger.setLevel(config.get('logging', {}).get('level', 'INFO'))
+    return logger

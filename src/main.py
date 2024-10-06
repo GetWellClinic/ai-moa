@@ -36,7 +36,7 @@ from processors.document_processor import DocumentProcessor
 from processors.pdf.pdf_processor import PdfProcessor
 from processors.workflow.processor import WorkflowProcessor
 from config import ConfigManager
-from utils.logging_setup import setup_logging
+from utils.logging_setup import setup_logging, get_logger
 
 
 class OscarAutomation:
@@ -65,7 +65,8 @@ class OscarAutomation:
             config_file (str): Path to the workflow configuration file.
         """
         self.config = ConfigManager(config_file)
-        self.logger = setup_logging(self.config.config)
+        setup_logging(self.config.config)
+        self.logger = get_logger(__name__, self.config.config)
         self.session_manager = SessionManager(self.config)
         self.login_manager = LoginManager(self.config)
         self.huey = self.setup_huey()
