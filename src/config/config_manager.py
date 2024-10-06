@@ -1,12 +1,12 @@
 import yaml
-import logging
 from typing import Dict, Any, List
+from src.utils.logging_setup import setup_logging
 
 class ConfigManager:
     def __init__(self, config_path: str):
         self.config_path = config_path
         self.config = self.load_config()
-        self.logger = self.setup_logging()
+        self.logger = setup_logging(self)
 
     def load_config(self) -> Dict[str, Any]:
         with open(self.config_path, 'r') as config_file:
@@ -21,15 +21,6 @@ class ConfigManager:
             else:
                 return default
         return value if value is not None else default
-
-    def setup_logging(self) -> logging.Logger:
-        logging_config = self.get('logging', {})
-        logging.basicConfig(
-            level=logging_config.get('level', 'INFO'),
-            format=logging_config.get('format', '%(asctime)s - %(name)s - %(levelname)s - %(message)s'),
-            filename=logging_config.get('filename', 'workflow.log')
-        )
-        return logging.getLogger(__name__)
 
     @property
     def workflow_steps(self) -> List[Dict[str, Any]]:
