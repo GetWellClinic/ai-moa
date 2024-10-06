@@ -198,3 +198,21 @@ if __name__ == "__main__":
     # Create an instance of OscarAutomation and schedule tasks
     oscar = OscarAutomation()
     oscar.schedule_tasks()
+from src.config.config_manager import ConfigManager
+from src.processors.workflow.emr_workflow import Workflow
+from huey import MemoryHuey
+
+def main():
+    config = ConfigManager('config/workflow-config.yaml')
+    huey = MemoryHuey(
+        name=config.get('huey.name'),
+        results=config.get('huey.results'),
+        store_none=config.get('huey.store_none'),
+        always_eager=config.get('huey.always_eager')
+    )
+    
+    workflow = Workflow(config)
+    workflow.execute_workflow()
+
+if __name__ == '__main__':
+    main()
