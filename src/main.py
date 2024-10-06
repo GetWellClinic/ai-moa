@@ -19,6 +19,7 @@ class OscarAutomation:
         self.logger = logging.getLogger(__name__)
         self.session_manager = SessionManager(self.config)
         self.login = Login(self.config, self.session_manager)
+        self.ai_config = self.config.ai_config
 
     def process_pdfs(self):
         self.logger.info("Starting PDF processing")

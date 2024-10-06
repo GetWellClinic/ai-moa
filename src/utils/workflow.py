@@ -219,13 +219,9 @@ class Workflow:
                 }
             ],
             "mode": "instruct",
-            #should be a parameter, only if needed else default api values
-            "temperature": .1,
+            "temperature": self.config.get('ai_config', {}).get('temperature', 0.1),
             "character": "Assistant",
-            #should be a parameter
-            "top_p":.1
-            #should be a parameter
-            #max_tokens:100
+            "top_p": self.config.get('ai_config', {}).get('top_p', 0.1)
         }
         response = requests.post(self.url, headers=self.headers, json=data)
         self.logger.debug("LLM response: %s", response.json())

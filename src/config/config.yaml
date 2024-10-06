@@ -5,14 +5,17 @@ user_login:
   pin: "1117"
 last_processed_pdf: ""
 enable_ocr_gpu: true
-last_processed_pdf: ''
 last_pending_doc_file: ''
-enable_ocr_gpu: false
 workflow_file_path: workflow.csv
 urls:
   login: /login.do
 chrome_options:
   headless: true
+ai_config:
+  url: "http://127.0.0.1:5000/v1/chat/completions"
+  auth_token: "qwerty"
+  temperature: 0.1
+  top_p: 0.1
 logging:
   version: 1
   disable_existing_loggers: false

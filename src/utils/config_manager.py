@@ -59,3 +59,7 @@ class ConfigManager:
     @property
     def chrome_options(self) -> Dict[str, Any]:
         return self.config['chrome_options']
+
+    @property
+    def ai_config(self) -> Dict[str, Any]:
+        return self.config.get('ai_config', {})
