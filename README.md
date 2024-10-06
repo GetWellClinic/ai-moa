@@ -16,9 +16,10 @@ ai_moa/
 │   │   ├── document_processor.py
 │   │   ├── pdf_processor.py
 │   │   └── workflow_processor.py
+│   ├── config/
+│   │   └── config_manager.py
 │   ├── utils/
 │   │   ├── config_loader.py
-│   │   ├── config_manager.py
 │   │   ├── logging_setup.py
 │   │   ├── ocr_utils.py
 │   │   ├── OscarProviderList.py
