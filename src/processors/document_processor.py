@@ -18,6 +18,10 @@ Dependencies:
 from utils.workflow import Workflow
 from utils.config_manager import ConfigManager
 
+from utils.workflow import Workflow
+from utils.config_manager import ConfigManager
+
+
 class DocumentProcessor:
     """
     Class for processing documents in the Oscar EMR system.
@@ -36,7 +40,8 @@ class DocumentProcessor:
         Initialize DocumentProcessor with configuration and session.
 
         Args:
-            config (ConfigManager): Configuration manager containing system settings.
+            config (ConfigManager): Configuration manager containing system
+                                    settings.
             session: Session object for making HTTP requests.
         """
         self.config = config
@@ -54,19 +59,23 @@ class DocumentProcessor:
             name (str): Document name or identifier to fetch.
 
         Returns:
-            bool: True if the file was successfully fetched and saved, False otherwise.
+            bool: True if the file was successfully fetched and saved, False
+                  otherwise.
 
         Note:
-            The method saves the fetched document as "downloaded_pdf.pdf" in the current directory.
+            The method saves the fetched document as "downloaded_pdf.pdf" in
+            the current directory.
         """
-        file_url = f"{self.base_url}/dms/ManageDocument.do?method=display&doc_no={name}"
+        file_url = (f"{self.base_url}/dms/ManageDocument.do?"
+                    f"method=display&doc_no={name}")
         file_response = self.session.get(file_url)
         if file_response.status_code == 200 and file_response.content:
             with open("downloaded_pdf.pdf", "wb") as file:
                 file.write(file_response.content)
             return True
         else:
-            print(f"Failed to fetch file content. Status code: {file_response.status_code}")
+            print(f"Failed to fetch file content. "
+                  f"Status code: {file_response.status_code}")
             return False
 
     def process_documents(self, driver, login_url, login_successful_callback):
@@ -79,7 +88,8 @@ class DocumentProcessor:
         Args:
             driver: Selenium WebDriver instance.
             login_url (str): URL for logging into the EMR system.
-            login_successful_callback: Callback function to execute after successful login.
+            login_successful_callback: Callback function to execute after
+                                       successful login.
 
         Returns:
             str: Document number of the last processed document.
@@ -96,14 +106,16 @@ class DocumentProcessor:
             return self.config.get('last_pending_doc_file')
 
         # Navigate to the documents page
-        driver.get(f"{self.base_url}/dms/inboxManage.do?method=getDocumentsInQueues")
+        driver.get(f"{self.base_url}/dms/inboxManage.do?"
+                   f"method=getDocumentsInQueues")
         script_value = driver.execute_script("return typeDocLab;")
 
         # Process each document
         for item in script_value['DOC']:
             if int(item) > int(self.config.get('last_pending_doc_file')):
                 if self.get_file_content(item):
-                    workflow = Workflow("downloaded_pdf.pdf", self.session, self.config)
+                    workflow = Workflow("downloaded_pdf.pdf",
+                                        self.session, self.config)
                     workflow.execute_tasks_from_csv()
                     self.config.set('last_pending_doc_file', item)
 

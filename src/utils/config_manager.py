@@ -18,6 +18,10 @@ Dependencies:
 import yaml
 from typing import Dict, Any, List
 
+import yaml
+from typing import Dict, Any, List
+
+
 class ConfigManager:
     """
     Class for managing general configuration settings.
@@ -27,7 +31,8 @@ class ConfigManager:
 
     Attributes:
         config_path (str): Path to the configuration file.
-        config (Dict[str, Any]): Dictionary containing the configuration settings.
+        config (Dict[str, Any]): Dictionary containing the configuration
+                                 settings.
     """
 
     def __init__(self, config_path: str):
@@ -60,7 +65,8 @@ class ConfigManager:
 
         Raises:
             IOError: If there's an error writing to the file.
-            yaml.YAMLError: If there's an error dumping the configuration to YAML.
+            yaml.YAMLError: If there's an error dumping the configuration to
+                            YAML.
         """
         with open(self.config_path, 'w') as file:
             yaml.dump(self.config, file)
@@ -74,7 +80,8 @@ class ConfigManager:
             default (Any, optional): Default value if the key is not found.
 
         Returns:
-            Any: The value associated with the key, or the default value if not found.
+            Any: The value associated with the key, or the default value if not
+                 found.
         """
         return self.config.get(key, default)
 
@@ -89,6 +96,7 @@ class ConfigManager:
         self.config[key] = value
         self.save_config()
 
+
 class WorkflowConfigManager:
     """
     Class for managing workflow configuration settings.
@@ -98,12 +106,14 @@ class WorkflowConfigManager:
 
     Attributes:
         config_path (str): Path to the workflow configuration file.
-        config (Dict[str, Any]): Dictionary containing the workflow configuration settings.
+        config (Dict[str, Any]): Dictionary containing the workflow
+                                 configuration settings.
     """
 
     def __init__(self, config_path: str):
         """
-        Initialize WorkflowConfigManager with the path to the workflow configuration file.
+        Initialize WorkflowConfigManager with the path to the workflow
+        configuration file.
 
         Args:
             config_path (str): Path to the workflow configuration file.
@@ -116,7 +126,8 @@ class WorkflowConfigManager:
         Load workflow configuration from the YAML file.
 
         Returns:
-            Dict[str, Any]: Dictionary containing the workflow configuration settings.
+            Dict[str, Any]: Dictionary containing the workflow configuration
+                            settings.
 
         Raises:
             FileNotFoundError: If the configuration file is not found.
@@ -131,7 +142,8 @@ class WorkflowConfigManager:
 
         Raises:
             IOError: If there's an error writing to the file.
-            yaml.YAMLError: If there's an error dumping the configuration to YAML.
+            yaml.YAMLError: If there's an error dumping the configuration to
+                            YAML.
         """
         with open(self.config_path, 'w') as file:
             yaml.dump(self.config, file)
@@ -145,7 +157,8 @@ class WorkflowConfigManager:
             default (Any, optional): Default value if the key is not found.
 
         Returns:
-            Any: The value associated with the key, or the default value if not found.
+            Any: The value associated with the key, or the default value if not
+                 found.
         """
         return self.config.get(key, default)
 
@@ -166,7 +179,8 @@ class WorkflowConfigManager:
         Get the workflow steps.
 
         Returns:
-            List[Dict[str, Any]]: List of workflow steps with their decision paths.
+            List[Dict[str, Any]]: List of workflow steps with their decision
+                                  paths.
         """
         return self.config['workflow']['steps']
 

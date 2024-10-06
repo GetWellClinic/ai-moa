@@ -15,6 +15,12 @@ import torch
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 
+import fitz
+import torch
+from doctr.io import DocumentFile
+from doctr.models import ocr_predictor
+
+
 def has_ocr(pdf_path):
     """
     Check if a PDF file has an OCR layer.
@@ -41,6 +47,7 @@ def has_ocr(pdf_path):
         print(f"An error occurred while checking for OCR: {e}")
         return False
 
+
 def extract_text_doctr(pdf_path, enable_ocr_gpu=True):
     """
     Extract text from a PDF using the doctr OCR library.
@@ -59,7 +66,8 @@ def extract_text_doctr(pdf_path, enable_ocr_gpu=True):
         Exception: If there's an error during the OCR process.
     """
     try:
-        device = torch.device("cuda:0" if enable_ocr_gpu and torch.cuda.is_available() else "cpu")
+        device = torch.device("cuda:0" if enable_ocr_gpu and
+                              torch.cuda.is_available() else "cpu")
         model = ocr_predictor(pretrained=True).to(device)
 
         doc = DocumentFile.from_pdf(pdf_path)
@@ -75,6 +83,7 @@ def extract_text_doctr(pdf_path, enable_ocr_gpu=True):
     except Exception as e:
         print(f"An error occurred during OCR: {e}")
         return None
+
 
 def extract_text_from_pdf_file(pdf_path):
     """

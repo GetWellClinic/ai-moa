@@ -16,7 +16,6 @@ The main class, OscarAutomation, initializes these components and provides metho
 for processing PDFs, documents, and workflows as Huey tasks.
 """
 
-import yaml
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -30,6 +29,7 @@ from processors.workflow.processor import WorkflowProcessor
 from utils.config_manager import ConfigManager, WorkflowConfigManager
 from huey import RedisHuey
 from huey.api import task, TaskLock
+
 
 class OscarAutomation:
     """
@@ -47,12 +47,13 @@ class OscarAutomation:
         huey (RedisHuey): Huey instance for task management.
     """
 
-    def __init__(self, config_file='config/config.yaml', workflow_config_file='config/config-workflow.yaml'):
+    def __init__(self, config_file='config/config.yaml',
+                 workflow_config_file='config/config-workflow.yaml'):
         """
         Initialize OscarAutomation with configuration and necessary components.
 
-        This method sets up the configuration managers, logger, session manager, login handler,
-        and Huey task queue.
+        This method sets up the configuration managers, logger, session manager,
+        login handler, and Huey task queue.
 
         Args:
             config_file (str): Path to the main configuration file.
@@ -69,8 +70,9 @@ class OscarAutomation:
         """
         Create and configure a Chrome WebDriver instance.
 
-        This method sets up a Chrome WebDriver with options specified in the configuration.
-        It uses the webdriver_manager to automatically manage the ChromeDriver binary.
+        This method sets up a Chrome WebDriver with options specified in the
+        configuration. It uses the webdriver_manager to automatically manage
+        the ChromeDriver binary.
 
         Returns:
             webdriver.Chrome: Configured Chrome WebDriver instance.
@@ -87,8 +89,9 @@ class OscarAutomation:
         """
         Set up Huey instance based on configuration.
 
-        This method configures a RedisHuey instance using settings from the configuration.
-        It sets up the task queue name, Redis connection details, and other Huey-specific options.
+        This method configures a RedisHuey instance using settings from the
+        configuration. It sets up the task queue name, Redis connection details,
+        and other Huey-specific options.
 
         Returns:
             RedisHuey: Configured Huey instance for task management.
@@ -107,14 +110,18 @@ class OscarAutomation:
         """
         Process PDFs using Huey task.
 
-        This method is decorated as a Huey task. It creates a PdfProcessor instance,
-        sets up a WebDriver, and processes PDFs. The TaskLock ensures that only one
-        instance of this task runs at a time.
+        This method is decorated as a Huey task. It creates a PdfProcessor
+        instance, sets up a WebDriver, and processes PDFs. The TaskLock ensures
+        that only one instance of this task runs at a time.
         """
         with TaskLock('pdf_processing'):
             pdf_processor = PdfProcessor(self.config, self.session_manager)
             driver = self._get_driver()
-            pdf_processor.process_pdfs(driver, f"{self.config['base_url']}/login.do", self.login.login_successful_callback)
+            pdf_processor.process_pdfs(
+                driver,
+                f"{self.config['base_url']}/login.do",
+                self.login.login_successful_callback
+            )
             driver.quit()
 
     @task()
@@ -122,14 +129,18 @@ class OscarAutomation:
         """
         Process documents using Huey task.
 
-        This method is decorated as a Huey task. It creates a DocumentProcessor instance,
-        sets up a WebDriver, and processes documents. The TaskLock ensures that only one
-        instance of this task runs at a time.
+        This method is decorated as a Huey task. It creates a DocumentProcessor
+        instance, sets up a WebDriver, and processes documents. The TaskLock
+        ensures that only one instance of this task runs at a time.
         """
         with TaskLock('document_processing'):
             document_processor = DocumentProcessor(self.config, self.session_manager)
             driver = self._get_driver()
-            document_processor.process_documents(driver, f"{self.config['base_url']}/login.do", self.login.login_successful_callback)
+            document_processor.process_documents(
+                driver,
+                f"{self.config['base_url']}/login.do",
+                self.login.login_successful_callback
+            )
             driver.quit()
 
     @task()
@@ -137,14 +148,18 @@ class OscarAutomation:
         """
         Process workflow using Huey task.
 
-        This method is decorated as a Huey task. It creates a WorkflowProcessor instance,
-        sets up a WebDriver, and processes the workflow. The TaskLock ensures that only one
-        instance of this task runs at a time.
+        This method is decorated as a Huey task. It creates a WorkflowProcessor
+        instance, sets up a WebDriver, and processes the workflow. The TaskLock
+        ensures that only one instance of this task runs at a time.
         """
         with TaskLock('workflow_processing'):
             workflow_processor = WorkflowProcessor(self.config, self.session_manager)
             driver = self._get_driver()
-            workflow_processor.process_workflow(driver, f"{self.config['base_url']}/login.do", self.login.login_successful_callback)
+            workflow_processor.process_workflow(
+                driver,
+                f"{self.config['base_url']}/login.do",
+                self.login.login_successful_callback
+            )
             driver.quit()
 
     @task()
@@ -152,14 +167,15 @@ class OscarAutomation:
         """
         Schedule and run tasks using Huey.
 
-        This method is the main entry point for task scheduling. It schedules the document processing,
-        PDF processing, and workflow processing tasks. Each task is added to the Huey task queue
-        for asynchronous execution.
+        This method is the main entry point for task scheduling. It schedules
+        the document processing, PDF processing, and workflow processing tasks.
+        Each task is added to the Huey task queue for asynchronous execution.
         """
         self.logger.info("Scheduling tasks")
         self.process_documents()
         self.process_pdfs()
         self.process_workflow()
+
 
 if __name__ == "__main__":
     # Create an instance of OscarAutomation and schedule tasks

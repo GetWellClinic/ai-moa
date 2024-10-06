@@ -23,6 +23,14 @@ from utils.workflow import Workflow
 from utils.config_manager import ConfigManager
 from pdf_fetcher import PdfFetcher
 
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import Select
+from datetime import datetime
+from utils.workflow import Workflow
+from utils.config_manager import ConfigManager
+from .pdf_fetcher import PdfFetcher
+
+
 class PdfProcessor:
     """
     Class for processing PDF documents in the Oscar EMR system.
@@ -33,7 +41,8 @@ class PdfProcessor:
     Attributes:
         config (ConfigManager): Configuration manager for the system.
         session_manager: SessionManager object for handling EMR sessions.
-        pdf_fetcher (PdfFetcher): Instance of PdfFetcher for fetching PDF content.
+        pdf_fetcher (PdfFetcher): Instance of PdfFetcher for fetching PDF
+                                  content.
     """
 
     def __init__(self, config: ConfigManager, session_manager):
@@ -41,7 +50,8 @@ class PdfProcessor:
         Initialize PdfProcessor with configuration and session manager.
 
         Args:
-            config (ConfigManager): Configuration manager containing system settings.
+            config (ConfigManager): Configuration manager containing system
+                                    settings.
             session_manager: SessionManager object for handling EMR sessions.
         """
         self.config = config
@@ -55,7 +65,8 @@ class PdfProcessor:
         Args:
             driver: Selenium WebDriver instance.
             login_url (str): URL for logging into the EMR system.
-            login_successful_callback: Callback function to execute after successful login.
+            login_successful_callback: Callback function to execute after
+                                       successful login.
 
         Returns:
             str: Timestamp of the last processed PDF.
@@ -88,11 +99,13 @@ class PdfProcessor:
     def _process_pdf(self, option, update_time):
         split_string = option.get_attribute('text').split(") ", 1)
         current_file = datetime.strptime(split_string[1], "%Y-%m-%d %H:%M:%S")
-        last_file = datetime.strptime(update_time, "%Y-%m-%d %H:%M:%S") if update_time else current_file
+        last_file = (datetime.strptime(update_time, "%Y-%m-%d %H:%M:%S")
+                     if update_time else current_file)
 
         if last_file <= current_file:
             update_time = split_string[1]
-            pdf_content = self.pdf_fetcher.get_pdf_content(option.get_attribute('value'))
+            pdf_content = self.pdf_fetcher.get_pdf_content(
+                option.get_attribute('value'))
             if pdf_content:
                 self._save_and_process_pdf(pdf_content)
 
@@ -101,5 +114,6 @@ class PdfProcessor:
     def _save_and_process_pdf(self, pdf_content):
         with open("downloaded_pdf.pdf", "wb") as f:
             f.write(pdf_content)
-        workflow = Workflow("downloaded_pdf.pdf", self.session_manager.get_session(), self.config)
+        workflow = Workflow("downloaded_pdf.pdf",
+                            self.session_manager.get_session(), self.config)
         workflow.execute_tasks_from_csv()

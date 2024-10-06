@@ -14,6 +14,9 @@ Dependencies:
 
 import logging
 
+import logging
+
+
 def setup_logging(config):
     """
     Set up logging configuration based on the provided config.
@@ -28,7 +31,8 @@ def setup_logging(config):
                        {
                            'logging': {
                                'root': {
-                                   'level': 'INFO'  # or DEBUG, WARNING, ERROR, CRITICAL
+                                   'level': 'INFO'  # or DEBUG, WARNING, ERROR,
+                                                    # CRITICAL
                                }
                            }
                        }
@@ -46,4 +50,5 @@ def setup_logging(config):
     )
 
     # Optionally, you can add more sophisticated logging setup here
-    # For example, setting up file handlers, configuring loggers for different modules, etc.
+    # For example, setting up file handlers, configuring loggers for different
+    # modules, etc.

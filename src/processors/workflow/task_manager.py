@@ -7,6 +7,9 @@ and management of Huey tasks for workflow processing.
 
 from huey.api import task, TaskLock
 
+from huey.api import task, TaskLock
+
+
 class WorkflowTaskManager:
     """
     Class for managing Huey tasks related to workflow processing.
@@ -32,11 +35,13 @@ class WorkflowTaskManager:
             return process_func(*args, **kwargs)
 
     @task()
-    def execute_workflow_step_task(self, execute_func, step_name, *args, **kwargs):
+    def execute_workflow_step_task(self, execute_func, step_name, *args,
+                                   **kwargs):
         """
         Create and execute a Huey task for a specific workflow step.
 
-        This method uses a TaskLock to prevent concurrent execution of the same step.
+        This method uses a TaskLock to prevent concurrent execution of the same
+        step.
 
         Args:
             execute_func: Function to execute for the workflow step.

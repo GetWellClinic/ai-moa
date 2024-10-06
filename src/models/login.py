@@ -19,16 +19,23 @@ from selenium.webdriver.common.keys import Keys
 
 from utils.config_manager import ConfigManager
 
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+
+from utils.config_manager import ConfigManager
+
+
 class Login:
     """
     Class for handling login operations in the Oscar EMR system.
 
     This class provides methods for authenticating users in the Oscar EMR system
-    using Selenium WebDriver. It manages login credentials and performs the login
-    process.
+    using Selenium WebDriver. It manages login credentials and performs the
+    login process.
 
     Attributes:
-        config (ConfigManager): Configuration manager containing login credentials and URLs.
+        config (ConfigManager): Configuration manager containing login
+                                credentials and URLs.
         session_manager: SessionManager object for handling EMR sessions.
         username (str): Username for login.
         password (str): Password for login.
@@ -44,7 +51,8 @@ class Login:
         configuration. It also stores a reference to the session manager.
 
         Args:
-            config (ConfigManager): Configuration manager containing login credentials and URLs.
+            config (ConfigManager): Configuration manager containing login
+                                    credentials and URLs.
             session_manager: SessionManager object for handling EMR sessions.
         """
         self.config = config

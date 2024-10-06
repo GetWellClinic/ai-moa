@@ -18,6 +18,11 @@ import requests
 
 from utils.config_manager import ConfigManager
 
+import requests
+
+from utils.config_manager import ConfigManager
+
+
 class SessionManager:
     """
     Class for managing sessions in the Oscar EMR system.
@@ -26,7 +31,8 @@ class SessionManager:
     with the Oscar EMR system, including login functionality.
 
     Attributes:
-        config (ConfigManager): Configuration manager containing login credentials and URLs.
+        config (ConfigManager): Configuration manager containing login
+                                credentials and URLs.
         session (requests.Session): Session object for making HTTP requests.
         username (str): Username for login.
         password (str): Password for login.
@@ -39,10 +45,12 @@ class SessionManager:
         Initialize SessionManager with configuration.
 
         This method sets up the session and login credentials from the provided
-        configuration. It also attempts to log in immediately upon initialization.
+        configuration. It also attempts to log in immediately upon
+        initialization.
 
         Args:
-            config (ConfigManager): Configuration manager containing login credentials and URLs.
+            config (ConfigManager): Configuration manager containing login
+                                    credentials and URLs.
         """
         self.config = config
         self.session = requests.Session()
@@ -65,7 +73,8 @@ class SessionManager:
 
         Note:
             This method prints the login status to the console. In a production
-            environment, consider using proper logging instead of print statements.
+            environment, consider using proper logging instead of print
+            statements.
         """
         response = self.session.post(
             f"{self.base_url}/login.do",
@@ -75,7 +84,7 @@ class SessionManager:
                 "pin": self.pin
             }
         )
-        
+
         if response.url == f"{self.base_url}/login.do":
             print("Login failed.")
             return False

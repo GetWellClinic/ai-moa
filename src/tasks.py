@@ -1,5 +1,4 @@
-from huey import crontab
-from huey.contrib.djhuey import task, periodic_task
+from huey.contrib.djhuey import task
 from processors.pdf_processor import PdfProcessor
 from processors.document_processor import DocumentProcessor
 from processors.workflow_processor import WorkflowProcessor
@@ -7,6 +6,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
+
 
 def _get_driver(config):
     chrome_options = Options()
@@ -17,23 +17,28 @@ def _get_driver(config):
         options=chrome_options
     )
 
+
 @task()
 def process_pdfs_task(config, session_manager, login):
     with _get_driver(config) as driver:
         pdf_processor = PdfProcessor(config, session_manager)
         config["last_processed_pdf"] = pdf_processor.process_pdfs(
-            driver, f"{config['base_url']}/login.do", login.login_successful_callback
+            driver, f"{config['base_url']}/login.do",
+            login.login_successful_callback
         )
     return config["last_processed_pdf"]
+
 
 @task()
 def process_documents_task(config, session_manager, login):
     with _get_driver(config) as driver:
         document_processor = DocumentProcessor(config, session_manager)
         config["last_pending_doc_file"] = document_processor.process_documents(
-            driver, f"{config['base_url']}/login.do", login.login_successful_callback
+            driver, f"{config['base_url']}/login.do",
+            login.login_successful_callback
         )
     return config["last_pending_doc_file"]
+
 
 @task()
 def process_workflow_task(config, session_manager, login):
@@ -42,14 +47,15 @@ def process_workflow_task(config, session_manager, login):
         with _get_driver(config) as driver:
             workflow_processor = WorkflowProcessor(config, session_manager)
             workflow_processor.process_workflow(
-                driver, f"{config['base_url']}/login.do", login.login_successful_callback
+                driver, f"{config['base_url']}/login.do",
+                login.login_successful_callback
             )
         return "Workflow processing completed"
     else:
-        return "Workflow file path is not configured. Skipping workflow processing."
+        return ("Workflow file path is not configured. "
+                "Skipping workflow processing.")
 
-# You can add more specific tasks here for different workflow steps
-# For example:
+
 @task()
 def execute_workflow_step(step_name, *args, **kwargs):
     # Implement the logic for executing a specific workflow step

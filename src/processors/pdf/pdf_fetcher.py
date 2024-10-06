@@ -4,6 +4,9 @@ Module for fetching PDF content from the Oscar EMR system.
 
 from utils.config_manager import ConfigManager
 
+from utils.config_manager import ConfigManager
+
+
 class PdfFetcher:
     """
     Class for fetching PDF content from the Oscar EMR system.
@@ -29,10 +32,13 @@ class PdfFetcher:
         Returns:
             bytes: Content of the PDF file if successful, None otherwise.
         """
-        pdf_url = f"{self.base_url}/dms/ManageDocument.do?method=displayIncomingDocs&curPage=1&pdfDir=File&queueId=1&pdfName={name}"
+        pdf_url = (f"{self.base_url}/dms/ManageDocument.do?"
+                   f"method=displayIncomingDocs&curPage=1&pdfDir=File&"
+                   f"queue_Id=1&pdfName={name}")
         pdf_response = self.session.get(pdf_url)
         if pdf_response.status_code == 200:
             return pdf_response.content
         else:
-            print(f"Failed to fetch PDF content. Status code: {pdf_response.status_code}")
+            print(f"Failed to fetch PDF content. "
+                  f"Status code: {pdf_response.status_code}")
             return None
