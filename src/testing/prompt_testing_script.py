@@ -48,10 +48,9 @@ class Workflow:
         # self.base_url = base_url
         # self.file_name = file_name
         self.enable_ocr_gpu = True
-        self.url = "http://127.0.0.1:5000/v1/chat/completions"
-        # the Authorization qwerty will have to be changed, this for testing
+        self.url = self.config.get('ai_config', {}).get('url', "http://127.0.0.1:5000/v1/chat/completions")
         self.headers = {
-            "Authorization": "Bearer qwerty",
+            "Authorization": f"Bearer {self.config.get('ai_config', {}).get('auth_token', 'qwerty')}",
             "Content-Type": "application/json"
         }
         self.categories = [
