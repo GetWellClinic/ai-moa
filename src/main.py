@@ -1,22 +1,19 @@
 """
-Main module for automating Oscar EMR tasks.
+Main module for automating Oscar EMR tasks using Huey for task management.
 
 This module contains the OscarAutomation class which orchestrates the automation
 of various tasks in the Oscar EMR system, including PDF processing, document
 processing, and workflow execution using Huey for task management.
 
 The module uses several components:
-- ConfigManager and WorkflowConfigManager for handling configurations
+- ConfigManager for handling configurations
 - SessionManager for managing EMR sessions
 - Login for handling EMR authentication
 - PdfProcessor, DocumentProcessor, and WorkflowProcessor for specific task processing
-- Huey for task queue management
-
-The main class, OscarAutomation, initializes these components and provides methods
-for processing PDFs, documents, and workflows as Huey tasks.
+- Huey for task queue management (memory-only method)
 """
 
-from huey import RedisHuey
+from huey import MemoryHuey
 from huey.api import task, TaskLock
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -28,7 +25,7 @@ from models.session_manager import SessionManager
 from processors.document_processor import DocumentProcessor
 from processors.pdf.pdf_processor import PdfProcessor
 from processors.workflow.processor import WorkflowProcessor
-from utils.config_manager import ConfigManager, WorkflowConfigManager
+from utils.config_manager import ConfigManager
 from utils.logging_setup import setup_logging
 
 
@@ -40,28 +37,24 @@ class OscarAutomation:
     for processing PDFs, documents, and workflows using Huey for task management.
 
     Attributes:
-        config (ConfigManager): Configuration manager instance for general settings.
-        workflow_config (WorkflowConfigManager): Configuration manager instance for workflow settings.
+        config (ConfigManager): Configuration manager instance for all settings.
         logger (logging.Logger): Logger instance for this class.
         session_manager (SessionManager): Session manager for handling EMR sessions.
         login (Login): Login handler for EMR authentication.
-        huey (RedisHuey): Huey instance for task management.
+        huey (MemoryHuey): Huey instance for task management (memory-only).
     """
 
-    def __init__(self, config_file='config/config.yaml',
-                 workflow_config_file='config/config-workflow.yaml'):
+    def __init__(self, config_file='config/workflow-config.yaml'):
         """
         Initialize OscarAutomation with configuration and necessary components.
 
-        This method sets up the configuration managers, logger, session manager,
+        This method sets up the configuration manager, logger, session manager,
         login handler, and Huey task queue.
 
         Args:
-            config_file (str): Path to the main configuration file.
-            workflow_config_file (str): Path to the workflow configuration file.
+            config_file (str): Path to the workflow configuration file.
         """
         self.config = ConfigManager(config_file)
-        self.workflow_config = WorkflowConfigManager(workflow_config_file)
         self.logger = setup_logging(self.config.config)
         self.session_manager = SessionManager(self.config)
         self.login = Login(self.config, self.session_manager)
@@ -90,20 +83,18 @@ class OscarAutomation:
         """
         Set up Huey instance based on configuration.
 
-        This method configures a RedisHuey instance using settings from the
-        configuration. It sets up the task queue name, Redis connection details,
-        and other Huey-specific options.
+        This method configures a MemoryHuey instance using settings from the
+        configuration. It sets up the task queue name and other Huey-specific options.
 
         Returns:
-            RedisHuey: Configured Huey instance for task management.
+            MemoryHuey: Configured Huey instance for task management (memory-only).
         """
         huey_config = self.config.get('huey', {})
-        return RedisHuey(
-            huey_config.get('name', 'workflow_queue'),
-            host=huey_config.get('connection', {}).get('host', 'localhost'),
-            port=huey_config.get('connection', {}).get('port', 6379),
+        return MemoryHuey(
+            name=huey_config.get('name', 'workflow_queue'),
             results=huey_config.get('results', True),
-            store_none=huey_config.get('store_none', False)
+            store_none=huey_config.get('store_none', False),
+            always_eager=huey_config.get('always_eager', True)
         )
 
     @task()
@@ -120,7 +111,7 @@ class OscarAutomation:
             driver = self._get_driver()
             pdf_processor.process_pdfs(
                 driver,
-                f"{self.config['base_url']}/login.do",
+                f"{self.config.get('emr', {}).get('base_url')}/login.do",
                 self.login.login_successful_callback
             )
             driver.quit()
@@ -139,7 +130,7 @@ class OscarAutomation:
             driver = self._get_driver()
             document_processor.process_documents(
                 driver,
-                f"{self.config['base_url']}/login.do",
+                f"{self.config.get('emr', {}).get('base_url')}/login.do",
                 self.login.login_successful_callback
             )
             driver.quit()
@@ -158,7 +149,7 @@ class OscarAutomation:
             driver = self._get_driver()
             workflow_processor.process_workflow(
                 driver,
-                f"{self.config['base_url']}/login.do",
+                f"{self.config.get('emr', {}).get('base_url')}/login.do",
                 self.login.login_successful_callback
             )
             driver.quit()
@@ -170,7 +161,7 @@ class OscarAutomation:
 
         This method is the main entry point for task scheduling. It schedules
         the document processing, PDF processing, and workflow processing tasks.
-        Each task is added to the Huey task queue for asynchronous execution.
+        Each task is added to the Huey task queue for execution.
         """
         self.logger.info("Scheduling tasks")
         self.process_documents()

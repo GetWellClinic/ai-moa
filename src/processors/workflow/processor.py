@@ -20,12 +20,10 @@ class WorkflowProcessor:
     based on the configuration settings using Huey for task management.
 
     Attributes:
-        config (ConfigManager): Configuration manager containing system
-                                settings.
+        config (ConfigManager): Configuration manager containing all settings.
         session_manager: SessionManager object for handling EMR sessions.
         task_manager (WorkflowTaskManager): Manager for Huey tasks.
-        step_executor (WorkflowStepExecutor): Executor for individual workflow
-                                              steps.
+        step_executor (WorkflowStepExecutor): Executor for individual workflow steps.
     """
 
     def __init__(self, config: ConfigManager, session_manager):
@@ -33,8 +31,7 @@ class WorkflowProcessor:
         Initialize WorkflowProcessor with configuration and session manager.
 
         Args:
-            config (ConfigManager): Configuration manager containing system
-                                    settings.
+            config (ConfigManager): Configuration manager containing all settings.
             session_manager: SessionManager object for handling EMR sessions.
         """
         self.config = config
@@ -52,8 +49,7 @@ class WorkflowProcessor:
         Args:
             driver: Selenium WebDriver instance.
             login_url (str): URL for logging into the EMR system.
-            login_successful_callback: Callback function to execute after
-                                       successful login.
+            login_successful_callback: Callback function to execute after successful login.
         """
         return self.task_manager.process_workflow_task(
             self._process_workflow_internal,
@@ -62,24 +58,21 @@ class WorkflowProcessor:
             login_successful_callback
         )
 
-    def _process_workflow_internal(self, driver, login_url,
-                                   login_successful_callback):
+    def _process_workflow_internal(self, driver, login_url, login_successful_callback):
         """
         Internal method to process the workflow.
 
-        This method is called by the task manager and performs the actual
-        workflow processing.
+        This method is called by the task manager and performs the actual workflow processing.
 
         Args:
             driver: Selenium WebDriver instance.
             login_url (str): URL for logging into the EMR system.
-            login_successful_callback: Callback function to execute after
-                                       successful login.
+            login_successful_callback: Callback function to execute after successful login.
         """
         print("Starting workflow processing")
         driver.get(login_url)
         current_url = login_successful_callback(driver)
-        if current_url == f"{self.config['base_url']}/login.do":
+        if current_url == f"{self.config.get('emr', {}).get('base_url')}/login.do":
             print("Login failed.")
             return
 
@@ -91,8 +84,7 @@ class WorkflowProcessor:
         """
         Execute a specific workflow step as a Huey task.
 
-        This method allows individual steps of a workflow to be executed
-        as separate tasks.
+        This method allows individual steps of a workflow to be executed as separate tasks.
 
         Args:
             step_name (str): Name of the workflow step to execute.

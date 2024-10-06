@@ -42,7 +42,7 @@ class Workflow:
         logger (logging.Logger): Logger instance.
     """
 
-    def __init__(self, session, config):
+    def __init__(self, session, config: ConfigManager):
         """
         Initialize the Workflow instance.
 
@@ -59,13 +59,13 @@ class Workflow:
         self.document_description = ''
         self.session = session
         self.logger = logging.getLogger(__name__)
-        self.base_url = config.get('base_url')
+        self.base_url = config.get('emr', {}).get('base_url')
         self.url = config.get('ai_config', {}).get('url')
         self.headers = {
             "Authorization": f"Bearer {config.get('ai_config', {}).get('auth_token')}",
             "Content-Type": "application/json"
         }
-        self.categories = config.get('document_categories', [])
+        self.categories = config.document_categories
         self.categories_code = [cat.replace(' ', '') for cat in self.categories]
 
     def find_category_index(self, text):
