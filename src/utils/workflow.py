@@ -150,41 +150,27 @@ class Workflow:
             return False
 
     def extract_text_doctr(self):
-        # if the pdf doesnt have ocr use doctr for ocr
+        start_time = time.time()
         pdf_path = self.filepath
         self.logger.debug("Processing PDF: %s", pdf_path)
         text = ''
         try:
-            if(self.enable_ocr_gpu == True):
-                device = torch.device("cuda:0")
-                model = ocr_predictor(pretrained=True).to(device)
-            else:
-                model = ocr_predictor(pretrained=True)
-            # PDF
+            device = torch.device("cuda:0" if self.enable_ocr_gpu and torch.cuda.is_available() else "cpu")
+            model = ocr_predictor(pretrained=True).to(device)
             doc = DocumentFile.from_pdf(pdf_path)
-
-            # Analyze
             result = model(doc)
-            # Iterate through pages
+            
             for page in result.pages:
                 self.logger.debug("Processing page %d", page.page_idx)
-                
-                # Iterate through blocks
                 for block in page.blocks:
-                    self.logger.debug("Processing block")
-                    
-                    # Iterate through lines
                     for line in block.lines:
-                        text += '\n'
-                        
-                        # Print words in the line
-                        for word in line.words:
-                            text += word.value + ' '
+                        text += ' '.join(word.value for word in line.words) + '\n'
 
-            self.tesseracted_text = text
+            self.tesseracted_text = text.strip()
+            self.logger.info(f"OCR completed in {time.time() - start_time:.2f} seconds")
             return True
         except Exception as e:
-            self.logger.error(f"An error occurred in extract_text_doctr: {e}")
+            self.logger.exception(f"Error in extract_text_doctr: {e}")
             return False
 
     def extract_text_from_pdf_file(self):
