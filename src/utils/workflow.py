@@ -57,25 +57,15 @@ class Workflow:
         mrp (str): Most Responsible Provider number.
         provider_number (list): List of provider numbers.
         document_description (str): Description of the document.
-        filepath (str): Path to the file being processed.
-        tesseracted_text (str): Text extracted from the document using OCR.
         session: Session object for making HTTP requests.
-        base_url (str): Base URL for the Oscar EMR system.
-        file_name (str): Name of the file being processed.
-        enable_ocr_gpu (bool): Flag to enable GPU for OCR.
         logger (logging.Logger): Logger instance.
-        url (str): URL for AI API.
-        headers (dict): Headers for API requests.
-        categories (list): List of document categories.
-        categories_code (list): List of document category codes.
     """
 
-    def __init__(self, filepath, session, config):
+    def __init__(self, session, config):
         """
         Initialize the Workflow instance.
 
         Args:
-            filepath (str): Path to the file to be processed.
             session: Session object for making HTTP requests.
             config (ConfigManager): Configuration manager instance.
         """
@@ -86,20 +76,8 @@ class Workflow:
         self.mrp = ''
         self.provider_number = []
         self.document_description = ''
-        self.filepath = filepath
-        self.tesseracted_text = None
         self.session = session
-        self.base_url = self.config.get('base_url')
-        self.file_name = os.path.basename(filepath)
-        self.enable_ocr_gpu = self.config.get('ocr', {}).get('enable_gpu', False)
         self.logger = logging.getLogger(__name__)
-        self.url = self.config.get('ai_config', {}).get('url')
-        self.headers = {
-            "Authorization": f"Bearer {self.config.get('ai_config', {}).get('auth_token')}",
-            "Content-Type": "application/json"
-        }
-        self.categories = self.config.get('document_categories', [])
-        self.categories_code = self.categories
 
     def find_category_index(self, text):
         """
@@ -608,9 +586,9 @@ class Workflow:
 
     def execute_workflow(self):
         self.logger.info("Executing workflow")
-        workflow_steps = self.config.get('workflow', {}).get('steps', [])
+        workflow_steps = self.config.get('workflow_tasks', [])
         for step in workflow_steps:
-            self.execute_step(step['name'], **step.get('params', {}))
+            self.execute_step(step[0], **step[1] if len(step) > 1 else {})
 
     @task()
     def execute_step(self, step_name, **params):

@@ -20,21 +20,18 @@ class WorkflowProcessor:
     Attributes:
         config (ConfigManager): Configuration manager containing system settings.
         session_manager: SessionManager object for handling EMR sessions.
-        workflow_config: Workflow configuration loaded from YAML.
     """
 
-    def __init__(self, config: ConfigManager, session_manager, workflow_config):
+    def __init__(self, config: ConfigManager, session_manager):
         """
-        Initialize WorkflowProcessor with configuration, session manager, and workflow config.
+        Initialize WorkflowProcessor with configuration and session manager.
 
         Args:
             config (ConfigManager): Configuration manager containing system settings.
             session_manager: SessionManager object for handling EMR sessions.
-            workflow_config: Workflow configuration loaded from YAML.
         """
         self.config = config
         self.session_manager = session_manager
-        self.workflow_config = workflow_config
 
     @task()
     def process_workflow(self, driver, login_url, login_successful_callback):
@@ -42,7 +39,7 @@ class WorkflowProcessor:
         Process the workflow defined in the configuration using Huey tasks.
 
         This method logs into the EMR system and executes the workflow
-        defined in the workflow configuration using Huey tasks.
+        defined in the configuration using Huey tasks.
 
         Args:
             driver: Selenium WebDriver instance.
@@ -57,7 +54,7 @@ class WorkflowProcessor:
                 print("Login failed.")
                 return
 
-            workflow = Workflow(self.workflow_config, self.session_manager.get_session(), self.config)
+            workflow = Workflow(self.session_manager.get_session(), self.config)
             workflow.execute_workflow()
             print("Workflow processing completed")
 

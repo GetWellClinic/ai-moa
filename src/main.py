@@ -7,7 +7,6 @@ processing, and workflow execution using Huey for task management.
 """
 
 import yaml
-import yaml
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -19,8 +18,6 @@ from processors.pdf_processor import PdfProcessor
 from processors.document_processor import DocumentProcessor
 from processors.workflow_processor import WorkflowProcessor
 from utils.config_manager import ConfigManager
-from huey import RedisHuey
-from huey.api import task, TaskLock
 from huey import RedisHuey
 from huey.api import task, TaskLock
 
@@ -39,19 +36,17 @@ class OscarAutomation:
         huey (RedisHuey): Huey instance for task management.
     """
 
-    def __init__(self, config_file='config/config.yaml', workflow_config_file='config/workflow-config.yaml'):
+    def __init__(self, config_file='config/config.yaml'):
         """
         Initialize OscarAutomation with configuration and necessary components.
 
         Args:
-            config_file (str): Path to the main configuration file.
-            workflow_config_file (str): Path to the workflow configuration file.
+            config_file (str): Path to the configuration file.
         """
         self.config = ConfigManager(config_file)
         self.logger = setup_logging(self.config.config)
         self.session_manager = SessionManager(self.config)
         self.login = Login(self.config, self.session_manager)
-        self.workflow_config = self.load_workflow_config(workflow_config_file)
         self.huey = self.setup_huey()
 
     def _get_driver(self):
@@ -69,19 +64,6 @@ class OscarAutomation:
             options=chrome_options
         )
 
-    def load_workflow_config(self, filename):
-        """
-        Load the workflow configuration from YAML file.
-
-        Args:
-            filename (str): Path to the workflow configuration file.
-
-        Returns:
-            dict: Workflow configuration.
-        """
-        with open(filename, 'r') as file:
-            return yaml.safe_load(file)
-
     def setup_huey(self):
         """
         Set up Huey instance based on configuration.
@@ -89,7 +71,7 @@ class OscarAutomation:
         Returns:
             RedisHuey: Configured Huey instance.
         """
-        huey_config = self.workflow_config.get('huey', {})
+        huey_config = self.config.get('huey', {})
         return RedisHuey(
             huey_config.get('name', 'workflow_queue'),
             host=huey_config.get('connection', {}).get('host', 'localhost'),
@@ -120,7 +102,7 @@ class OscarAutomation:
     def process_workflow(self):
         """Process workflow using Huey task."""
         with TaskLock('workflow_processing'):
-            workflow_processor = WorkflowProcessor(self.config, self.session_manager, self.workflow_config)
+            workflow_processor = WorkflowProcessor(self.config, self.session_manager)
             driver = self._get_driver()
             workflow_processor.process_workflow(driver, f"{self.config['base_url']}/login.do", self.login.login_successful_callback)
             driver.quit()
