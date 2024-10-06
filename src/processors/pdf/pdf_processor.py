@@ -136,21 +136,19 @@ class PdfProcessor:
             pdf_content = self.pdf_fetcher.get_pdf_content(
                 option.get_attribute('value'))
             if pdf_content:
-                self._save_and_process_pdf(pdf_content)
+                self._process_pdf_content(pdf_content, split_string[1])
             else:
                 logger.warning(f"Failed to fetch PDF content for {split_string[1]}")
 
         return update_time
 
-    def _save_and_process_pdf(self, pdf_content):
-        temp_pdf_name = self.config.get('file_processing.temp_pdf_name', 'downloaded_pdf.pdf')
-        logger.debug(f"Saving PDF content to {temp_pdf_name}")
-        with open(temp_pdf_name, "wb") as f:
-            f.write(pdf_content)
-        temp_pdf_name = self.config.get('file_processing.temp_pdf_name', 'downloaded_pdf.pdf')
-        extracted_text = extract_text_from_pdf(temp_pdf_name)
+    def _process_pdf_content(self, pdf_content, pdf_name):
+        logger.debug(f"Processing PDF content for: {pdf_name}")
+        extracted_text = extract_text_from_bytes(io.BytesIO(pdf_content))
         if extracted_text:
             logger.debug("Text extracted from PDF, executing workflow")
+            self.config.set_in_memory(f"pdf_content_{pdf_name}", pdf_content)
+            self.config.set_in_memory(f"extracted_text_{pdf_name}", extracted_text)
             workflow = Workflow(extracted_text,
                                 self.session_manager.get_session(), self.config)
             workflow.execute_tasks_from_csv()

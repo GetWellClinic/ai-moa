@@ -58,27 +58,26 @@ class DocumentProcessor:
         Fetch the content of a document file from the Oscar EMR system.
 
         This method sends a GET request to retrieve the document content and
-        saves it as a PDF file if successful.
+        stores it in memory if successful.
 
         Args:
             name (str): Document name or identifier to fetch.
 
         Returns:
-            bool: True if the file was successfully fetched and saved, False
+            bool: True if the file was successfully fetched and stored, False
                   otherwise.
 
         Note:
-            The method saves the fetched document as "downloaded_pdf.pdf" in
-            the current directory.
+            The method stores the fetched document content in memory using the
+            ConfigManager's set_in_memory method.
         """
         logger.info(f"Fetching file content for document: {name}")
         file_url = (f"{self.base_url}/dms/ManageDocument.do?"
                     f"method=display&doc_no={name}")
         file_response = self.session.get(file_url)
         if file_response.status_code == 200 and file_response.content:
-            with open(self.temp_pdf_name, "wb") as file:
-                file.write(file_response.content)
-            logger.debug(f"File content saved to {self.temp_pdf_name}")
+            self.config.set_in_memory(f"document_content_{name}", file_response.content)
+            logger.debug(f"File content saved in memory for document: {name}")
             return True
         else:
             logger.error(f"Failed to fetch file content. Status code: {file_response.status_code}")
@@ -125,7 +124,8 @@ class DocumentProcessor:
             if int(item) > int(self.config.get('last_pending_doc_file')):
                 logger.info(f"Processing document: {item}")
                 if self.get_file_content(item):
-                    workflow = Workflow("downloaded_pdf.pdf",
+                    document_content = self.config.get_in_memory(f"document_content_{item}")
+                    workflow = Workflow(document_content,
                                         self.session, self.config)
                     workflow.execute_tasks_from_csv()
                     self.config.set('last_pending_doc_file', item)
