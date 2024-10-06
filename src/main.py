@@ -1,4 +1,9 @@
 """
+Main module for automating Oscar EMR tasks using Huey for task management.
+
+This module initializes the OscarAutomation class and sets up periodic tasks
+for processing documents, PDFs, and workflows in the Oscar EMR system.
+
 Copyright (C) 2024 Spring Health Corporation
 
 This program is free software: you can redistribute it and/or modify
@@ -13,8 +18,6 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-Main module for automating Oscar EMR tasks using Huey for task management.
 """
 
 import os
@@ -31,18 +34,49 @@ from src.logging import setup_logging
 huey = SqliteHuey('oscar_automation', filename='/app/oscar_tasks.db')
 
 class OscarAutomation:
+    """
+    Main class for automating tasks in the Oscar EMR system.
+
+    This class initializes the necessary components and provides methods
+    for processing PDFs, documents, workflows, and files.
+
+    Attributes:
+        config (ConfigManager): Configuration manager for the application.
+        logger: Logger instance for the application.
+        session_manager (SessionManager): Manager for EMR sessions.
+        login_manager (LoginManager): Manager for EMR login.
+    """
+
     def __init__(self, config_file='src/config.yaml'):
+        """
+        Initialize the OscarAutomation instance.
+
+        Args:
+            config_file (str): Path to the main configuration file.
+        """
         self.config = ConfigManager(config_file, 'src/workflow-config.yaml')
         self.logger = setup_logging(self.config)
         self.session_manager = SessionManager(self.config)
         self.login_manager = LoginManager(self.config)
 
     def _get_driver(self):
+        """
+        Get a new instance of the WebDriver.
+
+        Returns:
+            WebDriver: A new instance of the configured WebDriver.
+        """
         driver_manager = DriverManager(self.config)
         return driver_manager.get_driver()
 
     @huey.task()
     def process_pdfs(self):
+        """
+        Process PDF documents in the EMR system.
+
+        This method is decorated as a Huey task and handles the processing
+        of PDF documents, including login and cleanup.
+        """
         pdf_processor = PdfProcessor(self.config, self.session_manager)
         driver = self._get_driver()
         pdf_processor.process_pdfs(
@@ -53,6 +87,12 @@ class OscarAutomation:
 
     @huey.task()
     def process_documents(self):
+        """
+        Process general documents in the EMR system.
+
+        This method is decorated as a Huey task and handles the processing
+        of general documents, including login and cleanup.
+        """
         document_processor = DocumentProcessor(self.config, self.session_manager)
         driver = self._get_driver()
         document_processor.process_documents(
@@ -63,6 +103,12 @@ class OscarAutomation:
 
     @huey.task()
     def process_workflow(self):
+        """
+        Execute the main workflow in the EMR system.
+
+        This method is decorated as a Huey task and handles the execution
+        of the main workflow, including login and cleanup.
+        """
         workflow_processor = WorkflowProcessor(self.config, self.session_manager)
         driver = self._get_driver()
         workflow_processor.process_workflow(
@@ -73,6 +119,13 @@ class OscarAutomation:
 
     @huey.task()
     def process_files(self):
+        """
+        Process files in the input directory.
+
+        This method is decorated as a Huey task and handles the processing
+        of files in the configured input directory, executing workflows
+        for each file with an allowed extension.
+        """
         input_directory = self.config.get('file_processing', {}).get('input_directory')
         allowed_extensions = self.config.get('file_processing', {}).get('allowed_extensions')
         
@@ -86,6 +139,13 @@ class OscarAutomation:
 
 @huey.periodic_task(crontab(minute=ConfigManager('src/config.yaml').get('huey.schedule.minute', '*/5')))
 def schedule_tasks():
+    """
+    Periodic task to schedule and execute various EMR processing tasks.
+
+    This function is decorated as a Huey periodic task and runs at intervals
+    specified in the configuration. It initializes an OscarAutomation instance
+    and triggers the processing of documents, PDFs, workflows, and files.
+    """
     oscar = OscarAutomation()
     oscar.process_documents()
     oscar.process_pdfs()
