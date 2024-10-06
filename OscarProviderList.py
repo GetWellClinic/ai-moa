@@ -41,9 +41,9 @@ class OscarProviderList:
         response = self.session.post(f"{self.base_url}/login.do", data={"username": self.username, "password": self.password, "pin": self.pin})
         
         if response.url == f"{self.base_url}/login.do":
-            print("Login failed.")
+            self.logger.error("Login failed.")
         else:
-            print("Login successful!")
+            self.logger.info("Login successful!")
 
     def load_config(self, filename):
         with open(filename, 'r') as file:
@@ -79,7 +79,7 @@ class OscarProviderList:
                 cells = row.find_all('td')
                 cell_values = [cell.get_text(strip=True) for cell in cells]
                 if(cell_values[1] == "AI-MOA Config Search Providers (System generated)"):
-                    print("Template already exists.")
+                    self.logger.info("Template already exists.")
                     return True
         
         url = f"{self.base_url}/oscarReport/reportByTemplate/uploadTemplates.do"
@@ -98,12 +98,12 @@ class OscarProviderList:
         response = self.session.post(url, files=files, data=data)
 
         if response.status_code == 200:
-            print('Template added to OSCAR successful')
-            # print('Response content:', response.text)
+            self.logger.info('Template added to OSCAR successfully')
+            self.logger.debug('Response content: %s', response.text)
             return True
         else:
-            print(f'Failed to upload template file. Status code: {response.status_code}')
-            print('Response content:', response.text)
+            self.logger.error('Failed to upload template file. Status code: %d', response.status_code)
+            self.logger.debug('Response content: %s', response.text)
 
         return False
 
@@ -116,7 +116,7 @@ class OscarProviderList:
         upload_template_file = self.upload_template_file(driver,f"{self.base_url}/login.do")
 
         if(upload_template_file == True):
-            print("generate_provider_list")
+            self.logger.info("Generating provider list")
 
             url = f"{self.base_url}/oscarReport/reportByTemplate/homePage.jsp?templates=all"
 
@@ -142,7 +142,7 @@ class OscarProviderList:
                         template_id = cell_id[3]
 
             if(template_id == 0):
-                print("Template id cant be zero")
+                self.logger.error("Template id can't be zero")
                 return
 
             url = f"{self.base_url}/oscarReport/reportByTemplate/GenerateReportAction.do"
@@ -167,7 +167,7 @@ class OscarProviderList:
 
                 data = list(csv.reader(csv_file))
 
-                # print(data)
+                self.logger.debug("Data: %s", data)
 
                 csv_file_path = 'providers.csv'
 
@@ -178,9 +178,9 @@ class OscarProviderList:
                     # Write the data
                     writer.writerows(data)
 
-                print(f'Data has been written to {csv_file_path}')
+                self.logger.info('Data has been written to %s', csv_file_path)
             else:
-                print('List not found')
+                self.logger.warning('List not found')
 
             
 

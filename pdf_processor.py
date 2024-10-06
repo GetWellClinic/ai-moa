@@ -33,7 +33,6 @@ class PdfProcessor:
         self.last_processed_pdf = last_processed_pdf
         self.enable_ocr_gpu = enable_ocr_gpu
         self.logger = logging.getLogger(__name__)
-        self.logger = logging.getLogger(__name__)
 
     def get_pdf_content(self, pdf_name):
         self.logger.debug(f"Fetching PDF content for: {pdf_name}")
