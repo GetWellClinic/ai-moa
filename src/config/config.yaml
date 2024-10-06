@@ -36,28 +36,4 @@ logging:
     level: INFO
     handlers: [console, file]
   filename: log_test_28_emr_test.txt
-categories:
-  - Lab
-  - Consult
-  - Insurance
-  - Legal
-  - Old Chart
-  - Radiology
-  - Pathology
-  - Others
-  - Photo
-  - Consent
-  - Diagnostics
-  - Pharmacy
-  - Requisition
-  - Referral
-  - Request
-  - Advertisement
-workflow_tasks:
-  - ["get_document_description", "Analyze the document and provide a description"]
-  - ["getProviderList", "Get the list of providers"]
-  - ["get_patient_name", "Extract the patient name from the document"]
-  - ["set_patient", "Set the patient information"]
-  - ["set_doctor", "Set the doctor information"]
-  - ["oscar_update", "Update the Oscar EMR system"]
 

@@ -17,7 +17,7 @@ from models.session_manager import SessionManager
 from processors.pdf_processor import PdfProcessor
 from processors.document_processor import DocumentProcessor
 from processors.workflow_processor import WorkflowProcessor
-from utils.config_manager import ConfigManager
+from utils.config_manager import ConfigManager, WorkflowConfigManager
 from huey import RedisHuey
 from huey.api import task, TaskLock
 
@@ -36,14 +36,16 @@ class OscarAutomation:
         huey (RedisHuey): Huey instance for task management.
     """
 
-    def __init__(self, config_file='config/config.yaml'):
+    def __init__(self, config_file='config/config.yaml', workflow_config_file='config/config-workflow.yaml'):
         """
         Initialize OscarAutomation with configuration and necessary components.
 
         Args:
-            config_file (str): Path to the configuration file.
+            config_file (str): Path to the main configuration file.
+            workflow_config_file (str): Path to the workflow configuration file.
         """
         self.config = ConfigManager(config_file)
+        self.workflow_config = WorkflowConfigManager(workflow_config_file)
         self.logger = setup_logging(self.config.config)
         self.session_manager = SessionManager(self.config)
         self.login = Login(self.config, self.session_manager)
