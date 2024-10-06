@@ -42,12 +42,18 @@ import logging
 from utils.config_manager import ConfigManager
 from huey import task
 
+from huey import RedisHuey
+from src.utils.config_manager import ConfigManager
+
+config = ConfigManager('src/config/workflow-config.yaml')
+huey = RedisHuey('workflow_queue', host=config.get('huey.connection.host'), port=config.get('huey.connection.port'))
+
 class Workflow:
     """
     A class to manage the workflow of processing medical documents.
 
     This class handles various operations such as OCR, patient information extraction,
-    and interaction with the Oscar EMR system.
+    and interaction with the Oscar EMR system using Huey for task queuing.
 
     Attributes:
         config (ConfigManager): Configuration manager instance.
@@ -570,7 +576,8 @@ class Workflow:
             self.logger.error(f"Error in oscar_update: {e}")
             return False
 
-    def execute_task(self,task, previous_result=None):
+    @huey.task()
+    def execute_task(self, task, previous_result=None):
         task_number, function_name, *params, true_next_row, false_next_row = task
         self.logger.debug(f"Executing task {task_number}: {function_name}")
         function_to_call = getattr(self, function_name, None)

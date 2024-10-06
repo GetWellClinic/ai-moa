@@ -1,17 +1,26 @@
-workflow_steps:
-  - name: get_document_description
-    params:
-      prompt: "Analyze the document and provide a description"
-  - name: getProviderList
-    params:
-      prompt: "Get the list of providers"
-  - name: get_patient_name
-    params:
-      prompt: "Extract the patient name from the document"
-  - name: set_patient
-  - name: set_doctor
-  - name: oscar_update
+# Workflow Configuration
+workflow:
+  steps:
+    - name: get_document_description
+      task: ai_task
+      params:
+        prompt_key: get_document_description
+    - name: getProviderList
+      task: ai_task
+      params:
+        prompt_key: getProviderList
+    - name: get_patient_name
+      task: ai_task
+      params:
+        prompt_key: get_patient_name
+    - name: set_patient
+      task: emr_task
+    - name: set_doctor
+      task: emr_task
+    - name: oscar_update
+      task: emr_task
 
+# Document Categories
 document_categories:
   - Lab
   - Consult
@@ -30,6 +39,7 @@ document_categories:
   - Request
   - Advertisement
 
+# AI Prompts
 ai_prompts:
   get_document_description: >
     Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document.
@@ -48,4 +58,35 @@ ai_prompts:
     Answer only to the following question in two words; and the answer should be in the following format.
     Format : Lastname, Firstname. What is the name of the patient?
 
-# Add other AI prompts as needed
+# Huey Configuration
+huey:
+  name: workflow_queue
+  results: True
+  store_none: False
+  always_eager: False
+  connection:
+    host: localhost
+    port: 6379
+
+# Logging Configuration
+logging:
+  level: INFO
+  format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+  filename: 'workflow.log'
+
+# EMR Configuration
+emr:
+  base_url: 'http://localhost:8080/oscar'
+  username: 'admin'
+  password: 'admin'
+
+# OCR Configuration
+ocr:
+  enable_gpu: False
+  tesseract_path: '/usr/bin/tesseract'
+
+# File Processing
+file_processing:
+  input_directory: '/path/to/input/files'
+  output_directory: '/path/to/output/files'
+  allowed_extensions: ['.pdf', '.jpg', '.png', '.tiff']
