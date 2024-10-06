@@ -70,9 +70,9 @@ class WorkflowProcessor:
             login_successful_callback: Callback function to execute after successful login.
         """
         print("Starting workflow processing")
-        driver.get(login_url)
-        current_url = login_successful_callback(driver)
-        if current_url == f"{self.config.get('emr', {}).get('base_url')}/login.do":
+        login_manager = LoginManager(self.config)
+        current_url = login_manager.login_with_selenium(driver)
+        if not login_manager.is_login_successful(current_url):
             print("Login failed.")
             return
 

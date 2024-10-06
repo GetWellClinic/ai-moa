@@ -10,13 +10,12 @@ The module provides functionality to:
 3. Maintain and retrieve the current session
 
 Dependencies:
-- requests: For making HTTP requests
 - utils.config_manager: For accessing configuration settings
+- utils.login_manager: For centralized login logic
 """
 
-import requests
-
 from utils.config_manager import ConfigManager
+from utils.login_manager import LoginManager
 
 
 class SessionManager:
@@ -29,73 +28,51 @@ class SessionManager:
     Attributes:
         config (ConfigManager): Configuration manager containing login
                                 credentials and URLs.
-        session (requests.Session): Session object for making HTTP requests.
-        username (str): Username for login.
-        password (str): Password for login.
-        pin (str): PIN for login.
-        base_url (str): Base URL of the EMR system.
+        login_manager (LoginManager): Instance of LoginManager for handling
+                                      login operations.
+        session: Session object for making HTTP requests.
     """
 
     def __init__(self, config: ConfigManager):
         """
         Initialize SessionManager with configuration.
 
-        This method sets up the session and login credentials from the provided
-        configuration. It also attempts to log in immediately upon
-        initialization.
+        This method sets up the login manager and attempts to log in
+        immediately upon initialization.
 
         Args:
             config (ConfigManager): Configuration manager containing login
                                     credentials and URLs.
         """
         self.config = config
-        self.session = requests.Session()
-        self.username = config.get('user_login', {}).get('username')
-        self.password = config.get('user_login', {}).get('password')
-        self.pin = config.get('user_login', {}).get('pin')
-        self.base_url = config.get('base_url')
-        self.login()
+        self.login_manager = LoginManager(config)
+        self.session, login_successful = self.login_manager.login_with_requests()
+        if login_successful:
+            print("Login successful!")
+        else:
+            print("Login failed.")
 
     def login(self):
         """
         Perform login and establish a session.
 
-        This method sends a POST request to the login URL with the
-        provided credentials to establish a session. It checks the response
-        URL to determine if the login was successful.
+        This method uses the LoginManager to perform the login operation
+        and establish a session.
 
         Returns:
             bool: True if login was successful, False otherwise.
-
-        Note:
-            This method prints the login status to the console. In a production
-            environment, consider using proper logging instead of print
-            statements.
         """
-        response = self.session.post(
-            f"{self.base_url}/login.do",
-            data={
-                "username": self.username,
-                "password": self.password,
-                "pin": self.pin
-            }
-        )
-
-        if response.url == f"{self.base_url}/login.do":
-            print("Login failed.")
-            return False
-        else:
-            print("Login successful!")
-            return True
+        self.session, login_successful = self.login_manager.login_with_requests()
+        return login_successful
 
     def get_session(self):
         """
         Return the current session object.
 
-        This method provides access to the current requests.Session object,
+        This method provides access to the current session object,
         which can be used to make authenticated requests to the EMR system.
 
         Returns:
-            requests.Session: The current session object.
+            The current session object.
         """
         return self.session

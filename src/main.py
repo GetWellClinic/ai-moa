@@ -20,7 +20,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
-from models.login import Login
+from utils.login_manager import LoginManager
 from models.session_manager import SessionManager
 from processors.document_processor import DocumentProcessor
 from processors.pdf.pdf_processor import PdfProcessor

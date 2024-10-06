@@ -96,9 +96,9 @@ class DocumentProcessor:
             after processing each document.
         """
         # Attempt to log in
-        driver.get(login_url)
-        current_url = login_successful_callback(driver)
-        if current_url == f"{self.base_url}/login.do":
+        login_manager = LoginManager(self.config)
+        current_url = login_manager.login_with_selenium(driver)
+        if not login_manager.is_login_successful(current_url):
             print("Login failed.")
             return self.config.get('last_pending_doc_file')
 
