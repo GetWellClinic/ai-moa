@@ -24,10 +24,8 @@ import os
 import logging
 from huey.contrib.sqlitedb import SqliteHuey
 from huey import crontab
-from src.auth import LoginManager, DriverManager, SessionManager
-from src.processors.document import DocumentProcessor
-from src.processors.pdf import PdfProcessor
-from src.processors.workflow import WorkflowProcessor, Workflow
+from auth import LoginManager, DriverManager, SessionManager
+from processors import DocumentProcessor, PdfProcessor, WorkflowProcessor, Workflow
 from src.config import ConfigManager
 from src.logging import setup_logging
 

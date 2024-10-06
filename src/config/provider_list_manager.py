@@ -7,8 +7,8 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
-from src.config import ConfigManager
-from src.auth import Login
+from config import ConfigManager
+from auth import Login
 
 class ProviderListManager:
     def __init__(self, config: ConfigManager):

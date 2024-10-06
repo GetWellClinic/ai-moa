@@ -29,7 +29,7 @@ from PIL import Image
 
 logger = logging.getLogger(__name__)
 
-from src.config.config_manager import ConfigManager
+from config import ConfigManager
 
 def extract_text_from_bytes(pdf_bytes, config: ConfigManager):
     enable_ocr_gpu = config.get('general.enable_ocr_gpu', False)

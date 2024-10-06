@@ -37,9 +37,9 @@ import io
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
-from src.config import ConfigManager
-from src.logging import setup_logging
-from utils.workflow import Workflow
+from config import ConfigManager
+from logging import setup_logging
+from processors.workflow import Workflow
 from auth import LoginManager, DriverManager
 
 from .pdf_fetcher import PdfFetcher

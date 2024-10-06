@@ -16,10 +16,10 @@ Dependencies:
 """
 
 import logging
-from ../../config import ConfigManager
-from workflow import Workflow
+from config import ConfigManager
+from processors.workflow import Workflow
 from auth import LoginManager, DriverManager
-from src.logging import setup_logging
+from logging import setup_logging
 
 logger = logging.getLogger(__name__)
 
