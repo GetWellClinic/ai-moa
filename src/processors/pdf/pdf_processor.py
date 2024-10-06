@@ -32,21 +32,21 @@ class PdfProcessor:
 
     Attributes:
         config (ConfigManager): Configuration manager for the system.
-        session: Session object for making HTTP requests.
+        session_manager: SessionManager object for handling EMR sessions.
         pdf_fetcher (PdfFetcher): Instance of PdfFetcher for fetching PDF content.
     """
 
-    def __init__(self, config: ConfigManager, session):
+    def __init__(self, config: ConfigManager, session_manager):
         """
-        Initialize PdfProcessor with configuration and session.
+        Initialize PdfProcessor with configuration and session manager.
 
         Args:
             config (ConfigManager): Configuration manager containing system settings.
-            session: Session object for making HTTP requests.
+            session_manager: SessionManager object for handling EMR sessions.
         """
         self.config = config
-        self.session = session
-        self.pdf_fetcher = PdfFetcher(config, session)
+        self.session_manager = session_manager
+        self.pdf_fetcher = PdfFetcher(config, session_manager.get_session())
 
     def process_pdfs(self, driver, login_url, login_successful_callback):
         """
@@ -101,5 +101,5 @@ class PdfProcessor:
     def _save_and_process_pdf(self, pdf_content):
         with open("downloaded_pdf.pdf", "wb") as f:
             f.write(pdf_content)
-        workflow = Workflow("downloaded_pdf.pdf", self.session, self.config)
+        workflow = Workflow("downloaded_pdf.pdf", self.session_manager.get_session(), self.config)
         workflow.execute_tasks_from_csv()
