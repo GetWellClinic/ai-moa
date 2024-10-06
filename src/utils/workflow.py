@@ -591,6 +591,10 @@ class Workflow:
             self.logger.info(f"Executing step: {current_step}")
             result = self.execute_step(current_step)
             current_step = self.workflow_config.get_next_step(current_step, result)
+            if current_step is None:
+                self.logger.error(f"No next step defined for {current_step}")
+                break
+        self.logger.info("Workflow execution completed")
 
     @task()
     def execute_step(self, step_name):

@@ -20,13 +20,28 @@ workflow:
       true_next: getProviderList
       false_next: exit
     - name: getProviderList
-      true_next: get_patient_name
+      true_next: patientSearch
       false_next: exit
-    - name: get_patient_name
-      true_next: set_patient
+    - name: patientSearch
+      true_next: filter_results
+      false_next: patientSearch_dob
+    - name: patientSearch_dob
+      true_next: filter_results
+      false_next: patientSearch_name
+    - name: patientSearch_name
+      true_next: filter_results
       false_next: unidentified_patient
+    - name: filter_results
+      true_next: set_patient
+      false_next: exit
     - name: set_patient
-      true_next: set_doctor
+      true_next: get_doctor_name
+      false_next: exit
+    - name: get_doctor_name
+      true_next: filter_results
+      false_next: set_doctor_from_code
+    - name: set_doctor_from_code
+      true_next: oscar_update
       false_next: exit
     - name: set_doctor
       true_next: oscar_update

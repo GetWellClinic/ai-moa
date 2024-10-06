@@ -154,12 +154,12 @@ class WorkflowConfigManager:
             outcome (bool): The outcome of the current step (True or False).
 
         Returns:
-            str: The name of the next step.
+            str: The name of the next step, or None if not found.
         """
         for step in self.workflow_steps:
             if step['name'] == current_step:
                 return step['true_next'] if outcome else step['false_next']
-        raise ValueError(f"Step '{current_step}' not found in workflow configuration.")
+        return None
 
     @property
     def document_categories(self) -> List[str]:
