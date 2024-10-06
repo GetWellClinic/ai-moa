@@ -21,7 +21,7 @@ from selenium.webdriver.support.ui import Select
 from datetime import datetime
 from utils.workflow import Workflow
 from utils.config_manager import ConfigManager
-from .pdf_fetcher import PdfFetcher
+from pdf_fetcher import PdfFetcher
 
 class PdfProcessor:
     """
