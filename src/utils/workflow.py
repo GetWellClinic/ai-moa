@@ -604,18 +604,17 @@ class Workflow:
             self.logger.error(f"Error: Function {function_name} not found or not callable.")
             return false_next_row 
 
-    def execute_tasks(self,tasks, current_row, previous_result=None):
+    def execute_tasks(self, tasks, current_row, previous_result=None):
         if current_row >= len(tasks):
             self.logger.info("Reached end of tasks.")
             return
 
-        next_row = self.execute_task(tasks[current_row], previous_result)
+        next_row = self.execute_task(tasks[current_row], previous_result).get()  # .get() waits for the task to complete
         if next_row == 'exit':
             self.logger.info("Exiting task execution.")
             return
 
         if isinstance(next_row, tuple): 
-            #print(next_row)
             next_row_index = int(next_row[0])
             next_result = next_row[1] if len(next_row) > 1 else None
             self.execute_tasks(tasks, next_row_index, previous_result=next_result)
