@@ -69,7 +69,7 @@ class PdfProcessor:
         driver_manager = DriverManager(self.config)
         driver = driver_manager.get_driver()
 
-        if not self._login(driver, login_url, login_successful_callback):
+        if not self._login(driver, login_url):
             driver.quit()
             return self.config.get('last_processed_pdf')
 
@@ -87,10 +87,9 @@ class PdfProcessor:
         self.config.set('last_processed_pdf', update_time)
         return update_time
 
-    def _login(self, driver, login_url, login_successful_callback):
-        login_manager = LoginManager(self.config)
-        current_url = login_manager.login_with_selenium(driver)
-        if not login_manager.is_login_successful(current_url):
+    def _login(self, driver, login_url):
+        current_url = self.login_manager.login_with_selenium(driver)
+        if not self.login_manager.is_login_successful(current_url):
             print("Login failed.")
             return False
         return True
