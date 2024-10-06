@@ -1,8 +1,10 @@
+base_url: "http://localhost:8080/oscar"
 user_login:
-  username: your_username
-  password: your_password
-  pin: your_pin
-base_url: https://your-oscar-url.com
+  username: "oscardoc"
+  password: ""
+  pin: "1117"
+last_processed_pdf: ""
+enable_ocr_gpu: true
 last_processed_pdf: ''
 last_pending_doc_file: ''
 enable_ocr_gpu: false
@@ -11,3 +13,24 @@ urls:
   login: /login.do
 chrome_options:
   headless: true
+logging:
+  version: 1
+  disable_existing_loggers: false
+  formatters:
+    standard:
+      format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+  handlers:
+    console:
+      class: logging.StreamHandler
+      level: DEBUG
+      formatter: standard
+      stream: ext://sys.stdout
+    file:
+      class: logging.FileHandler
+      level: INFO
+      formatter: standard
+      filename: oscar_automation.log
+  root:
+    level: INFO
+    handlers: [console, file]
+

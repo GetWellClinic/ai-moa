@@ -5,7 +5,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 
-from config.config_loader import load_config, save_config
+from src.utils.config_loader import load_config, save_config
 import os
 from utils.logging_setup import setup_logging
 from src.models.login import Login
