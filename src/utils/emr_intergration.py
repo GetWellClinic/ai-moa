@@ -36,6 +36,7 @@ from doctr.models import ocr_predictor
 from bs4 import BeautifulSoup
 
 import logging
+import os
 
 class Workflow:
     def __init__(self, filepath, session, base_url, file_name, enable_ocr_gpu, config):
@@ -744,7 +745,7 @@ class Workflow:
 
         if table:
             #print(table)
-            # oscar_response = self.build_sub_prompt(self.tesseracted_text + prompt + str(table))
+            oscar_response = self.build_sub_prompt(self.tesseracted_text + prompt + str(table))
             self.logger.debug("Oscar response: %s", oscar_response)
             data = {
                 "messages": [
