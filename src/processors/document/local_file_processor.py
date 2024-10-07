@@ -4,7 +4,7 @@ from .base_document_processor import BaseDocumentProcessor
 class LocalFileProcessor(BaseDocumentProcessor):
     def __init__(self, config):
         self.config = config
-        self.input_directory = config.get('file_processing.input_directory', '/app/input')
+        self.input_directory = config.get('document_processor.local.input_directory', '/app/input')
 
     def login(self, login_url, login_successful_callback):
         # No login needed for local files

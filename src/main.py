@@ -100,13 +100,16 @@ class AIMOAAutomation:
         of general documents, including login and cleanup.
         """
         self.logger.info("Starting document processing task")
-        document_processor = DocumentProcessor(self.config, self.session_manager)
-        driver = self._get_driver()
-        document_processor.process_documents(
-            f"{self.config.get('emr', {}).get('base_url')}/login.do",
-            self.login_manager.login_successful_callback
-        )
-        driver.quit()
+        document_processor = DocumentProcessor(self.config)
+        if self.config.get('document_processor.type') == 'o19':
+            driver = self._get_driver()
+            document_processor.process_documents(
+                f"{self.config.get('emr', {}).get('base_url')}/login.do",
+                self.login_manager.login_successful_callback
+            )
+            driver.quit()
+        else:
+            document_processor.process_documents(None, None)
         self.logger.info("Document processing task completed")
 
     @huey.task()
