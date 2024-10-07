@@ -1,0 +1,10 @@
+huey
+PyYAML
+requests
+selenium
+PyPDF2
+fitz
+pytesseract
+doctr
+torch
+guidance

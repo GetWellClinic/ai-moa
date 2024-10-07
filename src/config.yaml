@@ -1,0 +1,61 @@
+# Huey Configuration
+huey:
+  name: workflow_queue
+  results: True
+  store_none: False
+  always_eager: True
+  schedule:
+    minute: '*/5'
+
+  file_level: DEBUG
+  console_level: INFO
+
+# Logging Configuration
+logging:
+  level: INFO
+  format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+  filename: 'workflow.log'
+
+# EMR Configuration
+emr:
+  base_url: 'http://localhost:8080/oscar'
+  username: 'admin'
+  password: 'admin'
+  pin: ''  # Add pin here if required
+  system_type: 'o19'  # or 'local'
+
+# OCR Configuration
+ocr:
+  enable_gpu: False
+  tesseract_path: '/usr/bin/tesseract'
+
+# File Processing
+file_processing:
+  input_directory: '/app/input'
+  output_directory: '/app/output'
+  allowed_extensions: ['.pdf', '.jpg', '.png', '.tiff']
+  temp_pdf_name: "downloaded_pdf.pdf"
+
+# Chrome Configuration
+chrome:
+  options:
+    headless: false
+
+# Provider List Configuration
+provider_list:
+  template_file: 'config/template_providerlist.txt'
+  output_file: 'config/provider_list.yaml'
+
+# Testing Configuration
+testing:
+  full_workflow:
+    folder_path: "./testing_data/all_files/"
+  prompt:
+    folder_path: "./testing_data/new/"
+    log_file: "log_test_20.txt"
+
+# Document Processor Configuration
+document_processor:
+  type: 'o19'  # or 'local'
+  local:
+    input_directory: '/app/input'
