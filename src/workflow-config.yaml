@@ -1,6 +1,9 @@
 # Workflow Configuration
 workflow:
   steps:
+    - name: check_for_file
+      true_next: has_ocr
+      false_next: exit
     - name: has_ocr
       true_next: extract_text_from_pdf_file
       false_next: extract_text_doctr

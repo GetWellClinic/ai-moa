@@ -60,6 +60,7 @@ class AIMOAAutomation:
         self.logger = logging.getLogger(__name__)
         self.session_manager = SessionManager(self.config)
         self.login_manager = LoginManager(self.config)
+        self.workflow = Workflow(self.config)
         self.logger.info("AIMOAAutomation initialized")
 
     def _get_driver(self):
@@ -74,84 +75,16 @@ class AIMOAAutomation:
         return driver_manager.get_driver()
 
     @huey.task()
-    def process_pdfs(self):
-        """
-        Process PDF documents in the EMR system.
-
-        This method is decorated as a Huey task and handles the processing
-        of PDF documents, including login and cleanup.
-        """
-        self.logger.info("Starting PDF processing task")
-        pdf_processor = PdfProcessor(self.config, self.session_manager)
-        driver = self._get_driver()
-        pdf_processor.process_pdfs(
-            f"{self.config.get('emr', {}).get('base_url')}/login.do",
-            self.login_manager.login_successful_callback
-        )
-        driver.quit()
-        self.logger.info("PDF processing task completed")
-
-    @huey.task()
-    def process_documents(self):
-        """
-        Process general documents in the EMR system.
-
-        This method is decorated as a Huey task and handles the processing
-        of general documents, including login and cleanup.
-        """
-        self.logger.info("Starting document processing task")
-        document_processor = DocumentProcessor(self.config)
-        if self.config.get('document_processor.type') == 'o19':
-            driver = self._get_driver()
-            document_processor.process_documents(
-                f"{self.config.get('emr', {}).get('base_url')}/login.do",
-                self.login_manager.login_successful_callback
-            )
-            driver.quit()
-        else:
-            document_processor.process_documents(None, None)
-        self.logger.info("Document processing task completed")
-
-    @huey.task()
     def process_workflow(self):
         """
-        Execute the main workflow in the EMR system.
+        Process the workflow defined in the configuration using Huey tasks.
 
         This method is decorated as a Huey task and handles the execution
-        of the main workflow, including login and cleanup.
+        of the workflow defined in the configuration.
         """
         self.logger.info("Starting workflow processing task")
-        workflow_processor = WorkflowProcessor(self.config, self.session_manager)
-        driver = self._get_driver()
-        workflow_processor.process_workflow(
-            f"{self.config.get('emr', {}).get('base_url')}/login.do",
-            self.login_manager.login_successful_callback
-        )
-        driver.quit()
+        self.workflow.execute_workflow()
         self.logger.info("Workflow processing task completed")
-
-    @huey.task()
-    def process_files(self):
-        """
-        Process files in the input directory.
-
-        This method is decorated as a Huey task and handles the processing
-        of files in the configured input directory, executing workflows
-        for each file with an allowed extension.
-        """
-        self.logger.info("Starting file processing task")
-        input_directory = self.config.get('file_processing', {}).get('input_directory')
-        allowed_extensions = self.config.get('file_processing', {}).get('allowed_extensions')
-        
-        for file_name in os.listdir(input_directory):
-            if any(file_name.endswith(ext) for ext in allowed_extensions):
-                self.logger.debug(f"Processing file: {file_name}")
-                file_path = os.path.join(input_directory, file_name)
-                workflow = Workflow(self.config)
-                workflow.filepath = file_path
-                workflow.file_name = file_name
-                workflow.execute_workflow()
-        self.logger.info("File processing task completed")
 
 @huey.periodic_task(crontab(minute=ConfigManager('src/config.yaml').get('huey.schedule.minute', '*/5')))
 def schedule_tasks():
@@ -164,10 +97,7 @@ def schedule_tasks():
     """
     logger.info("Starting scheduled tasks")
     ai_moa = AIMOAAutomation()
-    ai_moa.process_documents()
-    ai_moa.process_pdfs()
     ai_moa.process_workflow()
-    ai_moa.process_files()
     logger.info("Scheduled tasks completed")
 
 if __name__ == "__main__":

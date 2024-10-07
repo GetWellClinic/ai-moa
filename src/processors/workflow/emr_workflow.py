@@ -3,6 +3,7 @@ from huey import crontab, task
 from config import ConfigManager
 
 from logging import setup_logging
+import os
 
 class Workflow:
     def __init__(self, config: ConfigManager):
@@ -40,13 +41,18 @@ class Workflow:
                 next_step_name = current_step['false_next']
             
             if next_step_name == 'exit':
-                break
+                self.logger.info("Workflow execution completed")
+                return
             
             current_step = next((step for step in self.steps if step['name'] == next_step_name), None)
         
         self.logger.info("Workflow execution completed")
 
-    # Implement the actual task functions here
+    def check_for_file(self, previous_result):
+        input_directory = self.config.get('document_processor.local.input_directory', '/app/input')
+        files = [f for f in os.listdir(input_directory) if os.path.isfile(os.path.join(input_directory, f))]
+        return len(files) > 0
+
     def has_ocr(self, previous_result):
         # Implementation
         pass
