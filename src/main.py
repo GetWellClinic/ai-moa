@@ -1,7 +1,7 @@
 """
 Main module for automating AI-MOA tasks using Huey for task management.
 
-This module initializes the AIMOAAuthomation class and sets up periodic tasks
+This module initializes the AIMOAAutomation class and sets up periodic tasks
 for processing documents, PDFs, and workflows in the AI MOA system.
 
 Copyright (C) 2024 Spring Health Corporation
@@ -42,34 +42,39 @@ class AIMOAAutomation:
     This class initializes the necessary components and provides methods
     for processing PDFs, documents, workflows, and files.
 
-    Attributes:
-        config (ConfigManager): Configuration manager for the application.
-        logger: Logger instance for the application.
-        session_manager (SessionManager): Manager for EMR sessions.
-        login_manager (LoginManager): Manager for EMR login.
+    :param config_file: Path to the main configuration file
+    :type config_file: str
+    :ivar config: Configuration manager for the application
+    :ivar logger: Logger instance for the application
+    :ivar session_manager: Manager for EMR sessions
+    :ivar login_manager: Manager for EMR login
     """
 
     def __init__(self, config_file='config.yaml'):
         """
-        Initialize the AIMOAAAutomation instance.
+        Initialize the AIMOAAutomation instance.
 
-        Args:
-            config_file (str): Path to the main configuration file.
+        :param config_file: Path to the main configuration file
+        :type config_file: str
         """
+        # Load configuration and set up logging
         self.config = ConfigManager(config_file, 'workflow-config.yaml')
         setup_logging(self.config)
         self.logger = logging.getLogger(__name__)
+
+        # Initialize managers
         self.session_manager = SessionManager(self.config)
         self.login_manager = LoginManager(self.config)
         self.workflow = Workflow(self.config)
+
         self.logger.info("AIMOAAutomation initialized")
 
     def _get_driver(self):
         """
         Get a new instance of the WebDriver.
 
-        Returns:
-            WebDriver: A new instance of the configured WebDriver.
+        :return: A new instance of the configured WebDriver
+        :rtype: WebDriver
         """
         self.logger.debug("Getting new WebDriver instance")
         driver_manager = DriverManager(self.config)
