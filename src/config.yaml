@@ -55,3 +55,7 @@ testing:
   prompt:
     folder_path: "/home/justinjoseph/Documents/AI-MOA/new/"
     log_file: "log_test_20.txt"
+
+# Document Processor Configuration
+document_processor:
+  type: 'o19'  # or 'local'
