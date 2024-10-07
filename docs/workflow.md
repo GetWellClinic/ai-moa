@@ -2,6 +2,30 @@
 
 The AI-MOA workflow system is designed to process medical documents through a series of configurable steps. This document outlines the workflow structure and how to customize it.
 
+## Shared State
+
+The AI-MOA workflow system uses a shared state mechanism to pass information between tasks. This is implemented using the `ConfigManager` class, which provides methods to set, get, and clear shared state data.
+
+### Using Shared State in Workflow Steps
+
+Each workflow step can access and modify the shared state:
+
+```python
+def some_workflow_step(self):
+    # Get data from shared state
+    previous_result = self.config.get_shared_state('previous_step_result')
+    
+    # Process data
+    result = process_data(previous_result)
+    
+    # Store result in shared state
+    self.config.set_shared_state('current_step_result', result)
+    
+    return True  # or False, depending on the result
+```
+
+The shared state is cleared at the beginning of each workflow execution to ensure a clean slate for each run.
+
 ## Workflow Structure
 
 The workflow is defined in `src/workflow-config.yaml` and consists of:
@@ -70,18 +94,20 @@ To customize the workflow:
 
 ## Implementing New Workflow Steps
 
-To add a new workflow step:
-
-1. Add the step to the `workflow.steps` section in `workflow-config.yaml`
-2. Implement the corresponding method in the `Workflow` class (`src/processors/workflow/emr_workflow.py`)
-3. Update the `execute_workflow` method to include your new step
-
-Example of adding a new step:
+When implementing new workflow steps, make sure to use the shared state mechanism to pass data between steps:
 
 ```python
-def new_custom_step(self, previous_result):
-    # Implementation
-    pass
+def new_custom_step(self):
+    # Get data from previous steps
+    data = self.config.get_shared_state('some_key')
+    
+    # Process the data
+    result = process_data(data)
+    
+    # Store the result for next steps
+    self.config.set_shared_state('new_key', result)
+    
+    return True  # or False, depending on the result
 ```
 
 ## Testing Workflow Changes

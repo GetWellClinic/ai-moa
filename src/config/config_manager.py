@@ -7,6 +7,7 @@ class ConfigManager:
         self.config = self.load_config(config_file)
         self.workflow_config = self.load_config(workflow_config_file)
         self.in_memory_storage = {}
+        self.shared_state = {}
 
     def load_config(self, file_path: str) -> Dict[str, Any]:
         with open(file_path, 'r') as file:
@@ -49,3 +50,12 @@ class ConfigManager:
 
     def get_in_memory(self, key, default=None):
         return self.in_memory_storage.get(key, default)
+
+    def set_shared_state(self, key, value):
+        self.shared_state[key] = value
+
+    def get_shared_state(self, key, default=None):
+        return self.shared_state.get(key, default)
+
+    def clear_shared_state(self):
+        self.shared_state.clear()

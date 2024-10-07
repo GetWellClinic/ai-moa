@@ -70,6 +70,18 @@ AI-MOA is structured as a modular Python application with the following main com
 4. Workflow is executed based on document type and content
 5. Results are updated in O19 EMR
 
+## Shared State Mechanism
+
+AI-MOA implements a shared state mechanism to pass information between workflow tasks. This is achieved through the `ConfigManager` class, which provides methods to set, get, and clear shared state data.
+
+- Location: `src/config/config_manager.py`
+- Key Methods:
+  - `set_shared_state(key, value)`: Stores a value in the shared state
+  - `get_shared_state(key, default=None)`: Retrieves a value from the shared state
+  - `clear_shared_state()`: Clears all shared state data
+
+The shared state is used within the `Workflow` class to pass data between different steps of the workflow execution.
+
 ## Extensibility
 
 The modular architecture allows for easy extension of functionality:
