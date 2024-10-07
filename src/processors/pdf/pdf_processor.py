@@ -42,6 +42,7 @@ from logging import setup_logging
 from processors.workflow import Workflow
 from auth import LoginManager, DriverManager
 
+from .hello import hello
 from .o19_pdf_fetcher import O19PdfFetcher
 from .local_pdf_fetcher import LocalPdfFetcher
 from .ocr import extract_text_from_pdf, extract_text_from_bytes
