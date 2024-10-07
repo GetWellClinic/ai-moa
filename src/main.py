@@ -58,7 +58,7 @@ class AIMOAAutomation:
         self.config = ConfigManager(config_file, 'workflow-config.yaml')
         setup_logging(self.config)
         self.logger = logging.getLogger(__name__)
-        self.session_manager = SessionManager(self.config
+        self.session_manager = SessionManager(self.config)
         self.login_manager = LoginManager(self.config)
         self.logger.info("AIMOAAutomation initialized")
 
