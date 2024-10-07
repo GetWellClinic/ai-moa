@@ -42,7 +42,8 @@ from logging import setup_logging
 from processors.workflow import Workflow
 from auth import LoginManager, DriverManager
 
-from .pdf_fetcher import PdfFetcher
+from .o19_pdf_fetcher import O19PdfFetcher
+from .local_pdf_fetcher import LocalPdfFetcher
 from .ocr import extract_text_from_pdf, extract_text_from_bytes
 
 logger = logging.getLogger(__name__)
@@ -72,7 +73,14 @@ class PdfProcessor:
         """
         self.config = config
         self.session_manager = session_manager
-        self.pdf_fetcher = PdfFetcher(config, session_manager.get_session())
+        self.system_type = config.get('emr.system_type', 'o19')
+
+        if self.system_type == 'o19':
+            self.pdf_fetcher = O19PdfFetcher(config, session_manager.get_session())
+        elif self.system_type == 'local':
+            self.pdf_fetcher = LocalPdfFetcher(config)
+        else:
+            raise ValueError(f"Unknown system type: {self.system_type}")
         setup_logging(config)
         self.logger = logging.getLogger(__name__)
         self.login_manager = LoginManager(config)

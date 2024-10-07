@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 class DocumentProcessor:
     def __init__(self, config):
         self.config = config
-        processor_type = config.get('document_processor.type', 'local')
+        processor_type = config.get('emr.system_type', 'o19')
         if processor_type == 'local':
             self.processor = LocalFileProcessor(config)
         elif processor_type == 'o19':

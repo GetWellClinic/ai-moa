@@ -25,6 +25,7 @@ emr:
   base_url: 'http://localhost:8080/oscar'
   username: 'admin'
   password: 'admin'
+  system_type: 'o19'  # or 'local'
 
 # OCR Configuration
 ocr:

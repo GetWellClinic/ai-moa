@@ -7,11 +7,23 @@ class LocalFileProcessor(BaseDocumentProcessor):
         self.input_directory = config.get('document_processor.local.input_directory', '/app/input')
 
     def login(self, login_url, login_successful_callback):
-        # No login needed for local files
+        # O19 login code commented out:
+        # logger.info("Attempting to log in to O19 EMR")
+        # # Implementation for O19 login
+        # # Set self.session if login is successful
         pass
 
     def get_file_content(self, name):
-        file_path = os.path.join(self.input_directory, name)
+        # O19 code commented out:
+        # if not self.session:
+        #     logger.error("Not logged in. Cannot fetch file content.")
+        #     return None
+        #
+        # logger.info(f"Fetching file content for document: {name}")
+        # file_url = f"{self.base_url}/dms/ManageDocument.do?method=display&doc_no={name}"
+        # ...
+
+        # Local filesystem code:
         try:
             with open(file_path, 'rb') as file:
                 return file.read()
