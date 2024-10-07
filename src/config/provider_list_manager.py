@@ -7,7 +7,10 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
+import logging
 from config import ConfigManager
+
+logger = logging.getLogger(__name__)
 from auth.login_manager import LoginManager
 
 class ProviderListManager:
@@ -47,7 +50,7 @@ class ProviderListManager:
     def generate_provider_list(self) -> None:
         chrome_options = Options()
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
-        login = Login(self.username, self.password, self.pin, self.base_url)
+        login_manager = LoginManager(self.config)
         
         if self.upload_template_file():
             url = f"{self.base_url}/oscarReport/reportByTemplate/homePage.jsp?templates=all"

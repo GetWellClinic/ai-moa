@@ -95,18 +95,6 @@ class Workflow:
         else:
             self.logger.error(f"Function {function_name} not found or not callable.")
             raise AttributeError(f"Function {function_name} not found or not callable.")
-    def execute_task(self, step: Dict[str, Any]) -> Any:
-        function_name = step['name']
-        self.logger.info(f"Executing task: {function_name}")
-        function_to_call = getattr(self, function_name, None)
-        
-        if function_to_call and callable(function_to_call):
-            result = function_to_call()
-            self.config.set_shared_state(step['name'], result)
-            return result
-        else:
-            self.logger.error(f"Function {function_name} not found or not callable.")
-            raise AttributeError(f"Function {function_name} not found or not callable.")
 
     def execute_workflow(self):
         """

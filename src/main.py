@@ -23,11 +23,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import os
 import logging
 from huey import MemoryHuey
+from config import ConfigManager
 from huey import crontab
 from auth import LoginManager, DriverManager, SessionManager
 from processors import DocumentProcessor, PdfProcessor, WorkflowProcessor, Workflow
 from config import ConfigManager
-from app_logging import setup_logging
+from logging.logging_setup import setup_logging
 
 # Initialize Huey with in-memory storage
 huey = MemoryHuey('aimoa_automation')
@@ -86,7 +87,7 @@ class AIMOAAutomation:
         self.workflow.execute_workflow()
         self.logger.info("Workflow processing task completed")
 
-@huey.periodic_task(crontab(minute=ConfigManager('src/config.yaml').get('huey.schedule.minute', '*/5')))
+@huey.periodic_task(crontab(minute=ConfigManager().get('huey.schedule.minute', '*/5')))
 def schedule_tasks():
     """
     Periodic task to schedule and execute various EMR processing tasks.

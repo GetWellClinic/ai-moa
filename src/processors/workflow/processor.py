@@ -1,11 +1,3 @@
-"""
-Module for processing workflows in the AI MOA system using Huey tasks.
-
-This module contains the WorkflowProcessor class which handles the execution
-of predefined workflows within the AI MOA system using Huey for task management.
-"""
-
-from config import ConfigManager
 from logging import setup_logging
 from .emr_workflow import Workflow
 
@@ -106,4 +98,3 @@ This module contains the WorkflowProcessor class which handles the execution
 of predefined workflows within the AI MOA system using Huey for task management.
 """
 
-from config import ConfigManager

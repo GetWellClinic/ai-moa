@@ -11,7 +11,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
-from config import ConfigManager
+from ..config import ConfigManager
 
 logger = logging.getLogger(__name__)
 

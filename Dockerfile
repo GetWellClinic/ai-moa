@@ -6,6 +6,7 @@ WORKDIR /app
 COPY src /app/src
 
 # Copy the configuration files
+COPY src/config/*.yaml /app/src/config/
 COPY src/config.yaml /app/src/config.yaml
 COPY src/workflow-config.yaml /app/src/workflow-config.yaml
 

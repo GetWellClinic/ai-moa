@@ -20,7 +20,6 @@
 # ***
 
 import io
-import sys
 import logging
 
 import fitz
@@ -59,7 +58,7 @@ def extract_text_from_bytes(pdf_bytes, config: ConfigManager):
                 logger.debug(f"Extracted text from image {img_index} on page {page_num}")
         return extracted_text
     except Exception as e:
-        logger.error(f"An error occurred while extracting text: {e}")
+        logger.exception(f"An error occurred while extracting text: {e}")
         return None
 
 if __name__ == "__main__":

@@ -7,10 +7,6 @@ huey:
   schedule:
     minute: '*/5'
 
-logging:
-  level: INFO
-  format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-  filename: 'workflow.log'
   file_level: DEBUG
   console_level: INFO
 
@@ -53,9 +49,9 @@ provider_list:
 # Testing Configuration
 testing:
   full_workflow:
-    folder_path: "/home/justinjoseph/Documents/AI-MOA/all_files/"
+    folder_path: "./testing_data/all_files/"
   prompt:
-    folder_path: "/home/justinjoseph/Documents/AI-MOA/new/"
+    folder_path: "./testing_data/new/"
     log_file: "log_test_20.txt"
 
 # Document Processor Configuration

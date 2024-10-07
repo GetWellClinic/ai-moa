@@ -77,6 +77,7 @@ class Workflow:
             filepath (str): Path to the document file to be processed.
         """
         self.config = ConfigManager()
+        self.config.clear_shared_state()
         self.patient_name = ''
         self.fileType = ''
         self.demographic_number = ''
@@ -149,7 +150,7 @@ class Workflow:
             self.tesseracted_text = extracted_text
             return True
         except Exception as e:
-            print("An error occurred:", e)
+            logger.error(f"An error occurred: {e}")
             return False
 
     def extract_text_doctr(self):
