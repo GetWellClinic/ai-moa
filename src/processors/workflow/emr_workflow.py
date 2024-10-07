@@ -161,8 +161,7 @@ class Workflow:
         self.find_category_index(content_value)
         return True
 
-    def get_document_description(self):
-        prompt = self.ai_prompts.get('get_document_description', '')
+    def get_document_description(self, prompt):
         result = self.build_sub_prompt(self.tesseracted_text + prompt)
         self.document_description = result
         self.config.set_shared_state('document_description', result)
@@ -201,8 +200,7 @@ class Workflow:
         self.config.set_shared_state('provider_list', self.provider_number)
         return True
 
-    def get_patient_name(self):
-        prompt = self.ai_prompts.get('get_patient_name', '')
+    def get_patient_name(self, prompt):
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
         if '.' in name:
             name = name.replace('.', '')
@@ -215,11 +213,9 @@ class Workflow:
         if len(response_data["results"]) == 0:
             return False
         else:
-            self.config.set_shared_state('patient_search_results', response_data["results"])
-            return True
+            return True, response_data["results"]
 
-    def set_patient(self):
-        patient_data = self.config.get_shared_state('patient_search_results')[0]
+    def set_patient(self, patient_data):
         self.patient_name = f"{patient_data['formattedName']} ({patient_data['formattedDob']})"
         self.fl_name = patient_data['formattedName']
         self.demographic_number = patient_data['demographicNo']
@@ -230,9 +226,26 @@ class Workflow:
         self.config.set_shared_state('mrp', self.mrp)
         return True
 
-    def set_doctor(self):
-        provider_list = self.config.get_shared_state('provider_list')
-        self.provider_number = provider_list
+    def get_doctor_name(self, prompt):
+        name = self.build_sub_prompt(self.tesseracted_text + prompt)
+        if '.' in name:
+            name = name.replace('.', '')
+        url = f"{self.base_url}/provider/SearchProvider.do"
+        payload = {
+            "query": name
+        }
+        response = self.session.post(url, data=payload)
+        response_data = json.loads(response.text)
+        if len(response_data["results"]) != 0:
+            return True, response_data["results"]
+        else:
+            return False
+
+    def set_doctor(self, provider_data):
+        for item in provider_data:
+            if isinstance(item, dict) and 'providerNo' in item:
+                self.provider_number.append(item['providerNo'])
+        self.config.set_shared_state('provider_list', self.provider_number)
         return True
 
     def o19_update(self):
