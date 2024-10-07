@@ -10,11 +10,11 @@ COPY src/config.yaml /app/src/config.yaml
 COPY src/workflow-config.yaml /app/src/workflow-config.yaml
 
 # Install dependencies
-COPY requirements.txt .
+COPY src/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install Uvicorn
-RUN pip install uvicorn
+# Set the working directory to src
+WORKDIR /app/src
 
 # Run the application
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["python", "main.py"]

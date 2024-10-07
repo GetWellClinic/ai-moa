@@ -8,15 +8,15 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
 from config import ConfigManager
-from auth import Login
+from auth.login_manager import LoginManager
 
 class ProviderListManager:
     def __init__(self, config: ConfigManager):
         self.config = config
-        self.username = config.get('general.user_login.username')
-        self.password = config.get('general.user_login.password')
-        self.pin = config.get('general.user_login.pin')
-        self.base_url = config.get('general.base_url')
+        self.username = config.get('emr.username')
+        self.password = config.get('emr.password')
+        self.pin = config.get('emr.pin')
+        self.base_url = config.get('emr.base_url')
         self.session = requests.Session()
         self.login()
 

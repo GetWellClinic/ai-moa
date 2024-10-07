@@ -49,10 +49,10 @@ class LoginManager:
         :type config: ConfigManager
         """
         self.config = config
-        self.username = config.get('user_login', {}).get('username')
-        self.password = config.get('user_login', {}).get('password')
-        self.pin = config.get('user_login', {}).get('pin')
-        self.base_url = config.get('base_url')
+        self.username = config.get('emr.username')
+        self.password = config.get('emr.password')
+        self.pin = config.get('emr.pin')
+        self.base_url = config.get('emr.base_url')
         self.login_url = f"{self.base_url}/login.do"
         logger.debug("LoginManager initialized")
 

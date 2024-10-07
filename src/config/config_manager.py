@@ -3,9 +3,12 @@ import os
 from typing import Dict, Any, List
 
 class ConfigManager:
-    def __init__(self, config_file='config/config.yaml', workflow_config_file='config/workflow-config.yaml'):
-        self.config = self.load_config(config_file)
-        self.workflow_config = self.load_config(workflow_config_file)
+    def __init__(self, config_file='config.yaml', workflow_config_file='workflow-config.yaml'):
+        self.base_dir = os.path.dirname(os.path.abspath(__file__))
+        config_path = os.path.join(self.base_dir, config_file)
+        workflow_config_path = os.path.join(self.base_dir, workflow_config_file)
+        self.config = self.load_config(config_path)
+        self.workflow_config = self.load_config(workflow_config_path)
         self.in_memory_storage = {}
         self.shared_state = {}
 
