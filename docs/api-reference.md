@@ -41,6 +41,9 @@ class ConfigManager:
     def get_workflow(self, key: str, default: Any = None) -> Any
     def set_in_memory(self, key: str, value: Any)
     def get_in_memory(self, key: str, default: Any = None) -> Any
+    def set_shared_state(self, key: str, value: Any)
+    def get_shared_state(self, key: str, default: Any = None) -> Any
+    def clear_shared_state()
 ```
 
 ### ProviderListManager
