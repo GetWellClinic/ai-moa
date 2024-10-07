@@ -21,6 +21,7 @@
 
 import io
 import logging
+import sys
 
 import fitz
 import pytesseract

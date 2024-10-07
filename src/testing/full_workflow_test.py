@@ -30,6 +30,7 @@ import os
 import time
 
 import PyPDF2
+import logging
 import fitz
 import guidance
 import requests
@@ -43,6 +44,8 @@ import io
 from PIL import Image
 import pytesseract
 from src.config.config_manager import ConfigManager
+
+logger = logging.getLogger(__name__)
 
 class Workflow:
     """

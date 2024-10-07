@@ -1,4 +1,5 @@
 from logging import setup_logging
+from config import ConfigManager
 from .emr_workflow import Workflow
 
 from .step_executor import WorkflowStepExecutor
