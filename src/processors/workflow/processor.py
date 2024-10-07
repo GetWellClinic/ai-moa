@@ -78,7 +78,7 @@ class WorkflowProcessor:
             print("Login failed.")
             return
 
-        workflow = EMRWorkflow(self.session_manager.get_session(), self.config)
+        workflow = Workflow(self.session_manager.get_session(), self.config)
         workflow.execute_workflow()
         print("Workflow processing completed")
 
