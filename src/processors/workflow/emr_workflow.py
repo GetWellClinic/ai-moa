@@ -316,6 +316,39 @@ class Workflow:
         }
         response = requests.post(self.url, headers=self.headers, json=data)
         return response.json()['choices'][0]['message']['content']
+
+    def getProviderList(self, prompt):
+        provider_list = self.getProviderListFromOscarFileMode()
+        if provider_list is None:
+            self.provider_number.append(99)
+            return True
+        data = {
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant designed to output JSON."
+                },
+                {
+                    "role": "user",
+                    "content": self.tesseracted_text + prompt + str(provider_list)
+                }
+            ],
+            "mode": "instruct",
+            "temperature": 0.1,
+            "character": "Assistant",
+            "top_p": 0.1
+        }
+        response = requests.post(self.url, headers=self.headers, json=data)
+        content_value = response.json()['choices'][0]['message']['content']
+        match = re.search(r'\b\d+\b', content_value)
+        if match:
+            numerical_value = int(match.group())
+            self.provider_number.append(numerical_value)
+        else:
+            self.provider_number.append(99)
+        self.config.set_shared_state('provider_list', self.provider_number)
+        return True
+
     def getProviderListFromOscarFileMode(self):
         file_path = 'providers.csv'
         data = []
