@@ -25,6 +25,7 @@ class LocalFileProcessor(BaseDocumentProcessor):
 
         # Local filesystem code:
         file_path = os.path.join(self.input_directory, name)
+        try:
             with open(file_path, 'rb') as file:
                 return file.read()
         except IOError as e:
