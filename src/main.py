@@ -1,124 +1,110 @@
 """
-Main module for automating Oscar EMR tasks.
+Main module for automating AI-MOA tasks using Huey for task management.
 
-This module contains the OscarAutomation class which orchestrates the automation
-of various tasks in the Oscar EMR system, including PDF processing, document
-processing, and workflow execution.
+This module initializes the AIMOAAutomation class and sets up periodic tasks
+for processing documents, PDFs, and workflows in the AI MOA system.
+
+Copyright (C) 2024 Spring Health Corporation
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import json
-import requests
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
-from utils.config_loader import load_config, save_config
-from utils.logging_setup import setup_logging
-from models.login import Login
-from models.session_manager import SessionManager
-from processors.pdf_processor import PdfProcessor
-from processors.document_processor import DocumentProcessor
-from processors.workflow_processor import WorkflowProcessor
+import os
+import logging
+from huey import MemoryHuey
+from config import ConfigManager
+from huey import crontab
+from auth import LoginManager, DriverManager, SessionManager
+from processors import DocumentProcessor, PdfProcessor, WorkflowProcessor, Workflow
+from config import ConfigManager
+from logging.logging_setup import setup_logging
 
+# Initialize Huey with in-memory storage
+huey = MemoryHuey('aimoa_automation')
 
-from utils.config_manager import ConfigManager
+logger = logging.getLogger(__name__)
 
-class OscarAutomation:
+class AIMOAAutomation:
     """
-    Main class for automating Oscar EMR tasks.
+    Main class for automating tasks with the AI-MOA system.
 
     This class initializes the necessary components and provides methods
-    for processing PDFs, documents, and workflows.
+    for processing PDFs, documents, workflows, and files.
 
-    Attributes:
-        config (ConfigManager): Configuration manager instance.
-        logger (logging.Logger): Logger instance for this class.
-        session_manager (SessionManager): Session manager for handling EMR sessions.
-        login (Login): Login handler for EMR authentication.
+    :param config_file: Path to the main configuration file
+    :type config_file: str
+    :ivar config: Configuration manager for the application
+    :ivar logger: Logger instance for the application
+    :ivar session_manager: Manager for EMR sessions
+    :ivar login_manager: Manager for EMR login
     """
 
-    def __init__(self, config_file='config/config.yaml'):
+    def __init__(self, config_file='config.yaml'):
         """
-        Initialize OscarAutomation with configuration and necessary components.
+        Initialize the AIMOAAutomation instance.
 
-        Args:
-            config_file (str): Path to the configuration file.
+        :param config_file: Path to the main configuration file
+        :type config_file: str
         """
-        self.config = ConfigManager(config_file)
-        setup_logging(self.config.config)
-        self.logger = setup_logging(self.config.config)
+        # Load configuration and set up logging
+        self.config = ConfigManager(config_file, 'workflow-config.yaml')
+        setup_logging(self.config)
+        self.logger = logging.getLogger(__name__)
+
+        # Initialize managers
         self.session_manager = SessionManager(self.config)
-        self.login = Login(self.config, self.session_manager)
+        self.login_manager = LoginManager(self.config)
+        self.workflow = Workflow(self.config)
 
-    def process_pdfs(self):
-        """
-        Process PDF documents.
-
-        This method initializes a PDF processor and processes PDF documents
-        using the configured settings and login credentials.
-        """
-        self.logger.info("Starting PDF processing")
-        with self._get_driver() as driver:
-            pdf_processor = PdfProcessor(self.config, self.session_manager)
-            self.config["last_processed_pdf"] = pdf_processor.process_pdfs(
-                driver, f"{self.config['base_url']}/login.do", self.login.login_successful_callback
-            )
-        save_config(self.config)
-        self.logger.info("PDF processing completed")
-
-    def process_documents(self):
-        """
-        Process general documents.
-
-        This method initializes a document processor and processes general
-        documents using the configured settings and login credentials.
-        """
-        self.logger.info("Starting document processing")
-        with self._get_driver() as driver:
-            document_processor = DocumentProcessor(self.config, self.session_manager)
-            self.config["last_pending_doc_file"] = document_processor.process_documents(
-                driver, f"{self.config['base_url']}/login.do", self.login.login_successful_callback
-            )
-        save_config(self.config)
-        self.logger.info("Document processing completed")
+        self.logger.info("AIMOAAutomation initialized")
 
     def _get_driver(self):
         """
-        Create and configure a Chrome WebDriver instance.
+        Get a new instance of the WebDriver.
 
-        Returns:
-            webdriver.Chrome: Configured Chrome WebDriver instance.
+        :return: A new instance of the configured WebDriver
+        :rtype: WebDriver
         """
-        chrome_options = Options()
-        if self.config.get('chrome_options', {}).get('headless', False):
-            chrome_options.add_argument("--headless")
-        return webdriver.Chrome(
-            service=Service(ChromeDriverManager().install()),
-            options=chrome_options
-        )
+        self.logger.debug("Getting new WebDriver instance")
+        driver_manager = DriverManager(self.config)
+        return driver_manager.get_driver()
 
+    @huey.task()
     def process_workflow(self):
         """
-        Process the workflow if a workflow file path is configured.
+        Process the workflow defined in the configuration using Huey tasks.
 
-        This method initializes a workflow processor and executes the defined
-        workflow if a valid workflow file path is provided in the configuration.
+        This method is decorated as a Huey task and handles the execution
+        of the workflow defined in the configuration.
         """
-        workflow_file_path = self.config.get('workflow_file_path')
-        if workflow_file_path:
-            self.logger.info("Starting workflow processing")
-            with self._get_driver() as driver:
-                workflow_processor = WorkflowProcessor(self.config, self.session_manager)
-                workflow_processor.process_workflow(
-                    driver, f"{self.config['base_url']}/login.do", self.login.login_successful_callback
-                )
-            self.logger.info("Workflow processing completed")
-        else:
-            self.logger.warning("Workflow file path is not configured. Skipping workflow processing.")
+        self.logger.info("Starting workflow processing task")
+        self.workflow.execute_workflow()
+        self.logger.info("Workflow processing task completed")
 
+@huey.periodic_task(crontab(minute=ConfigManager().get('huey.schedule.minute', '*/5')))
+def schedule_tasks():
+    """
+    Periodic task to schedule and execute various EMR processing tasks.
+
+    This function is decorated as a Huey periodic task and runs at intervals
+    specified in the configuration. It initializes an AIMOAAutomation instance
+    and triggers the processing of documents, PDFs, workflows, and files.
+    """
+    logger.info("Starting scheduled tasks")
+    ai_moa = AIMOAAutomation()
+    ai_moa.process_workflow()
+    logger.info("Scheduled tasks completed")
 
 if __name__ == "__main__":
-    oscar = OscarAutomation()
-    oscar.process_documents()
-    oscar.process_pdfs()
-    oscar.process_workflow()
+    logger.info("AIMOA Automation started. Waiting for scheduled tasks...")

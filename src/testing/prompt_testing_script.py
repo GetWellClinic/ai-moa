@@ -19,28 +19,32 @@
 # source code can be acquired publicly in its latest most up-to-date version, within one month.
 # ***
 
-import os
 import csv
-import re
-import random
-import torch
-import fitz
-import PyPDF2
-import requests
 import json
-import datetime
+import os
 import time
+import io
+from PIL import Image
+import pytesseract
+
+import PyPDF2
+import fitz
+import requests
+import torch
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
+from src.config.config_manager import ConfigManager
+
 
 class Workflow:
     def __init__(self, filepath):
+        self.config = ConfigManager()
         self.patient_name = ''
         self.fileType = ''
         self.demographic_number = ''
         self.mrp = ''
         self.provider_number = []
-        self.logFile = "log_test_20.txt"
+        self.logFile = self.config.get('testing.prompt.log_file', "log_test_20.txt")
         self.document_description = ''
         self.filepath = filepath
         self.tesseracted_text = None
@@ -51,42 +55,42 @@ class Workflow:
             "Content-Type": "application/json"
         }
         self.categories = [
-                            "Lab",
-                            "Consult",
-                            "Insurance",
-                            "Legal",
-                            "Old Chart",
-                            "Radiology",
-                            "Pathology",
-                            "Others",
-                            "Photo",
-                            "Consent",
-                            "Diagnostics",
-                            "Pharmacy",
-                            "Requisition",
-                            "Referral",
-                            "Request"
-                        ]
+            "Lab",
+            "Consult",
+            "Insurance",
+            "Legal",
+            "Old Chart",
+            "Radiology",
+            "Pathology",
+            "Others",
+            "Photo",
+            "Consent",
+            "Diagnostics",
+            "Pharmacy",
+            "Requisition",
+            "Referral",
+            "Request"
+        ]
 
         self.categories_code = [
-                            "Lab",
-                            "Consult",
-                            "Insurance",
-                            "Legal",
-                            "OldChart",
-                            "Radiology",
-                            "Pathology",
-                            "Others",
-                            "Photo",
-                            "Consent",
-                            "Diagnostics",
-                            "Pharmacy",
-                            "Requisition",
-                            "Referral",
-                            "Request"
-                        ]
+            "Lab",
+            "Consult",
+            "Insurance",
+            "Legal",
+            "OldChart",
+            "Radiology",
+            "Pathology",
+            "Others",
+            "Photo",
+            "Consent",
+            "Diagnostics",
+            "Pharmacy",
+            "Requisition",
+            "Referral",
+            "Request"
+        ]
 
-    def find_category_index(self,text):
+    def find_category_index(self, text):
         self.logger.debug("Inside find_category_index")
         if '.' in text:
             text = text.replace('.', '')
@@ -94,7 +98,7 @@ class Workflow:
             for word in text.split():
                 if word.lower() == category.lower():
                     self.logger.debug(f"Category index found: {index}")
-                    #set file type
+                    # set file type
                     self.fileType = category.lower()
                     self.execute_tasks_from_csv(index)
                     return True
@@ -127,7 +131,7 @@ class Workflow:
                     base_image = pdf_document.extract_image(xref)
                     image_bytes = base_image["image"]
                     image = Image.open(io.BytesIO(image_bytes))
-                    
+
                     image_text = pytesseract.image_to_string(image)
                     extracted_text += image_text + '\n'
             self.tesseracted_text = extracted_text
@@ -142,7 +146,7 @@ class Workflow:
         self.logger.debug(f"Processing PDF: {pdf_path}")
         text = ''
         try:
-            if(self.enable_ocr_gpu == True):
+            if self.enable_ocr_gpu == True:
                 device = torch.device("cuda:0")
                 model = ocr_predictor(pretrained=True).to(device)
             else:
@@ -155,15 +159,15 @@ class Workflow:
             # Iterate through pages
             for page in result.pages:
                 self.logger.debug(f"Processing page {page.page_idx}")
-                
+
                 # Iterate through blocks
                 for block in page.blocks:
                     self.logger.debug("Processing block")
-                    
+
                     # Iterate through lines
                     for line in block.lines:
                         text += '\n'
-                        
+
                         # Print words in the line
                         for word in line.words:
                             text += word.value + ' '
@@ -189,13 +193,13 @@ class Workflow:
                     page = reader.pages[page_num]
                     text += page.extract_text()
             self.tesseracted_text = text
-            #self.tesseracted_text = """"""
+            # self.tesseracted_text = """"""
             return True
         except Exception as e:
             print("An error occurred:", e)
             return False
 
-    def build_prompt(self,prompt):
+    def build_prompt(self, prompt):
         start_time = time.time()
         data = {
             "messages": [
@@ -205,17 +209,17 @@ class Workflow:
                 },
                 {
                     "role": "user",
-                    "content": self.tesseracted_text + '\n. '+"""For the following question, if confidence level is more than 85%, else reply ‘Others’. From the list, choose one that suits the type of the EMR document. Here are your options: Lab, Consult, Insurance, Legal, Old Chart, Radiology, Photo, Consent, Pathology, Diagnostics, Pharmacy, Requisition, HCC Referrals, Request. See descriptions of these terms below; these descriptions should be only used to help you to identify the correct term, and not to be used to display in the output."""+ prompt + '\n emphasized different aspects of the document based on the identified term'
+                    "content": self.tesseracted_text + '\n. ' + """For the following question, if confidence level is more than 85%, else reply ‘Others’. From the list, choose one that suits the type of the EMR document. Here are your options: Lab, Consult, Insurance, Legal, Old Chart, Radiology, Photo, Consent, Pathology, Diagnostics, Pharmacy, Requisition, HCC Referrals, Request. See descriptions of these terms below; these descriptions should be only used to help you to identify the correct term, and not to be used to display in the output.""" + prompt + '\n emphasized different aspects of the document based on the identified term'
                 }
             ],
             "mode": "instruct",
-            #should be a parameter, only if needed else default api values
+            # should be a parameter, only if needed else default api values
             "temperature": .1,
             "character": "Assistant",
-            #should be a parameter
-            "top_p":.1
-            #should be a parameter
-            #max_tokens:100
+            # should be a parameter
+            "top_p": .1
+            # should be a parameter
+            # max_tokens:100
         }
         response = requests.post(self.url, headers=self.headers, json=data)
         self.logger.debug(f"LLM response: {response.json()}")
@@ -242,13 +246,13 @@ class Workflow:
                 }
             ],
             "mode": "instruct",
-            #should be a parameter, only if needed else default api values
+            # should be a parameter, only if needed else default api values
             "temperature": .1,
             "character": "Assistant",
-            #should be a parameter
-            "top_p":.1
-            #should be a parameter
-            #max_tokens:100
+            # should be a parameter
+            "top_p": .1
+            # should be a parameter
+            # max_tokens:100
         }
 
         response = requests.post(self.url, headers=self.headers, json=data)
@@ -257,11 +261,11 @@ class Workflow:
         self.logger.debug(f"Content value: {content_value}")
         self.append_to_file("Second Response:")
         self.append_to_file(response.json()['choices'][0]['message']['content'])
-        self.append_to_file("Second Document Type: "+content_value)
+        self.append_to_file("Second Document Type: " + content_value)
 
         return True
 
-    def build_sub_prompt(self,prompt):
+    def build_sub_prompt(self, prompt):
         start_time = time.time()
         data = {
             "messages": [
@@ -271,13 +275,13 @@ class Workflow:
                 },
                 {
                     "role": "user",
-                    "content": self.tesseracted_text + '. '+ prompt
+                    "content": self.tesseracted_text + '. ' + prompt
                 }
             ],
             "mode": "instruct",
             "temperature": .1,
             "character": "Assistant",
-            "top_p":.1
+            "top_p": .1
         }
         response = requests.post(self.url, headers=self.headers, json=data)
         end_time = time.time()
@@ -288,7 +292,7 @@ class Workflow:
         self.append_to_file(str(elapsed_time))
         return response.json()['choices'][0]['message']['content']
 
-    def get_patient_name(self,prompt):
+    def get_patient_name(self, prompt):
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
         if '.' in name:
             name = name.replace('.', '')
@@ -308,9 +312,9 @@ class Workflow:
         if len(response_data["results"]) == 0:
             return False
         else:
-            return True,response_data["results"]
+            return True, response_data["results"]
 
-    def set_doctor_from_code(self,name):
+    def set_doctor_from_code(self, name):
         self.logger.debug(f"Setting doctor from code: {name}")
         oscar_response = []
         if name:
@@ -347,13 +351,13 @@ class Workflow:
             else:
                 return False
 
-    def get_doctor_name(self,prompt):
+    def get_doctor_name(self, prompt):
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
         self.logger.debug("Getting doctor name")
         self.logger.debug(f"Doctor name: {name}")
         array_pattern = r'\[.*?\]'
-        #name = "Sokolowski"
-        #array_match = re.search(array_pattern, names)
+        # name = "Sokolowski"
+        # array_match = re.search(array_pattern, names)
         oscar_response = []
         if name:
             if '.' in name:
@@ -381,28 +385,28 @@ class Workflow:
                             oscar_response.append(item)
 
             if len(oscar_response) != 0:
-                return True,oscar_response
+                return True, oscar_response
             else:
                 return False
 
             self.logger.debug(f"Oscar response: {oscar_response}")
 
-    def get_document_description(self,prompt):
+    def get_document_description(self, prompt):
         result = self.build_sub_prompt(self.tesseracted_text + prompt)
         self.document_description = result
         return True
 
-    def filter_results(self,prompt,additional_param=None):
+    def filter_results(self, prompt, additional_param=None):
         self.append_to_file("Filtering results: ")
         if additional_param is not None:
             details = self.build_sub_prompt(self.tesseracted_text + prompt + str(additional_param))
             self.logger.debug(f"Filtered results: {details}")
-            return True,details
+            return True, details
         else:
             self.append_to_file("Skipping filtering, not connected to oscar.")
             return False
 
-    def set_patient(self,additional_param=None):
+    def set_patient(self, additional_param=None):
         self.append_to_file("Storing patient details. ")
         if additional_param is not None:
             self.logger.debug("Additional param: %s", additional_param)
@@ -417,10 +421,10 @@ class Workflow:
             self.append_to_file("Skipping in test mode. ")
             return False
 
-    def set_doctor(self,additional_param=None):
+    def set_doctor(self, additional_param=None):
         self.append_to_file("Storing provider details. ")
         if additional_param is not None:
-            #additional_param = '[{"firstName": "Michelle", "lastName": "Liu", "ohipNo": "", "providerNo": "999998"},{"firstName": "John", "lastName": "Doe", "ohipNo": "", "providerNo": "999998"}]'
+            # additional_param = '[{"firstName": "Michelle", "lastName": "Liu", "ohipNo": "", "providerNo": "999998"},{"firstName": "John", "lastName": "Doe", "ohipNo": "", "providerNo": "999998"}]'
             self.logger.debug("Additional param: %s", additional_param)
             data = json.loads(additional_param)
             self.logger.debug(f"Provider data: {data}")
@@ -439,16 +443,17 @@ class Workflow:
     def oscar_update(self):
         self.append_to_file("Updating details in OSCAR. ")
         self.append_to_file("Skipping OSCAR update in test mode. ")
-        self.logger.debug(f"Document Details: Patient: {self.patient_name}, Demographic: {self.demographic_number}, Providers: {self.provider_number}, Description: {self.document_description}")
+        self.logger.debug(
+            f"Document Details: Patient: {self.patient_name}, Demographic: {self.demographic_number}, Providers: {self.provider_number}, Description: {self.document_description}")
         return True
 
-    def execute_task(self,task, previous_result=None):
+    def execute_task(self, task, previous_result=None):
         task_number, function_name, *params, true_next_row, false_next_row = task
         function_to_call = getattr(self, function_name, None)
-        
+
         if function_to_call and callable(function_to_call):
             print(f"Executing Task {task_number} with function {function_name} and parameters: {', '.join(params)}")
-            
+
             if 'additional_param' in function_to_call.__code__.co_varnames:
                 additional_param = previous_result if previous_result is not None else None
                 response = function_to_call(*params, additional_param=additional_param)
@@ -461,14 +466,14 @@ class Workflow:
                 if response[0]:
                     return true_next_row, response[1]
                 else:
-                    return false_next_row,response[1]
+                    return false_next_row, response[1]
             else:
-                return true_next_row if response else false_next_row 
+                return true_next_row if response else false_next_row
         else:
             print(f"Error: Function {function_name} not found or not callable.")
-            return false_next_row 
+            return false_next_row
 
-    def execute_tasks(self,tasks, current_row, previous_result=None):
+    def execute_tasks(self, tasks, current_row, previous_result=None):
         if current_row >= len(tasks):
             print("Reached end of tasks.")
             return
@@ -478,8 +483,8 @@ class Workflow:
             print("Exiting task execution.")
             return
 
-        if isinstance(next_row, tuple): 
-            #print(next_row)
+        if isinstance(next_row, tuple):
+            # print(next_row)
             next_row_index = int(next_row[0])
             next_result = next_row[1] if len(next_row) > 1 else None
             self.execute_tasks(tasks, next_row_index, previous_result=next_result)
@@ -490,8 +495,7 @@ class Workflow:
                 next_result = next_row_parts[1] if len(next_row_parts) > 1 else None
                 self.execute_tasks(tasks, next_row_index, previous_result=next_result)
 
-
-    def read_tasks_from_csv(self,file_path):
+    def read_tasks_from_csv(self, file_path):
         tasks = []
         with open(file_path, 'r') as file:
             reader = csv.reader(file)
@@ -499,18 +503,19 @@ class Workflow:
                 tasks.append(row)
         return tasks
 
-    def execute_tasks_from_csv(self,index=None):
+    def execute_tasks_from_csv(self, index=None):
         if index is None:
             tasks = self.read_tasks_from_csv('workflow.csv')
         else:
-            tasks = self.read_tasks_from_csv(str(index)+'.csv')
+            tasks = self.read_tasks_from_csv(str(index) + '.csv')
         self.logger.debug(f"Processing file: {self.filepath}")
         self.execute_tasks(tasks, 0)
 
-    def append_to_file(self,content):
+    def append_to_file(self, content):
         print(content)
         with open(self.logFile, "a") as file:
             file.write(content + "\n")
+
 
 def get_pdf_files(folder_path):
     pdf_files = []
@@ -518,7 +523,7 @@ def get_pdf_files(folder_path):
 
     }
     retrying_files = {
-        
+
     }
     files_to_remove.update(retrying_files)
     for file in os.listdir(folder_path):
@@ -529,16 +534,18 @@ def get_pdf_files(folder_path):
     return pdf_files_sorted
     # return ["Sample-C1-021.pdf"]
 
+
 if __name__ == "__main__":
-    folder_path = "/home/justinjoseph/Documents/AI-MOA/new/"
-    #print(folder_path)
+    config = ConfigManager()
+    folder_path = config.get('testing.prompt.folder_path', "/home/justinjoseph/Documents/AI-MOA/new/")
+    # print(folder_path)
     pdf_files = get_pdf_files(folder_path)
     for pdf_file in pdf_files:
         start_time = time.time()
-        workflow = Workflow(folder_path+pdf_file)
-        workflow.append_to_file("File: "+pdf_file)
+        workflow = Workflow(folder_path + pdf_file)
+        workflow.append_to_file("File: " + pdf_file)
         workflow.execute_tasks_from_csv()
         end_time = time.time()
         elapsed_time = end_time - start_time
-        workflow.append_to_file("Time taken for the file "+ pdf_file +" : ")
+        workflow.append_to_file("Time taken for the file " + pdf_file + " : ")
         workflow.append_to_file(str(elapsed_time))
