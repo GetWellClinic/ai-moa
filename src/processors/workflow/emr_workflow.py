@@ -1,9 +1,19 @@
 from typing import Dict, Any, List
 from huey import crontab, task
 from config import ConfigManager
-
 from logging import setup_logging
 import os
+import csv
+import re
+import json
+import datetime
+import requests
+from bs4 import BeautifulSoup
+import fitz
+import PyPDF2
+from doctr.io import DocumentFile
+from doctr.models import ocr_predictor
+import torch
 
 class Workflow:
     def __init__(self, config: ConfigManager):
@@ -13,6 +23,24 @@ class Workflow:
         self.steps = config.workflow_steps
         self.document_categories = config.document_categories
         self.ai_prompts = config.ai_prompts
+        self.patient_name = ''
+        self.fl_name = ''
+        self.fileType = ''
+        self.demographic_number = ''
+        self.mrp = ''
+        self.provider_number = []
+        self.document_description = ''
+        self.filepath = config.get('document_processor.local.input_directory', '/app/input')
+        self.tesseracted_text = None
+        self.session = requests.Session()
+        self.base_url = config.get('emr.base_url')
+        self.file_name = ''
+        self.enable_ocr_gpu = config.get('enable_ocr_gpu', False)
+        self.url = config.get('ai.url', "http://127.0.0.1:5000/v1/chat/completions")
+        self.headers = {
+            "Authorization": f"Bearer {config.get('ai.api_key')}",
+            "Content-Type": "application/json"
+        }
 
     @task()
     def execute_task(self, step: Dict[str, Any]) -> Any:
@@ -57,53 +85,239 @@ class Workflow:
         return False
 
     def has_ocr(self):
-        current_file = self.config.get_shared_state('current_file')
-        # Implementation using current_file
-        pass
+        pdf_path = os.path.join(self.filepath, self.config.get_shared_state('current_file'))
+        try:
+            pdf_document = fitz.open(pdf_path)
+            for page_num in range(len(pdf_document)):
+                page = pdf_document.load_page(page_num)
+                text = page.get_text()
+                if text.strip():
+                    return True
+            return False
+        except Exception as e:
+            self.logger.error(f"An error occurred in has_ocr: {e}")
+            return False
 
     def extract_text_from_pdf_file(self):
-        current_file = self.config.get_shared_state('current_file')
-        # Implementation using current_file
-        pass
+        text = ''
+        pdf_path = os.path.join(self.filepath, self.config.get_shared_state('current_file'))
+        try:
+            with open(pdf_path, 'rb') as file:
+                reader = PyPDF2.PdfReader(file)
+                num_pages = len(reader.pages)
+                for page_num in range(num_pages):
+                    page = reader.pages[page_num]
+                    text += page.extract_text()
+            self.tesseracted_text = text
+            return True
+        except Exception as e:
+            self.logger.error(f"An error occurred in extract_text_from_pdf_file: {e}")
+            return False
 
     def extract_text_doctr(self):
-        current_file = self.config.get_shared_state('current_file')
-        # Implementation using current_file
-        pass
+        pdf_path = os.path.join(self.filepath, self.config.get_shared_state('current_file'))
+        text = ''
+        try:
+            if self.enable_ocr_gpu:
+                device = torch.device("cuda:0")
+                model = ocr_predictor(pretrained=True).to(device)
+            else:
+                model = ocr_predictor(pretrained=True)
+            doc = DocumentFile.from_pdf(pdf_path)
+            result = model(doc)
+            for page in result.pages:
+                for block in page.blocks:
+                    for line in block.lines:
+                        text += '\n'
+                        for word in line.words:
+                            text += word.value + ' '
+            self.tesseracted_text = text
+            return True
+        except Exception as e:
+            self.logger.error(f"An error occurred in extract_text_doctr: {e}")
+            return False
 
     def build_prompt(self):
-        extracted_text = self.config.get_shared_state('extracted_text')
-        # Implementation using extracted_text
-        pass
+        prompt = self.ai_prompts.get('build_prompt', '')
+        data = {
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant designed to output JSON."
+                },
+                {
+                    "role": "user",
+                    "content": f"Today's Date is : {datetime.datetime.now().date()}\n{self.tesseracted_text}\n. {prompt}"
+                }
+            ],
+            "mode": "instruct",
+            "temperature": 0.1,
+            "character": "Assistant",
+            "top_p": 0.1
+        }
+        response = requests.post(self.url, headers=self.headers, json=data)
+        content_value = response.json()['choices'][0]['message']['content']
+        self.logger.info(f"AI Response: {content_value}")
+        self.find_category_index(content_value)
+        return True
 
     def get_document_description(self):
-        prompt = self.ai_prompts.get('get_document_description')
-        # Use the prompt to get document description
-        # Store the result in shared state
-        pass
+        prompt = self.ai_prompts.get('get_document_description', '')
+        result = self.build_sub_prompt(self.tesseracted_text + prompt)
+        self.document_description = result
+        self.config.set_shared_state('document_description', result)
+        return True
 
     def getProviderList(self):
-        prompt = self.ai_prompts.get('getProviderList')
-        # Use the prompt to get provider list
-        # Store the result in shared state
-        pass
+        prompt = self.ai_prompts.get('getProviderList', '')
+        provider_list = self.getProviderListFromOscarFileMode()
+        if provider_list is None:
+            self.provider_number.append(99)
+            return True
+        data = {
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant designed to output JSON."
+                },
+                {
+                    "role": "user",
+                    "content": self.tesseracted_text + prompt + str(provider_list)
+                }
+            ],
+            "mode": "instruct",
+            "temperature": 0.1,
+            "character": "Assistant",
+            "top_p": 0.1
+        }
+        response = requests.post(self.url, headers=self.headers, json=data)
+        content_value = response.json()['choices'][0]['message']['content']
+        match = re.search(r'\b\d+\b', content_value)
+        if match:
+            numerical_value = int(match.group())
+            self.provider_number.append(numerical_value)
+        else:
+            self.provider_number.append(99)
+        self.config.set_shared_state('provider_list', self.provider_number)
+        return True
 
     def get_patient_name(self):
-        prompt = self.ai_prompts.get('get_patient_name')
-        # Use the prompt to get patient name
-        # Store the result in shared state
-        pass
+        prompt = self.ai_prompts.get('get_patient_name', '')
+        name = self.build_sub_prompt(self.tesseracted_text + prompt)
+        if '.' in name:
+            name = name.replace('.', '')
+        url = f"{self.base_url}/demographic/SearchDemographic.do"
+        payload = {
+            "query": "%"+name+"%"
+        }
+        response = self.session.post(url, data=payload)
+        response_data = json.loads(response.text)
+        if len(response_data["results"]) == 0:
+            return False
+        else:
+            self.config.set_shared_state('patient_search_results', response_data["results"])
+            return True
 
     def set_patient(self):
-        patient_name = self.config.get_shared_state('patient_name')
-        # Implementation using patient_name
-        pass
+        patient_data = self.config.get_shared_state('patient_search_results')[0]
+        self.patient_name = f"{patient_data['formattedName']} ({patient_data['formattedDob']})"
+        self.fl_name = patient_data['formattedName']
+        self.demographic_number = patient_data['demographicNo']
+        if patient_data['providerNo'] is not None:
+            self.mrp = patient_data['providerNo']
+        self.config.set_shared_state('patient_name', self.patient_name)
+        self.config.set_shared_state('demographic_number', self.demographic_number)
+        self.config.set_shared_state('mrp', self.mrp)
+        return True
 
     def set_doctor(self):
         provider_list = self.config.get_shared_state('provider_list')
-        # Implementation using provider_list
-        pass
+        self.provider_number = provider_list
+        return True
 
     def o19_update(self):
-        # Implementation using various shared state data
-        pass
+        self.logger.info("================ Document Details ================")
+        self.logger.info(f"Patient Name : {self.patient_name}")
+        self.logger.info(f"Demographic Number : {self.demographic_number}")
+        self.logger.info(f"Provider Number : {self.provider_number}")
+        self.logger.info(f"Document Type : {self.fileType}")
+        self.logger.info(f"Document Description : {self.document_description}")
+        self.logger.info("================ End of Document Details ================")
+
+        url = f"{self.base_url}/dms/ManageDocument.do"
+        params = {
+            "method": "documentUpdateAjax",
+            "documentId": self.file_name,
+            "docType": self.fileType,
+            "documentDescription": self.document_description,
+            "observationDate": str(datetime.datetime.now().date()),
+            "demog": self.demographic_number,
+            "demofindName": self.fl_name,
+            "demoName": self.fl_name,
+            "demographicKeyword": self.patient_name
+        }
+
+        params["flagproviders"] = []
+        self.provider_number.append(127)
+        for value in self.provider_number:
+            params["flagproviders"].append(value)
+
+        response = self.session.post(url, data=params)
+        if response.status_code == 200:
+            self.logger.info("Document updated successfully in O19")
+            return True
+        else:
+            self.logger.error(f"Failed to update document in O19. Status code: {response.status_code}")
+            return False
+    def find_category_index(self, text):
+        if '.' in text:
+            text = text.replace('.', '')
+        for word in text.split():
+            for index, category in enumerate(self.document_categories):
+                if '"' in word:
+                    word = word.replace('"', '')
+                if "'" in word:
+                    word = word.replace("'", "")
+                if word.lower() == category.lower():
+                    self.fileType = category.lower()
+                    self.execute_tasks_from_csv(index)
+                    return True
+        self.fileType = 'others'
+        self.execute_tasks_from_csv(7)
+    def build_sub_prompt(self, prompt):
+        data = {
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant designed to output JSON."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            "mode": "instruct",
+            "temperature": 0.1,
+            "character": "Assistant",
+            "top_p": 0.1
+        }
+        response = requests.post(self.url, headers=self.headers, json=data)
+        return response.json()['choices'][0]['message']['content']
+    def getProviderListFromOscarFileMode(self):
+        file_path = 'providers.csv'
+        data = []
+        try:
+            with open(file_path, 'r') as file:
+                reader = csv.DictReader(file)
+                for row in reader:
+                    transformed_row = {
+                        "lastname": row["last_name"], 
+                        "firstname": row["first_name"],    
+                        "provider_number": int(row["provider_no"]) 
+                    }
+                    data.append(transformed_row)
+        except FileNotFoundError as e:
+            self.logger.error(f"File not found: {e}")
+        except IOError as e:
+            self.logger.error(f"Error reading the file: {e}")
+        return data
