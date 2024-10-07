@@ -1,3 +1,17 @@
+"""
+Module Name: emr_workflow.py
+
+Description:
+    This module manages the execution of the EMR workflow.
+    It handles the processing of documents through various steps, utilizing AI prompts and interactions with the EMR system.
+
+Author:
+    Spring Health Corporation
+
+License:
+    Refer to the LICENSE file for detailed licensing information.
+"""
+
 from typing import Dict, Any, List
 from huey import crontab, task
 from config import ConfigManager
@@ -16,7 +30,25 @@ from doctr.models import ocr_predictor
 import torch
 
 class Workflow:
+    """
+    Manages the execution of the EMR workflow.
+
+    This class handles the processing of documents through various steps, utilizing AI prompts and interactions with the EMR system.
+
+    :param config: Configuration manager containing workflow settings.
+    :type config: ConfigManager
+    :ivar logger: Logger instance for logging workflow activities.
+    :vartype logger: logging.Logger
+    :ivar task_results: Stores the results of each task executed in the workflow.
+    :vartype task_results: dict
+    """
     def __init__(self, config: ConfigManager):
+        """
+        Initializes the Workflow with configuration settings.
+
+        :param config: Configuration manager containing workflow settings.
+        :type config: ConfigManager
+        """
         self.config = config
         self.logger = setup_logging(config)
         self.task_results = {}
@@ -44,6 +76,26 @@ class Workflow:
 
     @task()
     def execute_task(self, step: Dict[str, Any]) -> Any:
+        """
+        Executes a single workflow task based on the provided step definition.
+
+        :param step: A dictionary containing the task details.
+        :type step: Dict[str, Any]
+        :return: The result of the executed task.
+        :rtype: Any
+        """
+        function_name = step['name']
+        self.logger.info(f"Executing task: {function_name}")
+        function_to_call = getattr(self, function_name, None)
+        
+        if function_to_call and callable(function_to_call):
+            result = function_to_call()
+            self.config.set_shared_state(step['name'], result)
+            return result
+        else:
+            self.logger.error(f"Function {function_name} not found or not callable.")
+            raise AttributeError(f"Function {function_name} not found or not callable.")
+    def execute_task(self, step: Dict[str, Any]) -> Any:
         function_name = step['name']
         self.logger.info(f"Executing task: {function_name}")
         function_to_call = getattr(self, function_name, None)
@@ -57,6 +109,11 @@ class Workflow:
             raise AttributeError(f"Function {function_name} not found or not callable.")
 
     def execute_workflow(self):
+        """
+        Executes the entire workflow as defined in the configuration.
+
+        Navigates through each step, executing tasks and handling branching based on task results.
+        """
         self.logger.info("Starting workflow execution")
         self.config.clear_shared_state()
         current_step = self.steps[0]
