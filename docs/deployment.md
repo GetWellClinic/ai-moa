@@ -72,6 +72,8 @@ This guide covers the deployment process for AI-MOA in both development and prod
    docker build -t ai-moa:prod .
    ```
 
+Note: The current configuration uses Huey with in-memory storage. For production deployments with high load or requiring persistence across restarts, consider configuring Huey with Redis or SQLite backend.
+
 4. Create a `docker-compose.prod.yml` file:
    ```yaml
    version: '3.8'

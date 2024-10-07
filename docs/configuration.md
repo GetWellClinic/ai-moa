@@ -17,7 +17,6 @@ huey:
   always_eager: True
   schedule:
     minute: '*/5'
-  filename: '/app/oscar_tasks.db'
 ```
 
 - `name`: Name of the Huey task queue
@@ -25,7 +24,8 @@ huey:
 - `store_none`: Whether to store None results
 - `always_eager`: Run tasks immediately for testing
 - `schedule`: Cron-style schedule for periodic tasks
-- `filename`: SQLite database file for task storage
+
+Note: Huey is configured to use in-memory storage only. No SQLite or Redis backend is used.
 
 ### Logging Configuration
 

@@ -50,6 +50,7 @@ AI-MOA is structured as a modular Python application with the following main com
   - `WorkflowProcessor`: Orchestrates workflow execution
   - `WorkflowStepExecutor`: Executes individual workflow steps
   - `WorkflowTaskManager`: Manages Huey tasks for workflows
+- Uses Huey for task management with in-memory storage
 
 ### 6. AI Integration
 

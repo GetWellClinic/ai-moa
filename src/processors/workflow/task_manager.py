@@ -13,7 +13,7 @@ class WorkflowTaskManager:
     Class for managing Huey tasks related to workflow processing.
 
     This class provides methods for creating and executing Huey tasks
-    for workflow processing and step execution.
+    for workflow processing and step execution. Tasks are stored in memory.
     """
 
     @task()

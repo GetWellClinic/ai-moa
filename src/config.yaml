@@ -3,10 +3,9 @@ huey:
   name: workflow_queue
   results: True
   store_none: False
-  always_eager: True  # Set to True for memory-only method
+  always_eager: True
   schedule:
-    minute: '*/5'  # Run every 5 minutes
-  filename: '/app/oscar_tasks.db'
+    minute: '*/5'
 
 logging:
   level: INFO

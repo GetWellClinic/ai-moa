@@ -22,15 +22,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
 import logging
-from huey.contrib.sqlitedb import SqliteHuey
+from huey import MemoryHuey
 from huey import crontab
 from auth import LoginManager, DriverManager, SessionManager
 from processors import DocumentProcessor, PdfProcessor, WorkflowProcessor, Workflow
 from src.config import ConfigManager
 from src.logging import setup_logging
 
-# Initialize Huey with SQLite backend
-huey = SqliteHuey('aimoa_automation', filename='/app/aimoa_tasks.db')
+# Initialize Huey with in-memory storage
+huey = MemoryHuey('aimoa_automation')
 
 logger = logging.getLogger(__name__)
 

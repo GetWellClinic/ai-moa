@@ -59,6 +59,7 @@ ai-moa/
 - Provider list management
 - Extensive error handling and logging
 - Docker support for easy deployment
+- Task queue management with Huey (in-memory storage)
 
 ## How It Works
 

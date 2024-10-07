@@ -48,6 +48,12 @@ This guide addresses common issues that you might encounter while working with A
 2. Verify that all required environment variables are set.
 3. Ensure that the necessary ports are available and not in use by other services.
 
+## Task Persistence Issues
+
+### Problem: Tasks are lost when the application restarts
+
+This is expected behavior with the current in-memory Huey configuration. If task persistence across restarts is required, consider configuring Huey with Redis or SQLite backend.
+
 ## Debugging Tips
 
 1. Enable debug logging by setting the log level to DEBUG in `config.yaml`.
