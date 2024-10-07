@@ -38,7 +38,7 @@ import io
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from config import ConfigManager
-from logging import setup_logging
+from app_logging import setup_logging
 from processors.workflow import Workflow
 from auth import LoginManager, DriverManager
 

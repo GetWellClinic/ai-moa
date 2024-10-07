@@ -26,8 +26,8 @@ from huey import MemoryHuey
 from huey import crontab
 from auth import LoginManager, DriverManager, SessionManager
 from processors import DocumentProcessor, PdfProcessor, WorkflowProcessor, Workflow
-from src.config import ConfigManager
-from src.logging import setup_logging
+from config import ConfigManager
+from app_logging import setup_logging
 
 # Initialize Huey with in-memory storage
 huey = MemoryHuey('aimoa_automation')

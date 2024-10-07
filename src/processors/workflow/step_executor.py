@@ -5,7 +5,7 @@ This module contains the WorkflowStepExecutor class which handles the execution
 of individual steps within a workflow.
 """
 
-from utils.workflow import Workflow
+from .emr_workflow import Workflow
 
 
 class WorkflowStepExecutor:

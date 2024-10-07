@@ -2,7 +2,7 @@
 Module for fetching PDF content from the AI MOA system.
 """
 
-from src.config import ConfigManager
+from config import ConfigManager
 
 
 class PdfFetcher:

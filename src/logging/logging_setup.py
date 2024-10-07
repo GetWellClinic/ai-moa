@@ -1,6 +1,6 @@
 import logging
 from logging.handlers import RotatingFileHandler
-from src.config.config_manager import ConfigManager
+from config.config_manager import ConfigManager
 
 def setup_logging(config: ConfigManager):
     logging_config = config.get('logging', {})
