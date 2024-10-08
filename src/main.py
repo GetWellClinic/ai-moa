@@ -19,7 +19,7 @@ from huey import MemoryHuey, crontab
 from config import ConfigManager
 from auth import LoginManager, SessionManager
 from processors import Workflow
-from logging.logging_setup import setup_logging
+from ai_moa_utils.logging_setup import setup_logging
 from datetime import datetime
 from threading import Event
 from typing import Optional
