@@ -38,13 +38,13 @@ import io
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from config import ConfigManager
-from app_logging import setup_logging
+from ai_moa_utils import setup_logging
 from processors.workflow import Workflow
 from auth import LoginManager, DriverManager
 
 from .o19_pdf_fetcher import O19PdfFetcher
 from .local_pdf_fetcher import LocalPdfFetcher
-from .ocr import extract_text_from_pdf, extract_text_from_bytes
+from .ocr import extract_text_from_bytes
 
 logger = logging.getLogger(__name__)
 

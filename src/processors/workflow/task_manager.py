@@ -5,7 +5,9 @@ This module contains the WorkflowTaskManager class which handles the creation
 and management of Huey tasks for workflow processing.
 """
 
-from huey.api import task, TaskLock
+from huey.api import MemoryHuey, TaskLock
+
+huey: MemoryHuey = MemoryHuey('aimoa_automation')
 
 
 class WorkflowTaskManager:
@@ -16,7 +18,7 @@ class WorkflowTaskManager:
     for workflow processing and step execution. Tasks are stored in memory.
     """
 
-    @task()
+    @huey.task()
     def process_workflow_task(self, process_func, *args, **kwargs):
         """
         Create and execute a Huey task for processing a workflow.
@@ -32,7 +34,7 @@ class WorkflowTaskManager:
         with TaskLock('workflow_processing'):
             return process_func(*args, **kwargs)
 
-    @task()
+    @huey.task()
     def execute_workflow_step_task(self, execute_func, step_name, *args,
                                    **kwargs):
         """

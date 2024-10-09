@@ -1,4 +1,4 @@
-from logging import setup_logging
+from ai_moa_utils import setup_logging
 from config import ConfigManager
 from .emr_workflow import Workflow
 
