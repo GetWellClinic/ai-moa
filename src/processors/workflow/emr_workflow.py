@@ -13,9 +13,9 @@ License:
 """
 
 from typing import Dict, Any, List
-from huey import crontab, task
+from huey import crontab, MemoryHuey
 from config import ConfigManager
-from logging import setup_logging
+from ai_moa_utils import setup_logging
 import os
 import csv
 import re
@@ -28,6 +28,8 @@ import PyPDF2
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 import torch
+
+huey: MemoryHuey = MemoryHuey('aimoa_automation')
 
 class Workflow:
     """
@@ -74,7 +76,7 @@ class Workflow:
             "Content-Type": "application/json"
         }
 
-    @task()
+    @huey.task()
     def execute_task(self, step: Dict[str, Any]) -> Any:
         """
         Executes a single workflow task based on the provided step definition.

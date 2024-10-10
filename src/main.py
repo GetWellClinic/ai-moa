@@ -130,8 +130,8 @@ def parse_args() -> argparse.Namespace:
     """
     parser: argparse.ArgumentParser = argparse.ArgumentParser(
         description="Run AI-MOA Automation with optional configuration file paths.")
-    parser.add_argument('--config-file', type=str, default='config.yaml', help="Path to the main configuration file")
-    parser.add_argument('--workflow-config-file', type=str, default='workflow-config.yaml',
+    parser.add_argument('--config-file', type=str, default='src/config.yaml', help="Path to the main configuration file")
+    parser.add_argument('--workflow-config-file', type=str, default='src/workflow-config.yaml',
                         help="Path to the workflow configuration file")
     return parser.parse_args()
 
@@ -160,7 +160,7 @@ def start_huey_consumer(config_file: str, workflow_config_file: str, timeout: in
 
     while not shutdown_event.is_set() and retries < max_retries:
         try:
-            huey.start()
+            huey.dequeue()
             time.sleep(1)
         except Exception as e:
             retries += 1
@@ -175,11 +175,15 @@ def start_huey_consumer(config_file: str, workflow_config_file: str, timeout: in
                 timeout)
 
     # Attempt graceful shutdown with timeout
-    huey.stop(graceful=True, timeout=timeout)
+    # Wait for ongoing tasks to complete (implement a timeout if needed)
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        if shutdown_event.is_set():
+            logger.info("Shutdown event detected. Graceful shutdown complete.")
+            break
+        time.sleep(1)  # Sleep to avoid busy-waiting
 
-    if shutdown_event.is_set():
-        logger.info("Shutdown event detected. Graceful shutdown complete.")
-    else:
+    if not shutdown_event.is_set():
         logger.warning("Graceful shutdown timed out after %s seconds. Forcing shutdown.", timeout)
 
     logger.info("Huey consumer has stopped.")
