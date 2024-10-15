@@ -76,7 +76,7 @@ class Workflow:
             "Content-Type": "application/json"
         }
 
-    @huey.task()
+    # @huey.task()
     def execute_task(self, step: Dict[str, Any]) -> Any:
         """
         Executes a single workflow task based on the provided step definition.
