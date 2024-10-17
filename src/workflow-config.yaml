@@ -8,15 +8,18 @@ workflow:
       true_next: extract_text_from_pdf_file
       false_next: extract_text_doctr
     - name: extract_text_from_pdf
-      true_next: build_prompt
+      true_next: get_category_type
       false_next: exit
     - name: extract_text_from_pdf_file
-      true_next: build_prompt
+      true_next: get_category_type
       false_next: exit
     - name: extract_text_doctr
-      true_next: build_prompt
+      true_next: get_category_type
       false_next: exit
-    - name: build_prompt
+    - name: query_prompt
+      true_next: get_category_type
+      false_next: exit
+    - name: get_category_type
       true_next: get_document_description
       false_next: exit
     - name: get_document_description
@@ -301,7 +304,7 @@ document_categories:
 
 # AI Prompts
 ai_prompts:
-  build_prompt: >
+  category_type_prompt: >
     For the following question, if confidence level is more than 85%, else reply 'Others'.
     From the list, choose one that suits the type of the EMR document.
     Here are your options: Lab, Consult, Insurance, Legal, Old Chart, Radiology, Photo, Consent, Pathology, Diagnostics, Pharmacy, Requisition, HCC Referrals, Request.

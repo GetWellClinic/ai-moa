@@ -28,6 +28,10 @@ import PyPDF2
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 import torch
+from ..utils import file_checker
+from ..utils import ocr
+from ..utils import llm
+from ..document_tagger import document_category
 
 huey: MemoryHuey = MemoryHuey('aimoa_automation')
 
@@ -65,18 +69,23 @@ class Workflow:
         self.provider_number = []
         self.document_description = ''
         self.filepath = config.get('document_processor.local.input_directory', '/app/input')
-        self.tesseracted_text = None
+        self.ocr_text = None
         self.session = requests.Session()
         self.base_url = config.get('emr.base_url')
         self.file_name = ''
-        self.enable_ocr_gpu = config.get('enable_ocr_gpu', False)
+        self.enable_ocr_gpu = config.get('enable_ocr_gpu', True)
         self.url = config.get('ai.url', "http://127.0.0.1:5000/v1/chat/completions")
         self.headers = {
             "Authorization": f"Bearer {config.get('ai.api_key')}",
             "Content-Type": "application/json"
         }
+        self.check_for_file = file_checker.check_for_file
+        self.has_ocr = ocr.has_ocr
+        self.extract_text_doctr = ocr.extract_text_doctr
+        self.query_prompt = llm.query_prompt
+        self.get_category_type = document_category.get_category_type
 
-    @huey.task()
+    # @huey.task()
     def execute_task(self, step: Dict[str, Any]) -> Any:
         """
         Executes a single workflow task based on the provided step definition.
@@ -91,9 +100,12 @@ class Workflow:
         function_to_call = getattr(self, function_name, None)
         
         if function_to_call and callable(function_to_call):
-            result = function_to_call()
+            result = function_to_call(self)
             self.config.set_shared_state(step['name'], result)
-            return result
+            if isinstance(result, tuple):
+                return result[0]
+            else:
+                return result
         else:
             self.logger.error(f"Function {function_name} not found or not callable.")
             raise AttributeError(f"Function {function_name} not found or not callable.")
@@ -107,6 +119,7 @@ class Workflow:
         self.logger.info("Starting workflow execution")
         self.config.clear_shared_state()
         current_step = self.steps[0]
+
         while current_step:
             result = self.execute_task(current_step)
             
@@ -118,101 +131,29 @@ class Workflow:
             if next_step_name == 'exit':
                 self.logger.info("Workflow execution completed")
                 return
+
+            # Find the index of the step to pop
+            index_to_pop = None
+            for index, step in enumerate(self.steps):
+                if step['name'] == current_step['name']:
+                    index_to_pop = index
+                    break  # Exit the loop once the match is found
+
+            # Pop the steps to avoid error in execution
+            if index_to_pop is not None:
+                self.steps = self.steps[index_to_pop + 1:]
             
             current_step = next((step for step in self.steps if step['name'] == next_step_name), None)
         
         self.logger.info("Workflow execution completed")
 
-    def check_for_file(self):
-        input_directory = self.config.get('document_processor.local.input_directory', '/app/input')
-        files = [f for f in os.listdir(input_directory) if os.path.isfile(os.path.join(input_directory, f))]
-        if files:
-            self.config.set_shared_state('current_file', files[0])
-            return True
-        return False
-
-    def has_ocr(self):
-        pdf_path = os.path.join(self.filepath, self.config.get_shared_state('current_file'))
-        try:
-            pdf_document = fitz.open(pdf_path)
-            for page_num in range(len(pdf_document)):
-                page = pdf_document.load_page(page_num)
-                text = page.get_text()
-                if text.strip():
-                    return True
-            return False
-        except Exception as e:
-            self.logger.error(f"An error occurred in has_ocr: {e}")
-            return False
-
-    def extract_text_from_pdf_file(self):
-        text = ''
-        pdf_path = os.path.join(self.filepath, self.config.get_shared_state('current_file'))
-        try:
-            with open(pdf_path, 'rb') as file:
-                reader = PyPDF2.PdfReader(file)
-                num_pages = len(reader.pages)
-                for page_num in range(num_pages):
-                    page = reader.pages[page_num]
-                    text += page.extract_text()
-            self.tesseracted_text = text
-            return True
-        except Exception as e:
-            self.logger.error(f"An error occurred in extract_text_from_pdf_file: {e}")
-            return False
-
-    def extract_text_doctr(self):
-        pdf_path = os.path.join(self.filepath, self.config.get_shared_state('current_file'))
-        text = ''
-        try:
-            if self.enable_ocr_gpu:
-                device = torch.device("cuda:0")
-                model = ocr_predictor(pretrained=True).to(device)
-            else:
-                model = ocr_predictor(pretrained=True)
-            doc = DocumentFile.from_pdf(pdf_path)
-            result = model(doc)
-            for page in result.pages:
-                for block in page.blocks:
-                    for line in block.lines:
-                        text += '\n'
-                        for word in line.words:
-                            text += word.value + ' '
-            self.tesseracted_text = text
-            return True
-        except Exception as e:
-            self.logger.error(f"An error occurred in extract_text_doctr: {e}")
-            return False
-
-    def build_prompt(self):
-        prompt = self.ai_prompts.get('build_prompt', '')
-        data = {
-            "messages": [
-                {
-                    "role": "system",
-                    "content": "You are a helpful assistant designed to output JSON."
-                },
-                {
-                    "role": "user",
-                    "content": f"Today's Date is : {datetime.datetime.now().date()}\n{self.tesseracted_text}\n. {prompt}"
-                }
-            ],
-            "mode": "instruct",
-            "temperature": 0.1,
-            "character": "Assistant",
-            "top_p": 0.1
-        }
-        response = requests.post(self.url, headers=self.headers, json=data)
-        content_value = response.json()['choices'][0]['message']['content']
-        self.logger.info(f"AI Response: {content_value}")
-        self.find_category_index(content_value)
-        return True
 
     def get_document_description(self, prompt):
-        result = self.build_sub_prompt(self.tesseracted_text + prompt)
-        self.document_description = result
-        self.config.set_shared_state('document_description', result)
-        return True
+        # result = self.build_sub_prompt(self.tesseracted_text + prompt)
+        # self.document_description = result
+        # self.config.set_shared_state('document_description', result)
+        print(self.config.get_shared_state('get_category_type'))
+        return False
 
     def getProviderList(self):
         prompt = self.ai_prompts.get('getProviderList', '')
@@ -329,21 +270,7 @@ class Workflow:
         else:
             self.logger.error(f"Failed to update document in O19. Status code: {response.status_code}")
             return False
-    def find_category_index(self, text):
-        if '.' in text:
-            text = text.replace('.', '')
-        for word in text.split():
-            for index, category in enumerate(self.document_categories):
-                if '"' in word:
-                    word = word.replace('"', '')
-                if "'" in word:
-                    word = word.replace("'", "")
-                if word.lower() == category.lower():
-                    self.fileType = category.lower()
-                    self.execute_tasks_from_csv(index)
-                    return True
-        self.fileType = 'others'
-        self.execute_tasks_from_csv(7)
+    
     def build_sub_prompt(self, prompt):
         data = {
             "messages": [
