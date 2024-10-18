@@ -68,7 +68,20 @@ class AIMOAAutomation:
         Perform cleanup operations to release resources properly.
         """
         self.logger.info("Cleaning up resources")
-        self.session_manager.close()
+        
+        if hasattr(self.session_manager, 'close'):
+            try:
+                self.session_manager.close()
+            except Exception as e:
+                self.logger.exception(f"An error occurred while closing: {e}")
+        else:
+            self.logger.warning("The session manager does not have a close method.")
+
+        # Close all logging handlers
+        for handler in self.logger.handlers:
+            handler.close()
+            self.logger.removeHandler(handler)
+
         self.logger.info("Cleanup complete.")
 
     def __enter__(self) -> 'AIMOAAutomation':
@@ -110,93 +123,16 @@ class AIMOAAutomation:
 
 
 @huey.periodic_task(crontab(minute='*/5'))
-def schedule_tasks(config_file: str, workflow_config_file: str) -> None:
+def schedule_tasks() -> None:
     """
     Periodic task triggered every 5 minutes to process workflows.
     """
     logger.info("Running scheduled tasks")
     try:
-        with AIMOAAutomation(config_file=config_file, workflow_config_file=workflow_config_file) as ai_moa:
-            ai_moa.process_workflow()
+        with AIMOAAutomation(config_file='../config.yaml', workflow_config_file='../workflow-config.yaml') as ai_moa:
+            ai_moa.process_workflow(ai_moa)
     except Exception as e:
         logger.exception("Error during scheduled task execution: %s", e)
 
     logger.info("Scheduled tasks completed")
-
-
-def parse_args() -> argparse.Namespace:
-    """
-    Parse command-line arguments to allow specifying custom paths for configuration files.
-    """
-    parser: argparse.ArgumentParser = argparse.ArgumentParser(
-        description="Run AI-MOA Automation with optional configuration file paths.")
-    parser.add_argument('--config-file', type=str, default='src/config.yaml', help="Path to the main configuration file")
-    parser.add_argument('--workflow-config-file', type=str, default='src/workflow-config.yaml',
-                        help="Path to the workflow configuration file")
-    return parser.parse_args()
-
-
-def handle_shutdown_signal(signal_number: int, frame: Optional[object]) -> None:
-    """
-    Handle shutdown signals to stop the Huey consumer gracefully.
-    """
-    logger.info(f"Received shutdown signal ({signal_number}). Stopping Huey consumer...")
-    shutdown_event.set()
-
-
-def start_huey_consumer(config_file: str, workflow_config_file: str, timeout: int = 60) -> None:
-    """
-    Programmatically start the Huey consumer, handling retries and graceful shutdown.
-    Wait for tasks to complete with a maximum timeout during shutdown.
-    """
-    signal.signal(signal.SIGINT, handle_shutdown_signal)
-    signal.signal(signal.SIGTERM, handle_shutdown_signal)
-
-    check_config_files_exist(config_file, workflow_config_file)
-    logger.info("Starting the Huey consumer...")
-
-    retries: int = 0
-    max_retries: int = 5
-
-    while not shutdown_event.is_set() and retries < max_retries:
-        try:
-            huey.dequeue()
-            time.sleep(1)
-        except Exception as e:
-            retries += 1
-            logger.exception(f"Error in Huey consumer loop (attempt {retries}/{max_retries}): %s", e)
-            time.sleep(5 * (2 ** retries))  # Exponential backoff for retries
-
-        if retries >= max_retries:
-            logger.error(f"Huey consumer failed to start after {max_retries} attempts. Exiting.")
-            raise RuntimeError(f"Huey consumer could not start after {max_retries} retries.")
-
-    logger.info("Huey consumer shutting down. Waiting for running tasks to complete (max timeout: %s seconds)...",
-                timeout)
-
-    # Attempt graceful shutdown with timeout
-    # Wait for ongoing tasks to complete (implement a timeout if needed)
-    start_time = time.time()
-    while time.time() - start_time < timeout:
-        if shutdown_event.is_set():
-            logger.info("Shutdown event detected. Graceful shutdown complete.")
-            break
-        time.sleep(1)  # Sleep to avoid busy-waiting
-
-    if not shutdown_event.is_set():
-        logger.warning("Graceful shutdown timed out after %s seconds. Forcing shutdown.", timeout)
-
-    logger.info("Huey consumer has stopped.")
-
-
-if __name__ == "__main__":
-    try:
-        args: argparse.Namespace = parse_args()
-        logger.info("AIMOA Automation started. Waiting for scheduled tasks...")
-        start_huey_consumer(args.config_file, args.workflow_config_file)
-    except FileNotFoundError as e:
-        logger.error(e)
-        raise
-    except Exception as e:
-        logger.exception("An unexpected error occurred during startup: %s", e)
-        raise
+    
