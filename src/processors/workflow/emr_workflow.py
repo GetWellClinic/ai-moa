@@ -31,7 +31,7 @@ import torch
 from ..utils import file_checker
 from ..utils import ocr
 from ..utils import llm
-from ..document_tagger import document_category
+from ..document_tagger import document_category, get_document_description
 
 huey: MemoryHuey = MemoryHuey('aimoa_automation')
 
@@ -84,6 +84,7 @@ class Workflow:
         self.extract_text_doctr = ocr.extract_text_doctr
         self.query_prompt = llm.query_prompt
         self.get_category_type = document_category.get_category_type
+        self.get_document_description = document_category.get_document_description
 
     # @huey.task()
     def execute_task(self, step: Dict[str, Any]) -> Any:
@@ -147,13 +148,6 @@ class Workflow:
         
         self.logger.info("Workflow execution completed")
 
-
-    def get_document_description(self, prompt):
-        # result = self.build_sub_prompt(self.tesseracted_text + prompt)
-        # self.document_description = result
-        # self.config.set_shared_state('document_description', result)
-        print(self.config.get_shared_state('get_category_type'))
-        return False
 
     def getProviderList(self):
         prompt = self.ai_prompts.get('getProviderList', '')
@@ -292,6 +286,12 @@ class Workflow:
         return response.json()['choices'][0]['message']['content']
 
     def getProviderList(self, prompt):
+        print(self.config.get_shared_state('get_document_description'))
+        print('\n\n')
+        print(self.config.get_shared_state('get_document_description_get_document_description'))
+        print('\n\n')
+        print(self.config.get_shared_state('get_document_description_getProviderList'))
+        return
         provider_list = self.getProviderListFromOscarFileMode()
         if provider_list is None:
             self.provider_number.append(99)

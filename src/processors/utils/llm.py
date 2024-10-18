@@ -6,7 +6,7 @@ def query_prompt(self,prompt):
         "messages": [
             {
                 "role": "system",
-                "content": "You are a helpful assistant designed to output JSON."
+                "content": "You are a helpful assistant."
             },
             {
                 "role": "user",
@@ -20,5 +20,5 @@ def query_prompt(self,prompt):
     }
     response = requests.post(self.url, headers=self.headers, json=data)
     content_value = response.json()['choices'][0]['message']['content']
-    self.logger.info(f"AI Response: {content_value}")
+    # self.logger.info(f"AI Response: {content_value}")
     return True, content_value
