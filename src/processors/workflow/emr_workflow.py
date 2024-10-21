@@ -32,6 +32,7 @@ from ..utils import file_checker
 from ..utils import ocr
 from ..utils import llm
 from ..document_tagger import document_category, get_document_description
+from ..provider_tagger import provider
 
 huey: MemoryHuey = MemoryHuey('aimoa_automation')
 
@@ -61,6 +62,7 @@ class Workflow:
         self.steps = config.workflow_steps
         self.document_categories = config.document_categories
         self.ai_prompts = config.ai_prompts
+        self.default_values = config.default_values
         self.patient_name = ''
         self.fl_name = ''
         self.fileType = ''
@@ -85,6 +87,8 @@ class Workflow:
         self.query_prompt = llm.query_prompt
         self.get_category_type = document_category.get_category_type
         self.get_document_description = document_category.get_document_description
+        self.get_provider_list = provider.get_provider_list
+        self.get_provider_list_filemode = provider.get_provider_list_filemode
 
     # @huey.task()
     def execute_task(self, step: Dict[str, Any]) -> Any:
@@ -149,40 +153,9 @@ class Workflow:
         self.logger.info("Workflow execution completed")
 
 
-    def getProviderList(self):
-        prompt = self.ai_prompts.get('getProviderList', '')
-        provider_list = self.getProviderListFromOscarFileMode()
-        if provider_list is None:
-            self.provider_number.append(99)
-            return True
-        data = {
-            "messages": [
-                {
-                    "role": "system",
-                    "content": "You are a helpful assistant designed to output JSON."
-                },
-                {
-                    "role": "user",
-                    "content": self.tesseracted_text + prompt + str(provider_list)
-                }
-            ],
-            "mode": "instruct",
-            "temperature": 0.1,
-            "character": "Assistant",
-            "top_p": 0.1
-        }
-        response = requests.post(self.url, headers=self.headers, json=data)
-        content_value = response.json()['choices'][0]['message']['content']
-        match = re.search(r'\b\d+\b', content_value)
-        if match:
-            numerical_value = int(match.group())
-            self.provider_number.append(numerical_value)
-        else:
-            self.provider_number.append(99)
-        self.config.set_shared_state('provider_list', self.provider_number)
-        return True
-
     def get_patient_name(self, prompt):
+        print(self.config.get_shared_state('get_provider_list'))
+        return
         name = self.build_sub_prompt(self.tesseracted_text + prompt)
         if '.' in name:
             name = name.replace('.', '')

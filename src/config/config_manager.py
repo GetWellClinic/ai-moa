@@ -48,6 +48,10 @@ class ConfigManager:
     def ai_prompts(self) -> Dict[str, str]:
         return self.get_workflow('ai_prompts', {})
 
+    @property
+    def default_values(self) -> Dict[str, str]:
+        return self.get_workflow('default_values', {})
+
     def set_in_memory(self, key, value):
         self.in_memory_storage[key] = value
 

@@ -1,3 +1,10 @@
+#default values
+default_values:
+  default_provider_tagging_id: >
+    99
+  defaul_unidentified_patient_tagging_id: >
+    285
+
 # Workflow Configuration
 workflow:
   steps:
@@ -23,9 +30,9 @@ workflow:
       true_next: get_document_description
       false_next: exit
     - name: get_document_description
-      true_next: getProviderList
+      true_next: get_provider_list
       false_next: exit
-    - name: getProviderList
+    - name: get_provider_list
       true_next: get_patient_name
       false_next: exit
     - name: get_patient_name
@@ -313,6 +320,10 @@ ai_prompts:
   get_patient_name: >
     Answer only to the following question in two words; and the answer should be in the following format.
     Format : Lastname, Firstname. What is the name of the patient?
+
+  get_provider: >
+    Based on the above document, select the appropriate provider from the following list who requested
+    for this document and only return the provider number (eg: 20) nothing else
 
   build_sub_prompt: >
     For the following question if confidence level is more than 85% give the answer in one word using the format 'True' else 'False'.
