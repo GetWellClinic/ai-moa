@@ -8,18 +8,18 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
 import logging
-from config import ConfigManager
 
 logger = logging.getLogger(__name__)
 from auth.login_manager import LoginManager
 
 class ProviderListManager:
-    def __init__(self, config: ConfigManager):
-        self.config = config
-        self.username = config.get('emr.username')
-        self.password = config.get('emr.password')
-        self.pin = config.get('emr.pin')
-        self.base_url = config.get('emr.base_url')
+    def __init__(self, workflow):
+        self.config = workflow.config
+        self.username = workflow.config.get('emr.username')
+        self.password = workflow.config.get('emr.password')
+        self.pin = workflow.config.get('emr.pin')
+        self.base_url = workflow.config.get('emr.base_url')
+        self.logger = workflow.logger
         self.session = requests.Session()
         self.login()
 
@@ -27,9 +27,9 @@ class ProviderListManager:
         response = self.session.post(f"{self.base_url}/login.do",
                                      data={"username": self.username, "password": self.password, "pin": self.pin})
         if response.url == f"{self.base_url}/login.do":
-            print("Login failed.")
+            self.logger.info("Login failed.")
         else:
-            print("Login successful!")
+            self.logger.info("Login successful!")
 
     def upload_template_file(self) -> bool:
         url = f"{self.base_url}/oscarReport/reportByTemplate/uploadTemplates.do"
@@ -39,20 +39,54 @@ class ProviderListManager:
                 files = {'templateFile': (template_file, file, 'text/plain')}
                 data = {'action': 'add'}
                 response = self.session.post(url, files=files, data=data)
-                return response.status_code == 200
+                if(response.status_code == 200):
+                    self.logger.info("Template uploaded successfully.")
+                    return True
         except FileNotFoundError:
-            print(f"Template file not found: {template_file}")
+            self.logger.error(f"Template file not found: {template_file}")
             return False
         except requests.RequestException as e:
-            print(f"Error uploading template file: {e}")
+            self.logger.error(f"Error uploading template file: {e}")
             return False
+
+    def check_template_file(self) -> None:
+
+        url = f"{self.base_url}/oscarReport/reportByTemplate/homePage.jsp?templates=all"
+
+        # Send the POST request
+        response = self.session.get(url)
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        tbody = soup.find('tbody', id='tableData')
+
+        if tbody:
+            # Extract rows from the tbody
+            rows = tbody.find_all('tr')
+
+            for row in rows:
+                # Extract cells from the row
+                cells = row.find_all('td')
+                cell_values = [cell.get_text(strip=True) for cell in cells]
+                if(cell_values[1] == "AI-MOA Config Search Providers (System generated)"):
+                    self.logger.info("Template already exists.")
+                    return True
+
+        if(self.upload_template_file()):
+            self.logger.info("Template uploaded.")
+            return True
+        else:
+            self.logger.info("Template not uploaded.")
+            return False
+
+
 
     def generate_provider_list(self) -> None:
         chrome_options = Options()
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
         login_manager = LoginManager(self.config)
         
-        if self.upload_template_file():
+        if self.check_template_file():
             url = f"{self.base_url}/oscarReport/reportByTemplate/homePage.jsp?templates=all"
             response = self.session.get(url)
             soup = BeautifulSoup(response.text, 'html.parser')
@@ -63,7 +97,7 @@ class ProviderListManager:
                 provider_data = self.fetch_provider_data(template_id)
                 self.save_provider_list(provider_data)
             else:
-                print("Template id not found")
+                self.logger.info("Template id not found")
         
         driver.quit()
 
@@ -83,9 +117,10 @@ class ProviderListManager:
             soup = BeautifulSoup(response.text, 'html.parser')
             input_element = soup.find('input', {'type': 'hidden', 'class': 'btn', 'name': 'csv'})
             if input_element:
+                self.logger.info("Fetching provider data.")
                 return input_element.get('value').replace('"', '')
         except requests.RequestException as e:
-            print(f"Error fetching provider data: {e}")
+            self.logger.info(f"Error fetching provider data: {e}")
         return None
 
     def save_provider_list(self, provider_data: Optional[str]) -> None:
@@ -103,14 +138,12 @@ class ProviderListManager:
             provider_list = {'providers': providers}
             try:
                 output_file = self.config.get('provider_list.output_file', 'config/provider_list.yaml')
+                self.logger.info("Saving provider details to yaml file.")
                 with open(output_file, 'w') as file:
                     yaml.dump(provider_list, file, default_flow_style=False)
-                print('Provider list has been saved to config/provider_list.yaml')
+                self.logger.info('Provider list has been saved to config/provider_list.yaml')
             except IOError as e:
-                print(f"Error saving provider list: {e}")
+                self.logger.error(f"Error saving provider list: {e}")
         else:
-            print('No provider data to save')
+            self.logger.info('No provider data to save')
 
-if __name__ == "__main__":
-    manager = ProviderListManager()
-    manager.generate_provider_list()

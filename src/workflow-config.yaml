@@ -1,3 +1,10 @@
+#default values
+default_values:
+  default_provider_tagging_id: >
+    99
+  defaul_unidentified_patient_tagging_id: >
+    285
+
 # Workflow Configuration
 workflow:
   steps:
@@ -8,21 +15,24 @@ workflow:
       true_next: extract_text_from_pdf_file
       false_next: extract_text_doctr
     - name: extract_text_from_pdf
-      true_next: build_prompt
+      true_next: get_category_type
       false_next: exit
     - name: extract_text_from_pdf_file
-      true_next: build_prompt
+      true_next: get_category_type
       false_next: exit
     - name: extract_text_doctr
-      true_next: build_prompt
+      true_next: get_category_type
       false_next: exit
-    - name: build_prompt
+    - name: query_prompt
+      true_next: get_category_type
+      false_next: exit
+    - name: get_category_type
       true_next: get_document_description
       false_next: exit
     - name: get_document_description
-      true_next: getProviderList
+      true_next: get_provider_list
       false_next: exit
-    - name: getProviderList
+    - name: get_provider_list
       true_next: get_patient_name
       false_next: exit
     - name: get_patient_name
@@ -301,7 +311,7 @@ document_categories:
 
 # AI Prompts
 ai_prompts:
-  build_prompt: >
+  category_type_prompt: >
     For the following question, if confidence level is more than 85%, else reply 'Others'.
     From the list, choose one that suits the type of the EMR document.
     Here are your options: Lab, Consult, Insurance, Legal, Old Chart, Radiology, Photo, Consent, Pathology, Diagnostics, Pharmacy, Requisition, HCC Referrals, Request.
@@ -310,6 +320,10 @@ ai_prompts:
   get_patient_name: >
     Answer only to the following question in two words; and the answer should be in the following format.
     Format : Lastname, Firstname. What is the name of the patient?
+
+  get_provider: >
+    Based on the above document, select the appropriate provider from the following list who requested
+    for this document and only return the provider number (eg: 20) nothing else
 
   build_sub_prompt: >
     For the following question if confidence level is more than 85% give the answer in one word using the format 'True' else 'False'.
