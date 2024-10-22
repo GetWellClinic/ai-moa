@@ -33,6 +33,7 @@ from ..utils import ocr
 from ..utils import llm
 from ..document_tagger import document_category, get_document_description
 from ..provider_tagger import provider
+from ..patient_tagger import patient
 
 huey: MemoryHuey = MemoryHuey('aimoa_automation')
 
@@ -89,6 +90,14 @@ class Workflow:
         self.get_document_description = document_category.get_document_description
         self.get_provider_list = provider.get_provider_list
         self.get_provider_list_filemode = provider.get_provider_list_filemode
+        self.get_patient_hin = patient.get_patient_hin
+        self.get_patient_dob = patient.get_patient_dob
+        self.get_patient_name = patient.get_patient_name
+        self.filter_results = patient.filter_results
+        self.get_patient_Html_Common = patient.get_patient_Html_Common
+        self.convert_date = patient.convert_date
+        self.get_patient_Html = patient.get_patient_Html
+
 
     # @huey.task()
     def execute_task(self, step: Dict[str, Any]) -> Any:
@@ -152,24 +161,6 @@ class Workflow:
         
         self.logger.info("Workflow execution completed")
 
-
-    def get_patient_name(self, prompt):
-        print(self.config.get_shared_state('get_provider_list'))
-        return
-        name = self.build_sub_prompt(self.tesseracted_text + prompt)
-        if '.' in name:
-            name = name.replace('.', '')
-        url = f"{self.base_url}/demographic/SearchDemographic.do"
-        payload = {
-            "query": "%"+name+"%"
-        }
-        response = self.session.post(url, data=payload)
-        response_data = json.loads(response.text)
-        if len(response_data["results"]) == 0:
-            return False
-        else:
-            return True, response_data["results"]
-
     def set_patient(self, patient_data):
         self.patient_name = f"{patient_data['formattedName']} ({patient_data['formattedDob']})"
         self.fl_name = patient_data['formattedName']
@@ -203,7 +194,14 @@ class Workflow:
         self.config.set_shared_state('provider_list', self.provider_number)
         return True
 
-    def o19_update(self):
+    def o19_update(self,prompt):
+        print(self.config.get_shared_state('get_patient_hin'))
+        print(self.config.get_shared_state('get_patient_dob'))
+        print(self.config.get_shared_state('get_patient_name'))
+        print(self.config.get_shared_state('search_hinfilter'))
+        print(self.config.get_shared_state('search_dobfilter'))
+        print(self.config.get_shared_state('search_namefilter'))
+        return
         self.logger.info("================ Document Details ================")
         self.logger.info(f"Patient Name : {self.patient_name}")
         self.logger.info(f"Demographic Number : {self.demographic_number}")
