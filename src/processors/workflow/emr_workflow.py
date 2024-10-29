@@ -15,6 +15,7 @@ License:
 from typing import Dict, Any, List
 from huey import crontab, MemoryHuey
 from config import ConfigManager
+from auth import SessionManager
 from ai_moa_utils import setup_logging
 import os
 import csv
@@ -50,7 +51,7 @@ class Workflow:
     :ivar task_results: Stores the results of each task executed in the workflow.
     :vartype task_results: dict
     """
-    def __init__(self, config: ConfigManager):
+    def __init__(self, config: ConfigManager, session_manager: SessionManager):
         """
         Initializes the Workflow with configuration settings.
 
@@ -73,11 +74,11 @@ class Workflow:
         self.document_description = ''
         self.filepath = config.get('document_processor.local.input_directory', '/app/input')
         self.ocr_text = None
-        self.session = requests.Session()
+        self.session = session_manager.get_session()
         self.base_url = config.get('emr.base_url')
         self.file_name = ''
         self.enable_ocr_gpu = config.get('enable_ocr_gpu', True)
-        self.url = config.get('ai.url', "http://127.0.0.1:5000/v1/chat/completions")
+        self.url = config.get('ai.uri', "https://localhost:3334/v1/chat/completions")
         self.headers = {
             "Authorization": f"Bearer {config.get('ai.api_key')}",
             "Content-Type": "application/json"
@@ -195,6 +196,9 @@ class Workflow:
         return True
 
     def o19_update(self,prompt):
+        print(self.config.get_shared_state('get_category_type'))
+        print(self.config.get_shared_state('get_document_description'))
+        print(self.config.get_shared_state('get_provider_list'))
         print(self.config.get_shared_state('get_patient_hin'))
         print(self.config.get_shared_state('get_patient_dob'))
         print(self.config.get_shared_state('get_patient_name'))

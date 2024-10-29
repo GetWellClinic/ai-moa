@@ -59,7 +59,7 @@ class AIMOAAutomation:
         self.logger: logging.Logger = logger
         self.session_manager: SessionManager = SessionManager(self.config)
         self.login_manager: LoginManager = LoginManager(self.config)
-        self.workflow: Workflow = Workflow(self.config)
+        self.workflow: Workflow = Workflow(self.config,self.session_manager)
 
         self.logger.info("AIMOAAutomation initialized with config: %s", config_file)
 
@@ -135,4 +135,3 @@ def schedule_tasks() -> None:
         logger.exception("Error during scheduled task execution: %s", e)
 
     logger.info("Scheduled tasks completed")
-    

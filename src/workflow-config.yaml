@@ -33,10 +33,28 @@ workflow:
       true_next: get_provider_list
       false_next: exit
     - name: get_provider_list
+      true_next: get_patient_hin
+      false_next: get_patient_hin
+    - name: get_patient_hin
+      true_next: filter_results
+      false_next: filter_results
+    - name: filter_results
+      true_next: get_patient_dob
+      false_next: get_patient_dob
+    - name: get_patient_dob
+      true_next: filter_results
+      false_next: filter_results
+    - name: filter_results
       true_next: get_patient_name
-      false_next: exit
+      false_next: get_patient_name
     - name: get_patient_name
-      true_next: set_patient
+      true_next: filter_results
+      false_next: filter_results
+    - name: filter_results
+      true_next: o19_update
+      false_next: o19_update
+    - name: o19_update
+      true_next: exit
       false_next: exit
     - name: set_patient
       true_next: set_doctor
@@ -70,8 +88,7 @@ document_categories:
           Inflammatory Markers, Genetics, Coagulation Profile, Tissue Biopsy, Sputum sample.
       - name: getProviderList
         prompt: >
-          Based on the above document, select the appropriate provider from the following list who requested for this document
-          and only return the provider number (eg: 20) nothing else
+          Based on the above give the description for the above.
 
   - name: Consult
     description: >
@@ -169,8 +186,7 @@ document_categories:
           ANATOMY LIST: Head, Cervical Neck, Shoulder, Chest, Abdomen, Pelvis, Lower Limbs, Upper Limbs, Spine.
       - name: getProviderList
         prompt: >
-          Based on the above document, select the appropriate provider from the following list who requested for this document
-          and only return the provider number (eg: 20) nothing else
+          Based on the above give the description for the above.
 
   - name: Pathology
     description: >
@@ -317,9 +333,26 @@ ai_prompts:
     Here are your options: Lab, Consult, Insurance, Legal, Old Chart, Radiology, Photo, Consent, Pathology, Diagnostics, Pharmacy, Requisition, HCC Referrals, Request.
     See descriptions of these terms below; these descriptions should be only used to help you to identify the correct term, and not to be used to display in the output.
 
+  get_patient_hin: >
+    Answer only to the following question in one word, one word only;
+    In one word, one word only what is the health card number / health insurance number of the patient?
+    If the health card number is not available only return False, no other words.
+
   get_patient_name: >
-    Answer only to the following question in two words; and the answer should be in the following format.
-    Format : Lastname, Firstname. What is the name of the patient?
+    Answer only to the following question; and the answer should be in the following format;
+    What is the full name of the patient? Format: Fullname
+
+  get_patient_dob: >
+    Answer only to the following question; and the answer should be in the following format;
+    What is the Date of Birth of the patient? Format: yyyy-mm-dd
+
+  get_patient_result_filter: >
+    For the following request, provide only the JSON object as shown in the example, and include no additional text or explanations.
+    Select the item from the list that matches the patient's healthcard number, name and date of birth.
+    The JSON object should include all the details: formattedDob, formattedName, demographicNo (Master Demographic File number) and providerNo.
+    Follow the example format exactly.
+    Example JSON object format: {'formattedDob': '1951-12-08','formattedName': 'John Doe','demographicNo': '22','providerNo': '_'}
+    Follow this format strictly and DO NOT add any other text other than JSON object in the response!
 
   get_provider: >
     Based on the above document, select the appropriate provider from the following list who requested

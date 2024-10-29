@@ -82,7 +82,7 @@ def get_patient_dob(self):
         query = matchText.group()
         query = self.convert_date(self,query)
 
-    self.get_patient_Html_Common(self,query,type_of_query)
+    return self.get_patient_Html_Common(self,query,type_of_query)
 
 
 
@@ -100,7 +100,7 @@ def get_patient_hin(self):
         query = match.group()
         query = query[:-2]
 
-    self.get_patient_Html_Common(self,query,type_of_query)
+    return self.get_patient_Html_Common(self,query,type_of_query)
 
 
 
@@ -177,7 +177,7 @@ def filter_results(self):
         prompt = f"\n{self.ocr_text}.\n" + self.ai_prompts.get('get_patient_result_filter', '')
         text = self.query_prompt(self,prompt)[1]
         cleaned_string = text.replace("[", "").replace("]", "")
-        self.config.set_shared_state(type_of_query+'filter', self.provider_number)
+        self.config.set_shared_state(type_of_query+'filter', cleaned_string)
         return True,cleaned_string
     else:
         return False
