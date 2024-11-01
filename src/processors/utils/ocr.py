@@ -83,7 +83,6 @@ def extract_text_doctr(self):
         
         self.ocr_text = text
         self.logger.info("OCR completed.")
-        print(text)
         return True
     except Exception as e:
         self.logger.error(f"An error occurred in extract_text_doctr: {e}")

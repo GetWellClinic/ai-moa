@@ -181,3 +181,15 @@ def filter_results(self):
         return True,cleaned_string
     else:
         return False
+
+
+def unidentified_patients(self):
+    patient = '''{
+        "formattedDob": "2010-02-28",
+        "formattedName": "self.default_values.get('default_provider_tagging_id', '')",
+        "demographicNo": "self.default_values.get('default_provider_tagging_id', '')",
+        "providerNo": "self.default_values.get('defaul_unidentified_patient_tagging_name', '')"
+    }'''
+
+    self.config.set_shared_state('filter_results', patient)
+    return True, patient

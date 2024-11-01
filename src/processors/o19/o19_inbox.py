@@ -32,6 +32,7 @@ def get_inbox_pendingdocs_documents(self):
 		for item in script_value['DOC']:
 			item = int(item)
 			if(item > last_processed_file):
+				self.file_name = item
 				file_url = f"{self.base_url}/dms/ManageDocument.do?method=display&doc_no={item}"
 				file_response = self.session.get(file_url)
 
@@ -75,6 +76,7 @@ def get_inbox_incomingdocs_documents(self):
 						file_response = self.session.get(pdf_url)
 
 						if file_response.status_code == 200  and file_response.content:
+							self.file_name = option.get_attribute('value')
 							self.config.set_shared_state('current_file', file_response.content)
 							return True
 						else:

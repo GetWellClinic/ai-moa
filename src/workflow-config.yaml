@@ -1,13 +1,18 @@
 #default values
 default_values:
-  default_provider_tagging_id: >
+  default_provider_tagging_id:
     99
-  defaul_unidentified_patient_tagging_id: >
+  defaul_unidentified_patient_tagging_id:
     285
+  defaul_unidentified_patient_tagging_name: >
+    CONFIDENTIAL, UNATTACHED (2016-10-17)
 
 # Workflow Configuration
 workflow:
   steps:
+    - name: update_o19
+      true_next: exit
+      false_next: exit
     - name: get_document_processor_type
       true_next: get_o19_documents
       false_next: get_local_documents
@@ -55,14 +60,8 @@ workflow:
       false_next: filter_results
     - name: filter_results
       true_next: o19_update
-      false_next: o19_update
-    - name: o19_update
-      true_next: exit
-      false_next: exit
-    - name: set_patient
-      true_next: set_doctor
-      false_next: exit
-    - name: set_doctor
+      false_next: unidentified_patients
+    - name: unidentified_patients
       true_next: o19_update
       false_next: exit
     - name: o19_update
@@ -72,6 +71,7 @@ workflow:
 # Document Categories
 document_categories:
   - name: Lab
+    default_tagger: 90
     description: >
       This refers to documents related to laboratory tests and results related to blood, antibodies, urine, fecal and stool; and these laboratory test results are meticulously recorded, often accompanied by reference ranges to provide context for interpretation. This also includes fax documents with a document header from Public Health Laboratory, LifeLabs, Dynacare Laboratories, Alpha Lab, or MedHealth. This also includes laboratory tests for CBC, Cr, iron, hepatitis B surface antigen/antibody test, hepatitis C, hemoglobin, Hba1c, HSV, VZV, HIV, urea, creatinine, TSH, ANA, ESR, urine culture and sensitivity, rubella, syphillis antibody scren, fungal microscopy, fungal culture, immune serology, fecal immunochemical test.
     tasks:
@@ -94,6 +94,7 @@ document_categories:
           Based on the above give the description for the above.
 
   - name: Consult
+    default_tagger: 85
     description: >
       This category type refers to documents that encompass written records or communications exchanged between healthcare professionals, including ED Consultations, Discharge Summary, Consult Report, sleep apnea diagnosis, pathology conducted by a dermatologist who has seen the patient, and Emergency Department Reports. These documents may also serve to seek the expertise or opinion of another colleague to aid in diagnosing, treating, or managing a patient's medical condition, fostering collaboration and knowledge sharing among healthcare providers involved in the patient's care. This may also include detailed explanation of a medical history, procedures, discussion of investigations, impression, assessment, treatment plan, follow-up instructions, and conclusion. This may also include operative note/consultation note/clinic note from a physician/dermatologist discussing the patient's condition, the procedure, findings, and post-op diagnosis for a patient.
     tasks:
@@ -115,6 +116,7 @@ document_categories:
           and only return the provider number (eg: 20) nothing else
 
   - name: Insurance
+    default_tagger: 75
     description: >
       This refers to documents related to health insurance requests for medical information. Examples include requests from WSIB, Sun Life, Canada Life, and Manulife for health records to assess disability or health claims. These documents request medical records such as clinical notes, test results, and consultation reports to evaluate a claim.
     tasks:
