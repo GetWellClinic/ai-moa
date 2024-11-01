@@ -59,7 +59,7 @@ class AIMOAAutomation:
         self.logger: logging.Logger = logger
         self.session_manager: SessionManager = SessionManager(self.config)
         self.login_manager: LoginManager = LoginManager(self.config)
-        self.workflow: Workflow = Workflow(self.config,self.session_manager)
+        self.workflow: Workflow = Workflow(self.config,self.session_manager,self.login_manager)
 
         self.logger.info("AIMOAAutomation initialized with config: %s", config_file)
 
@@ -122,7 +122,7 @@ class AIMOAAutomation:
             self.logger.info("Workflow task completed successfully. Duration: %s seconds", duration)
 
 
-@huey.periodic_task(crontab(minute='*/5'))
+@huey.periodic_task(crontab(minute='*'))
 def schedule_tasks() -> None:
     """
     Periodic task triggered every 5 minutes to process workflows.

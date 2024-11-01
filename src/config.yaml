@@ -12,27 +12,33 @@ huey:
 
 # Logging Configuration
 logging:
-  level: INFO
+  level: DEBUG
   format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-  filename: 'workflow.log'
+  filename: '../workflow.log'
 
 # EMR Configuration
 emr:
   base_url: 'http://localhost:8080/oscar'
-  username: 'admin'
-  password: 'admin'
-  pin: ''  # Add pin here if required
-  system_type: 'o19'  # or 'local'
+  username: 'test'
+  password: 'test'
+  pin: '123'  # Add pin here if required
+  system_type: 'o19'
+  incoming_folder: 'File'
+  incoming_folder_queue: '1'
+  document_folder: 'incoming' # 'pending' or 'incoming'
+
+ai:
+  uri: 'https://localhost:3334/v1/chat/completions'
 
 # OCR Configuration
 ocr:
-  enable_gpu: False
+  enable_gpu: True
   tesseract_path: '/usr/bin/tesseract'
 
 # File Processing
 file_processing:
-  input_directory: '/app/input'
-  output_directory: '/app/output'
+  input_directory: '../app/input'
+  output_directory: '../app/output'
   allowed_extensions: ['.pdf', '.jpg', '.png', '.tiff']
   temp_pdf_name: "downloaded_pdf.pdf"
 
@@ -43,8 +49,8 @@ chrome:
 
 # Provider List Configuration
 provider_list:
-  template_file: 'config/template_providerlist.txt'
-  output_file: 'config/provider_list.yaml'
+  template_file: '../config/template_providerlist.txt'
+  output_file: '../config/provider_list.yaml'
 
 # Testing Configuration
 testing:
@@ -56,6 +62,16 @@ testing:
 
 # Document Processor Configuration
 document_processor:
-  type: 'o19'  # or 'local'
+  system_type: 'local'  #'local'
   local:
-    input_directory: '/app/input'
+    input_directory: '../app/input'
+
+# Document Processor used by AI-MOA
+aimoa_document_processor:
+  type: 'o19' # 'o19' or 'local'
+
+
+# Last documents processed by AI-MOA
+inbox:
+  pending: '1303'
+  incoming: '2024-10-30 00:00:00'

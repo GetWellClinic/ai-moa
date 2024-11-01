@@ -73,7 +73,7 @@ class LoginManager:
         # Locate the login fields and enter credentials
         username_field = driver.find_element(By.NAME, "username")
         password_field = driver.find_element(By.NAME, "password")
-        pin_field = driver.find_element(By.NAME, "pin")
+        pin_field = driver.find_element(By.NAME, "pin2")
 
         username_field.send_keys(self.username)
         password_field.send_keys(self.password)

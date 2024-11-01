@@ -15,7 +15,7 @@ License:
 from typing import Dict, Any, List
 from huey import crontab, MemoryHuey
 from config import ConfigManager
-from auth import SessionManager
+from auth import LoginManager, SessionManager
 from ai_moa_utils import setup_logging
 import os
 import csv
@@ -29,9 +29,10 @@ import PyPDF2
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 import torch
-from ..utils import file_checker
+from ..utils import local_files
 from ..utils import ocr
 from ..utils import llm
+from ..o19 import o19_updater, o19_inbox
 from ..document_tagger import document_category, get_document_description
 from ..provider_tagger import provider
 from ..patient_tagger import patient
@@ -51,7 +52,7 @@ class Workflow:
     :ivar task_results: Stores the results of each task executed in the workflow.
     :vartype task_results: dict
     """
-    def __init__(self, config: ConfigManager, session_manager: SessionManager):
+    def __init__(self, config: ConfigManager, session_manager: SessionManager, login_manager: LoginManager):
         """
         Initializes the Workflow with configuration settings.
 
@@ -75,6 +76,7 @@ class Workflow:
         self.filepath = config.get('document_processor.local.input_directory', '/app/input')
         self.ocr_text = None
         self.session = session_manager.get_session()
+        self.login_manager = login_manager
         self.base_url = config.get('emr.base_url')
         self.file_name = ''
         self.enable_ocr_gpu = config.get('enable_ocr_gpu', True)
@@ -83,7 +85,13 @@ class Workflow:
             "Authorization": f"Bearer {config.get('ai.api_key')}",
             "Content-Type": "application/json"
         }
-        self.check_for_file = file_checker.check_for_file
+        self.update_o19 = o19_updater.update_o19
+        self.get_document_processor_type = o19_inbox.get_document_processor_type
+        self.get_o19_documents = o19_inbox.get_o19_documents
+        self.get_driver = o19_inbox.get_driver
+        self.get_inbox_pendingdocs_documents = o19_inbox.get_inbox_pendingdocs_documents
+        self.get_inbox_incomingdocs_documents = o19_inbox.get_inbox_incomingdocs_documents
+        self.get_local_documents = local_files.get_local_documents
         self.has_ocr = ocr.has_ocr
         self.extract_text_doctr = ocr.extract_text_doctr
         self.query_prompt = llm.query_prompt
