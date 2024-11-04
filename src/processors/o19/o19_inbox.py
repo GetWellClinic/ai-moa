@@ -14,6 +14,21 @@ def get_document_processor_type(self):
 
 	return False
 
+
+def check_lock(self):
+	if self.config.get('lock.status'):
+		self.logger.info(f"Lock already set.")
+		return True
+	else:
+		self.config.update_lock_status(True)
+		self.logger.info(f"Lock set.")
+		return False
+
+def release_lock(self):
+	self.config.update_lock_status(False)
+	self.logger.info(f"Lock released.")
+	return True
+
 def get_o19_documents(self):
 	system_type = self.config.get('emr.document_folder')
 

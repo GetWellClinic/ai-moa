@@ -10,36 +10,36 @@ default_values:
 # Workflow Configuration
 workflow:
   steps:
-    - name: update_o19
+    - name: check_lock
       true_next: exit
-      false_next: exit
+      false_next: get_document_processor_type
     - name: get_document_processor_type
       true_next: get_o19_documents
       false_next: get_local_documents
     - name: get_o19_documents
       true_next: has_ocr
-      false_next: exit
+      false_next: release_lock
     - name: get_local_documents
       true_next: has_ocr
-      false_next: exit
+      false_next: release_lock
     - name: has_ocr
       true_next: extract_text_from_pdf_file
       false_next: extract_text_doctr
     - name: extract_text_from_pdf_file
       true_next: get_category_type
-      false_next: exit
+      false_next: release_lock
     - name: extract_text_doctr
       true_next: get_category_type
-      false_next: exit
+      false_next: release_lock
     - name: query_prompt
       true_next: get_category_type
-      false_next: exit
+      false_next: release_lock
     - name: get_category_type
       true_next: get_document_description
-      false_next: exit
+      false_next: release_lock
     - name: get_document_description
       true_next: get_provider_list
-      false_next: exit
+      false_next: release_lock
     - name: get_provider_list
       true_next: get_patient_hin
       false_next: get_patient_hin
@@ -65,6 +65,9 @@ workflow:
       true_next: o19_update
       false_next: exit
     - name: o19_update
+      true_next: release_lock
+      false_next: release_lock
+    - name: release_lock
       true_next: exit
       false_next: exit
 

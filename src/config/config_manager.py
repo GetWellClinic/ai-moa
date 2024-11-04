@@ -1,20 +1,34 @@
 import yaml
 import os
+from filelock import FileLock
 from typing import Dict, Any, List
 
 class ConfigManager:
     def __init__(self, config_file='config.yaml', workflow_config_file='workflow-config.yaml'):
         self.base_dir = os.path.dirname(os.path.abspath(__file__))
-        config_path = os.path.join(self.base_dir, config_file)
-        workflow_config_path = os.path.join(self.base_dir, workflow_config_file)
-        self.config = self.load_config(config_path)
-        self.workflow_config = self.load_config(workflow_config_path)
+        self.config_file = os.path.join(self.base_dir, config_file)
+        self.workflow_config_file = os.path.join(self.base_dir, workflow_config_file)
+        self.config = self.load_config(self.config_file)
+        self.workflow_config = self.load_config(self.workflow_config_file)
         self.in_memory_storage = {}
         self.shared_state = {}
 
+    def save_workflow_config(self) -> None:
+        with open(self.workflow_config_file, 'w') as file:
+            yaml.dump(self.workflow_config, file)
+
+
+    def save_config(self) -> None:
+        lock = FileLock(f"{self.config_file}.lock")
+        with lock:
+            with open(self.config_file, 'w') as file:
+                yaml.dump(self.config, file)
+
     def load_config(self, file_path: str) -> Dict[str, Any]:
-        with open(file_path, 'r') as file:
-            return yaml.safe_load(file)
+        lock = FileLock(f"{file_path}.lock")
+        with lock:
+            with open(file_path, 'r') as file:
+                return yaml.safe_load(file)
 
     def get(self, key: str, default: Any = None) -> Any:
         keys = key.split('.')
@@ -35,6 +49,18 @@ class ConfigManager:
             else:
                 return default
         return value if value is not None else default
+
+    def update_lock_status(self, status: bool) -> None:
+        self.config['lock']['status'] = status
+        self.save_config()
+
+    def update_pending_inbox(self, file_name: str) -> None:
+        self.config['inbox']['pending'] = file_name
+        self.save_config()
+
+    def update_incoming_inbox(self, file_name: str) -> None:
+        self.config['inbox']['incoming'] = file_name
+        self.save_config()
 
     @property
     def workflow_steps(self) -> List[Dict[str, Any]]:

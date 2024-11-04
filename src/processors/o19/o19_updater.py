@@ -6,6 +6,7 @@ def update_o19(self):
 	self.config.set_shared_state('get_document_description', [True,"Test"])
 	self.config.set_shared_state('filter_results', [True,'{"formattedDob": "2010-10-21", "formattedName": "John Doe", "demographicNo": "454", "providerNo": "253"}'])
 	self.config.set_shared_state('get_provider_list', [True,99])
+	self.file_name = '2024-07-10 10:00:00'
 
 	self.fileType = self.config.get_shared_state('get_category_type')[1]
 	self.document_description = self.config.get_shared_state('get_document_description')[1]
@@ -63,15 +64,15 @@ def update_o19_pendingdocs(self):
 	for value in self.provider_number:
 	    params["flagproviders"].append(value)
 
-	# print(params)
-
-	# response = self.session.post(url, data=params)
-
-	# print(response)
-
 	return True
 
-	#return False
+	response = self.session.post(url, data=params)
+
+	if response.status_code == 200:
+		return self.update_o19_last_processed_file(self)
+
+	self.logger.error(f"An error occurred: {response.status_code}")
+	return False
 
 
 def update_o19_incomingdocs(self):
@@ -110,10 +111,25 @@ def update_o19_incomingdocs(self):
 	for value in self.provider_number:
 	    params["flagproviders"].append(value)
 
-	# response = self.session.post(url, data=params)
-
-	# print(response)
-
 	return True
 
-	#return False
+	response = self.session.post(url, data=params)
+
+	if response.status_code == 200:
+		return self.update_o19_last_processed_file(self)
+
+	self.logger.error(f"An error occurred: {response.status_code}")
+	return False
+
+
+def update_o19_last_processed_file(self):
+	system_type = self.config.get('emr.document_folder')
+
+	if system_type == 'pending':
+		self.config.update_pending_inbox(self.file_name)
+	else:
+		self.config.update_incoming_inbox(self.file_name)
+
+	self.config.save_config()
+
+	return True
