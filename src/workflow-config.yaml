@@ -5,7 +5,9 @@ default_values:
   defaul_unidentified_patient_tagging_id:
     285
   defaul_unidentified_patient_tagging_name: >
-    CONFIDENTIAL, UNATTACHED (2016-10-17)
+    CONFIDENTIAL, UNATTACHED
+  defaul_unidentified_patient_tagging_dob: >
+    2010-02-28
 
 # Workflow Configuration
 workflow:
@@ -29,9 +31,6 @@ workflow:
       true_next: get_category_type
       false_next: release_lock
     - name: extract_text_doctr
-      true_next: get_category_type
-      false_next: release_lock
-    - name: query_prompt
       true_next: get_category_type
       false_next: release_lock
     - name: get_category_type
@@ -59,12 +58,12 @@ workflow:
       true_next: filter_results
       false_next: filter_results
     - name: filter_results
-      true_next: o19_update
+      true_next: update_o19
       false_next: unidentified_patients
     - name: unidentified_patients
-      true_next: o19_update
+      true_next: update_o19
       false_next: exit
-    - name: o19_update
+    - name: update_o19
       true_next: release_lock
       false_next: release_lock
     - name: release_lock

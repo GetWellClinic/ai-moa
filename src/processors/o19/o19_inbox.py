@@ -43,7 +43,12 @@ def get_inbox_pendingdocs_documents(self):
 	if driver is not False:
 		driver.get(f"{self.base_url}/dms/inboxManage.do?method=getDocumentsInQueues")
 		script_value = driver.execute_script("return typeDocLab;")
-		last_processed_file = int(self.config.get('inbox.pending'))
+		pending_file = self.config.get('inbox.pending')
+		if pending_file is not None:
+		    last_processed_file = int(pending_file)
+		else:
+		    # Handle the case where the key is not set
+		    last_processed_file = 0
 		for item in script_value['DOC']:
 			item = int(item)
 			if(item > last_processed_file):
@@ -76,26 +81,26 @@ def get_inbox_incomingdocs_documents(self):
 			if(option.get_attribute('value') != ""):
 				split_string = option.get_attribute('text').split(") ", 1)
 
-				if(self.config.get('inbox.incoming') == ""):
+				if(update_time is None or update_time == ""):
 					update_time = split_string[1]
 				else:
 					update_time = self.config.get('inbox.incoming')
 
-					last_file = datetime.strptime(update_time, "%Y-%m-%d %H:%M:%S")
-					current_file = datetime.strptime(split_string[1], "%Y-%m-%d %H:%M:%S")
+				last_file = datetime.strptime(update_time, "%Y-%m-%d %H:%M:%S")
+				current_file = datetime.strptime(split_string[1], "%Y-%m-%d %H:%M:%S")
 
-					if last_file <= current_file:
-						update_time = split_string[1]
+				if last_file <= current_file:
+					update_time = split_string[1]
 
-						pdf_url = f"{self.base_url}/dms/ManageDocument.do?method=displayIncomingDocs&curPage=1&pdfDir=File&queueId=1&pdfName={option.get_attribute('value')}"
-						file_response = self.session.get(pdf_url)
+					pdf_url = f"{self.base_url}/dms/ManageDocument.do?method=displayIncomingDocs&curPage=1&pdfDir=File&queueId=1&pdfName={option.get_attribute('value')}"
+					file_response = self.session.get(pdf_url)
 
-						if file_response.status_code == 200  and file_response.content:
-							self.file_name = option.get_attribute('value')
-							self.config.set_shared_state('current_file', file_response.content)
-							return True
-						else:
-							self.logger.error(f"An error occurred: {file_response.status_code}")
+					if file_response.status_code == 200  and file_response.content:
+						self.file_name = option.get_attribute('value')
+						self.config.set_shared_state('current_file', file_response.content)
+						return True
+					else:
+						self.logger.error(f"An error occurred: {file_response.status_code}")
 
 	return False
 

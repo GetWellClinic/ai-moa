@@ -1,6 +1,7 @@
 import re
 from bs4 import BeautifulSoup
 import itertools
+import json
 
 def get_patient_name(self):
     prompt = f"\n{self.ocr_text}.\n" + self.ai_prompts.get('get_patient_name', '')
@@ -184,12 +185,12 @@ def filter_results(self):
 
 
 def unidentified_patients(self):
-    patient = '''{
-        "formattedDob": "2010-02-28",
-        "formattedName": "self.default_values.get('default_provider_tagging_id', '')",
-        "demographicNo": "self.default_values.get('default_provider_tagging_id', '')",
-        "providerNo": "self.default_values.get('defaul_unidentified_patient_tagging_name', '')"
-    }'''
-
-    self.config.set_shared_state('filter_results', patient)
-    return True, patient
+    patient_data = {
+            "formattedDob": self.default_values.get('defaul_unidentified_patient_tagging_dob', ''),
+            "formattedName": self.default_values.get('defaul_unidentified_patient_tagging_name', ''),
+            "demographicNo": self.default_values.get('defaul_unidentified_patient_tagging_id', ''),
+            "providerNo": self.default_values.get('defaul_unidentified_patient_provider_id', '')
+        }
+    patient_json = json.dumps(patient_data)
+    self.config.set_shared_state('filter_results', (True, patient_json))
+    return True

@@ -61,7 +61,7 @@ def extract_text_doctr(self):
     try:
         if self.enable_ocr_gpu:
             self.logger.info("OCR using GPU")
-            device = torch.device("cuda:0")
+            device = torch.device(self.config.get('ocr.device'))
             model = ocr_predictor(pretrained=True).to(device)
         else:
             self.logger.info("OCR using CPU")

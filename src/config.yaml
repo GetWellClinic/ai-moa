@@ -57,6 +57,7 @@ logging:
   format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
   level: DEBUG
 ocr:
+  device: cuda:0
   enable_gpu: true
   tesseract_path: /usr/bin/tesseract
 provider_list:

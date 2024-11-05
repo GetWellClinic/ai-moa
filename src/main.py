@@ -129,7 +129,11 @@ def schedule_tasks() -> None:
     """
     logger.info("Running scheduled tasks")
     try:
-        with AIMOAAutomation(config_file='../config.yaml', workflow_config_file='../workflow-config.yaml') as ai_moa:
+        # Accessing the environment variables
+        config_file = os.getenv('CONFIG_FILE', default='../config.yaml')
+        workflow_config_file = os.getenv('WORKFLOW_CONFIG_FILE', default='../workflow-config.yaml')
+
+        with AIMOAAutomation(config_file, workflow_config_file) as ai_moa:
             ai_moa.process_workflow(ai_moa)
     except Exception as e:
         logger.exception("Error during scheduled task execution: %s", e)

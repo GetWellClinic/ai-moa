@@ -2,11 +2,6 @@ import datetime
 import json
 
 def update_o19(self):
-	self.config.set_shared_state('get_category_type', [True,"Insurance"])
-	self.config.set_shared_state('get_document_description', [True,"Test"])
-	self.config.set_shared_state('filter_results', [True,'{"formattedDob": "2010-10-21", "formattedName": "John Doe", "demographicNo": "454", "providerNo": "253"}'])
-	self.config.set_shared_state('get_provider_list', [True,99])
-	self.file_name = '2024-07-10 10:00:00'
 
 	self.fileType = self.config.get_shared_state('get_category_type')[1]
 	self.document_description = self.config.get_shared_state('get_document_description')[1]
@@ -16,13 +11,26 @@ def update_o19(self):
 	    data = json.loads(data)
 	except json.JSONDecodeError as e:
 	    self.logger.error(f"JSON decoding error: {e}")
+	    return False
 
-	self.patient_name = data['formattedName'] + ' (' + data['formattedDob'] + ')'
-	self.fl_name = data['formattedName']
-	self.demographic_number = data['demographicNo']
+	# Extract values safely using get()
+	formatted_name = data.get('formattedName', '')
+	formatted_dob = data.get('formattedDob', '')
+	demographic_number = data.get('demographicNo', '')
+	provider_no = data.get('providerNo', None)
 
-	if data['providerNo'] is not None:
-		self.mrp = data['providerNo']
+	# Check if the required fields are present
+	if not formatted_name or not formatted_dob or not demographic_number:
+		self.logger.error("Missing required patient information.")
+		return False  # Indicate failure due to missing information
+
+    # Assign values to instance variables
+	self.patient_name = f"{formatted_name} ({formatted_dob})"
+	self.fl_name = formatted_name
+	self.demographic_number = demographic_number
+
+	if provider_no is not None:
+	    self.mrp = provider_no
 
 	default_provider_id = self.default_values.get('default_provider_tagging_id', '')
 
@@ -33,7 +41,10 @@ def update_o19(self):
 
 	for category in self.document_categories:
 		if category['name'] == self.fileType:
-			self.provider_number.append(category['default_tagger'])
+			try:
+				self.provider_number.append(category['default_tagger'])
+			except KeyError:
+				self.logger.info(f"Category default tagging id not available for type {self.fileType}.")
 
 	system_type = self.config.get('emr.document_folder')
 
@@ -63,8 +74,6 @@ def update_o19_pendingdocs(self):
 
 	for value in self.provider_number:
 	    params["flagproviders"].append(value)
-
-	return True
 
 	response = self.session.post(url, data=params)
 
@@ -110,8 +119,6 @@ def update_o19_incomingdocs(self):
 
 	for value in self.provider_number:
 	    params["flagproviders"].append(value)
-
-	return True
 
 	response = self.session.post(url, data=params)
 
