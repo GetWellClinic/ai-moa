@@ -1,7 +1,12 @@
 
 
+def get_category_types(self):
+    prompt = f"\n{self.ocr_text}.\n" + self.ai_prompts.get('category_types_prompt', '')
+    text = self.query_prompt(self,prompt)[1]
+    return True, text
+
 def get_category_type(self):
-    prompt = f"\n{self.ocr_text}.\n" + self.ai_prompts.get('category_type_prompt', '')
+    prompt = f"EMR Document content : {self.config.get_shared_state('get_category_types')[1]}.\n" + self.ai_prompts.get('category_type_prompt', '')
     text = self.query_prompt(self,prompt)[1]
     if '.' in text:
         text = text.replace('.', '')

@@ -100,6 +100,7 @@ class Workflow:
         self.has_ocr = ocr.has_ocr
         self.extract_text_doctr = ocr.extract_text_doctr
         self.query_prompt = llm.query_prompt
+        self.get_category_types = document_category.get_category_types
         self.get_category_type = document_category.get_category_type
         self.get_document_description = document_category.get_document_description
         self.get_provider_list = provider.get_provider_list

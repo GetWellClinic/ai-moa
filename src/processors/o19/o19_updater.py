@@ -3,7 +3,7 @@ import json
 
 def update_o19(self):
 
-	self.fileType = self.config.get_shared_state('get_category_type')[1]
+	self.fileType = self.config.get_shared_state('get_category_type')[1].lower()
 	self.document_description = self.config.get_shared_state('get_document_description')[1]
 	data = self.config.get_shared_state('filter_results')[1]
 
