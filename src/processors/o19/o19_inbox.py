@@ -7,6 +7,20 @@ from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 
 def get_document_processor_type(self):
+	"""
+    Determines the document processor type based on the configuration.
+
+    This method checks the system type set in the configuration (`aimoa_document_processor.type`) 
+    and returns `True` if the system type is 'o19'. Otherwise, it returns `False`.
+
+    Returns:
+        bool: `True` if the system type is 'o19', otherwise `False`.
+
+    Example:
+        >>> processor_type = manager.get_document_processor_type()
+        >>> print(processor_type)
+        True
+    """
 	system_type = self.config.get('aimoa_document_processor.type')
 
 	if system_type == 'o19':
@@ -16,6 +30,21 @@ def get_document_processor_type(self):
 
 
 def check_lock(self):
+	"""
+    Checks if a lock is already set and, if not, sets the lock.
+
+    This method checks the current lock status in the configuration (`lock.status`).
+    If the lock is not set, it updates the status to `True` and logs the action. 
+    If the lock is already set, it logs that the lock is in place.
+
+    Returns:
+        bool: `True` if the lock is already set, `False` if the lock was successfully set.
+
+    Example:
+        >>> lock_status = manager.check_lock()
+        >>> print(lock_status)
+        True  # if lock is already set
+    """
 	if self.config.get('lock.status'):
 		self.logger.info(f"Lock already set.")
 		return True
@@ -25,11 +54,39 @@ def check_lock(self):
 		return False
 
 def release_lock(self):
+	"""
+    Releases the current lock.
+
+    This method releases the lock by updating the lock status in the configuration (`lock.status`)
+    and logs the action.
+
+    Returns:
+        bool: `True` indicating that the lock has been released.
+
+    Example:
+        >>> release_status = manager.release_lock()
+        >>> print(release_status)
+        True  # indicating that lock was released
+    """
 	self.config.update_lock_status(False)
 	self.logger.info(f"Lock released.")
 	return True
 
 def get_o19_documents(self):
+	"""
+    Retrieves documents based on the folder type set in the configuration.
+
+    This method determines the type of document folder (`emr.document_folder`) from the configuration 
+    and calls the corresponding method to fetch documents from either the 'pending' or 'incoming' folder.
+
+    Returns:
+        bool: `True` if documents were retrieved successfully, `False` otherwise.
+
+    Example:
+        >>> documents_fetched = manager.get_o19_documents()
+        >>> print(documents_fetched)
+        True  # if documents are fetched successfully
+    """
 	system_type = self.config.get('emr.document_folder')
 
 	if system_type == 'pending':
@@ -39,6 +96,22 @@ def get_o19_documents(self):
 
 
 def get_inbox_pendingdocs_documents(self):
+	"""
+    Retrieves documents from the 'pending' folder in the document management system.
+
+    This method uses Selenium WebDriver to access the document management system and 
+    fetches documents that are in the 'pending' state based on the script value `typeDocLab`.
+    
+    It retrieves the content of the next unprocessed document and updates the shared state with it.
+
+    Returns:
+        bool: `True` if the document was retrieved successfully, `False` otherwise.
+
+    Example:
+        >>> pending_docs_fetched = manager.get_inbox_pendingdocs_documents()
+        >>> print(pending_docs_fetched)
+        True  # if pending documents are fetched successfully
+    """
 	driver = self.get_driver(self)
 	if driver is not False:
 		driver.get(f"{self.base_url}/dms/inboxManage.do?method=getDocumentsInQueues")
@@ -66,6 +139,20 @@ def get_inbox_pendingdocs_documents(self):
 
 
 def get_inbox_incomingdocs_documents(self):
+	"""
+    Retrieves documents from the 'incoming' folder in the document management system.
+
+    This method uses Selenium WebDriver to access the document management system and fetches 
+    documents from the 'incoming' queue. It compares timestamps to ensure the latest document is retrieved.
+
+    Returns:
+        bool: `True` if the document was retrieved successfully, `False` otherwise.
+
+    Example:
+        >>> incoming_docs_fetched = manager.get_inbox_incomingdocs_documents()
+        >>> print(incoming_docs_fetched)
+        True  # if incoming documents are fetched successfully
+    """
 	driver = self.get_driver(self)
 	if driver is not False:
 		queue = self.config.get('emr.incoming_folder_queue')
@@ -106,6 +193,22 @@ def get_inbox_incomingdocs_documents(self):
 
 
 def get_driver(self):
+	"""
+    Retrieves a Selenium WebDriver instance for interaction with the web-based system.
+
+    This method configures Chrome options and creates a Chrome WebDriver instance using 
+    the `webdriver_manager` library. It then attempts to log in using Selenium. If login is successful, 
+    the driver instance is returned, otherwise, it returns `False`.
+
+    Returns:
+        webdriver.Chrome | bool: The WebDriver instance if login is successful, 
+        `False` otherwise.
+
+    Example:
+        >>> driver = manager.get_driver()
+        >>> print(driver)
+        <selenium.webdriver.chrome.webdriver.WebDriver object at 0x...>  # if login is successful
+    """
 	chrome_options = Options()
 	driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 	try:

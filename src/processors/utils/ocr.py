@@ -7,10 +7,30 @@ import torch
 
 def has_ocr(self):
     """
-    Check if the provided PDF bytes contain any text (indicating OCR).
+    Check if the provided PDF contains text, indicating it has OCR.
+
+    This method checks if any of the pages in the PDF have text content, 
+    which would indicate that Optical Character Recognition (OCR) has been 
+    applied to the document.
+
+    Args:
+        None
+
+    Returns:
+        bool: 
+            - `True` if the PDF contains any text.
+            - `False` if the PDF does not contain any text or if an error occurs.
+
+    Example:
+        >>> result = has_ocr()
+        >>> print(result)
+        True  # If OCR is detected in the document.
+
+    Logs:
+        - Logs an error if an exception occurs during OCR detection.
     
-    :param pdf_bytes: The PDF content as a bytes-like object.
-    :return: True if the PDF has text; False otherwise.
+    Raises:
+        Exception: If there is an issue loading or reading the PDF.
     """
     try:
         # Load the PDF from bytes
@@ -29,10 +49,29 @@ def has_ocr(self):
 
 def extract_text_from_pdf_file(self):
     """
-    Extract text from the provided PDF bytes.
+    Extract text from the provided PDF bytes using the PyPDF2 library.
 
-    :param pdf_bytes: The PDF content as a bytes-like object.
-    :return: True if text extraction is successful; False otherwise.
+    This method attempts to extract text from each page of the PDF document 
+    using the `PyPDF2` library. It combines the extracted text into one string.
+
+    Args:
+        None
+
+    Returns:
+        bool:
+            - `True` if text extraction is successful.
+            - `False` if an error occurs during extraction.
+
+    Example:
+        >>> result = extract_text_from_pdf_file()
+        >>> print(result)
+        True  # If the text extraction was successful.
+
+    Logs:
+        - Logs an error if an exception occurs during text extraction.
+    
+    Raises:
+        Exception: If there is an issue reading the PDF file or extracting text.
     """
     text = ''
     try:
@@ -52,10 +91,30 @@ def extract_text_from_pdf_file(self):
 
 def extract_text_doctr(self):
     """
-    Extract text from the provided PDF bytes using OCR.
+    Extract text from the provided PDF bytes using OCR (Optical Character Recognition).
 
-    :param pdf_bytes: The PDF content as a bytes-like object.
-    :return: True if text extraction is successful; False otherwise.
+    This method uses the `doctr` library to perform OCR on the PDF document 
+    and extract text. It can use either the CPU or GPU depending on configuration.
+
+    Args:
+        None
+
+    Returns:
+        bool:
+            - `True` if text extraction is successful using OCR.
+            - `False` if an error occurs during OCR extraction.
+
+    Example:
+        >>> result = extract_text_doctr()
+        >>> print(result)
+        True  # If the OCR text extraction was successful.
+
+    Logs:
+        - Logs the start and completion of the OCR process.
+        - Logs an error if an exception occurs during OCR processing.
+    
+    Raises:
+        Exception: If there is an issue performing OCR or reading the PDF.
     """
     text = ''
     try:

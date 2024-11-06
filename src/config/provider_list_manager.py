@@ -13,7 +13,29 @@ logger = logging.getLogger(__name__)
 from auth.login_manager import LoginManager
 
 class ProviderListManager:
+    """
+    Manages the provider list generation, template file upload, and fetching provider data from an EMR system.
+
+    This class handles login, template file upload, verification, and the generation of provider lists
+    by interacting with the EMR system through HTTP requests and web scraping techniques using BeautifulSoup.
+    It also handles the saving of the generated provider list to a YAML file.
+
+    Attributes:
+        config (dict): The configuration settings for the workflow, including login credentials and URLs.
+        username (str): The EMR username.
+        password (str): The EMR password.
+        pin (str): The EMR PIN.
+        base_url (str): The base URL of the EMR system.
+        logger (logging.Logger): A logger instance to log information and errors.
+        session (requests.Session): The requests session for making HTTP requests.
+    """
     def __init__(self, workflow):
+        """
+        Initializes the ProviderListManager with configuration and login credentials.
+
+        Args:
+            workflow (object): The workflow object that contains configuration data and logger instance.
+        """
         self.config = workflow.config
         self.username = workflow.config.get('emr.username')
         self.password = workflow.config.get('emr.password')
@@ -24,6 +46,14 @@ class ProviderListManager:
         self.login()
 
     def login(self) -> None:
+        """
+        Logs in to the EMR system using the provided username, password, and PIN.
+
+        If the login is successful, a message is logged. If the login fails, an error message is logged.
+
+        Raises:
+            requests.RequestException: If there is an error making the login request.
+        """
         response = self.session.post(f"{self.base_url}/login.do",
                                      data={"username": self.username, "password": self.password, "pin": self.pin})
         if response.url == f"{self.base_url}/login.do":
@@ -32,6 +62,20 @@ class ProviderListManager:
             self.logger.info("Login successful!")
 
     def upload_template_file(self) -> bool:
+        """
+        Uploads the provider list template file to the EMR system.
+
+        Attempts to upload the template file specified in the configuration. If the upload is successful,
+        logs the success and returns `True`. If there is an error or the file is not found, logs an error and
+        returns `False`.
+
+        Returns:
+            bool: `True` if the file was uploaded successfully, otherwise `False`.
+
+        Raises:
+            requests.RequestException: If there is an error during the file upload.
+            FileNotFoundError: If the template file is not found.
+        """
         url = f"{self.base_url}/oscarReport/reportByTemplate/uploadTemplates.do"
         template_file = self.config.get('provider_list.template_file', 'config/template_providerlist.txt')
         try:
@@ -50,7 +94,16 @@ class ProviderListManager:
             return False
 
     def check_template_file(self) -> None:
+        """
+        Checks if the provider list template file already exists in the EMR system.
 
+        This method checks if a template file with the name "AI-MOA Config Search Providers (System generated)"
+        exists in the system. If the template exists, it logs that the template already exists. If not, it attempts
+        to upload the template file.
+
+        Returns:
+            bool: `True` if the template exists or was successfully uploaded, otherwise `False`.
+        """
         url = f"{self.base_url}/oscarReport/reportByTemplate/homePage.jsp?templates=all"
 
         # Send the POST request
@@ -82,6 +135,16 @@ class ProviderListManager:
 
 
     def generate_provider_list(self) -> None:
+        """
+        Generates the provider list by fetching provider data from the EMR system.
+
+        This method first checks if the provider list template file exists or uploads it if necessary. Then,
+        it retrieves the provider data by sending a request with the template ID and parses the response.
+        The data is saved in a YAML file.
+
+        Returns:
+            None
+        """
         chrome_options = Options()
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
         login_manager = LoginManager(self.config)
@@ -102,6 +165,15 @@ class ProviderListManager:
         driver.quit()
 
     def find_template_id(self, tbody: BeautifulSoup) -> Optional[str]:
+        """
+        Finds the template ID for the provider list template.
+
+        Args:
+            tbody (BeautifulSoup): The BeautifulSoup object representing the HTML table body.
+
+        Returns:
+            Optional[str]: The template ID if found, otherwise `None`.
+        """
         if tbody:
             for row in tbody.find_all('tr'):
                 cells = row.find_all('td')
@@ -110,6 +182,18 @@ class ProviderListManager:
         return None
 
     def fetch_provider_data(self, template_id: str) -> Optional[str]:
+        """
+        Fetches provider data from the EMR system by submitting the template ID.
+
+        Args:
+            template_id (str): The template ID to be used in the request.
+
+        Returns:
+            Optional[str]: The CSV data for the provider list if successful, otherwise `None`.
+
+        Raises:
+            requests.RequestException: If there is an error while fetching the data.
+        """
         url = f"{self.base_url}/oscarReport/reportByTemplate/GenerateReportAction.do"
         params = {"templateId": template_id, "submitButton": "Run Query"}
         try:
@@ -124,6 +208,18 @@ class ProviderListManager:
         return None
 
     def save_provider_list(self, provider_data: Optional[str]) -> None:
+        """
+        Saves the fetched provider data to a YAML file.
+
+        Args:
+            provider_data (Optional[str]): The CSV data containing the provider information.
+
+        Returns:
+            None
+
+        Raises:
+            IOError: If there is an error writing the YAML file.
+        """
         if provider_data:
             providers: List[Dict[str, str]] = []
             for row in provider_data.split('\n')[1:]:  # Skip header row
