@@ -14,7 +14,7 @@ emr:
   document_folder: pending
   incoming_folder: File
   incoming_folder_queue: '1'
-  password: password
+  password: passpwd
   pin: '123'
   system_type: o19
   username: emr
@@ -24,8 +24,11 @@ file_processing:
   - .jpg
   - .png
   - .tiff
+  incoming_retries: 0
   input_directory: ../app/input
+  max_retries: 3
   output_directory: ../app/output
+  pending_retries: 1
   temp_pdf_name: downloaded_pdf.pdf
 huey:
   always_eager: true
@@ -37,7 +40,6 @@ huey:
     minute: '*/5'
   store_none: false
 inbox:
-  incoming: ''
   pending: 0
 llm:
   character: Assistant
@@ -47,11 +49,11 @@ llm:
     == ''user'' %}{{ ''[INST] '' + message[''content''] + '' [/INST]'' }}{% elif message[''role'']
     == ''assistant'' %}{{ message[''content''] + eos_token}}{% else %}{{ raise_exception(''Only
     user and assistant roles are supported!'') }}{% endif %}{% endfor %}'
-  model: /models/model_name
+  model: /models/Mistral-7B-Instruct-v0.3.Q8_0.gguf
   temperature: 0.1
   top_p: 0.1
 lock:
-  status: true
+  status: false
 logging:
   filename: ../workflow.log
   format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'

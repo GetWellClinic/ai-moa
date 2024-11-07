@@ -193,10 +193,10 @@ def update_o19_last_processed_file(self):
 	system_type = self.config.get('emr.document_folder')
 
 	if system_type == 'pending':
+		self.config.update_pending_retries(0)
 		self.config.update_pending_inbox(self.file_name)
 	else:
+		self.config.update_incoming_retries(0)
 		self.config.update_incoming_inbox(self.file_name)
-
-	self.config.save_config()
 
 	return True

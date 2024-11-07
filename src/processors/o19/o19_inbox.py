@@ -125,15 +125,26 @@ def get_inbox_pendingdocs_documents(self):
 		for item in script_value['DOC']:
 			item = int(item)
 			if(item > last_processed_file):
-				self.file_name = item
-				file_url = f"{self.base_url}/dms/ManageDocument.do?method=display&doc_no={item}"
-				file_response = self.session.get(file_url)
 
-				if file_response.status_code == 200 and file_response.content:
-					self.config.set_shared_state('current_file', file_response.content)
-					return True
+				max_retries = self.config.get('file_processing.max_retries')  # Get max retry count from configuration
+				current_retries = self.config.get('file_processing.pending_retries')  # Get current retry count from configuration
+
+				if max_retries <= current_retries:  # If max retries is equal to current retries
+					self.config.update_pending_retries(0)  # Reset the retry count in the configuration
+					self.config.update_pending_inbox(item)
+					self.logger.info(f"Max retries exceeded for document {item}.")
 				else:
-					self.logger.error(f"An error occurred: {file_response.status_code}")
+					self.config.update_pending_retries(current_retries + 1)  # Increment the retry count by 1
+
+					self.file_name = item
+					file_url = f"{self.base_url}/dms/ManageDocument.do?method=display&doc_no={item}"
+					file_response = self.session.get(file_url)
+
+					if file_response.status_code == 200 and file_response.content:
+						self.config.set_shared_state('current_file', file_response.content)
+						return True
+					else:
+						self.logger.error(f"An error occurred: {file_response.status_code}")
 
 	return False
 
@@ -166,6 +177,7 @@ def get_inbox_incomingdocs_documents(self):
 
 		for option in select_element.options:
 			if(option.get_attribute('value') != ""):
+
 				split_string = option.get_attribute('text').split(") ", 1)
 
 				if(update_time is None or update_time == ""):
@@ -177,17 +189,28 @@ def get_inbox_incomingdocs_documents(self):
 				current_file = datetime.strptime(split_string[1], "%Y-%m-%d %H:%M:%S")
 
 				if last_file <= current_file:
-					update_time = split_string[1]
 
-					pdf_url = f"{self.base_url}/dms/ManageDocument.do?method=displayIncomingDocs&curPage=1&pdfDir=File&queueId=1&pdfName={option.get_attribute('value')}"
-					file_response = self.session.get(pdf_url)
+					max_retries = self.config.get('file_processing.max_retries')  # Get max retry count from configuration
+					current_retries = self.config.get('file_processing.incoming_retries')  # Get current retry count from configuration
 
-					if file_response.status_code == 200  and file_response.content:
-						self.file_name = option.get_attribute('value')
-						self.config.set_shared_state('current_file', file_response.content)
-						return True
+					if max_retries <= current_retries:  # If max retries is equal to current retries
+						self.config.update_incoming_retries(0)  # Reset the retry count in the configuration
+						self.config.update_incoming_inbox(option.get_attribute('value'))
+						self.logger.info(f"Max retries exceeded for document {item}.")
 					else:
-						self.logger.error(f"An error occurred: {file_response.status_code}")
+						self.config.update_incoming_retries(current_retries + 1)  # Increment the retry count by 1
+
+						update_time = split_string[1]
+
+						pdf_url = f"{self.base_url}/dms/ManageDocument.do?method=displayIncomingDocs&curPage=1&pdfDir=File&queueId=1&pdfName={option.get_attribute('value')}"
+						file_response = self.session.get(pdf_url)
+
+						if file_response.status_code == 200  and file_response.content:
+							self.file_name = option.get_attribute('value')
+							self.config.set_shared_state('current_file', file_response.content)
+							return True
+						else:
+							self.logger.error(f"An error occurred: {file_response.status_code}")
 
 	return False
 

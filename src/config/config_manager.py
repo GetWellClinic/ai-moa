@@ -154,6 +154,38 @@ class ConfigManager:
         self.config['inbox']['incoming'] = file_name
         self.save_config()
 
+    def update_pending_retries(self, times: int) -> None:
+        """
+        Update the pending retry count for file processing.
+
+        This method updates the number of pending retries for file processing in the
+        configuration and saves the updated configuration to persistent storage.
+
+        Args:
+            times (int): The new count of pending retries to set in the configuration.
+
+        Returns:
+            None
+        """
+        self.config['file_processing']['pending_retries'] = times
+        self.save_config()
+
+    def update_incoming_retries(self, times: int) -> None:
+        """
+        Update the incoming retry count for file processing.
+
+        This method updates the number of incoming retries for file processing in the
+        configuration and saves the updated configuration to persistent storage.
+
+        Args:
+            times (int): The new count of incoming retries to set in the configuration.
+
+        Returns:
+            None
+        """
+        self.config['file_processing']['incoming_retries'] = times
+        self.save_config()
+
     @property
     def workflow_steps(self) -> List[Dict[str, Any]]:
         """
