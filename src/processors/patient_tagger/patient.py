@@ -69,6 +69,7 @@ def get_patient_name(self):
 
             if table:
                 self.config.set_shared_state('type_of_query',type_of_query)
+                self.config.set_shared_state('type_of_query_table',str(table))
                 return True,str(table)
 
     return False
@@ -179,6 +180,7 @@ def get_patient_Html_Common(self, query, type_of_query):
 
     if table:
         self.config.set_shared_state('type_of_query',type_of_query)
+        self.config.set_shared_state('type_of_query_table',str(table))
         return True,str(table)
     else:
         return False
@@ -290,8 +292,9 @@ def filter_results(self):
         (True, 'filtered_data')  # cleaned and filtered patient data
     """
     type_of_query = self.config.get_shared_state('type_of_query')
+    table = self.config.get_shared_state('type_of_query_table')
     if type_of_query is not None:
-        prompt = f"\n{self.ocr_text}.\n" + self.ai_prompts.get('get_patient_result_filter', '')
+        prompt = f"\n{self.ocr_text}.\n" + self.ai_prompts.get('get_patient_result_filter', '') + table
         text = self.query_prompt(self,prompt)[1]
         cleaned_string = text.replace("[", "").replace("]", "")
         self.config.set_shared_state(type_of_query+'filter', cleaned_string)
