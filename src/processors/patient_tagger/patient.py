@@ -294,8 +294,14 @@ def filter_results(self):
     type_of_query = self.config.get_shared_state('type_of_query')
     table = self.config.get_shared_state('type_of_query_table')
     if type_of_query is not None:
-        prompt = f"\n{self.ocr_text}.\n" + self.ai_prompts.get('get_patient_result_filter', '') + table
+        prompt = f"\n{table}.\n{self.ocr_text}.\n" + self.ai_prompts.get('get_patient_result_filter', '')
         text = self.query_prompt(self,prompt)[1]
+        match = re.search(r'```json\n(.*?)```', text, re.DOTALL)
+
+        if match:
+            text = match.group(1)
+
+        text = text.replace("'", '"')
         cleaned_string = text.replace("[", "").replace("]", "")
         self.config.set_shared_state(type_of_query+'filter', cleaned_string)
         return True,cleaned_string

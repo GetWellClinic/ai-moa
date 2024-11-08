@@ -62,7 +62,11 @@ def get_category_type(self):
             if word.lower() == category.lower():
                 return True, category
 
-    return False
+            if word.lower().startswith(category.lower()):
+                return True, category
+
+
+    return True, self.default_values.get('default_category', '')
 
 
 def get_document_description(self):
@@ -86,7 +90,7 @@ def get_document_description(self):
 
     # Iterate over document categories
     for item in self.document_categories:
-        if isinstance(item, dict) and item.get('name') == category_name:
+        if isinstance(item, dict) and item.get('name').strip().lower() == category_name.strip().lower():
             previous_response = f"\n{self.ocr_text}.\n"
             for task in item['tasks']:
                 prompt = previous_response + task['prompt']
