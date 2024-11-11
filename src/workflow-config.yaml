@@ -8,6 +8,8 @@ default_values:
     CONFIDENTIAL, UNATTACHED
   defaul_unidentified_patient_tagging_dob: >
     2010-02-28
+  default_category: >
+    Miscellaneous
 
 # Workflow Configuration
 workflow:
@@ -47,25 +49,25 @@ workflow:
       false_next: get_patient_hin
     - name: get_patient_hin
       true_next: filter_results
-      false_next: filter_results
+      false_next: get_patient_name
     - name: filter_results
-      true_next: get_patient_dob
-      false_next: get_patient_dob
-    - name: get_patient_dob
-      true_next: filter_results
-      false_next: filter_results
-    - name: filter_results
-      true_next: get_patient_name
+      true_next: update_o19
       false_next: get_patient_name
     - name: get_patient_name
       true_next: filter_results
-      false_next: filter_results
+      false_next: get_patient_dob
+    - name: filter_results
+      true_next: update_o19
+      false_next: get_patient_dob
+    - name: get_patient_dob
+      true_next: filter_results
+      false_next: unidentified_patients
     - name: filter_results
       true_next: update_o19
       false_next: unidentified_patients
     - name: unidentified_patients
       true_next: update_o19
-      false_next: exit
+      false_next: release_lock
     - name: update_o19
       true_next: release_lock
       false_next: release_lock
@@ -285,7 +287,7 @@ ai_prompts:
   get_patient_result_filter: >
     For the following request, provide only the JSON object as shown in the example, and include no additional text or explanations.
     Select the item from the list that matches the patient's healthcard number, name and date of birth.
-    The JSON object should include all the details: formattedDob, formattedName, demographicNo (Master Demographic File number) and providerNo.
+    The JSON object should include all the details: formattedDob, formattedName, demographicNo (Master Demographic File number or demoIdSearch) and providerNo (provider number).
     Follow the example format exactly.
     Example JSON object format: {'formattedDob': '1951-12-08','formattedName': 'John Doe','demographicNo': '22','providerNo': '_'}
     Follow this format strictly and DO NOT add any other text other than JSON object in the response!
