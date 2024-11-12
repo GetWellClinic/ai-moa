@@ -17,8 +17,7 @@ def get_category_types(self):
         >>> print(result, response)
     """
     prompt = f"\n{self.ocr_text}.\n" + self.ai_prompts.get('category_types_prompt', '')
-    text = self.query_prompt(self,prompt)[1]
-    return True, text
+    return self.query_prompt(self,prompt)
 
 def get_category_type(self):
     """
@@ -66,7 +65,7 @@ def get_category_type(self):
                 return True, category
 
 
-    return True, self.default_values.get('default_category', '')
+    return True, self.default_values.get('default_category', '').lower()
 
 
 def get_document_description(self):

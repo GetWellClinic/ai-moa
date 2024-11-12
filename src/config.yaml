@@ -61,6 +61,7 @@ logging:
 ocr:
   device: cuda:0
   enable_gpu: true
+  page_limit: 20
   tesseract_path: /usr/bin/tesseract
 provider_list:
   output_file: ../config/provider_list.yaml

@@ -119,29 +119,43 @@ def extract_text_doctr(self):
     text = ''
     try:
         if self.enable_ocr_gpu:
-            self.logger.info("OCR using GPU")
+            self.logger.debug("OCR using GPU")
             device = torch.device(self.config.get('ocr.device'))
             model = ocr_predictor(pretrained=True).to(device)
         else:
-            self.logger.info("OCR using CPU")
+            self.logger.debug("OCR using CPU")
             model = ocr_predictor(pretrained=True)
         
-        # Load the PDF from bytes
+        # Read the PDF from bytes (or file)
         pdf_bytes = self.config.get_shared_state('current_file')
         pdf_io = io.BytesIO(pdf_bytes)
+
+        # Read the entire PDF into a list of pages
         doc = DocumentFile.from_pdf(pdf_io)
 
-        self.logger.info("OCR started.")
-        result = model(doc)
-        for page in result.pages:
+        # Truncate the pages to a limit (page_limit)
+        page_limit = self.config.get('ocr.page_limit')
+        self.logger.debug(f"OCR page limit: {page_limit}")
+
+        # Truncate the document before passing to the model
+        truncated_doc = doc[:page_limit]  # Limit the number of pages
+
+        # Now perform OCR on the truncated document
+        self.logger.debug("OCR started.")
+        result = model(truncated_doc)
+
+        # Process the OCR result
+        text = ""
+        for page_index, page in enumerate(result.pages):
+            self.logger.debug(f"OCR processing page number: {page_index}")
             for block in page.blocks:
                 for line in block.lines:
                     text += '\n'
                     for word in line.words:
                         text += word.value + ' '
-        
+
         self.ocr_text = text
-        self.logger.info("OCR completed.")
+        self.logger.debug("OCR completed.")
         return True
     except Exception as e:
         self.logger.error(f"An error occurred in extract_text_doctr: {e}")

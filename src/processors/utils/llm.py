@@ -47,5 +47,7 @@ def query_prompt(self,prompt):
         "top_p": self.config.get('llm.top_p')
     }
     response = requests.post(self.url, headers=self.headers, json=data, verify=False)
+    if response.status_code != 200:
+        return False
     content_value = response.json()['choices'][0]['message']['content']
     return True, content_value

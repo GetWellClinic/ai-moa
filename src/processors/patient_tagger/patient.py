@@ -301,6 +301,11 @@ def filter_results(self):
         if match:
             text = match.group(1)
 
+        json_pattern = r'\{.*\}'
+        json_match = re.search(json_pattern, text)
+        if json_match:
+            text = json_match.group(0)
+
         text = text.replace("'", '"')
         cleaned_string = text.replace("[", "").replace("]", "")
         self.config.set_shared_state(type_of_query+'filter', cleaned_string)
