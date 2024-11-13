@@ -36,6 +36,7 @@ chrome:
 document_processor:
   local:
     input_directory: ../app/input  # Directory where input files for document processing are stored.
+  system_type: local  # Type of system, 'local'.
 
 # EMR (Electronic Medical Record) configuration for connecting to an EMR system.
 emr:
@@ -45,7 +46,7 @@ emr:
   incoming_folder_queue: '1'  # Queue number for processing incoming files.
   password: passpwd  # Password for EMR login.
   pin: '123'  # PIN for EMR login.
-  system_type: o19  # Type of system being used, 'o19'.
+  system_type: o19  # Type of system, 'o19'.
   username: emr  # Username for EMR login.
 
 # File processing configuration, defining allowed file extensions and directories for input/output.
