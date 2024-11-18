@@ -22,6 +22,7 @@
 # AI configuration for interacting with the AI-MOA service.
 ai:
   uri: https://localhost:3334/v1/chat/completions  # URI endpoint for AI model interactions.
+  use-HTTPS: false
 
 # AI-MOA document processor configuration. (Assumed to process medical-related documents.)
 aimoa_document_processor:
