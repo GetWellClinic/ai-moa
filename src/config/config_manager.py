@@ -50,13 +50,13 @@ class ConfigManager:
             config_file (str): The path to the general configuration file. Defaults to 'config.yaml'.
             workflow_config_file (str): The path to the workflow configuration file. Defaults to 'workflow-config.yaml'.
         """
-        self.base_dir = os.path.dirname(os.path.abspath(__file__))
-        self.config_file = os.path.join(self.base_dir, config_file)
-        self.workflow_config_file = os.path.join(self.base_dir, workflow_config_file)
+        self.base_dir = os.path.dirname(os.path.abspath(__file__)) #Base directory location
+        self.config_file = os.path.join(self.base_dir, config_file) #Configurations or settings for the application
+        self.workflow_config_file = os.path.join(self.base_dir, workflow_config_file) #Workflow settings for the current workflow
         self.config = self.load_config(self.config_file)
         self.workflow_config = self.load_config(self.workflow_config_file)
-        self.in_memory_storage = {}
-        self.shared_state = {}
+        self.in_memory_storage = {} #In memory storage variable
+        self.shared_state = {} #Shared state for the application
 
     def save_workflow_config(self) -> None:
         """
