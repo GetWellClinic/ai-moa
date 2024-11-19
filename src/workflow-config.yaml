@@ -23,11 +23,11 @@
 default_values:
   default_provider_tagging_id:
     127
-  defaul_unidentified_patient_tagging_id:
+  default_unidentified_patient_tagging_id:
     285
-  defaul_unidentified_patient_tagging_name: >
+  default_unidentified_patient_tagging_name: >
     CONFIDENTIAL, UNATTACHED
-  defaul_unidentified_patient_tagging_dob: >
+  default_unidentified_patient_tagging_dob: >
     2010-02-28
   default_category: >
     Miscellaneous
@@ -266,7 +266,7 @@ ai_prompts:
 
     Request: This refers to documents that request for health information, release for medical records. These documents may be from MedChart. This document may contain some phrases like: access and disclosure request, release of information request, any and all information, all medical records, complete file, medical record transfer, cumulative patient profile, authorization and direction, request for health information. These documents include requests to transfer medical records to another medical clinic, or family doctor.
 
-    Advertisement: These documents contain promotional messages and important notifications from companies, clinics, medical specialists, individuals addressed to medical clinic and health providers. Advertisements are included to market products, services, events, utilizing persuasive language to capture attention. Announcements are also included to inform us about significant news, educational workshops, updates, changes to services, upcoming events, or organizations. The purpose of these documents includes, advertise or to inform about the changes and services offered. These documents might also promotes the services offered by the clinics, including its new location or specific information about the physicians and their areas of specialization. These documents might have the follow words in the first 3 sentences of the first page: announcement, announcing, accepting new, exciting news etc. These documents has content similar to marketing emails. These documents might describe exciting news about a new doctor joining a clinic or new service available, describing what services are offered, describing what conditions are treated, and explaining how to make a referral. These might also include information about the clinic's services and referral process.
+    Advertisement: These documents contain promotional messages and important notifications from companies, clinics, medical specialists, and individuals addressed to medical clinics and healthcare providers. They include advertisements designed to market products, services, and events, using persuasive language to capture attention, as well as announcements that inform recipients about significant news, educational workshops, updates, changes to services, upcoming events, or organizations. The purpose of these documents is to advertise or inform about changes and services offered by the clinic, such as new locations or updates on physicians and their areas of specialization. These communications often use language such as 'announcement,' 'announcing,' 'accepting new,' or 'exciting news' within the first few sentences. The content is similar to marketing emails, often highlighting exciting developments like new doctors joining a clinic, new services available, conditions treated, or the referral process. They may also include details about the clinic’s services, conditions treated, and how to make a referral. These documents can be classified into specific categories, such as 'Advertisement for Pain Clinic Referrals,' 'Advertisement for Gastroenterology Services,' 'Advertisement for Endoscopy Services,' 'Advertisement for General Surgery Services,' 'Advertisement for Colorectal Treatment Services,' 'Advertisement for Dermatology Services,' and 'Advertisement for Endoscopic Surgery Services,' which help identify and target specific medical specialties and services being promoted or referred.
 
     Miscellaneous: These documents include notification of admission to emergency department, notification of ER visit, discharge patient notification, notification of appointment, appointment notification, appointment cancellations, notification of cancelled appointments, new patient registration forms, patient enrolment forms, clinical scales, and Public Health physician questionnaire forms for reportable diseases.
 

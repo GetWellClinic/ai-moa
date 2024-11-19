@@ -109,7 +109,7 @@ class LoginManager:
                 "username": self.username,
                 "password": self.password,
                 "pin": self.pin
-            }
+            }, verify=self.config.get('emr.verify-HTTPS')
         )
 
         login_successful = response.url != self.login_url

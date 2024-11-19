@@ -127,7 +127,7 @@ def update_o19_pendingdocs(self):
 	for value in self.provider_number:
 	    params["flagproviders"].append(value)
 
-	response = self.session.post(url, data=params)
+	response = self.session.post(url, data=params, verify=self.config.get('emr.verify-HTTPS'))
 
 	if response.status_code == 200:
 		return self.update_o19_last_processed_file(self)
@@ -187,7 +187,7 @@ def update_o19_incomingdocs(self):
 	for value in self.provider_number:
 	    params["flagproviders"].append(value)
 
-	response = self.session.post(url, data=params)
+	response = self.session.post(url, data=params, verify=self.config.get('emr.verify-HTTPS'))
 
 	if response.status_code == 200:
 		return self.update_o19_last_processed_file(self)

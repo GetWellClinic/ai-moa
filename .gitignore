@@ -1,2 +1,4 @@
 .idea
 .aid*
+logs/
+llm-container/models

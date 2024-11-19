@@ -159,7 +159,7 @@ def get_inbox_pendingdocs_documents(self):
 
 					self.file_name = item
 					file_url = f"{self.base_url}/dms/ManageDocument.do?method=display&doc_no={item}"
-					file_response = self.session.get(file_url)
+					file_response = self.session.get(file_url, verify=self.config.get('emr.verify-HTTPS'))
 
 					if file_response.status_code == 200 and file_response.content:
 						self.config.set_shared_state('current_file', file_response.content)
@@ -224,7 +224,7 @@ def get_inbox_incomingdocs_documents(self):
 						update_time = split_string[1]
 
 						pdf_url = f"{self.base_url}/dms/ManageDocument.do?method=displayIncomingDocs&curPage=1&pdfDir=File&queueId=1&pdfName={option.get_attribute('value')}"
-						file_response = self.session.get(pdf_url)
+						file_response = self.session.get(pdf_url, verify=self.config.get('emr.verify-HTTPS'))
 
 						if file_response.status_code == 200  and file_response.content:
 							self.file_name = option.get_attribute('value')
@@ -254,6 +254,8 @@ def get_driver(self):
         <selenium.webdriver.chrome.webdriver.WebDriver object at 0x...>  # if login is successful
     """
 	chrome_options = Options()
+	if not self.config.get('emr.verify-HTTPS', False):
+		chrome_options.add_argument('--ignore-certificate-errors')
 	driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 	try:
 

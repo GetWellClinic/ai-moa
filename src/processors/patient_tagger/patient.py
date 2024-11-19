@@ -285,7 +285,7 @@ def get_patient_Html(self,type_of_query,query):
                 }
 
     # Send the POST request
-    response = self.session.post(url, data=payload)
+    response = self.session.post(url, data=payload, verify=self.config.get('emr.verify-HTTPS'))
 
     soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -352,10 +352,10 @@ def unidentified_patients(self):
         True  # if the unidentified patient data was successfully set
     """
     patient_data = {
-            "formattedDob": self.default_values.get('defaul_unidentified_patient_tagging_dob', ''),
-            "formattedName": self.default_values.get('defaul_unidentified_patient_tagging_name', ''),
-            "demographicNo": self.default_values.get('defaul_unidentified_patient_tagging_id', ''),
-            "providerNo": self.default_values.get('defaul_unidentified_patient_provider_id', '')
+            "formattedDob": self.default_values.get('default_unidentified_patient_tagging_dob', ''),
+            "formattedName": self.default_values.get('default_unidentified_patient_tagging_name', ''),
+            "demographicNo": self.default_values.get('default_unidentified_patient_tagging_id', ''),
+            "providerNo": self.default_values.get('default_unidentified_patient_provider_id', '')
         }
     patient_json = json.dumps(patient_data)
     self.config.set_shared_state('filter_results', (True, patient_json))

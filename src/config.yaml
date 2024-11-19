@@ -22,7 +22,7 @@
 # AI configuration for interacting with the AI-MOA service.
 ai:
   uri: https://localhost:3334/v1/chat/completions  # URI endpoint for AI model interactions.
-  use-HTTPS: false
+  verify-HTTPS: false
 
 # AI-MOA document processor configuration. (Assumed to process medical-related documents.)
 aimoa_document_processor:
@@ -42,6 +42,7 @@ document_processor:
 # EMR (Electronic Medical Record) configuration for connecting to an EMR system.
 emr:
   base_url: http://127.0.0.1:8080/oscar  # Base URL for the EMR system.
+  verify-HTTPS: false
   document_folder: pending  # Folder where pending documents to be processed are stored in o19.
   incoming_folder: File  # Folder where incoming documents to be processed are stored in o19.
   incoming_folder_queue: '1'  # Queue number for processing incoming files.
@@ -62,22 +63,19 @@ file_processing:
   max_retries: 3  # Maximum retries for file processing before failure.
   output_directory: ../app/output  # Directory where processed files are output.
   pending_retries: 1  # Number of retries for the current file in processing.
-  temp_pdf_name: downloaded_pdf.pdf  # Temporary name for downloaded PDF files.
 
 # Huey configuration for task scheduling and logging.
 huey:
   always_eager: true  # If true, tasks will be executed immediately without waiting for the scheduled time.
   console_level: INFO  # Log level for console output.
-  file_level: DEBUG  # Log level for file output.
+  file_level: INFO  # Log level for file output.
   name: workflow_queue  # Name of the task queue.
   results: true  # If true, task results will be stored.
-  schedule:
-    minute: '*/5'  # Task will run every 5 minutes.
   store_none: false  # Whether or not to store task results.
   
 # Inbox configuration.
 inbox:
-  pending: 0  # Last processed file ID in the inbox.
+  pending: 99999999  # Last processed file ID in the inbox, should be set to your last processed file in the inbox.
 
 # LLM (Large Language Model) configuration, including model parameters for AI interactions.
 llm:
@@ -98,9 +96,9 @@ lock:
 
 # Logging configuration, including file location, format, and log level.
 logging:
-  filename: ../workflow.log  # Log file location.
+  filename: ../logs/workflow.log  # Log file location.
   format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'  # Log format.
-  level: DEBUG  # Log level for capturing detailed information (DEBUG level).
+  level: INFO  # Log level for capturing detailed information (DEBUG, INFO level etc).
 
 # OCR (Optical Character Recognition) configuration, specifying the device and settings for document scanning.
 ocr:
