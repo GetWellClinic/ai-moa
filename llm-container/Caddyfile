@@ -1,0 +1,9 @@
+localhost:{$LLM_CONTAINER_PORT} {
+    tls internal
+    reverse_proxy llm-container:2242
+}
+
+127.0.0.1:{$LLM_CONTAINER_PORT} {
+    tls internal
+    reverse_proxy llm-container:2242
+}

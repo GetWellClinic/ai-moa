@@ -1,0 +1,58 @@
+services:
+  # Define the services that will be run by Docker Compose
+  llm-container:
+    # Service for the LLM container
+    deploy:
+      # Resource allocation settings
+      resources:
+        reservations:
+          # Device reservations
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities:
+                - gpu
+    build:
+      # Build context and Dockerfile for the LLM container
+      context: .
+      dockerfile: Dockerfile.llm-cont
+    user: "1000:1000" # Set the user to '1000:1000'
+    # Ensure the container runs with the specified user and group ID
+    volumes:
+      # Mount the local models directory to the container's /models directory
+      - ./models:/models
+    networks:
+      # Attach the container to the llm-network
+      - llm-network
+    ipc: host
+    # Use the host's IPC namespace for inter-process communication
+    environment:
+      - MODEL_NAME=${MODEL_NAME:-/models/gemma-2-2b-it}
+      - HF_TOKEN=${HF_TOKEN}
+    command: --model ${MODEL_NAME:-/models/gemma-2-2b-it} --enable-chunked-prefill --max_model_len 20000 --gpu_memory_utilization 0.8
+    # Command to run when the container starts
+  caddy:
+    # Service for the Caddy container
+    container_name: caddy-llm-container # Name of the container
+    user: "1000:1000" # Set the user to '1000:1000'
+    build:
+      # Build context and Dockerfile for the Caddy container
+      context: .
+      dockerfile: Dockerfile.caddy
+
+    environment:
+      - LLM_CONTAINER_PORT=${LLM_CONTAINER_PORT:-3334}
+    ports:
+      # Map port 3334 on the host to port 3334 in the container
+      - ${LLM_CONTAINER_PORT:-3334}:${LLM_CONTAINER_PORT:-3334}
+    networks:
+      # Attach the container to the llm-network
+      - llm-network
+    depends_on:
+      # Ensure the Caddy container starts after the LLM container
+      - llm-container
+
+networks:
+  # Define the network for the services
+  llm-network:
+    driver: bridge

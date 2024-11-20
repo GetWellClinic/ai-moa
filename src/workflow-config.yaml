@@ -1,106 +1,137 @@
+# COPYRIGHT © 2024 by Spring Health Corporation <office(at)springhealth.org>
+# Toronto, Ontario, Canada
+# SUMMARY: This file is part of the Get Well Clinic's original "AI-MOA" project's collection of software,
+# documentation, and configuration files.
+# These programs, documentation, and configuration files are made available to you as open source
+# in the hopes that your clinic or organization may find it useful and improve your care to the public
+# by reducing administrative burden for your staff and service providers.
+# NO WARRANTY: This software and related documentation is provided "AS IS" and WITHOUT ANY WARRANTY of any kind;
+# and WITHOUT EXPRESS OR IMPLIED WARRANTY OF SUITABILITY, MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+# LICENSE: This software is licensed under the "GNU Affero General Public License Version 3".
+# Please see LICENSE file for full details. Or contact the Free Software Foundation for more details.
+# ***
+# NOTICE: We hope that you will consider contributing to our common source code repository so that
+# others may benefit from your shared work.
+# However, if you distribute this code or serve this application to users in modified form,
+# or as part of a derivative work, you are required to make your modified or derivative work
+# source code available under the same herein described license.
+# Please notify Spring Health Corp <office(at)springhealth.org> where your modified or derivative work
+# source code can be acquired publicly in its latest most up-to-date version, within one month.
+# ***
+
+#default values
+default_values:
+  default_provider_tagging_id:
+    127
+  default_unidentified_patient_tagging_id:
+    285
+  default_unidentified_patient_tagging_name: >
+    CONFIDENTIAL, UNATTACHED
+  default_unidentified_patient_tagging_dob: >
+    2010-02-28
+  default_category: >
+    Miscellaneous
+
 # Workflow Configuration
 workflow:
   steps:
-    - name: check_for_file
+    - name: check_lock
+      true_next: exit
+      false_next: get_document_processor_type
+    - name: get_document_processor_type
+      true_next: get_o19_documents
+      false_next: get_local_documents
+    - name: get_o19_documents
       true_next: has_ocr
-      false_next: exit
+      false_next: release_lock
+    - name: get_local_documents
+      true_next: has_ocr
+      false_next: release_lock
     - name: has_ocr
       true_next: extract_text_from_pdf_file
       false_next: extract_text_doctr
-    - name: extract_text_from_pdf
-      true_next: build_prompt
-      false_next: exit
     - name: extract_text_from_pdf_file
-      true_next: build_prompt
-      false_next: exit
+      true_next: get_category_types
+      false_next: release_lock
     - name: extract_text_doctr
-      true_next: build_prompt
-      false_next: exit
-    - name: build_prompt
+      true_next: get_category_types
+      false_next: release_lock
+    - name: get_category_types
+      true_next: get_category_type
+      false_next: release_lock
+    - name: get_category_type
       true_next: get_document_description
-      false_next: exit
+      false_next: release_lock
     - name: get_document_description
-      true_next: getProviderList
-      false_next: exit
-    - name: getProviderList
-      true_next: get_patient_name
-      false_next: exit
+      true_next: get_provider_list
+      false_next: release_lock
+    - name: get_provider_list
+      true_next: get_patient_hin
+      false_next: get_patient_hin
+    - name: get_patient_hin
+      true_next: filter_results
+      false_next: get_patient_name
+    - name: filter_results
+      true_next: update_o19
+      false_next: get_patient_name
     - name: get_patient_name
-      true_next: set_patient
-      false_next: exit
-    - name: set_patient
-      true_next: set_doctor
-      false_next: exit
-    - name: set_doctor
-      true_next: o19_update
-      false_next: exit
-    - name: o19_update
+      true_next: filter_results
+      false_next: get_patient_dob
+    - name: filter_results
+      true_next: update_o19
+      false_next: get_patient_dob
+    - name: get_patient_dob
+      true_next: filter_results
+      false_next: unidentified_patients
+    - name: filter_results
+      true_next: update_o19
+      false_next: unidentified_patients
+    - name: unidentified_patients
+      true_next: update_o19
+      false_next: release_lock
+    - name: update_o19
+      true_next: release_lock
+      false_next: release_lock
+    - name: release_lock
       true_next: exit
       false_next: exit
 
 # Document Categories
 document_categories:
   - name: Lab
+    default_tagger: 99
     description: >
       This refers to documents related to laboratory tests and results related to blood, antibodies, urine, fecal and stool; and these laboratory test results are meticulously recorded, often accompanied by reference ranges to provide context for interpretation. This also includes fax documents with a document header from Public Health Laboratory, LifeLabs, Dynacare Laboratories, Alpha Lab, or MedHealth. This also includes laboratory tests for CBC, Cr, iron, hepatitis B surface antigen/antibody test, hepatitis C, hemoglobin, Hba1c, HSV, VZV, HIV, urea, creatinine, TSH, ANA, ESR, urine culture and sensitivity, rubella, syphillis antibody scren, fungal microscopy, fungal culture, immune serology, fecal immunochemical test.
     tasks:
       - name: get_document_description
         prompt: >
-          Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document.
-          Review the above document and provide onl ythe output using in the specified output format, without labeling it as output format:,
-          after review perform through the following steps. 1. Select pathology type from PATHOLOGY TESTS LIST provided below.
-          If the provided laboratory tests list does not provide a strong match display the word 'Other'.
-          2. Identify the name of laboratory/hospital/department that performed the test.
-          Use the following output format template: pathology (laboratory/hospital/department).
-          Ensure this output format template is followed precisely including brackets (), the output must not be enclosed with quotation marks,
-          and the output must end without a period. A laboratory with the address of 100 International Blvd Toronto has the name LifeLabs.
-          For reference these are examples using this output template: Biopsy colon (HRH), Bone Marrow (Markham Stouffville), Endometrial biopsy (NYGH), Bloodwork (LifeLabs).
-          PATHOLOGY TESTS LIST: Colon biopsy, Gastric biopsy, Bone marrow biopsy, Endometrial Biopsy, FNA biopsy, HPV PCR, PAP cytopathology, STI tests,
-          GC & Chlam, HIV, Skin Biopsy, Blood Culture, Urinalysis, Culture and Sensitivity, CBC, Liver Function, Thyroid Function, Immune Serology,
-          Inflammatory Markers, Genetics, Coagulation Profile, Tissue Biopsy, Sputum sample.
-      - name: getProviderList
-        prompt: >
-          Based on the above document, select the appropriate provider from the following list who requested for this document
-          and only return the provider number (eg: 20) nothing else
+          Act as if you are a medical office assistant who follows direction precisely and consistantly when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as output 'format:/type:', patient names are never part of output, output ends without period '.'. After review perform the following steps. 1. Select one diagnostics type from the list (Bloodwork, Immunity, Serology, Lab Result, FIT) that suits the above document. 2. Identify the name of the laboratory/hospital that performed the tests in the lab report, use the english name if there is both English and French. Replace 'feLabs' with 'LifeLabs'. 3. Select the lab tests from the LAB TEST LIST. Follow this output format template: diagnostics (laboratory/hospital) lab tests. Ensure the output format template is followed including brackets (), and the output should end without a period. For reference these are example using this output template: Immune serology (Public Health) hepatitis, Bloodwork (LifeLabs) CBC, FIT (LifeLabs) FIT requisition rejected. For reference, use this LAB TEST LIST: CBC, MMR immunity, VZ immunity, H. pylori serology, hepatitis serology, HIV serology, syphilis serology, HSV PCR, fungal, EBV serology, AFB sputum culture, FIT normal, FIT Abnormal, FIT requisition rejected, PAP cytopathology, thyroid function, hormones, Quantiferon TB Gold, biochemistry, serum electrolytes.
 
   - name: Consult
+    default_tagger: 99
     description: >
       This category type refers to documents that encompass written records or communications exchanged between healthcare professionals, including ED Consultations, Discharge Summary, Consult Report, sleep apnea diagnosis, pathology conducted by a dermatologist who has seen the patient, and Emergency Department Reports. These documents may also serve to seek the expertise or opinion of another colleague to aid in diagnosing, treating, or managing a patient's medical condition, fostering collaboration and knowledge sharing among healthcare providers involved in the patient's care. This may also include detailed explanation of a medical history, procedures, discussion of investigations, impression, assessment, treatment plan, follow-up instructions, and conclusion. This may also include operative note/consultation note/clinic note from a physician/dermatologist discussing the patient's condition, the procedure, findings, and post-op diagnosis for a patient.
     tasks:
       - name: get_document_description
         prompt: >
-          These rules always apply: patient first names or patient last names are never part of output; output ends without a period. Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as 'output format'. After review, perform through the following steps.
+          These rules always apply: patient first names or patient last names are never part of output; output ends without period ‘.’, act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as 'output format', after review perform through the following steps.
 
-          Select one specialty type from the SPECIALITY LIST provided at the end of these instructions if there is a strong match based on the document content, otherwise select the specialty type 'Other'. If this document has a strong match in specialty type as the sublist: Geriatric Nurse Report, HealthLinks Coordinated Care Plan, Discharge Summary, Surgical Outpatient Consult, select from the sublist for the specialty type instead. 'ED Summary' should be used for specialty type for all discharge summaries from an emergency department.
-          Identify the name of the consultant or attending physician who wrote this document. Always include the prefix 'Dr.' before the physician's name. Always use the format: Dr. Firstname Lastname.
-          Identify the hospital/organization that this consultation report is sent from, if any. Never directly reference the patient by any type of name.
-          Without using the first name or last name of the patient, identify the sub-type or general nature of this medical report and prepare a description in less than 5 words for the above document. If the document specialty type is 'ED summary', this sub-type should be described as an injury or illness in 5 words or less.
-          Use this output format template: 'specialty (consultant physician or hospital/organization) sub-type or general nature'.
-          Ensure the output format template is followed including brackets (), and the output must end without a period.
-          For reference, these are examples using this output template: Allergy and Immunology (Dr. Smith) allergy test, Infectious Disease (Dr. Clarwyn Yip) sepsis.
-          SPECIALITY LIST: Family Medicine, Cardiology, Gastroenterology, Respirology, Pulmonology, Dermatology, Orthopedics, Neurology, Hematology, Endocrinology, Rheumatology, Nephrology, Ophthalmology, Optometry, Audiology, Rheumatology, Psychiatry, Chiropractic, Obstetrics, Gynecology, OB GYN, Urology, Fertility, General Internal Medicine, Oncology, Infectious Disease, Allergy and Immunology, Geriatrics, Gastrointestinal Surgery, Podiatry, Speech and Language, Chiropody, Dental, Maxillofacial Surgery, Emergency Medicine, Home Care, Physiotherapy, Occupational Therapy, Dietitian, Endoscopy, Palliative Care, Psychotherapy, Psychology, Infectious Disease, Neurosurgery, Spine Surgery, Gastroscopy, Colonoscopy, Plastic Surgery, Vascular Surgery, Pediatrics, Physical Medicine and Rehabilitation, Physiatry and Rehab, Hepatology, Hematopathology, Nuclear Medicine, Radiology, Pain Management, Genetics, Hepatobiliary Surgery, Colorectal Surgery, Cardiac Surgery, Plastic Surgery, Sleep Medicine, Sport Medicine, Vascular Surgery, Thoracic Surgery, Otolaryngology, ENT, Hematologic Oncology, Geriatric Psychiatry, Gynecologic Oncology, Neonatology, Interventional Cardiology, Clinical Genetics, Pediatric Cardiology, Pediatric Endocrinology, Pediatric Gastroenterology, Pediatric Hematology-Oncology, Pediatric Nephrology, Pediatric Neurology, Pediatric Pulmonology, Pediatric Rheumatology, Pediatric Surgery, Pediatric Urology, General Surgery, Pediatric Respirology, Anesthesiology, Surgical Outpatient, Pain Management, Sleep Medicine.
-      - name: getProviderList
-        prompt: >
-          Based on the above document, select the appropriate provider from the following list who requested for this document
-          and only return the provider number (eg: 20) nothing else
+          Select one specialty type from the SPECIALITY LIST provided at the end of these instructions if there is a strong match based on the document content, otherwise select the specialty type Other. If this document has a strong match in specialty type as the sublist: Geriatric Nurse Report, HealthLinks Coordinated Care Plan, Discharge Summary, Surgical Outpatient Consult; select from the sublist for the specialty type instead. ‘ED Summary’ should be used for specialty type for all discharge summaries from an emergency department.
+          Identify the name of the consultant or attending physician who wrote this document. Always include the prefix ‘Dr.’ before the physician’s name; Always use the format: Dr. Firstname Lastname.
+          Identify the hospital/organization that this consultation report is sent from, if any; never directly reference the patient by any type of name.
+          Without using the first name or last name of the patients, identify the sub-type or general nature of this medical report and prepare a description in less than 5 words for the above document. Never directly reference the patient by any type of name. If document specialty type is ‘ED summary’ this sub-type nature of the medical report should be described as an injury or illness in 5 words or less; Never directly reference the patient by any type of name in this description.
+          Use this output format template: 'specialty (consultant physician or hospital/organization) sub-type or general nature’. If the report is from a hospital or lab or of the specialty type ‘Discharge summary’, provide the hospital and the attending physician’s name. Do not mention the words ‘consultation type’, 'specialty type', ‘report’, ‘note’, ‘sub-type’, or 'category' in the ouput response! Only choose ‘Geriatrics’ if the medical report indicates this document is from a Geriatrics specialist; this does not include ED Consultations. Do not use ‘Geriatrics’ as a specialty just because the patient is old or the issues are age related, it must be only used if the physician sending the report is a Geriatrician or Gerontologist. Ensure the output format template is followed including brackets (), the output must not be enclosed with quotation marks, and the output should end without a period. For reference these are examples using this output template: Allergy and Immunology (Dr. Smith) allergy test, Infectious Disease (Dr. Clarwyn Yip) sepsis.
+
+          For reference, use this SPECIALITY LIST: Family Medicine, Cardiology, Gastroenterology, Respirology, Pulmonology, Dermatology, Orthopedics, Neurology, Hematology, Endocrinology, Rheumatology, Nephrology, Ophthalmology, Optometry, Audiology, Rheumatology, Psychiatry, Chiropractic, Obstetrics, Gynecology, OB GYN, Urology, Fertility, General Internal Medicine, Oncology, Infectious Disease, Allergy and Immunology, Geriatrics, Gastrointestinal Surgery, Podiatry, Speech and Language, Chiropody, Dental, Maxillofacial Surgery, Emergency Medicine, Home Care, Physiotherapy, Occupational Therapy, Dietitian, Endoscopy, Palliative Care, Psychotherapy, Psychology, Infectious Disease, Neurosurgery, Spine Surgery, Gastroscopy, Colonoscopy, Plastic Surgery, Vascular Surgery, Pediatrics, Physical Medicine and Rehabilitation, Physiatry and Rehab, Hepatology, Hematopathology, Nuclear Medicine, Radiology, Pain Management, Genetics, Hepatobiliary Surgery, Colorectal Surgery, Cardiac Surgery, Plastic Surgery, Sleep Medicine, Sport Medicine, Vascular Surgery, Thoracic Surgery, Otolaryngology, ENT, Hematologic Oncology, Geriatric Psychiatry, Gynecologic Oncology, Neonatology, Interventional Cardiology, Clinical Genetics, Pediatric Cardiology, Pediatric Endocrinology, Pediatric Gastroenterology, Pediatric Hematology-Oncology, Pediatric Nephrology, Pediatric Neurology, Pediatric Pulmonology, Pediatric Rheumatology, Pediatric Surgery, Pediatric Urology, General Surgery, Pediatric Respirology, Anesthesiology, Surgical Outpatient, Pain Management, Sleep Medicine.
 
   - name: Insurance
+    default_tagger: 99
     description: >
       This refers to documents related to health insurance requests for medical information. Examples include requests from WSIB, Sun Life, Canada Life, and Manulife for health records to assess disability or health claims. These documents request medical records such as clinical notes, test results, and consultation reports to evaluate a claim.
     tasks:
       - name: get_document_description
         prompt: >
-          Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document.
-          Review the above document and provide only the output using in the specified output format, without labeling it as output format:,
-          after review perform the following steps. 1. Identify the organization that wrote this document.
-          2. Select one record type from CATEGORY LIST provided below. If the provided category list does not provide a strong match, display the word 'Other'.
-          Output format template: 'record (insurance company name)'.
-          Ensure this output format template is followed precisely including brackets (), and the output must end without a period.
-          CATEGORY LIST: Authorization for Release, Request - Medical Records, Request - Further Information, Attending Physician Statement, Request - WSIB, Other.
-      - name: getProviderList
-        prompt: >
-          Based on the above document, select the appropriate provider from the following list who requested for this document
-          and only return the provider number (eg: 20) nothing else
+          Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as output format:, after review perform the following steps. 1. Identify the organization who wrote this document. 2. Select one record type from  CATEGORY LIST provided below. If the provided category list does not provide a strong match display the word 'Other'. Output format template: 'record (insurance company name)'. Ensure this output format template is followed precisely including brackets (), and the output must end without a period. For reference this is an example using this output template 'Request - medical records (Lifeworks)'. CATEGORY LIST: Authorization for Release, Request - Medical Records, Request - further information, Attending Physician Statement, Request - WSIB, Other
 
   - name: Legal
     description: >
@@ -108,17 +139,7 @@ document_categories:
     tasks:
       - name: get_document_description
         prompt: >
-          Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document.
-          Review the above document and provide only the output using the specified output format, without labeling it as output format:,
-          after review perform the following steps. 1. Identify the organization who wrote this document.
-          2. Select one correspondence type from CORRESPONDENCE LIST provided below. If the provided category list does not provide a strong match display the word 'Other'.
-          Output format template: 'correspondence type (Name of the firm/company/person who requested documents or records)'.
-          Ensure this output format template is followed precisely including brackets (), and the output must end without a period.
-          CORRESPONDENCE LIST: Authorization for Release of Records, Attending Physician Statement, Request for Records, Request for Records by Patient, Correspondence - Legal, Governing Law and Jurisdiction Agreement.
-      - name: getProviderList
-        prompt: >
-          Based on the above document, select the appropriate provider from the following list who requested for this document
-          and only return the provider number (eg: 20) nothing else
+          Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document. Review the above document and provide only the output using the specified output format, without labeling it as output format:, after review perform the following steps. 1. Identify the organization who wrote this document. 2. Select one correspondance type from  CORRESPONDANCE LIST provided below. If the provided category list does not provide a strong match display the word 'Other'. Output format template: 'correspondance type (Name of the firm/company/person who requested documents or records/date of request if its requested by a patient)'. Ensure this output format template is followed precisly including brackets (), and the output must end without a period. For reference, these are examples using this output template: Request for Records (Sharma Law Firm), Attending physician’s statement (Spector Lit Law Firm), Request for Record by patient (2024-Apr-03). CORRESPONDANCE LIST: Authorization for Release of Records, Attending Physician Statement, Request for Records, Request for records by patient, Correspondance - Legal, Governing Law and Jurisdiction Agreement.
 
   - name: Old Chart
     description: >
@@ -126,18 +147,7 @@ document_categories:
     tasks:
       - name: get_document_description
         prompt: >
-          Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document.
-          Review the above document and provide only the output using the specified output format, without labeling it as output format:,
-          after review perform the following steps. 1. Select one health record type from HEALTH RECORDS TYPE LIST provided below.
-          If the provided health records type list does not provide a strong match display the word 'Other'.
-          Output format template: 'health records type (Name of the doctor/hospital/clinic)'.
-          Ensure this output format template is followed precisely including brackets (), and the output must end without a period.
-          For reference, these are examples using this output template: Immunization record (Get Well Clinic), Old Medical Records (NYGH), Medical Records (Dr. Smith – Magenta Health), Prescription history.
-          HEALTH RECORDS TYPE LIST: Immunization Record, Old Medical Records, Medical Records - Assorted, Prescription History, Surgical History, Cumulative Patient Profile.
-      - name: getProviderList
-        prompt: >
-          Based on the above document, select the appropriate provider from the following list who requested for this document
-          and only return the provider number (eg: 20) nothing else
+          Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document. Review the above document and provide only the output using the specified output format, without labeling it as output format:, after review perform the following steps. 1. Select one health record type from  HEALTH RECORDS TYPE LIST provided below. If the provided health records type list does not provide a strong match display the word 'Other'. Output format template: 'health records type (Name of the doctor/hospital/clinic)'. Ensure this output format template is followed precisely including brackets (), and the output must end without a period. For reference these are examples using this output template 'Immunization record (Get Well Clinic), Old Medical Records (NYGH), Medical Records (Dr. Smith – Magenta Health), Prescription history'. HEALTH RECORDS TYPE LIST: Immunization Record, Old Medical Records, Medical Records - Assorted, Prescription History, Surgical History, Cumulative Patient Profile
 
   - name: Radiology
     description: >
@@ -145,22 +155,7 @@ document_categories:
     tasks:
       - name: get_document_description
         prompt: >
-          Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document.
-          Review the above document and provide only the output using the specified output format, without labeling it as output format:,
-          after review perform the following steps. 1. Select the modality type from DIAGNOSTIC IMAGING TESTS LIST provided below.
-          If the provided diagnostic imaging tests list does not provide a strong match display the word 'Other'.
-          2. Select the anatomy that was imaged from ANATOMY LIST provided below, include which side only if mentioned in the document.
-          3. Compose a maximum 5-word summary of imaging findings.
-          Use this output format template: modality anatomy (imaging facility) summary.
-          Ensure this output format template is followed precisely including brackets (), the output must not be enclosed with quotation marks,
-          and the output must end without a period.
-          For reference, these are examples using this output template: MRI Head (NYGH) ischemic density, CT Chest (UHN) nodule, Xray Chest (PDS) consolidation, Xray Right Femur (Humber River) fracture.
-          DIAGNOSTIC IMAGING TESTS LIST: MRI, MRI MRCP, CT, Xray, BMD, U/S, ECHO, Doppler U/S, Xray and U/S, Angiography, Mammography, PET Scan, CT Angiogram.
-          ANATOMY LIST: Head, Cervical Neck, Shoulder, Chest, Abdomen, Pelvis, Lower Limbs, Upper Limbs, Spine.
-      - name: getProviderList
-        prompt: >
-          Based on the above document, select the appropriate provider from the following list who requested for this document
-          and only return the provider number (eg: 20) nothing else
+          Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document. Review the above document and provide only the output using the specified output format, without labeling it as output format:, after review perform the following steps. 1. Select the modality type from  DIAGNOSTIC IMAGING TESTS LIST provided below. If the provided diagnostic imaging tests list does not provide a strong match display the word 'Other'. 2. Select the anatomy that was imaged from ANATOMY LIST provided below, include which side only if mentioned in the document. 3. Compose a maximum 5 word summary of imaging findings. Use this output format template: modality anatomy (imaging facility) summary. Ensure this output format template is followed precisely including brackets (), the output must not be enclosed with quotation marks, and the output must end without a period. For reference these are examples using this output template MRI Head (NYGH) ischemic density, CT Chest (UHN) nodule, Xray Chest (PDS) consolidation, Xray Right Femur (Humber River) fracture, U/S left shoulder (Hitek) tendonitis, BMD (PDS) low risk, U/S abdo pelvis (PDS) fibroids, Angiography (NYGH) stenosis. For reference, use this DIAGNOSTIC IMAGING TESTS LIST: MRI, MRI MRCP, CT, Xray, BMD, U/S, ECHO, Doppler U/S, Xray and U/S, Angiography, Mammography, Mammogram and U/S, PET Scan, CT Angiogram, Bone Mineral Densitometry. For reference, use this ANATOMY LIST: Head, Cervical Neck, Neck and Thyroid, Eye, Ear, Nose, Scalp, Shoulder, Abdo-Pelvis, Clavicle, Ribs, Chest, Humerous, Forearm, Hand, Wrist, Fingers, Breast, Axilla, Tibia-Fibula, Humerus, Femur, Parotid, Soft Tissue, Heart, Lungs, Abdomen, Obstetrical, Nuchal Translucency, Pelvis, Kidney Ureter Bladder, Scrotum, Inguinal, Rectal, Prostate, Transvaginal, Femur, Lower Limbs, Upper Limbs, Tibia Fibula, Ankle, Foot, Toes, Spine, Lumbar spine, Cervical spine, Knee, Elbow, Hip, Arterial, Venous
 
   - name: Pathology
     description: >
@@ -168,39 +163,31 @@ document_categories:
     tasks:
       - name: get_document_description
         prompt: >
-          Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document.
-          Review the above document and provide only the output using in the specified output format, without labeling it as output format:,
-          after review perform through the following steps. 1. Select pathology type from PATHOLOGY TESTS LIST provided below.
-          If the provided pathology tests list does not provide a strong match display the word 'Other'.
-          2. Identify the name of the laboratory/hospital/department that performed the test.
-          Use the following output format template: pathology (laboratory/hospital/department).
-          Ensure this output format template is followed precisely including brackets (), the output must not be enclosed with quotation marks,
-          and the output must end without a period.
-          For reference, these are examples using this output template: Biopsy colon (HRH), Bone Marrow (Markham Stouffville), Endometrial biopsy (NYGH), Bloodwork (LifeLabs).
-          PATHOLOGY TESTS LIST: Colon biopsy, Gastric biopsy, Bone marrow biopsy, Endometrial Biopsy, FNA biopsy, HPV PCR, PAP cytopathology, STI tests, HIV, Skin Biopsy.
-      - name: getProviderList
-        prompt: >
-          Based on the above document, select the appropriate provider from the following list who requested for this document
-          and only return the provider number (eg: 20) nothing else
+          Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document. Review the above document and provide only the output using the specified output format, without labeling it as output format:, after review perform through the following steps. 1. Select pathology type from PATHOLOGY TESTS LIST provided below. If the provided laboratory tests list does not provide a strong match display the word 'Other'. 2. Identify the name of laboratory/hospital/department that performed the test. Use the following output format template: pathology (laboratory/hospital/department). Ensure this output format template is followed precisely including brackets (), the output must not be enclosed with quotation marks, and the output must end without a period. A laboratory with the address of 100 International Blvd Toronto has the name LifeLabs. For reference these are examples using this output template: Biopsy colon (HRH), Bone Marrow (Markham Stouffville), Endometrial biopsy (NYGH), Bloodwork (LifeLabs). PATHOLOGY TESTS LIST: Colon biopsy, Gastric biopsy, Bone marrow biopsy, Endometrial Biopsy, FNA biopsy, HPV PCR, PAP cytopathology, STI tests, GC & Chlam, HIV, Skin Biopsy, Blood Culture, Urinalysis, Culture and Sensitivity, CBC, Liver Function, Thyroid Function, Immune Serology, Inflammatory Markers, Genetics, Coagulation Profile, Tissue Biopsy, Sputum sample.
 
+  - name: Consent
+    description: >
+      These documents include patient's consent.
+    tasks:
+      - name: get_document_description
+        prompt: >
+          Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as output format:, after review through the following steps. 1. Select one consent type from  PROCESSES LIST provided below. If the provided process list does not provide a strong match display the word 'Other'. Follow this output format template: consent type. Ensure this output format template is followed precisely including brackets (), and the output must end without a period. For reference these are examples using this output template: Patient Registration and Consent, Governing law  and jurisdiction agreement. PROCESSES LIST: Patient Registration and Consent, Consent to Release Records, Authorization for Release to Third Party, Governing Law and Jurisdiction Agreement, Consent for Medical Record Transfer, Patient Enrolment Form, Informed Consent for Treatment, Consent for Telemedicine Services, Consent for Minor's Treatment, Consent for Surgical Procedure.
+
+  - name: Diagnostics
+    description: >
+      These documents include information about patient's diagnostics.
+    tasks:
+      - name: get_document_description
+        prompt: >
+          Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document. Review the above document and provide only the output using the specified output format, without labeling it as output format:, after review perform the following steps. 1. Select one diagnostic test from DIAGNOSTIC TESTS LIST provided below. If the provided diagnostic tests list does not provide a strong match display the word 'Other'. Output format template: 'diagnostic test (Name of the facility)'. Ensure this output format template is followed precisely including brackets (), the output must not be enclosed with quotation marks, and the output must end without a period. For reference these are examples using this output template 'ECG (Lifelabs), Stress Test (The Heart Clinic ), PFT (Polyclinic), Holter Monitor (KMH)'. DIAGNOSTIC TESTS LIST: ECG, Exercise Stress Test, PFT, Holter Rhythm Monitor, EEG, Sleep Study, Audiogram, Vision Test, Spirometry, Nuclear Stress Test, ECHO, Cardiac Catheterization
+  
   - name: Pharmacy
     description: >
       This refers to documents sent from a pharmacy solely regarding medication renewals, prescription clarifications, notification of MedsCheck, as well as questions or correspondence from a pharmacist/pharmacy to a doctor to ensure a patient is taking the correct medications and dosage as prescribed. This does not include consultations from other physicians that also discuss medications as part of a consultation by a physician which are considered Consultations instead. If the first 4 lines of the first page mention the word MedsCheck, then the document is more likely to be a pharmacy category type than a lab/consult/diagnostics.
     tasks:
       - name: get_document_description
         prompt: >
-          Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document.
-          Review the above document and provide only the output using in the specified output format, without labeling it as output format:,
-          after review perform the following steps. 1. Select one record type from RECORDS TYPE LIST provided below.
-          2. Identify the pharmacist or pharmacy company in the document. If the provided medical record type list does not provide a strong match display the word 'Other'.
-          Output format template: 'record (pharmacy/pharmacist)'.
-          Ensure this output format template is followed precisely including brackets (), and the output must end without a period.
-          For reference these are examples using this output template: Rx Refill (Shoppers), Rx Clarification (New Canyon Pharmacy), Rx Summary (MedsCheck).
-          RECORDS TYPE LIST: Rx Refill Request, Rx Clarification, Medication Summary List, Notification of Pharmacist Dispensing, MedsCheck, Pharmacy Correspondence, Notification Rx Convenience Pack, Rx Renewal, Rx Adaptation, Notification Drug Interaction, Notification Drug Unavailable, Medication Concern.
-      - name: getProviderList
-        prompt: >
-          Based on the above document, select the appropriate provider from the following list who requested for this document
-          and only return the provider number (eg: 20) nothing else
+          Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as output format:, after review perform the following steps. 1. Select one record type from RECORDS TYPE LIST provided below. 2. Identify the pharmacist or pharmacy company in the document. If the provided medical record type list does not provide a strong match display the word 'Other'. Output format template: 'record (pharmacy/pharmacist)'. Ensure this output format template is followed precisely including brackets (), and the output must end without a period. For reference these are examples using this output template 'Rx Refill (Shoppers), Rx Clarification (New Canyon Pharmacy), Rx Summary (MedsCheck)'. For reference, this is RECORDS TYPE LIST: Rx Refill Request, Rx Clarification, Medication Summary List, Notification of Pharmacist Dispensing, MedsCheck, Pharmacy Correspondence, Notification Rx Convenience Pack, Rx Renewal, Rx Adaptation, Notification Drug Interaction, Notification Drug Unavailable, Medication Concern.
 
   - name: Requisition
     description: >
@@ -208,19 +195,7 @@ document_categories:
     tasks:
       - name: get_document_description
         prompt: >
-          Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document.
-          Review the above document and provide only the output using in the specified output format, without labeling it as output format:,
-          after review perform the following steps. 1. Select one category from CATEGORY LIST provided below.
-          If the provided category list does not provide a strong match display the word 'Other'.
-          Output format template: 'category (Name of the doctor/specialist/practitioner/location)'.
-          Ensure this output format template is followed precisely including brackets (), and the output must end without a period.
-          For reference these are examples using this output template: Req BP Monitor (Downsview Cardiology), Req Colonscopy (York Diagnostic Centre),
-          Referral - Sleep Clinic (Polyclinic Sleep Diagnostic), Req - MRI(NYGH), Req - Geriatric Program (Baycrest).
-          CATEGORY LIST: Req - Sleep Clinic, Req - Cardiac Testing, Req - Colonscopy, Referral, Referral to GWC, Req - MRI, Req - PFT, Req - CT, Req - Mammography, Req - FNA biopsy, Request for Consultation, Req - Nerve Conduction Study.
-      - name: getProviderList
-        prompt: >
-          Based on the above document, select the appropriate provider from the following list who requested for this document
-          and only return the provider number (eg: 20) nothing else
+          Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as output format:, after review through the following steps. 1. Select one category from  CATEGORY LIST provided below. If the provided category list does not provide a strong match display the word 'Other'. Output format template: 'category (Name of the doctor/specialist/practitioner/location)'. Ensure this output format template is followed precisely including brackets (), and the output must end without a period. For reference these are examples using this output template: Req BP Monitor (Downsview Cardiology), Req Colonscopy (York Diagnostic Centre), Referral - Sleep Clinic (Polyclinic Sleep Diagnostic), Req - MRI(NYGH), Req - Geriatric Program (Baycrest). CATEGORY LIST: Req - Sleep Clinic, Req - Cardiac Testing, Req - Colonscopy, Referral, Referral to GWC, Req - MRI, Req - PFT, Req - CT, Req - Mammography, Req - FNA biopsy, Request for Consultation, Req - Nerve Conduction Study
 
   - name: Referral
     description: >
@@ -228,21 +203,7 @@ document_categories:
     tasks:
       - name: get_document_description
         prompt: >
-          Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document.
-          Review the above document and provide only the output using in the specified output format, without labeling it as output format:,
-          after review perform the following steps. 1. Select one referral type from REFERRAL TYPE LIST provided below.
-          2. Select one specialty from SPECIALTY LIST. If the provided Medical Record type list does not provide a strong match display the word 'Other'.
-          Output format template: referral - specialty (clinic/program/consultant doctor).
-          Ensure this output format template is followed precisely including brackets () and -, and the output must end without a period.
-          For reference these are examples using this output template 'Health Care Connect (Get Well Clinic), Referral - Cardiology (Dr. John Habot),
-          Referral - Sleep Study (Polyclinic Sleep Diagnostic), Referral to GWC (Dr. Copeland) psychotherapy, Referral - Get Well Clinic (Weight Management Program),
-          Referral - Neurology (Dr. Prigozhikh)'.
-          REFERRAL TYPE LIST: Referral, Health Care Connect.
-          SPECIALTY LIST: Homecare, Weight Management, Psychotherapy, Cardiology, Neurology, Geriatrics, ENT, Audiology, Otolaryngology, Plastic Surgery, Ophthalmology, Mental Health, Psychiatry, Dermatology, Orthopedics, Rheumatology, Respirology, Hepatology, Gastroenterology, Endocrinology, Proctology, Urology, Nephrology, Obstetrics, Gynecology, Hematology, Oncology, Breast Diagnostic Centre, SCOPE, Dietitian, Chiropody, Neurology, Endoscopy, Fertility, Infectious Disease, Optometry, Family Medicine, Palliative Care, Pediatrics, Physiatry, Pain, Sleep and Language, Sports Medicine, GWC Allied Health.
-      - name: getProviderList
-        prompt: >
-          Based on the above document, select the appropriate provider from the following list who requested for this document
-          and only return the provider number (eg: 20) nothing else
+          Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as output format:, after review perform the following steps. 1. Select one referral type from REFERRAL TYPE LIST provided below. 2. Select one specialty from SPECIALTY LIST. If the provided Medical Record type list does not provide a strong match display the word 'Other'. Output format template: referral - specialty (clinic/program/consultant doctor). Ensure this output format template is followed precisely including brackets () and -, and the output must end without a period. For reference these are examples using this output template 'Health Care Connect (Get Well Clinic) John Doe, Referral - Cardiology (Dr. John Habot), Referral - Sleep Study (Polyclinic Sleep Diagnostic), Referral to GWC (Dr. Copeland) psychotherapy, Referral - Get Well Clinic (Weight Management Program), Referral - Neurology (Dr. Prigozhikh)  '. REFERRAL TYPE LIST: Referral, Health Care Connect. For reference, this is the SPECIALTY LIST: Homecare, Weight Management, Psychotherapy, Cardiology, Neurology, Geriatrics, ENT, Audiology, Otolaryngology, Plastic Surgery, Opthalmology, Mental Health, Psychiatry, Dermatology, Orthopedics, Rheumatology, Respirology, Hepatology, Gastroenterology, Endocrinology, Proctology, Urology, Nephrology, Obstetrics, Gynecology, Hematology, Oncology, Breast Diagnostic Centre, SCOPE, Dietitian, Chiropody, Neurology, Endoscopy, Fertility, Infectious Disease, Optometry, Family Medicine, Palliative Care, Pediatrics, Physiatry, Pain, Sleep and Language, Sports Medicine, GWC Allied Health.
 
   - name: Request
     description: >
@@ -250,20 +211,7 @@ document_categories:
     tasks:
       - name: get_document_description
         prompt: >
-          Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document.
-          Review the above document and provide only the output using in the specified output format, without labeling it as output format:,
-          after review perform the following steps. 1. Select one request type from the REQUEST LIST provided below.
-          2. From the content on the first 2 pages, identify the name of the organization/person who wrote the document from.
-          Use this output format template: request (organization/person).
-          Ensure this output format template is followed precisely including brackets (), and the output must end without a period.
-          For reference these are examples using this output template:
-          'Request for Medical Records (Spadina Clinic), Request for Records (Dr. John Smith), Request for Records (MedChart),
-          Request for Records (NYGH), Request, Request to Transfer Medical Care (Discovery Health)'.
-          REQUEST LIST: Request for Medical Records, Request for Records, Request to Transfer Medical Care, Request for Health Information, Request for more Information, Other Request.
-      - name: getProviderList
-        prompt: >
-          Based on the above document, select the appropriate provider from the following list who requested for this document
-          and only return the provider number (eg: 20) nothing else
+          Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as output format:, after review perform the following steps. 1. Select one request type from the REQUEST LIST provided below. 2. From the content on the first 2 pages, identify the name of the organization/person who wrote the document from. Use this output format template: request (organization/person). Ensure this output format template is followed precisely including brackets (), and the output must end without a period. For reference these are examples using this output template: 'Request for Medical Records (Spadina Clinic), Request for Records (Dr. John Smith), Request for Records (MedChart), Request for Records (NYGH), Request, Request to Transfer Medical Care (Discovery Health)'. REQUEST LIST: Request for Medical Records, Request for Records, Request to Transfer Medical Care, Request for  Health Information, Request for more Information, Other Request.
 
   - name: Advertisement
     description: >
@@ -271,21 +219,7 @@ document_categories:
     tasks:
       - name: get_document_description
         prompt: >
-          Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document.
-          Review the above document and provide only the output using the specified output format, without labeling it as output format:,
-          after review perform the following steps. 1. Select one advertisement type from ADVERTISEMENT LIST provided below.
-          If the provided advertisement type list does not provide a strong match display the word 'Other'.
-          2. Summarize the document in 10 words or less.
-          Follow this output format template: advertisement type (name of doctor/clinic/hospital/company/organization in the letterhead) summary.
-          Ensure this output format template is followed precisely including brackets (), the output must not be enclosed with quotation marks,
-          and the output must end without a period.
-          For reference these are examples using this output template:
-          Promotion (Merck) Nexplanon insertion workshop, Announcement (Toronto Dermatology) new specialist Dr Andrew Smith, Advertisement (Bayer) aspirin on sale.
-          ADVERTISEMENT LIST: Promotion, Announcement, Advertisement, Introduction, Notification.
-      - name: getProviderList
-        prompt: >
-          Based on the above document, select the appropriate provider from the following list who requested for this document
-          and only return the provider number (eg: 20) nothing else
+          Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document. Review the above document and provide only the output using the specified output format, without labeling it as output format:, after review perform the following steps. 1. Select one advertisement type from ADVERTISEMENT LIST provided below. If the provided advertisement type list does not provide a strong match display the word 'Other'. 2. Summarize document in 10 words or less. Follow this output format template: advertisement type (name of from doctor/from clinic/from hospital/from company/from organization in the letterhead) summary. Ensure this output format template is followed precisely including brackets (), the output must not be enclosed with quotation marks, and the output must end without a period. For reference these are examples using this output template: Promotion (Merck) Nexplanon insertion workshop, Announcement (Toronto Dermatology) new specialist Dr Andrew Smith, Advertisement (Bayer) aspirin on sale. ADVERTISEMENT LIST: Promotion, Announcement, Advertisement, Introduction, Notification
 
   - name: Miscellaneous
     description: >
@@ -293,23 +227,95 @@ document_categories:
     tasks:
       - name: get_document_description
         prompt: >
-          Provide a short description in less than 6 words for the above document which should include the type of the document, type of specimen, and who submitted the document.
-      - name: getProviderList
-        prompt: >
-          Based on the above document, select the appropriate provider from the following list who requested for this document
-          and only return the provider number (eg: 20) nothing else
+          Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document. Review the above document and provide only the output using the specified output format, without labeling it as output format:, after review perform the following steps. 1. Select one communication type from  COMMUNICATION TYPE LIST provided below. If the provided communication type list does not provide a strong match display the word 'Other'. 2. Identify the name of the organization/doctor/clinic from which this document was written. 3. Summarize the document in less than 5 words. Follow this output format template: communication (name) summary. Ensure this output format template is followed precisely including brackets (), the output must not be enclosed with quotation marks, and the output must end without a period. For reference these are examples using this output template: Notification – Admission (TSH), Appt Notification – OB (Dr.Cheng), Declined Appt – OB (Dr. Cha), Declined Appt from GWC – Psychotherapy (Dr. Copeland), Cancelled Appt - OB (Dr. Cheng), Appt clarification - Physiatry (Dr. Unarket), Appt notification from GWC – WMP, ER visit (HRH), Unable to reach patient – Psychiatry (Dr. Chen). COMMUNICATION TYPE LIST: Notification – Admission, Notification - Admitted Patient, Notification - Discharge, Appt Notification, Declined Appt, Declined Appt, Cancelled Appt, Appt Clarification, Appt Notification, ER Visit, Unable to Reach Patient, Mental Health Scales, Patient Feedback, New Patient Registration Form, Patient Enrolment Form, Patient Education Materials, Physician Questionnaire, Authorization to Release Medical Records, BP Log, Glucose Log.
 
 # AI Prompts
 ai_prompts:
-  build_prompt: >
-    For the following question, if confidence level is more than 85%, else reply 'Others'.
-    From the list, choose one that suits the type of the EMR document.
-    Here are your options: Lab, Consult, Insurance, Legal, Old Chart, Radiology, Photo, Consent, Pathology, Diagnostics, Pharmacy, Requisition, HCC Referrals, Request.
-    See descriptions of these terms below; these descriptions should be only used to help you to identify the correct term, and not to be used to display in the output.
+  category_types_prompt: >
+    Act as a helpful medical office assistant to perform the following instructions to identify the correct document category type for documents that you review.
+    Infer the confidence level in percentage for each document category in the CATEGORY LIST based on the definitions in the DOCUMENT DEFINITIONS.
+    This is very Important: If the documents do not have any information related to patient always give highest priority to the category type 'Advertisement'.
+    For your reference, these are the CATEGORY LIST: lab, consult, insurance, legal, oldchart, radiology, photo, consent, diagnostics, pharmacy, requisition, referral, request, advertisement, miscellaneous.
+    For your reference, these are the DOCUMENT DEFINITIONS:
+
+    Lab: This refers to documents related to laboratory tests and results related to blood, antibodies, urine, fecal and stool; and these laboratory test results are meticulously recorded, often accompanied by reference ranges to provide context for interpretation. This also includes fax documents with a document header from Public Health Laboratory, LifeLabs, Dynacare Laboratories, Alpha Lab, or MedHealth. This also includes laboratory tests for CBC, Cr, iron, hepatitis B surface antigen/antibody test, hepatitis C, hemoglobin, Hba1c, HSV, VZV, HIV, urea, creatinine, TSH, ANA, ESR, urine culture and sensitivity, rubella, syphillis antibody scren, fungal microscopy, fungal culture, immune serology, fecal immunochemical test.
+
+    Consult: This category type refers to documents that encompass written records or communications exchanged between healthcare professionals, including ED Consultations, Discharge Summary, Consult Report, sleep apnea diagnosis, pathology conducted by a dermatologist who has seen the patient, and Emergency Department Reports. These documents may also serve to seek the expertise or opinion of another colleague to aid in diagnosing, treating, or managing a patient's medical condition, fostering collaboration and knowledge sharing among healthcare providers involved in the patient's care. Theis may also include detailed explanation of a medical history, procedures, discussion of investigations, impression, assessment, treatment plan, follow up instructions, and conclusion. This may also includes operative note/consultation note/clinic note from a physician/dermatologist discussing the patient's condition, the procedure, findings, and post-op diagnosis for a patient. This might include details or documents about 'Radiology Report', 'Pathology Report', 'BCG therapy', or 'Diagnostics Report', but it's primary purpose is to provide advice or consultancy to a patient. A 'Consult' document may rely upon other documents for its conclusions or recommendations. With 'Consult' documents always consider the context in which the document is used for and the primary purpose of the document. This documents may have the phrases similar to 'The patient was seen in consultation regarding:','Thank you for referring this patient'. These documents do not include cardiologist reporting stress test and ECHO results which belong to 'Diagnostics'. These documents do not include reports from a cardiologist reporting primarily diagnostic results of heart rhythm, stress test, holter monitor, or ECG. These documents will not contain a first page that has a Consultation Request with a Reason for Consultation, which belong to category type Referral. These documents will not be 1 page only that contain booked an appointment notification, appointment date time reminder, or appointment instructions; instead, 1 page documents with appointment details are category type Other.
+
+    Insurance: This documents contains requests for health information from health insurance companies like WSIB, Sun Life, Canada Life, Manulife, Dynacare, Desjardin, RBC Insurance, IA Financial, SSQ; for the purposes of assessing a health insurance claim. These documents request for information related to a person’s medical condition, disability, accident or injury. This refers to documents related to patient insurance information, including request for medical records such as specific clinical notes, consultation reports, and test results, for the purpose of assessing a disability or health insurance claim, policy details, coverage, claims, and billing.
+
+    Legal: This encompasses documents related to the letters from a law firm, lawyer, law professional corp, law group representing a client for motor vehicle accident benefits with a date of loss or legal proceedings. It includes signed authorization forms from the client. The document may have titles with similar words as: access and disclosure request, authorization and direction. The request includes requesting All Clinical Notes and Records, Operative Reports, Pathology Reports, Consultation Notes, Physician Notes, Treatment Records, Laboratory Results, Emergency Room Records, Discharge Summaries, Diagnostic Imaging Reports, Electrocardiograms (ECGs), Product Identification Labels, and Billing History/Statement of Accounts. Documents in this category also include correspondence between lawyers and doctors, between law firms and medical clinics.
+
+    Old Chart: This refers to documents that contain one type or a mix of patient medical reports, consultation reports, lab results, and imaging reports that may be prefaced with a first page Authorization to Release Medical Records or Patient Cumulative Profile CPP. These documents may also have dates for reports or medical history that occur more than 3 months apart. If the provided document was generated or received months or years ago compared to the current date, it is categorically considered as an 'Old Chart'. If the document contains two or more documents about the patient's medical history, always look for the document sampling time, receiving time, report time, generated dates, received dates, recorded dates and if these dates are more than 1 year old when comparing with the current date, then it is always an 'Old Chart'.
+
+    Radiology: This category type of documents refers to radiology reports with findings from a radiologist/imaging center to describe imaging results. These documents provide detailed findings from the imaging studies such as X-ray, ultrasound, doppler U/S, mammography, Onario Breast Screening Program, PET scan, MRI, CT, CT Angiogram, MR Angiogram, DXA scan, bone scans, BMD, General Radiology, Medical Imaging Results, and ultrasounds examinations also comes under category type 'Radiology'. These documents may contain descriptive findings of heart ventricle, atrium, valve, joints, brain, internal organs and anatomy. Bone Mineral Densitometry Exams reports, Bone Mineral Density reports or any other reports related to bone density also comes under 'Radiology' reports. This also includes documents generated from organizations with the words similar to Diagnostic Imaging Centre, Medical Imaging, Medical Diagnostic Imaging, Diagnostic Xray and U/S, Ontario Breast Screening Program. These documents might also contain scan quality, standard T-scores, or BI-RADS category. These documents will have the phrase 'This is based on Canadian Association of Radiologists Technical Standards for Reporting'. These documents do not include any information or details regarding electrical activities in the human body which is monitored over a period of time. This category type also do not include documents regarding consults from internal medicine or surgical specialties which belong to 'Consult'. These documents do not contain a first page with headings of Request for MRI, Request for CT, or Request for Consultation. It is important to note that document is not a 'Radiology' document if it is requesting for a radiology report. Reduce the confidence level for radiology when the document contains the following words: 'requisition forms', 'request for examination'.
+
+    Photo: This refers to photographs related to the patient’s condition.
+
+    Consent: This refers to documents that contain patient consent forms such as those authorization for healthcare providers and organizations to release patients medical records, patient consent to office medical/surgical procedures, or patients acknowledge/agree to governing law and jurisdiction agreement; this does not include the requests to transfer copy or original of the patients medical records to specific healthcare providers. These documents contain headings similar to the following phrases: Authorization to Release Medical Records, Patient Registration and Consent, Consent to Release Records, Authorization for Release to Third Party, Governing Law and Jurisdiction Agreement, Consent to Assessment Treatment & Release, First Visit or Change of Information. These documents might also mention a 'Circle of Care' request, which means it is a consent request. The form will be filled out by the patient (or their substitute decision maker) and includes their signature. 
+
+    Pathology: This refers to documents related to detail findings from tissue biopsy, fluid sample obtained from body fluids, PAP cytology, aspirates, tissue scrapings, vaginal smear, yeast or bacterial vaginosis, cancerous and precancerous conditions, microbiology, for analysis and diagnosis. This category includes reports from a pathologist. These reports include reports on the presence or absence of yeast or bacterial vaginosis. This category does not include reports from a Dermatologist.
+
+    Diagnostics: This will be reports generated by electronic instruments that monitors patient's health over a period of time. These reports also include a heart's electrical activity, providing valuable information on heart rate, rhythm abnormalities, symptoms such as palpitations, and potential correlations with daily activities or events which will aid a physician in diagnosing various cardiac rhythm conditions. These reports also include pulmonary function tests and spirometry, electroencephalograms, sleep studies, audiograms, and vision testing. These reports may also involve nuclear stress testing using SESTAMIBI, Persantine, or MUGA scans.
+
+    Pharmacy: This refers to documents sent from a pharmacy solely regarding medication renewals, presciption clarifications, notification of MedsCheck, as well as questions or correspondence from a pharmacist/pharmacy to a doctor to ensure a patient is taking the correct medications and dosage as prescribed. This does not include consultations from other physicians that also discuss medications as part of a consultation by a physician which are considered Consultations instead. If the first 4 lines of the first page mention the word MedsCheck, then the document is more likely to be a pharmacy category type than a lab/consult/diagnostics.
+
+    Requisition: The first, second or third page of these documents refer to requisition forms for patients to receive a diagnostic test, imaging test, or request for a medical service/program. The first 1 to 3 pages must have patient demographic information including name, date of birth, health card number, address, phone number, ordering physician, and physician billing number, and fax number. The document is more likely to be a Requisition category type when the first 5 lines of the first page contain the words requisition, request for imaging, request for MRI consultation, imaging request form, or requisition form. The forms may have options to select from a list of various diagnostic tests, imaging modalities, body parts, medical specialties, and specialty departments. When the document contains more than 3 pages, the subsequent pages after page 3 may contain attached medical records that come from a variety of sources and category types. Do not include the information on pages longer than 3 pages to infer the context of these documents. When the first 1 to 3 pages of these documents include a requisition form with patient demographic, ordering physician name, billing number, address, fax number, and also contain a selection of options for requesting diagnostic tests, imaging, and consultation; ignore the information on the subsequent pages after page 3.
+
+    Referral: The first, second or third page of these to documents contain referral requests to external doctors, medical specialities, outside clinics, and programs. These documents include referrals from Health Care Connect or other doctors to our clinic family doctors, clinic health providers, or clinic programs. The document is more likely to be a Referral category type when the first 5 sentences of the first page contain phrases similar to: Referral Form, Referral Request, Request for Consultation, Consultation Request, Referral for Consultation, Reason for Consultation. The first 1 to 3 pages of these referral documents will contain a patient name, home phone number, health card number, clinic fax number, medical history, current medications, and describe a reason for referral/reason for consultation. When the document contains more than 3 pages, the subsequent pages after page 3 may contain attached medical records that come from a variety of sources and category types. Do not include information on pages longer than 3 pages to infer the context of these documents. When the first 1 to 3 pages of these referral documents include a referral form with patient demographic, requesting physician name, billing number, fax number, type of medical program requested, and reason for consultation; ignore the information on the subsequent pages after page 3 of these referral documents.
+
+    Request: This refers to documents that request for health information, release for medical records. These documents may be from MedChart. This document may contain some phrases like: access and disclosure request, release of information request, any and all information, all medical records, complete file, medical record transfer, cumulative patient profile, authorization and direction, request for health information. These documents include requests to transfer medical records to another medical clinic, or family doctor.
+
+    Advertisement: These documents contain promotional messages and important notifications from companies, clinics, medical specialists, and individuals addressed to medical clinics and healthcare providers. They include advertisements designed to market products, services, and events, using persuasive language to capture attention, as well as announcements that inform recipients about significant news, educational workshops, updates, changes to services, upcoming events, or organizations. The purpose of these documents is to advertise or inform about changes and services offered by the clinic, such as new locations or updates on physicians and their areas of specialization. These communications often use language such as 'announcement,' 'announcing,' 'accepting new,' or 'exciting news' within the first few sentences. The content is similar to marketing emails, often highlighting exciting developments like new doctors joining a clinic, new services available, conditions treated, or the referral process. They may also include details about the clinic’s services, conditions treated, and how to make a referral. These documents can be classified into specific categories, such as 'Advertisement for Pain Clinic Referrals,' 'Advertisement for Gastroenterology Services,' 'Advertisement for Endoscopy Services,' 'Advertisement for General Surgery Services,' 'Advertisement for Colorectal Treatment Services,' 'Advertisement for Dermatology Services,' and 'Advertisement for Endoscopic Surgery Services,' which help identify and target specific medical specialties and services being promoted or referred.
+
+    Miscellaneous: These documents include notification of admission to emergency department, notification of ER visit, discharge patient notification, notification of appointment, appointment notification, appointment cancellations, notification of cancelled appointments, new patient registration forms, patient enrolment forms, clinical scales, and Public Health physician questionnaire forms for reportable diseases.
+
+    Based on this, identify all the document categories that has elements from the 'CATEGORY LIST' with their confidence levels in percentage sorted in descending order without any explanation.
+
+    Determine the document category with the highest confidence level percentage for the EMR document using the following rules:
+
+    Step a. If the confidence level percentage is more than 60% for the category type 'Advertisement', then
+    the category type is 'Advertisement'. If the confidence level percentage is less than 60% for the category type 'Advertisement', then
+    go to next step. 
+
+    Step b. If there is only one category to select from, select that category as the document category.
+    If there is more that one category to select from go to next step.
+
+    Step c. Identify the top two document categories based on their confidence level percentage.
+
+    Step d. If the top two categories are "Requisition" and "Radiology," and both have confidence levels below 60%, select "Miscellaneous" as the document category. Else go to next step.
+
+    Step e. If the confidence level difference between the top two categories is less than 10%, select "Miscellaneous" as the document category. Else go to next step.
+
+    Step f. If neither of the above conditions apply, select the top document category with the highest confidence level percentage.
+
+  category_type_prompt: >
+    Based on this, the document category for the EMR document in one word will be ...
+
+  get_patient_hin: >
+    Answer only to the following question in one word, one word only;
+    In one word, one word only what is the health card number / health insurance number of the patient?
+    If the health card number is not available only return False, no other words.
 
   get_patient_name: >
-    Answer only to the following question in two words; and the answer should be in the following format.
-    Format : Lastname, Firstname. What is the name of the patient?
+    Answer only to the following question; and the answer should be in the following format;
+    What is the full name of the patient? Format: Fullname
+
+  get_patient_dob: >
+    Answer only to the following question; and the answer should be in the following format;
+    What is the Date of Birth of the patient? Format: yyyy-mm-dd
+
+  get_patient_result_filter: >
+    For the following request, provide only the JSON object as shown in the example, and include no additional text or explanations.
+    Select the item from the list that matches the patient's healthcard number, name and date of birth.
+    The JSON object should include all the details: formattedDob, formattedName, demographicNo (Master Demographic File number or demoIdSearch) and providerNo (provider number).
+    Follow the example format exactly.
+    Example JSON object format: {'formattedDob': '1951-12-08','formattedName': 'John Doe','demographicNo': '22','providerNo': '_'}
+    Follow this format strictly and DO NOT add any other text other than JSON object in the response!
+
+  get_provider: >
+    Based on the above document, select the appropriate provider from the following list who requested
+    for this document and only return the provider number (eg: 20) nothing else
 
   build_sub_prompt: >
     For the following question if confidence level is more than 85% give the answer in one word using the format 'True' else 'False'.
@@ -318,11 +324,3 @@ ai_prompts:
   get_doctor_name: >
     Answer only to the following question in two words; and the answer should be in the following format; do not add 'Dr.' to reply.
     Format : Lastname, Firstname. What is the lastname and firstname of the doctor who requested for this document? Answer Format (Lastname, Firstname)
-
-  filter_results: >
-    For the following always use only double quotes instead of single quotes.
-    Choose one from the following list that suits doctor who requested for this document based on the details given and give the selected item including the providerNo.
-    Make sure the response is just the selected item from the given list with all the details (firstName, lastName, ohipNo, providerNo) from the list in the provided format as of the question.
-    Make sure the response is just the selected item, nothing else! Do not add any other text than the result!
-    Response should be in JSON format, not as a string, and property names such as firstName, lastName, ohipNo, providerNo (keys) to be enclosed in double quotes.
-    Make sure the property names are enclosed in double quotes!

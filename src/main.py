@@ -1,14 +1,24 @@
-"""
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as published
-by the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+# COPYRIGHT © 2024 by Spring Health Corporation <office(at)springhealth.org>
+# Toronto, Ontario, Canada
+# SUMMARY: This file is part of the Get Well Clinic's original "AI-MOA" project's collection of software,
+# documentation, and configuration files.
+# These programs, documentation, and configuration files are made available to you as open source
+# in the hopes that your clinic or organization may find it useful and improve your care to the public
+# by reducing administrative burden for your staff and service providers.
+# NO WARRANTY: This software and related documentation is provided "AS IS" and WITHOUT ANY WARRANTY of any kind;
+# and WITHOUT EXPRESS OR IMPLIED WARRANTY OF SUITABILITY, MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+# LICENSE: This software is licensed under the "GNU Affero General Public License Version 3".
+# Please see LICENSE file for full details. Or contact the Free Software Foundation for more details.
+# ***
+# NOTICE: We hope that you will consider contributing to our common source code repository so that
+# others may benefit from your shared work.
+# However, if you distribute this code or serve this application to users in modified form,
+# or as part of a derivative work, you are required to make your modified or derivative work
+# source code available under the same herein described license.
+# Please notify Spring Health Corp <office(at)springhealth.org> where your modified or derivative work
+# source code can be acquired publicly in its latest most up-to-date version, within one month.
+# ***
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.
-"""
 import logging
 import os
 import argparse
@@ -59,7 +69,7 @@ class AIMOAAutomation:
         self.logger: logging.Logger = logger
         self.session_manager: SessionManager = SessionManager(self.config)
         self.login_manager: LoginManager = LoginManager(self.config)
-        self.workflow: Workflow = Workflow(self.config)
+        self.workflow: Workflow = Workflow(self.config,self.session_manager,self.login_manager)
 
         self.logger.info("AIMOAAutomation initialized with config: %s", config_file)
 
@@ -68,7 +78,20 @@ class AIMOAAutomation:
         Perform cleanup operations to release resources properly.
         """
         self.logger.info("Cleaning up resources")
-        self.session_manager.close()
+        
+        if hasattr(self.session_manager, 'close'):
+            try:
+                self.session_manager.close()
+            except Exception as e:
+                self.logger.exception(f"An error occurred while closing: {e}")
+        else:
+            self.logger.warning("The session manager does not have a close method.")
+
+        # Close all logging handlers
+        for handler in self.logger.handlers:
+            handler.close()
+            self.logger.removeHandler(handler)
+
         self.logger.info("Cleanup complete.")
 
     def __enter__(self) -> 'AIMOAAutomation':
@@ -109,94 +132,20 @@ class AIMOAAutomation:
             self.logger.info("Workflow task completed successfully. Duration: %s seconds", duration)
 
 
-@huey.periodic_task(crontab(minute='*/5'))
-def schedule_tasks(config_file: str, workflow_config_file: str) -> None:
+@huey.periodic_task(crontab(minute='*/3'))
+def schedule_tasks() -> None:
     """
-    Periodic task triggered every 5 minutes to process workflows.
+    Periodic task triggered every 3 minutes to process workflows.
     """
     logger.info("Running scheduled tasks")
     try:
-        with AIMOAAutomation(config_file=config_file, workflow_config_file=workflow_config_file) as ai_moa:
-            ai_moa.process_workflow()
+        # Accessing the environment variables
+        config_file = os.getenv('CONFIG_FILE', default='../config.yaml')
+        workflow_config_file = os.getenv('WORKFLOW_CONFIG_FILE', default='../workflow-config.yaml')
+
+        with AIMOAAutomation(config_file, workflow_config_file) as ai_moa:
+            ai_moa.process_workflow(ai_moa)
     except Exception as e:
         logger.exception("Error during scheduled task execution: %s", e)
 
     logger.info("Scheduled tasks completed")
-
-
-def parse_args() -> argparse.Namespace:
-    """
-    Parse command-line arguments to allow specifying custom paths for configuration files.
-    """
-    parser: argparse.ArgumentParser = argparse.ArgumentParser(
-        description="Run AI-MOA Automation with optional configuration file paths.")
-    parser.add_argument('--config-file', type=str, default='src/config.yaml', help="Path to the main configuration file")
-    parser.add_argument('--workflow-config-file', type=str, default='src/workflow-config.yaml',
-                        help="Path to the workflow configuration file")
-    return parser.parse_args()
-
-
-def handle_shutdown_signal(signal_number: int, frame: Optional[object]) -> None:
-    """
-    Handle shutdown signals to stop the Huey consumer gracefully.
-    """
-    logger.info(f"Received shutdown signal ({signal_number}). Stopping Huey consumer...")
-    shutdown_event.set()
-
-
-def start_huey_consumer(config_file: str, workflow_config_file: str, timeout: int = 60) -> None:
-    """
-    Programmatically start the Huey consumer, handling retries and graceful shutdown.
-    Wait for tasks to complete with a maximum timeout during shutdown.
-    """
-    signal.signal(signal.SIGINT, handle_shutdown_signal)
-    signal.signal(signal.SIGTERM, handle_shutdown_signal)
-
-    check_config_files_exist(config_file, workflow_config_file)
-    logger.info("Starting the Huey consumer...")
-
-    retries: int = 0
-    max_retries: int = 5
-
-    while not shutdown_event.is_set() and retries < max_retries:
-        try:
-            huey.dequeue()
-            time.sleep(1)
-        except Exception as e:
-            retries += 1
-            logger.exception(f"Error in Huey consumer loop (attempt {retries}/{max_retries}): %s", e)
-            time.sleep(5 * (2 ** retries))  # Exponential backoff for retries
-
-        if retries >= max_retries:
-            logger.error(f"Huey consumer failed to start after {max_retries} attempts. Exiting.")
-            raise RuntimeError(f"Huey consumer could not start after {max_retries} retries.")
-
-    logger.info("Huey consumer shutting down. Waiting for running tasks to complete (max timeout: %s seconds)...",
-                timeout)
-
-    # Attempt graceful shutdown with timeout
-    # Wait for ongoing tasks to complete (implement a timeout if needed)
-    start_time = time.time()
-    while time.time() - start_time < timeout:
-        if shutdown_event.is_set():
-            logger.info("Shutdown event detected. Graceful shutdown complete.")
-            break
-        time.sleep(1)  # Sleep to avoid busy-waiting
-
-    if not shutdown_event.is_set():
-        logger.warning("Graceful shutdown timed out after %s seconds. Forcing shutdown.", timeout)
-
-    logger.info("Huey consumer has stopped.")
-
-
-if __name__ == "__main__":
-    try:
-        args: argparse.Namespace = parse_args()
-        logger.info("AIMOA Automation started. Waiting for scheduled tasks...")
-        start_huey_consumer(args.config_file, args.workflow_config_file)
-    except FileNotFoundError as e:
-        logger.error(e)
-        raise
-    except Exception as e:
-        logger.exception("An unexpected error occurred during startup: %s", e)
-        raise

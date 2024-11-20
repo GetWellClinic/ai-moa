@@ -19,8 +19,6 @@
 # source code can be acquired publicly in its latest most up-to-date version, within one month.
 # ***
 
-from .login_manager import LoginManager
-from .driver_manager import DriverManager
-from .session_manager import SessionManager
+from .patient import get_patient_hin, get_patient_dob, get_patient_name, filter_results, get_patient_Html_Common, convert_date, get_patient_Html, unidentified_patients
 
-__all__ = ['LoginManager', 'DriverManager', 'SessionManager']
+__all__ = ['get_patient_hin', 'get_patient_dob', 'get_patient_name', 'filter_results', 'get_patient_Html_Common', 'convert_date', 'get_patient_Html', 'unidentified_patients']

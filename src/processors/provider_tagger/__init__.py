@@ -19,8 +19,6 @@
 # source code can be acquired publicly in its latest most up-to-date version, within one month.
 # ***
 
-from .login_manager import LoginManager
-from .driver_manager import DriverManager
-from .session_manager import SessionManager
+from .provider import get_provider_list, get_provider_list_filemode
 
-__all__ = ['LoginManager', 'DriverManager', 'SessionManager']
+__all__ = ['get_provider_list', 'get_provider_list_filemode']

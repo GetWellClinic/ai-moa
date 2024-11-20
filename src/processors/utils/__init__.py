@@ -19,8 +19,8 @@
 # source code can be acquired publicly in its latest most up-to-date version, within one month.
 # ***
 
-from .login_manager import LoginManager
-from .driver_manager import DriverManager
-from .session_manager import SessionManager
+from .local_files import get_local_documents
+from .ocr import has_ocr, extract_text_doctr
+from .llm import query_prompt
 
-__all__ = ['LoginManager', 'DriverManager', 'SessionManager']
+__all__ = ['get_local_documents' , 'has_ocr', 'extract_text_doctr', 'query_prompt']

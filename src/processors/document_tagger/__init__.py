@@ -19,8 +19,6 @@
 # source code can be acquired publicly in its latest most up-to-date version, within one month.
 # ***
 
-from .login_manager import LoginManager
-from .driver_manager import DriverManager
-from .session_manager import SessionManager
+from .document_category import get_category_types, get_category_type, get_document_description
 
-__all__ = ['LoginManager', 'DriverManager', 'SessionManager']
+__all__ = ['get_category_types','get_category_type','get_document_description']

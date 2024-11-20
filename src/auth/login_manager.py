@@ -1,16 +1,23 @@
-"""
-Module Name: login_manager.py
-
-Description:
-    This module handles login operations for the EMR system.
-    It provides the LoginManager class to authenticate users using either Selenium or requests sessions.
-
-Author:
-    Spring Health Corporation
-
-License:
-    Refer to the LICENSE file for detailed licensing information.
-"""
+# COPYRIGHT © 2024 by Spring Health Corporation <office(at)springhealth.org>
+# Toronto, Ontario, Canada
+# SUMMARY: This file is part of the Get Well Clinic's original "AI-MOA" project's collection of software,
+# documentation, and configuration files.
+# These programs, documentation, and configuration files are made available to you as open source
+# in the hopes that your clinic or organization may find it useful and improve your care to the public
+# by reducing administrative burden for your staff and service providers.
+# NO WARRANTY: This software and related documentation is provided "AS IS" and WITHOUT ANY WARRANTY of any kind;
+# and WITHOUT EXPRESS OR IMPLIED WARRANTY OF SUITABILITY, MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+# LICENSE: This software is licensed under the "GNU Affero General Public License Version 3".
+# Please see LICENSE file for full details. Or contact the Free Software Foundation for more details.
+# ***
+# NOTICE: We hope that you will consider contributing to our common source code repository so that
+# others may benefit from your shared work.
+# However, if you distribute this code or serve this application to users in modified form,
+# or as part of a derivative work, you are required to make your modified or derivative work
+# source code available under the same herein described license.
+# Please notify Spring Health Corp <office(at)springhealth.org> where your modified or derivative work
+# source code can be acquired publicly in its latest most up-to-date version, within one month.
+# ***
 
 import logging
 from selenium.webdriver.common.by import By
@@ -73,7 +80,7 @@ class LoginManager:
         # Locate the login fields and enter credentials
         username_field = driver.find_element(By.NAME, "username")
         password_field = driver.find_element(By.NAME, "password")
-        pin_field = driver.find_element(By.NAME, "pin")
+        pin_field = driver.find_element(By.NAME, "pin2")
 
         username_field.send_keys(self.username)
         password_field.send_keys(self.password)
@@ -102,7 +109,7 @@ class LoginManager:
                 "username": self.username,
                 "password": self.password,
                 "pin": self.pin
-            }
+            }, verify=self.config.get('emr.verify-HTTPS')
         )
 
         login_successful = response.url != self.login_url

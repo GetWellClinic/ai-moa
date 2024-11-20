@@ -1,0 +1,9 @@
+<report title="AI-MOA Config Search Providers (System generated)" description="List Providers for AI-MOA (v.2024.08.13)" active="1">
+
+<query>
+
+select last_name, first_name, provider_no, specialty, status from provider where status = 1 order by provider_no;
+
+</query>
+
+</report>
