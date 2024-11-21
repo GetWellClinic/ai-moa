@@ -105,6 +105,25 @@ class ConfigManager:
             with open(file_path, 'r') as file:
                 return yaml.safe_load(file)
 
+    def reload_config(self) -> None:
+        """
+        Reloads the configuration file and updates the internal configuration.
+
+        This method loads the configuration file specified in `self.config_file`
+        and updates the instance variable `self.config` with the new settings.
+
+        It calls the `load_config` method to perform the actual loading of the
+        configuration from the file.
+
+        Attributes:
+            config_file (str): The path to the configuration file.
+            config (dict): The loaded configuration data.
+
+        Returns:
+            None
+        """
+        self.config = self.load_config(self.config_file)
+
     def get(self, key: str, default: Any = None) -> Any:
         """
         Retrieves a value from the general configuration using a dotted key path.

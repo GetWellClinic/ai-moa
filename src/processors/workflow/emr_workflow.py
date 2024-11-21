@@ -122,7 +122,7 @@ class Workflow:
         self.get_patient_Html = patient.get_patient_Html
 
 
-    # @huey.task()
+
     def execute_task(self, step: Dict[str, Any]) -> Any:
         """
         Executes a single workflow task based on the provided step definition.
@@ -153,6 +153,7 @@ class Workflow:
 
         Navigates through each step, executing tasks and handling branching based on task results.
         """
+        self.config.reload_config() # Fetch updated config file data.
         self.logger.info("Starting workflow execution")
         self.config.clear_shared_state()
         current_step = self.steps[0]
