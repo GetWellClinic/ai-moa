@@ -24,7 +24,7 @@ ai:
   uri: https://localhost:3334/v1/chat/completions  # URI endpoint for AI model interactions.
   verify-HTTPS: false
 
-# AI-MOA document processor configuration. (Assumed to process medical-related documents.)
+# AI-MOA document processor configuration.
 aimoa_document_processor:
   type: o19  # Type of document processor being used, 'o19' or 'local'.
 
