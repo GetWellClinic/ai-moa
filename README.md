@@ -90,6 +90,7 @@ ai-moa/
 
 5. Run the application:
    ```
+   cd src/
    huey_consumer main.huey
    ```
 
@@ -124,6 +125,10 @@ Contributions to AI-MOA are welcome. Please follow these steps:
 7. Create a new Pull Request
 
 Please read [CONTRIBUTING.md](docs/contributing.md) for more details on our code of conduct and development process.
+
+## For Developers
+
+See the [DEVELOPERS.md](docs/developers.md) file for details.
 
 ## License
 

@@ -31,7 +31,8 @@
 
 5. Run the application:
    ```
-   python src/main.py
+   cd src/
+   huey_consumer main.huey
    ```
 
 ## Docker Setup

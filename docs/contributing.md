@@ -20,7 +20,7 @@ We welcome contributions to the AI-MOA project! This document outlines the proce
 2. Add or update tests as necessary
 3. Ensure all tests pass:
    ```
-   python -m unittest discover tests
+   python -m unittest discover testing/
    ```
 4. Update documentation if you're changing functionality
 5. Commit your changes:

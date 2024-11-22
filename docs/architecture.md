@@ -6,12 +6,10 @@ AI-MOA is structured as a modular Python application with the following main com
 
 1. Authentication and Session Management
 2. Configuration Management
-3. Document Processing
-4. PDF Processing
-5. Workflow Management
-6. AI Integration
-7. O19 EMR Integration
-8. Logging and Error Handling
+3. Workflow Management
+4. AI Integration
+5. O19 EMR Integration
+6. Logging and Error Handling
 
 ## Component Breakdown
 
@@ -30,46 +28,25 @@ AI-MOA is structured as a modular Python application with the following main com
   - `ConfigManager`: Loads and manages application configuration
   - `ProviderListManager`: Manages provider information
 
-### 3. Document Processing
-
-- Location: `src/processors/document/`
-- Key Classes:
-  - `DocumentProcessor`: Handles general document processing
-  - `LocalFileProcessor`: Processes documents from local filesystem
-  - `O19Processor`: Processes documents from O19 EMR
-
-### 4. PDF Processing
-
-- Location: `src/processors/pdf/`
-- Key Classes:
-  - `PdfProcessor`: Manages PDF document processing
-  - `PdfFetcher`: Abstract base class for PDF fetching
-  - `O19PdfFetcher`: Retrieves PDF content from O19 EMR
-  - `LocalPdfFetcher`: Retrieves PDF content from local filesystem
-  - OCR functionality in `ocr.py`
-
-### 5. Workflow Management
+### 3. Workflow Management
 
 - Location: `src/processors/workflow/`
 - Key Classes:
-  - `WorkflowProcessor`: Orchestrates workflow execution
-  - `WorkflowStepExecutor`: Executes individual workflow steps
-  - `WorkflowTaskManager`: Manages Huey tasks for workflows
   - `Workflow`: Defines and executes the main workflow logic
 - Uses Huey for task management with in-memory storage
 
-### 6. AI Integration
+### 4. AI Integration
 
 - Integrated throughout the application
 - Uses local AI model via API (configured in `config.yaml`)
 - AI prompts defined in `workflow-config.yaml`
 
-### 7. O19 EMR Integration
+### 5. O19 EMR Integration
 
 - Integrated throughout the application
 - Interacts with O19 EMR for patient and provider data, document updates
 
-### 8. Logging and Error Handling
+### 6. Logging and Error Handling
 
 - Location: `src/logging/`
 - Key Module:
