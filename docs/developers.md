@@ -4,13 +4,13 @@
 
 AI-MOA follows the Explicit Module Export approach along with a Workflow Engine, which allows the workflow to be controlled without editing the Python code. The main advantage of the system is that it is loosely coupled. The logic of a function can be altered without modifying the core code by creating a new function and replacing the function in the workflow itself. The system also supports before and after functions by utilizing shared variable implementation within the workflow. Additionally, different workflows can be created to perform various tasks. The system uses Huey to manage the execution of code at specified intervals.
 
-### New Module
+## New Module
 
-## Files needed:
-## your_module/__init__.py
-## your_module/your_python_file.py
-## processors/workflow/emr_workflow.py
-## workflow-config.yaml
+#### Files needed:
+#### your_module/__init__.py
+#### your_module/your_python_file.py
+#### processors/workflow/emr_workflow.py
+#### workflow-config.yaml
 
 
 1. Create a new module by adding a new folder to the `src/` directory.
@@ -21,7 +21,7 @@ AI-MOA follows the Explicit Module Export approach along with a Workflow Engine,
 6. Test the code and check the logs to verify if the function is being triggered.
 
 
-### Before and After funtions
+## Before and After funtions
 
 Before and after functions can be implemented; there is no global method to do that. However, you can take advantage of the workflow design if you need to modify the data before passing it to another function, or to update the data once it has been processed by a function. Simply follow the new module instructions and update the workflow based on your requirements.
 
@@ -29,7 +29,7 @@ Before and after functions can be implemented; there is no global method to do t
 
 Each shared data can be accessed using the get method. For example, `self.config.get_shared_state('filter_results')` accesses the data returned by the `filter_results` function.
 
-### Overriding funtions
+## Overriding funtions
 
 Instead of modifying a core function, create a new module and replace the function in the `workflow-config.yaml`. This way, the code can be maintained without conflicts.
 
