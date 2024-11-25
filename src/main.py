@@ -26,6 +26,7 @@ import signal
 import sys
 import time
 from huey import MemoryHuey, crontab
+from huey.consumer import Consumer
 from config import ConfigManager
 from auth import LoginManager, SessionManager
 from processors import Workflow
@@ -149,3 +150,7 @@ def schedule_tasks() -> None:
         logger.exception("Error during scheduled task execution: %s", e)
 
     logger.info("Scheduled tasks completed")
+
+if __name__ == "__main__":
+    consumer = Consumer(huey)
+    consumer.start()
