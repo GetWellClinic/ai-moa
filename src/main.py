@@ -183,10 +183,10 @@ def main_loop():
         shutdown_event.set()
         logger.info("Main loop ended.")
 
-# Global variable to store command-line arguments
-global args
-
 if __name__ == "__main__":
+    # Global variable to store command-line arguments
+    global args
+    
     parser = argparse.ArgumentParser(description="AI-MOA Automation")
     parser.add_argument("--config", default="config.yaml", help="Path to the config file")
     parser.add_argument("--workflow-config", default="workflow-config.yaml", help="Path to the workflow config file")
