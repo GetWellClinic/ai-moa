@@ -146,19 +146,24 @@ args = None
 
 def get_cron_interval():
     """
-    Get the cron interval from environment variable or command line argument.
+    Get the cron interval from command line argument, environment variable, or default value.
+    Command line argument takes precedence over environment variable.
     """
     global args
+    default_interval = '*/5'
     env_interval = os.environ.get('CRON_INTERVAL')
-    if env_interval:
-        logger.info(f"Using cron interval from environment variable: {env_interval}")
-        return env_interval
-    elif args and args.cron_interval:
-        logger.info(f"Using cron interval from command line argument: {args.cron_interval}")
+    
+    if args and args.cron_interval:
+        if env_interval:
+            logger.info(f"Overriding environment variable CRON_INTERVAL={env_interval} with command line argument: {args.cron_interval}")
+        else:
+            logger.info(f"Using cron interval from command line argument: {args.cron_interval}")
         return args.cron_interval
+    elif env_interval:
+        logger.info(f"Using cron interval from environment variable CRON_INTERVAL: {env_interval}")
+        return env_interval
     else:
-        default_interval = '*/5'
-        logger.info(f"Using default cron interval: {default_interval}")
+        logger.info(f"No cron interval specified. Using default value: {default_interval}")
         return default_interval
 
 @huey.periodic_task(crontab(minute=get_cron_interval()))
