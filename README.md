@@ -20,6 +20,9 @@ AI-MOA is an advanced, AI-powered Medical Office Assistant designed to automate 
 ```
 ai-moa/
 ├── src/
+│   ├── ai_moa_utils/
+│   │   ├── __init__.py
+│   │   └── logging_setup.py
 │   ├── auth/
 │   │   ├── __init__.py
 │   │   ├── driver_manager.py
@@ -29,28 +32,29 @@ ai-moa/
 │   │   ├── __init__.py
 │   │   ├── config_manager.py
 │   │   └── provider_list_manager.py
-│   ├── logging/
-│   │   ├── __init__.py
-│   │   └── logging_setup.py
 │   ├── processors/
 │   │   ├── __init__.py
-│   │   ├── document/
+│   │   ├── document_tagger/
 │   │   │   ├── __init__.py
-│   │   │   └── document_processor.py
-│   │   ├── pdf/
+│   │   │   └── document_category.py
+│   │   ├── o19/
 │   │   │   ├── __init__.py
-│   │   │   ├── ocr.py
-│   │   │   ├── pdf_fetcher.py
-│   │   │   └── pdf_processor.py
+│   │   │   ├── o19_inbox.py
+│   │   │   └── o19_updater.py
+│   │   ├── patient_tagger/
+│   │   │   ├── __init__.py
+│   │   │   └── patient.py
+│   │   ├── provider_tagger/
+│   │   │   ├── __init__.py
+│   │   │   └── provider.py
+│   │   ├── utils/
+│   │   │   ├── __init__.py
+│   │   │   ├── llm.py
+│   │   │   ├── local_files.py
+│   │   │   └── ocr.py
 │   │   └── workflow/
 │   │       ├── __init__.py
-│   │       ├── emr_workflow.py
-│   │       ├── processor.py
-│   │       ├── step_executor.py
-│   │       └── task_manager.py
-│   ├── testing/
-│   │   ├── full_workflow_test.py
-│   │   └── prompt_testing_script.py
+│   │       └── emr_workflow.py
 │   ├── config.yaml
 │   ├── main.py
 │   ├── requirements.txt
@@ -86,7 +90,8 @@ ai-moa/
 
 5. Run the application:
    ```
-   python src/main.py
+   cd src/
+   huey_consumer main.huey
    ```
 
 ## Docker Setup
@@ -105,10 +110,7 @@ ai-moa/
 
 To run the tests:
 
-1. Unit tests: `python -m unittest discover tests/unit`
-2. Integration tests: `python -m unittest discover tests/integration`
-3. Full workflow test: `python testing/full_workflow_test.py`
-4. Prompt testing: `python testing/prompt_testing_script.py`
+1. Unit tests: `python -m unittest discover testing/`
 
 ## Contributing
 
@@ -123,6 +125,10 @@ Contributions to AI-MOA are welcome. Please follow these steps:
 7. Create a new Pull Request
 
 Please read [CONTRIBUTING.md](docs/contributing.md) for more details on our code of conduct and development process.
+
+## For Developers
+
+See the [DEVELOPERS.md](docs/developers.md) file for details.
 
 ## License
 

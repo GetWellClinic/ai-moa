@@ -29,7 +29,8 @@ This guide covers the deployment process for AI-MOA in both development and prod
 
 5. Run the application:
    ```
-   python src/main.py
+   cd src/
+   huey_consumer main.huey
    ```
 
 ### Docker Setup for Development

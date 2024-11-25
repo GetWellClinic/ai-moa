@@ -15,15 +15,16 @@ huey:
   results: True
   store_none: False
   always_eager: True
-  schedule:
-    minute: '*/5'
+  file_level: INFO
+  console_level: INFO
 ```
 
 - `name`: Name of the Huey task queue
 - `results`: Whether to store task results
 - `store_none`: Whether to store None results
 - `always_eager`: Run tasks immediately for testing
-- `schedule`: Cron-style schedule for periodic tasks
+- `file_level`: Log level for file output.
+- `console_level`: Log level for console_level output.
 
 Note: Huey is configured to use in-memory storage only. No SQLite or Redis backend is used.
 
@@ -51,22 +52,24 @@ emr:
   base_url: 'http://localhost:8080/oscar'
   username: 'admin'
   password: 'admin'
+  pin: '1234'
 ```
 
 - `base_url`: Base URL of the O19 EMR system
 - `username`: EMR login username
 - `password`: EMR login password
+- `pin`: Pin for EMR login
 
 ### OCR Configuration
 
 ```yaml
 ocr:
+  device: cuda:0
   enable_gpu: False
-  tesseract_path: '/usr/bin/tesseract'
 ```
 
+- `device`: Device used for OCR processing
 - `enable_gpu`: Whether to use GPU for OCR
-- `tesseract_path`: Path to Tesseract OCR executable
 
 ### File Processing
 
@@ -75,13 +78,11 @@ file_processing:
   input_directory: '/app/input'
   output_directory: '/app/output'
   allowed_extensions: ['.pdf', '.jpg', '.png', '.tiff']
-  temp_pdf_name: "downloaded_pdf.pdf"
 ```
 
 - `input_directory`: Directory for input files
 - `output_directory`: Directory for processed output
 - `allowed_extensions`: List of allowed file extensions
-- `temp_pdf_name`: Temporary name for downloaded PDFs
 
 ## workflow-config.yaml
 

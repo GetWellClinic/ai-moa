@@ -14,8 +14,8 @@ This guide addresses common issues that you might encounter while working with A
 
 ### Problem: OCR is not working correctly
 
-1. Check if Tesseract is installed and properly configured.
-2. Verify the `tesseract_path` in the configuration file.
+1. Check if doctr OCR is installed and properly configured.
+2. Verify the `ocr` settings in the configuration file.
 3. Ensure the PDF files are not corrupted or password-protected.
 
 ### Problem: AI model is not responding
@@ -57,7 +57,10 @@ This is expected behavior with the current in-memory Huey configuration. If task
 ## Debugging Tips
 
 1. Enable debug logging by setting the log level to DEBUG in `config.yaml`.
-2. Use the `testing/full_workflow_test.py` script to test the entire system.
+2. Check if the lock status in `config.yaml` is set to true. If it is true, the system will skip file processing. Change it to false only if you are sure that all other processes have stopped.
 3. Check the application logs for detailed error messages and stack traces.
+4. If the application is stuck processing a file, check if the processors are overlapping (e.g., the config file's last processed file update and fetch).
+5. Check if the application is using the GPU if there is excessive waiting time. OCR and LLM should be using the GPU by default.
+6. Check O19 server logs if documents are not being updated (check app logs for more details).
 
 If you encounter any issues not covered in this guide, please open an issue on the GitHub repository with a detailed description of the problem and steps to reproduce it.

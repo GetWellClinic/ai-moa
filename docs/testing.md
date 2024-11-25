@@ -104,32 +104,13 @@ The CI pipeline runs:
 3. Integration tests
 4. End-to-end tests
 
-## Performance Testing
-
-For performance testing, use the `testing/full_workflow_test.py` script. This script processes a batch of documents and measures the time taken.
-
-To run performance tests:
-
-```
-python testing/full_workflow_test.py
-```
-
-## AI Prompt Testing
-
-Use `testing/prompt_testing_script.py` to test AI prompts and document classification in isolation.
-
-To run AI prompt tests:
-
-```
-python testing/prompt_testing_script.py
-```
 
 ## Coverage Reports
 
 To generate test coverage reports:
 
 1. Install coverage: `pip install coverage`
-2. Run tests with coverage: `coverage run -m unittest discover tests`
+2. Run tests with coverage: `coverage run -m unittest discover testing/`
 3. Generate report: `coverage report -m`
 4. For HTML report: `coverage html`
 
