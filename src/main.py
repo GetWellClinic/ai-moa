@@ -190,9 +190,11 @@ def main_loop():
         logger.info("Main loop ended.")
 
 if __name__ == "__main__":
+    project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
     parser = argparse.ArgumentParser(description="AI-MOA Automation")
-    parser.add_argument("--config", default="config.yaml", help="Path to the config file")
-    parser.add_argument("--workflow-config", default="workflow-config.yaml", help="Path to the workflow config file")
+    parser.add_argument("--config",  default=os.path.join(project_dir, "config", "config.yaml"), help="Path to the config file")
+    parser.add_argument("--workflow-config", default=os.path.join(project_dir, "config", "workflow-config.yaml"), help="Path to the workflow config file")
     parser.add_argument("--cron-interval", help="Cron interval for scheduling tasks (e.g. '*/5' for every 5 minutes)")
     parser.add_argument("--run-immediately", action="store_true", help="Run the task immediately when started")
     args = parser.parse_args()
