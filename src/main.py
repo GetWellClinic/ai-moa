@@ -132,7 +132,7 @@ class AIMOAAutomation:
             self.logger.info("Workflow task completed successfully. Duration: %s seconds", duration)
 
 
-@huey.periodic_task(crontab(minute='*'))
+@huey.periodic_task(crontab(minute='*/5'))
 def schedule_tasks() -> None:
     """
     Periodic task triggered every one minute to process workflows.
