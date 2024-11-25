@@ -135,10 +135,26 @@ def process_workflow_task(config_file: str, workflow_config_file: str) -> None:
     with AIMOAAutomation(config_file, workflow_config_file) as ai_moa:
         ai_moa.process_workflow()
 
-@huey.periodic_task(crontab(minute='*/5'))
+def get_cron_interval():
+    """
+    Get the cron interval from environment variable or command line argument.
+    """
+    env_interval = os.environ.get('CRON_INTERVAL')
+    if env_interval:
+        logger.info(f"Using cron interval from environment variable: {env_interval}")
+        return env_interval
+    elif args.cron_interval:
+        logger.info(f"Using cron interval from command line argument: {args.cron_interval}")
+        return args.cron_interval
+    else:
+        default_interval = '*/5'
+        logger.info(f"Using default cron interval: {default_interval}")
+        return default_interval
+
+@huey.periodic_task(crontab(minute=get_cron_interval()))
 def schedule_tasks() -> None:
     """
-    Periodic task triggered every five minutes to process workflows.
+    Periodic task triggered to process workflows.
     """
     logger.info("Running scheduled tasks")
     try:
@@ -167,6 +183,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="AI-MOA Automation")
     parser.add_argument("--config", default="config.yaml", help="Path to the config file")
     parser.add_argument("--workflow-config", default="workflow-config.yaml", help="Path to the workflow config file")
+    parser.add_argument("--cron-interval", help="Cron interval for scheduling tasks (e.g. '*/5' for every 5 minutes)")
     args = parser.parse_args()
 
     signal.signal(signal.SIGINT, signal_handler)
