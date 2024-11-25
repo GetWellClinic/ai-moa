@@ -25,17 +25,6 @@ from config import ConfigManager
 from auth import LoginManager, SessionManager
 from ai_moa_utils import setup_logging
 import os
-import csv
-import re
-import json
-import datetime
-import requests
-from bs4 import BeautifulSoup
-import fitz
-import PyPDF2
-from doctr.io import DocumentFile
-from doctr.models import ocr_predictor
-import torch
 from ..utils import local_files
 from ..utils import ocr
 from ..utils import llm
