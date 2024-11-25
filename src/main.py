@@ -108,11 +108,9 @@ class AIMOAAutomation:
         """
         self.cleanup()
 
-    @huey.task(expires=1800, retries=3, retry_delay=10)
     def process_workflow(self) -> None:
         """
-        Process the workflow as a Huey task.
-        Task expires after 30 minutes and retries up to 3 times.
+        Process the workflow.
         """
         start_time: datetime = datetime.now()
         self.logger.info("Starting workflow task at %s", start_time.isoformat())
@@ -127,16 +125,21 @@ class AIMOAAutomation:
 
         end_time: datetime = datetime.now()
         duration: float = (end_time - start_time).total_seconds()
-        if duration > 1800:
-            self.logger.warning("Workflow task expired before completion.")
-        else:
-            self.logger.info("Workflow task completed successfully. Duration: %s seconds", duration)
+        self.logger.info("Workflow task completed. Duration: %s seconds", duration)
 
+@huey.task(expires=1800, retries=3, retry_delay=10)
+def process_workflow_task(config_file: str, workflow_config_file: str) -> None:
+    """
+    Process the workflow as a Huey task.
+    Task expires after 30 minutes and retries up to 3 times.
+    """
+    with AIMOAAutomation(config_file, workflow_config_file) as ai_moa:
+        ai_moa.process_workflow()
 
 @huey.periodic_task(crontab(minute='*/5'))
 def schedule_tasks() -> None:
     """
-    Periodic task triggered every one minute to process workflows.
+    Periodic task triggered every five minutes to process workflows.
     """
     logger.info("Running scheduled tasks")
     try:
@@ -144,13 +147,31 @@ def schedule_tasks() -> None:
         config_file = os.getenv('CONFIG_FILE', default='../config.yaml')
         workflow_config_file = os.getenv('WORKFLOW_CONFIG_FILE', default='../workflow-config.yaml')
 
-        with AIMOAAutomation(config_file, workflow_config_file) as ai_moa:
-            ai_moa.process_workflow(ai_moa)
+        process_workflow_task(config_file, workflow_config_file)
     except Exception as e:
         logger.exception("Error during scheduled task execution: %s", e)
 
     logger.info("Scheduled tasks completed")
 
+def signal_handler(signum, frame):
+    logger.info("Received signal %s. Initiating shutdown...", signum)
+    shutdown_event.set()
+
 if __name__ == "__main__":
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
     consumer = Consumer(huey)
-    consumer.start()
+    consumer_thread = threading.Thread(target=consumer.run)
+    consumer_thread.start()
+
+    try:
+        while not shutdown_event.is_set():
+            time.sleep(1)
+    except KeyboardInterrupt:
+        logger.info("Keyboard interrupt received. Initiating shutdown...")
+    finally:
+        logger.info("Stopping consumer...")
+        consumer.stop()
+        consumer_thread.join()
+        logger.info("Consumer stopped. Exiting...")
