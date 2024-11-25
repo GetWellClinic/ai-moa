@@ -37,6 +37,8 @@ from datetime import datetime
 from threading import Event
 from typing import Optional
 
+print("AI-MOA version 1.0; licensed under AGPL3.0, see LICENSE file. (c) Spring Health Corporation")
+
 # Initialize a Huey instance with in-memory storage for managing asynchronous tasks.
 huey: MemoryHuey = MemoryHuey('aimoa_automation')
 
