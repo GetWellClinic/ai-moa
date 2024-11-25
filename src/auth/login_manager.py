@@ -103,18 +103,28 @@ class LoginManager:
         """
         logger.info(f"Attempting requests login for user: {self.username}")
         session = requests.Session()
-        response = session.post(
-            self.login_url,
-            data={
-                "username": self.username,
-                "password": self.password,
-                "pin": self.pin
-            }, verify=self.config.get('emr.verify-HTTPS')
-        )
-
-        login_successful = response.url != self.login_url
-        logger.debug(f"Login {'successful' if login_successful else 'failed'}")
-        return session, login_successful
+        try:
+            response = session.post(
+                self.login_url,
+                data={
+                    "username": self.username,
+                    "password": self.password,
+                    "pin": self.pin
+                }, verify=self.config.get('emr.verify-HTTPS'),
+                timeout=10  # Add a timeout to prevent hanging indefinitely
+            )
+            login_successful = response.url != self.login_url
+            logger.debug(f"Login {'successful' if login_successful else 'failed'}")
+            return session, login_successful
+        except requests.ConnectionError as e:
+            logger.error(f"Connection error occurred while attempting to login: {e}")
+            return session, False
+        except requests.Timeout as e:
+            logger.error(f"Timeout error occurred while attempting to login: {e}")
+            return session, False
+        except requests.RequestException as e:
+            logger.error(f"An unexpected error occurred while attempting to login: {e}")
+            return session, False
 
     def is_login_successful(self, current_url):
         """
