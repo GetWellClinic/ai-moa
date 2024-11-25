@@ -26,6 +26,7 @@ import signal
 import sys
 import time
 import threading
+import os
 from huey import MemoryHuey, crontab
 from huey.consumer import Consumer
 from config import ConfigManager
@@ -41,7 +42,7 @@ huey: MemoryHuey = MemoryHuey('aimoa_automation')
 
 logger: logging.Logger = logging.getLogger(__name__)
 shutdown_event: Event = Event()
-
+run_immediately: bool = False
 
 def check_config_files_exist(config_file: str, workflow_config_file: str) -> None:
     """
@@ -191,6 +192,7 @@ if __name__ == "__main__":
     parser.add_argument("--config", default="config.yaml", help="Path to the config file")
     parser.add_argument("--workflow-config", default="workflow-config.yaml", help="Path to the workflow config file")
     parser.add_argument("--cron-interval", help="Cron interval for scheduling tasks (e.g. '*/5' for every 5 minutes)")
+    parser.add_argument("--run-immediately", action="store_true", help="Run the task immediately when started")
     args = parser.parse_args()
 
     signal.signal(signal.SIGINT, signal_handler)
@@ -206,9 +208,16 @@ if __name__ == "__main__":
         logger.error(f"Configuration error: {e}")
         sys.exit(1)
 
+    # Check for run_immediately option
+    run_immediately = args.run_immediately or os.environ.get('RUN_IMMEDIATELY', '').lower() in ('true', '1', 'yes')
+
     consumer = Consumer(huey)
     main_thread = threading.Thread(target=main_loop)
     main_thread.start()
+
+    if run_immediately:
+        logger.info("Running task immediately...")
+        process_workflow_task(config_file, workflow_config_file)
 
     try:
         logger.info("Starting Huey consumer...")
