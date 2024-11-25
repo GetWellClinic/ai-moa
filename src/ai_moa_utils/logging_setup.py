@@ -69,7 +69,10 @@ def setup_logging(config: ConfigManager):
     if file_handler_exists and console_handler_exists:
         return root_logger
 
-    root_logger.setLevel(logging.DEBUG)  # Capture all levels, filter at handlers
+    # Set root logger level to the more permissive of file and console levels
+    file_level = logging.getLevelName(logging_config.get('file_level', 'DEBUG'))
+    console_level = logging.getLevelName(logging_config.get('console_level', 'INFO'))
+    root_logger.setLevel(min(file_level, console_level))
 
     # Create formatters
     formatter = logging.Formatter(logging_config.get('format', '%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
@@ -85,12 +88,12 @@ def setup_logging(config: ConfigManager):
         maxBytes=10*1024*1024,  # 10MB
         backupCount=5
     )
-    file_handler.setLevel(logging.getLevelName(logging_config.get('file_level', 'DEBUG')))
+    file_handler.setLevel(file_level)
     file_handler.setFormatter(formatter)
 
     # Console Handler
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.getLevelName(logging_config.get('console_level', 'INFO')))
+    console_handler.setLevel(console_level)
     console_handler.setFormatter(formatter)
 
     # Add handlers to root logger
