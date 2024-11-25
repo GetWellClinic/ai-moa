@@ -142,10 +142,6 @@ def schedule_tasks() -> None:
     """
     logger.info("Running scheduled tasks")
     try:
-        # Accessing the environment variables
-        config_file = os.getenv('CONFIG_FILE', default='../config.yaml')
-        workflow_config_file = os.getenv('WORKFLOW_CONFIG_FILE', default='../workflow-config.yaml')
-
         process_workflow_task(config_file, workflow_config_file)
     except Exception as e:
         logger.exception("Error during scheduled task execution: %s", e)
@@ -168,12 +164,17 @@ def main_loop():
         logger.info("Main loop ended.")
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="AI-MOA Automation")
+    parser.add_argument("--config", default="config.yaml", help="Path to the config file")
+    parser.add_argument("--workflow-config", default="workflow-config.yaml", help="Path to the workflow config file")
+    args = parser.parse_args()
+
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
     # Load configuration files
-    config_file = os.getenv('CONFIG_FILE', default='../config.yaml')
-    workflow_config_file = os.getenv('WORKFLOW_CONFIG_FILE', default='../workflow-config.yaml')
+    config_file = args.config
+    workflow_config_file = args.workflow_config
     
     try:
         check_config_files_exist(config_file, workflow_config_file)
