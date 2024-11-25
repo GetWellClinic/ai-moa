@@ -48,12 +48,10 @@ def check_config_files_exist(config_file: str, workflow_config_file: str) -> Non
     Check if the required configuration files exist at the specified paths.
     Raises a FileNotFoundError if any of the files are missing.
     """
-    if not os.path.exists(config_file):
-        raise FileNotFoundError(f"Configuration file '{config_file}' is missing.")
-    if not os.path.exists(workflow_config_file):
-        raise FileNotFoundError(f"Workflow configuration file '{workflow_config_file}' is missing.")
-
-    logger.info("Configuration files exist: '%s' and '%s'", config_file, workflow_config_file)
+    for file_path, file_type in [(config_file, "Configuration"), (workflow_config_file, "Workflow configuration")]:
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"{file_type} file '{file_path}' is missing.")
+        logger.info(f"{file_type} file exists: '{file_path}'")
 
 
 class AIMOAAutomation:
@@ -160,22 +158,35 @@ def signal_handler(signum, frame):
 
 def main_loop():
     try:
+        logger.info("Main loop started. Waiting for tasks...")
         while not shutdown_event.is_set():
             time.sleep(1)
     except KeyboardInterrupt:
         logger.info("Keyboard interrupt received. Initiating shutdown...")
     finally:
         shutdown_event.set()
+        logger.info("Main loop ended.")
 
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
+
+    # Load configuration files
+    config_file = os.getenv('CONFIG_FILE', default='../config.yaml')
+    workflow_config_file = os.getenv('WORKFLOW_CONFIG_FILE', default='../workflow-config.yaml')
+    
+    try:
+        check_config_files_exist(config_file, workflow_config_file)
+    except FileNotFoundError as e:
+        logger.error(f"Configuration error: {e}")
+        sys.exit(1)
 
     consumer = Consumer(huey)
     main_thread = threading.Thread(target=main_loop)
     main_thread.start()
 
     try:
+        logger.info("Starting Huey consumer...")
         consumer.run()
     except Exception as e:
         logger.exception("Error in consumer: %s", e)
