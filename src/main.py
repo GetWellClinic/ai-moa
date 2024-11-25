@@ -158,21 +158,30 @@ def signal_handler(signum, frame):
     logger.info("Received signal %s. Initiating shutdown...", signum)
     shutdown_event.set()
 
-if __name__ == "__main__":
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
-
-    consumer = Consumer(huey)
-    consumer_thread = threading.Thread(target=consumer.run)
-    consumer_thread.start()
-
+def main_loop():
     try:
         while not shutdown_event.is_set():
             time.sleep(1)
     except KeyboardInterrupt:
         logger.info("Keyboard interrupt received. Initiating shutdown...")
     finally:
+        shutdown_event.set()
+
+if __name__ == "__main__":
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+    consumer = Consumer(huey)
+    main_thread = threading.Thread(target=main_loop)
+    main_thread.start()
+
+    try:
+        consumer.run()
+    except Exception as e:
+        logger.exception("Error in consumer: %s", e)
+    finally:
         logger.info("Stopping consumer...")
         consumer.stop()
-        consumer_thread.join()
-        logger.info("Consumer stopped. Exiting...")
+        shutdown_event.set()
+        main_thread.join()
+        logger.info("Main thread joined. Exiting...")
