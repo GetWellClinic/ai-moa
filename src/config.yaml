@@ -1,0 +1,10 @@
+emr:
+  username: emr
+  password: emr
+  pin: emr
+  base_url: http://127.0.0.1:8080/oscar
+  verify-HTTPS: false
+
+login:
+  max_retries: 5
+  initial_retry_delay: 1
