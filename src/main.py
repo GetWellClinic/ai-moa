@@ -183,12 +183,14 @@ def main_loop():
         shutdown_event.set()
         logger.info("Main loop ended.")
 
+# Global variable to store command-line arguments
+global args
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="AI-MOA Automation")
     parser.add_argument("--config", default="config.yaml", help="Path to the config file")
     parser.add_argument("--workflow-config", default="workflow-config.yaml", help="Path to the workflow config file")
     parser.add_argument("--cron-interval", help="Cron interval for scheduling tasks (e.g. '*/5' for every 5 minutes)")
-    global args
     args = parser.parse_args()
 
     signal.signal(signal.SIGINT, signal_handler)
