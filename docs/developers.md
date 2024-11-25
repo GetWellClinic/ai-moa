@@ -21,7 +21,7 @@ AI-MOA follows the Explicit Module Export approach along with a Workflow Engine,
 6. Test the code and check the logs to verify if the function is being triggered.
 
 
-## Before and After funtions
+## Before and After functions
 
 Before and after functions can be implemented; there is no global method to do that. However, you can take advantage of the workflow design if you need to modify the data before passing it to another function, or to update the data once it has been processed by a function. Simply follow the new module instructions and update the workflow based on your requirements.
 
@@ -29,9 +29,9 @@ Before and after functions can be implemented; there is no global method to do t
 
 Each shared data can be accessed using the get method. For example, `self.config.get_shared_state('filter_results')` accesses the data returned by the `filter_results` function.
 
-## Overriding funtions
+## Overriding functions
 
 Instead of modifying a core function, create a new module and replace the function in the `workflow-config.yaml`. This way, the code can be maintained without conflicts.
 
 
-For detailed explanations of each funtions and configurations, refer to the comments in the base code and example configuration files.
+For detailed explanations of each functions and configurations, refer to the comments in the base code and example configuration files.
