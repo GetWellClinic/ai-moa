@@ -138,6 +138,9 @@ def process_workflow_task(config_file: str, workflow_config_file: str) -> None:
 # Global variable to store command-line arguments
 args = None
 
+# Global variable to store command-line arguments
+args = None
+
 def get_cron_interval():
     """
     Get the cron interval from environment variable or command line argument.
@@ -184,9 +187,6 @@ def main_loop():
         logger.info("Main loop ended.")
 
 if __name__ == "__main__":
-    # Global variable to store command-line arguments
-    global args
-    
     parser = argparse.ArgumentParser(description="AI-MOA Automation")
     parser.add_argument("--config", default="config.yaml", help="Path to the config file")
     parser.add_argument("--workflow-config", default="workflow-config.yaml", help="Path to the workflow config file")
