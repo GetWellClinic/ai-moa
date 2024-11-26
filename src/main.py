@@ -25,7 +25,10 @@ import argparse
 import signal
 import sys
 import time
+import threading
+import os
 from huey import MemoryHuey, crontab
+from huey.consumer import Consumer
 from config import ConfigManager
 from auth import LoginManager, SessionManager
 from processors import Workflow
@@ -34,24 +37,24 @@ from datetime import datetime
 from threading import Event
 from typing import Optional
 
+print("AI-MOA version 1.0; licensed under AGPL3.0, see LICENSE file. (c) Spring Health Corporation")
+
 # Initialize a Huey instance with in-memory storage for managing asynchronous tasks.
 huey: MemoryHuey = MemoryHuey('aimoa_automation')
 
 logger: logging.Logger = logging.getLogger(__name__)
 shutdown_event: Event = Event()
-
+run_immediately: bool = False
 
 def check_config_files_exist(config_file: str, workflow_config_file: str) -> None:
     """
     Check if the required configuration files exist at the specified paths.
     Raises a FileNotFoundError if any of the files are missing.
     """
-    if not os.path.exists(config_file):
-        raise FileNotFoundError(f"Configuration file '{config_file}' is missing.")
-    if not os.path.exists(workflow_config_file):
-        raise FileNotFoundError(f"Workflow configuration file '{workflow_config_file}' is missing.")
-
-    logger.info("Configuration files exist: '%s' and '%s'", config_file, workflow_config_file)
+    for file_path, file_type in [(config_file, "Configuration"), (workflow_config_file, "Workflow configuration")]:
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"{file_type} file '{file_path}' is missing.")
+        logger.info(f"{file_type} file exists: '{file_path}'")
 
 
 class AIMOAAutomation:
@@ -107,11 +110,9 @@ class AIMOAAutomation:
         """
         self.cleanup()
 
-    @huey.task(expires=1800, retries=3, retry_delay=10)
     def process_workflow(self) -> None:
         """
-        Process the workflow as a Huey task.
-        Task expires after 30 minutes and retries up to 3 times.
+        Process the workflow.
         """
         start_time: datetime = datetime.now()
         self.logger.info("Starting workflow task at %s", start_time.isoformat())
@@ -126,26 +127,115 @@ class AIMOAAutomation:
 
         end_time: datetime = datetime.now()
         duration: float = (end_time - start_time).total_seconds()
-        if duration > 1800:
-            self.logger.warning("Workflow task expired before completion.")
+        self.logger.info("Workflow task completed. Duration: %s seconds", duration)
+
+@huey.task(expires=1800, retries=3, retry_delay=10)
+def process_workflow_task(config_file: str, workflow_config_file: str) -> None:
+    """
+    Process the workflow as a Huey task.
+    Task expires after 30 minutes and retries up to 3 times.
+    """
+    with AIMOAAutomation(config_file, workflow_config_file) as ai_moa:
+        ai_moa.process_workflow()
+
+# Global variable to store command-line arguments
+args = None
+
+# Global variable to store command-line arguments
+args = None
+
+def get_cron_interval():
+    """
+    Get the cron interval from command line argument, environment variable, or default value.
+    Command line argument takes precedence over environment variable.
+    """
+    global args
+    default_interval = '*/5'
+    env_interval = os.environ.get('CRON_INTERVAL')
+    
+    if args and args.cron_interval:
+        if env_interval:
+            logger.info(f"Overriding environment variable CRON_INTERVAL={env_interval} with command line argument: {args.cron_interval}")
         else:
-            self.logger.info("Workflow task completed successfully. Duration: %s seconds", duration)
+            logger.info(f"Using cron interval from command line argument: {args.cron_interval}")
+        return args.cron_interval
+    elif env_interval:
+        logger.info(f"Using cron interval from environment variable CRON_INTERVAL: {env_interval}")
+        return env_interval
+    else:
+        logger.info(f"No cron interval specified. Using default value: {default_interval}")
+        return default_interval
 
-
-@huey.periodic_task(crontab(minute='*/5'))
+@huey.periodic_task(crontab(minute=get_cron_interval()))
 def schedule_tasks() -> None:
     """
-    Periodic task triggered every one minute to process workflows.
+    Periodic task triggered to process workflows.
     """
     logger.info("Running scheduled tasks")
     try:
-        # Accessing the environment variables
-        config_file = os.getenv('CONFIG_FILE', default='../config.yaml')
-        workflow_config_file = os.getenv('WORKFLOW_CONFIG_FILE', default='../workflow-config.yaml')
-
-        with AIMOAAutomation(config_file, workflow_config_file) as ai_moa:
-            ai_moa.process_workflow(ai_moa)
+        process_workflow_task(config_file, workflow_config_file)
     except Exception as e:
         logger.exception("Error during scheduled task execution: %s", e)
 
     logger.info("Scheduled tasks completed")
+
+def signal_handler(signum, frame):
+    logger.info("Received signal %s. Initiating shutdown...", signum)
+    shutdown_event.set()
+
+def main_loop():
+    try:
+        logger.info("Main loop started. Waiting for tasks...")
+        while not shutdown_event.is_set():
+            time.sleep(1)
+    except KeyboardInterrupt:
+        logger.info("Keyboard interrupt received. Initiating shutdown...")
+    finally:
+        shutdown_event.set()
+        logger.info("Main loop ended.")
+
+if __name__ == "__main__":
+    project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    parser = argparse.ArgumentParser(description="AI-MOA Automation")
+    parser.add_argument("--config",  default=os.path.join(project_dir, "config", "config.yaml"), help="Path to the config file")
+    parser.add_argument("--workflow-config", default=os.path.join(project_dir, "config", "workflow-config.yaml"), help="Path to the workflow config file")
+    parser.add_argument("--cron-interval", help="Cron interval for scheduling tasks (e.g. '*/5' for every 5 minutes)")
+    parser.add_argument("--run-immediately", action="store_true", help="Run the task immediately when started")
+    args = parser.parse_args()
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+    # Load configuration files
+    config_file = args.config
+    workflow_config_file = args.workflow_config
+    
+    try:
+        check_config_files_exist(config_file, workflow_config_file)
+    except FileNotFoundError as e:
+        logger.error(f"Configuration error: {e}")
+        sys.exit(1)
+
+    # Check for run_immediately option
+    run_immediately = args.run_immediately or os.environ.get('RUN_IMMEDIATELY', '').lower() in ('true', '1', 'yes')
+
+    consumer = Consumer(huey)
+    main_thread = threading.Thread(target=main_loop)
+    main_thread.start()
+
+    if run_immediately:
+        logger.info("Running task immediately...")
+        process_workflow_task(config_file, workflow_config_file)
+
+    try:
+        logger.info("Starting Huey consumer...")
+        consumer.run()
+    except Exception as e:
+        logger.exception("Error in consumer: %s", e)
+    finally:
+        logger.info("Stopping consumer...")
+        consumer.stop()
+        shutdown_event.set()
+        main_thread.join()
+        logger.info("Main thread joined. Exiting...")

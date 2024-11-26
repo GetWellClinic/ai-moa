@@ -20,6 +20,7 @@
 # ***
 
 import logging
+import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import requests
@@ -61,6 +62,8 @@ class LoginManager:
         self.pin = config.get('emr.pin')
         self.base_url = config.get('emr.base_url')
         self.login_url = f"{self.base_url}/login.do"
+        self.max_retries = config.get('login.max_retries', 5)
+        self.initial_retry_delay = config.get('login.initial_retry_delay', 1)
         logger.debug("LoginManager initialized")
 
     def login_with_selenium(self, driver):
@@ -94,7 +97,7 @@ class LoginManager:
 
     def login_with_requests(self):
         """
-        Perform login using a requests session.
+        Perform login using a requests session with exponential backoff retry.
 
         Sends a POST request to the login URL with credentials.
 
@@ -103,18 +106,32 @@ class LoginManager:
         """
         logger.info(f"Attempting requests login for user: {self.username}")
         session = requests.Session()
-        response = session.post(
-            self.login_url,
-            data={
-                "username": self.username,
-                "password": self.password,
-                "pin": self.pin
-            }, verify=self.config.get('emr.verify-HTTPS')
-        )
+        retry_delay = self.initial_retry_delay
 
-        login_successful = response.url != self.login_url
-        logger.debug(f"Login {'successful' if login_successful else 'failed'}")
-        return session, login_successful
+        for attempt in range(self.max_retries):
+            try:
+                response = session.post(
+                    self.login_url,
+                    data={
+                        "username": self.username,
+                        "password": self.password,
+                        "pin": self.pin
+                    },
+                    verify=self.config.get('emr.verify-HTTPS'),
+                    timeout=10  # Add a timeout to prevent hanging indefinitely
+                )
+                login_successful = response.url != self.login_url
+                logger.debug(f"Login {'successful' if login_successful else 'failed'}")
+                return session, login_successful
+            except (requests.ConnectionError, requests.Timeout, requests.RequestException) as e:
+                logger.error(f"Attempt {attempt + 1} failed: {str(e)}")
+                if attempt < self.max_retries - 1:
+                    logger.info(f"Retrying in {retry_delay} seconds...")
+                    time.sleep(retry_delay)
+                    retry_delay *= 2  # Exponential backoff
+                else:
+                    logger.error("Max retries reached. Login failed.")
+                    return session, False
 
     def is_login_successful(self, current_url):
         """
