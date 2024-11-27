@@ -57,7 +57,7 @@ This guide covers the deployment process for AI-MOA in both development and prod
    set CONFIG_FILE=C:\path\to\config.yaml
    set WORKFLOW_CONFIG_FILE=C:\path\to\workflow-config.yaml
 
-   Please read [basic-installation-details.md](docs/basic-installation-details.md) for more details
+   Please read [basic-installation-details.md](basic-installation-details.md) for more details
 
 
 5. Run the application:

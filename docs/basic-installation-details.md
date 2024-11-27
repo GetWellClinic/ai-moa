@@ -151,7 +151,7 @@ llm:
 
 For better results leave other LLM configurations as it is.
 
-Please read [llm-container.md](docs/llm-container.md) for more details
+Please read [llm-container.md](llm-container.md) for more details
 
 # 5. Other details
 

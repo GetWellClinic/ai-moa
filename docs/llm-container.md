@@ -6,7 +6,7 @@ This guide will walk you through the steps to set up and install **LLM Container
 
 Before starting, make sure you have the following installed:
 
-- **docker** [docker.md](docs/docker.md)
+- **docker** [docker.md](docker.md)
 - **docker-composer**
 - **Git**
 
