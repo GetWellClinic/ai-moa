@@ -254,6 +254,9 @@ def get_driver(self):
         <selenium.webdriver.chrome.webdriver.WebDriver object at 0x...>  # if login is successful
     """
 	chrome_options = Options()
+	if self.config.get('chrome.options.headless', False):
+            chrome_options.add_argument("--headless")
+            self.logger.debug("Chrome headless mode enabled")
 	if not self.config.get('emr.verify-HTTPS', False):
 		chrome_options.add_argument('--ignore-certificate-errors')
 	driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
