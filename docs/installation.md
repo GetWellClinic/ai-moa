@@ -18,6 +18,8 @@ First, clone the repository to your local machine. Open your terminal and run th
 
 `git clone https://github.com/GetWellClinic/ai-moa.git`
 
+Checkout the branch you will be using. For example, git checkout dev-gwc
+
 ### 2. Create and Activate the Virtual Environment
 Create a Python virtual environment for the project. This step ensures that the dependencies are installed in an isolated environment and do not interfere with your system's Python environment.
 
@@ -58,6 +60,21 @@ The `install.sh` script will handle the installation of Python dependencies and 
 After installation, you can run the application by executing:
 
 `huey_consumer main.huey`
+
+Before running the command, make sure to add the paths to config.yaml and workflow-config.yaml to the environment variables `CONFIG_FILE` and `WORKFLOW_CONFIG_FILE`.
+
+Example of Setting Environment Variables:
+If you're running the command in a terminal or shell, you can set the environment variables like this:
+
+On Linux/macOS (Bash shell):
+
+export CONFIG_FILE=/path/to/config.yaml
+export WORKFLOW_CONFIG_FILE=/path/to/workflow-config.yaml
+
+On Windows (Command Prompt):
+
+set CONFIG_FILE=C:\path\to\config.yaml
+set WORKFLOW_CONFIG_FILE=C:\path\to\workflow-config.yaml
 
 ### 5. (Optional) Deactivating the Virtual Environment
 Once you're done working with the project, you can deactivate the virtual environment by simply running:

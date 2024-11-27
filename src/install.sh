@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Create the logs directory if it doesn't exist
+mkdir -p ../logs
+
 # Create the static directory if it doesn't exist
 mkdir -p static
 
