@@ -22,7 +22,7 @@
 # AI configuration for interacting with the AI-MOA service.
 ai:
   uri: https://localhost:3334/v1/chat/completions  # URI endpoint for AI model interactions.
-  verify-HTTPS: false
+  verify-HTTPS: false # Set this to true to verify the SSL certificates for LLM api's.
 
 # AI-MOA document processor configuration.
 aimoa_document_processor:
@@ -42,7 +42,7 @@ document_processor:
 # EMR (Electronic Medical Record) configuration for connecting to an EMR system.
 emr:
   base_url: http://127.0.0.1:8080/oscar  # Base URL for the EMR system.
-  verify-HTTPS: false
+  verify-HTTPS: false # Set this to true to verify the SSL certificates for o19.
   document_folder: pending  # Folder where pending documents to be processed are stored in o19.
   incoming_folder: File  # Folder where incoming documents to be processed are stored in o19.
   incoming_folder_queue: '1'  # Queue number for processing incoming files.

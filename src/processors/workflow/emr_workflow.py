@@ -75,7 +75,7 @@ class Workflow:
         self.login_manager = login_manager
         self.base_url = config.get('emr.base_url')
         self.file_name = ''
-        self.enable_ocr_gpu = config.get('enable_ocr_gpu', True)
+        self.enable_ocr_gpu = config.get('ocr.enable_gpu', True)
         self.url = config.get('ai.uri', "https://localhost:3334/v1/chat/completions")
         self.headers = {
             "Authorization": f"Bearer {config.get('ai.api_key')}",

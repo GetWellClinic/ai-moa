@@ -9,6 +9,7 @@ Before starting, make sure you have the following installed:
 - **Python 3.x** (preferably Python 3.10+)
 - **pip** (Python's package installer)
 - **Git** (for cloning the repository)
+- **Google Chrome Browser**
 
 ## Steps for Installation
 

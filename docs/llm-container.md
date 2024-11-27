@@ -6,7 +6,7 @@ This guide will walk you through the steps to set up and install **LLM Container
 
 Before starting, make sure you have the following installed:
 
-- **docker**
+- **docker** [docker.md](docs/docker.md)
 - **docker-composer**
 - **Git**
 
@@ -92,3 +92,10 @@ To view the Docker logs, use:
 `docker logs CONTAINER_ID`
 
 Replace CONTAINER_ID with the actual container ID. You can find the container ID by running `docker ps -a`.
+
+If the LLM is running as expected, the llm-container log should show a similar response (towards the end of the log) as the one provided below:
+
+“INFO: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Swapped: 0 reqs, Pending: 0 reqs, GPU KV cache usage: 0.0%, CPU KV cache usage: 0.0%.”
+
+You can also use nvidia-smi to verify that the LLM is loaded into the GPU memory.
+
