@@ -1,4 +1,5 @@
 .idea
 .aid*
+.env
 logs/
 llm-container/models
