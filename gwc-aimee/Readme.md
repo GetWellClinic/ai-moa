@@ -2,8 +2,11 @@
 *Copyright © 2024 by Spring Health Corporation*
 *Toronto, Ontario, Canada*
 LICENSE: GNU Affero General Public License Version 3
-
 *Document Version 2024.12.08*
+
+<p align="center">
+  <img src="https://getwellclinic.ca/images/GetWellClinic/Logos-Icons/AimeeAI.png" alt="Aimee AI" />
+</p>
 
 ## Introduction: ##
 
