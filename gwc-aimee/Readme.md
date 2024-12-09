@@ -37,6 +37,8 @@ an AI-MOA (AI Medical Office Assistant) that is locally hosted so no private dat
 
 ### Installation ###
 
+**Be sure to change working directory to ""gwc-aimee"" where this readme.md and installation files are stored when running the installation files.**
+
 1. Install Ubuntu 22 LTS
 
 **Notes:**
