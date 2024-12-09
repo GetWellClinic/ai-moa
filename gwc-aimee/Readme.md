@@ -1,8 +1,7 @@
 # Aimee AI (AI-MOA) #
 *Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
-LICENSE: GNU Affero General Public License Version 3<br />
-*Document Version 2024.12.08*
-
+*LICENSE: GNU Affero General Public License Version 3**<br />
+**Document Version 2024.12.09**
 <p align="center">
   <img src="https://getwellclinic.ca/images/GetWellClinic/Logos-Icons/AimeeAI.png" alt="Aimee AI">
 </p>
