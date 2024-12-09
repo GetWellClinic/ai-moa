@@ -5,7 +5,7 @@ LICENSE: GNU Affero General Public License Version 3
 
 *Document Version 2024.12.08*
 
-### Introduction: ###
+## Introduction: ##
 
 Aimee AI is a sweet, polite, and helpful medical office assistant that sorts, labels, describes the content of documents,
 tags to ordering provider, and attaches faxes/scans to the patient's chart in the EMR. We have developed her as
@@ -35,11 +35,11 @@ an AI-MOA (AI Medical Office Assistant) that is locally hosted so no private dat
 - Hugging Face [https://huggingface.co](https://huggingface.co) user account and personal private access token generated (Optional)
 
 
-### Installation ###
+## Installation ##
 
 **Be sure to change working directory to "gwc-aimee" where this readme.md and installation files are stored, before executing the installation files.**
 
-1. Install Ubuntu 22 LTS
+### 1. Install Ubuntu 22 LTS ###
 
 **Notes:**
 If you plan on installing this in a VM such as on ProxMox VE, here are some tips:
@@ -47,7 +47,7 @@ If you plan on installing this in a VM such as on ProxMox VE, here are some tips
 - Enable IOMMU in BIOS
 - Enable [PCI passthrough](https://pve.proxmox.com/wiki/PCI_Passthrough) for Proxmox VE. This is a helpful Youtube [instructional video](https://www.youtube.com/watch?v=TWX3iWcka_0)
 
-2. Clone the AI-MOA repository from Github
+### 2. Clone the AI-MOA repository from Github ###
 
 You will need to have your Github user name and a personal access token (generated from your account on Github). Github no longer allows 'git clone' access with passwords, and must use an access token generated from your user account online from Github.
 ```
@@ -61,10 +61,10 @@ sudo chown $USER /opt/ai-moa/* -R
 To use another branch such as "gwc-dev"
 ```
 cd /opt/ai-moa
-git checkout dev-gwc
+git checkout dev-gwc-aimee
 ```
 
-3. Install NVIDIA RTX video card drivers
+### 3. Install NVIDIA RTX video card drivers ###
 
 Install your GPU in the PCIe slot, boot up your server, and install the video card drivers for your machine.
 
@@ -116,7 +116,7 @@ nvidia-smi
 +-----------------------------------------------------------------------------------------+
 ```
 
-4. Install NVIDIA Toolkit Container
+### 4. Install NVIDIA Toolkit Container ###
 
 Add the Repository for NVIDIA Container Toolkit
 ```
@@ -134,7 +134,7 @@ Restart the server for the installation to take effect.
 sudo shutdown -r now
 ```
 
-5. Install Docker and Docker Compose
+### 5. Install Docker and Docker Compose ###
 
 Follow online instructions to install Docker and Docker Compose.
 
@@ -145,38 +145,38 @@ Use our custom "install-docker.sh" scrip to install automatically:
 sudo ./install-docker.sh
 ```
 
-6. Configure Docker to use NVIDIA Container Toolkit
+### 6. Configure Docker to use NVIDIA Container Toolkit ###
 ```
 sudo nvidia-ctk runtime configure --runtime=docker
 sudo systemctl restart docker
 ```
 
-7. Install AI LLM Container
+### 7. Install AI LLM Container ###
 
 This installed the default AI Lare Language Model Docker Container for AI-MOA.
 ```
 sudo ./install-llm.sh
 ```
 
-8. Install Aimee AI (AI-MOA)
+### 8. Install Aimee AI (AI-MOA) ###
 
 This installs "Aimee AI" version of AI-MOA, by setting up custom settings and prerequisites.
 ```
 ./install-aimoa.sh
 ```
 
-9. Install *Aimee AI* as a system service (Recommended)
+### 9. Install *Aimee AI* as a system service (Recommended) ###
 
 This optional step, installs *Aimee AI* as a system service that automatically starts at system startup/reboot.
 If you install this option, both the LLM Container and AI-MOA will start in the background and keep running.
 
-Install "Aimee AI" as a sytem service
+Install "Aimee AI" as a system service
 ```
 ./install-aimoa.sh
 ```
 
 
-### Configuration ###
+## Configuration ##
 
 To configure your *Aimee AI*, please edit the parameters in the following configuration files.
 ```
@@ -184,7 +184,7 @@ sudo nano ../config/config.yaml
 sudo nano ../src/workflow-config.yaml
 ```
 
-1. Edit "../config/config.yaml" file
+### 1. Edit "../config/config.yaml" file ###
 
 Particularly, pay attention to the section on "emr" that is unique to your EMR server.
 ```
@@ -222,7 +222,7 @@ lock:
 	status: false
 ```
 
-2. Edit "../config/provider_list.yaml" file
+### 2. Edit "../config/provider_list.yaml" file ###
 
 Once you run AI-MOA once, it will attempt to automatically upload a Report by Template and generate
 a SQL search to extract the provider names and provider_id from your EMR.
@@ -236,8 +236,93 @@ confuse the LLM.
 sudo nano ../config/provider_list.yaml
 ```
 
-If you do not see this file, wait, or check out the next steps to run AI-MOA manually at command line.
+If you do not see this file, wait, or complete the configuration steps and then start Aimee AI manually by command line (See section: Maintenance Operations)
 
+### 3. Create new EMR user: AI, MOA ###
+
+	**A) Create AI MOA user in EMR**
+
+	Aimee AI will access the EMR with a user account you create for her.
+
+	1. Login to EMR
+	2. Administration -> Add a Provider Record:
+		- Provider No: **200**
+		- Last Name: AI
+		- First Name: MOA
+		- Sites Assigned: (select your site)
+		- Status: Active
+	3. Administration -> Assign Role to Provider:
+		- Find Provider No. **200** (MOA AI)
+			- Add "doctor" role
+			- Add "receptionist" role
+		- Scroll to bottom: Update Primary EMR Role:
+			- Select Provider: AI, MOA
+			- Assign AI, MOA primary Role: **receptionist**
+			- Click "Update Primary EMR Role" to save settings.
+	4. Administration -> Add a Login Record:
+		- Create new user for Aimee AI
+			- User Name: aimoa
+			- Password: *********
+			- Confirm: *********
+			- Provider No: **200**
+			- Expiry Date: (**uncheck box**)
+			- Time Cycling Pin (2FA): **No**
+			- Pin (remote) Enable: **Checkmark**/yes
+			- Pin (local) Enable: (uncheck or check)
+			- Force Password Reset: **No**
+		- Save settings by clicking "Add Record"
+	5. Update "config.yaml" file with AI, MOA login information.
+			(Please note: be sure to secure the server installation from any unauthorized access or use.)
+
+	**B) Create CONFIDENTIAL, UNATTACHED patient demographic record in EMR**
+
+	Aimee AI will file documents that do not have any corresponding patient record in the EMR to a generic chart for audit, tracking, and recovery purposes. This allows you to find records that are unattached to an actual patient, and make corrections (reattach to correct file). You may also use this to file away advertisements and junk faxes. It is best practice to label the document with the document's patient name, so your staff can do a search in the Document Manager to retrieve it if it was a mistake to file it in "CONFIDENTIAL, UNATTACHED"
+
+	1. Login to EMR
+	2. Click "Search" for a patient.
+		- Enter "confidential" and click "Search", to check if existing patient record named "CONFIDENTIAL, UNATTACHED"
+		- If one exist, then note down the demographic number of this chart, to specify as the "default_unidentified_patient_tagging_name:" field in "workflow-config.yaml"
+	3. Create Demographic:
+		- Click "Create Demographic" and create a new chart
+		- Lastname: CONFIDENTIAL
+		- Firstname: UNATTACHED
+		- Health Card Type: Other
+	4. Update "workflow-config.yaml"
+		- Note the Demographic Number for "CONFIDENTIAL, UNATTACHED" and enter it as the "default_unidentified_patient_tagging_name:" for the YAML file.
+
+	**C) Create missing Document Categories**
+
+	AI-MOA is developed for identify and tagging according to certain Document Category Types as defined in "workflow-config.yaml".
+	Some category names are missing in the default EMR installation. Check for document category types and create these missing categories so you can see the labels that Aimee AI tag.
+
+	1. Login to EMR
+	2. Administration -> System Management -> Document Categories:
+		- Under "Demographic Document Categories", Show "all or 100" categories
+		- Check for the presence of this standard Document Categories, and "Add New" for any missing categories (or Update Status to make them "A" - Active)
+
+		**AI-MOA Standard Document Categories**
+
+		advertisement
+		consent
+		consult
+		diagnostics
+		insurance
+		lab
+		legal
+		miscellaneous
+		*notifications*
+		oldchart
+		*others*
+		pathology
+		pharmacy
+		photo
+		radiology
+		referral
+		request
+		requisition
+
+		
+## Maintenance Operations ##
 
 ### Running *Aimee AI* manually by command line ###
 
@@ -288,16 +373,16 @@ To start the LLM Container manually:
 sudo ./run-llm.sh
 ````
 
-### Troubleshooting ###
+## Troubleshooting ##
 
-#### Uninstalling Aimee AI ####
+### Uninstalling Aimee AI ###
 
 To remove "Aimee AI" from running as a system service:
 ```
 sudo ../uninstall-aimoa.sh
 ```
 
-#### Fixing Permissions ####
+### Fixing Permissions ###
 
 Sometimes, Aimee AI won't run propertly because the permission for user:group are not set properly.
 
@@ -306,7 +391,7 @@ Fix this by running:
 sudo ./fix-aimoa.sh
 ```
 
-#### AI-MOA is running, but no documents being process ####
+### AI-MOA is running, but no documents being process ###
 
 This may happen because of a file lock on config.yaml
 
