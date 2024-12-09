@@ -240,7 +240,7 @@ If you do not see this file, wait, or complete the configuration steps and then 
 
 ### 3. Create new EMR user: AI, MOA ###
 
-	**A) Create AI MOA user in EMR**
+A. Create AI MOA user in EMR
 
 	Aimee AI will access the EMR with a user account you create for her.
 
@@ -274,7 +274,7 @@ If you do not see this file, wait, or complete the configuration steps and then 
 	5. Update "config.yaml" file with AI, MOA login information.
 			(Please note: be sure to secure the server installation from any unauthorized access or use.)
 
-	**B) Create CONFIDENTIAL, UNATTACHED patient demographic record in EMR**
+B. Create CONFIDENTIAL, UNATTACHED patient demographic record in EMR**
 
 	Aimee AI will file documents that do not have any corresponding patient record in the EMR to a generic chart for audit, tracking, and recovery purposes. This allows you to find records that are unattached to an actual patient, and make corrections (reattach to correct file). You may also use this to file away advertisements and junk faxes. It is best practice to label the document with the document's patient name, so your staff can do a search in the Document Manager to retrieve it if it was a mistake to file it in "CONFIDENTIAL, UNATTACHED"
 
@@ -290,7 +290,7 @@ If you do not see this file, wait, or complete the configuration steps and then 
 	4. Update "workflow-config.yaml"
 		- Note the Demographic Number for "CONFIDENTIAL, UNATTACHED" and enter it as the "default_unidentified_patient_tagging_name:" for the YAML file.
 
-	**C) Create missing Document Categories**
+C. Create missing Document Categories
 
 	AI-MOA is developed for identify and tagging according to certain Document Category Types as defined in "workflow-config.yaml".
 	Some category names are missing in the default EMR installation. Check for document category types and create these missing categories so you can see the labels that Aimee AI tag.
