@@ -62,6 +62,9 @@ sudo chown $USER /opt/ai-moa/* -R
 ```
 cd /opt/ai-moa
 git checkout dev-gwc-aimee
+cd gwc-aimee
+ls -l -h
+nano Readme.md
 ```
 
 ### 3. Install NVIDIA RTX video card drivers ###
