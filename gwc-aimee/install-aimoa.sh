@@ -43,8 +43,8 @@ AIMOA=$(pwd)
 
 # Backup config files
 /bin/echo "Backing up config files..."
-/bin/cp $AIMOA/config.yaml $AIMOA/config.yaml.default
-/bin/cp $AIMOA/workflow-config.yaml $AIMOA/workflow-config.yaml.default
+/bin/cp $AIMOA/config/config.yaml $AIMOA/config/config.yaml.default
+/bin/cp $AIMOA/config/workflow-config.yaml $AIMOA/config/workflow-config.yaml.default
 /bin/cp $AIMOA/config/provider_list.yaml $AIMOA/config/provider_list.yaml.$(date +'%Y-%m-%d')
 /bin/echo "Removing provider_list for clean start..."
 /bin/sleep 5s
