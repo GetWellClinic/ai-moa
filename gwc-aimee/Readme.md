@@ -242,16 +242,16 @@ If you do not see this file, wait, or complete the configuration steps and then 
 
 A. Create AI MOA user in EMR
 
-	Aimee AI will access the EMR with a user account you create for her.
+Aimee AI will access the EMR with a user account you create for her.
 
-	1. Login to EMR
-	2. Administration -> Add a Provider Record:
+1. Login to EMR
+2. Administration -> Add a Provider Record:
 		- Provider No: **200**
 		- Last Name: AI
 		- First Name: MOA
 		- Sites Assigned: (select your site)
 		- Status: Active
-	3. Administration -> Assign Role to Provider:
+3. Administration -> Assign Role to Provider:
 		- Find Provider No. **200** (MOA AI)
 			- Add "doctor" role
 			- Add "receptionist" role
@@ -259,7 +259,7 @@ A. Create AI MOA user in EMR
 			- Select Provider: AI, MOA
 			- Assign AI, MOA primary Role: **receptionist**
 			- Click "Update Primary EMR Role" to save settings.
-	4. Administration -> Add a Login Record:
+4. Administration -> Add a Login Record:
 		- Create new user for Aimee AI
 			- User Name: aimoa
 			- Password: *********
@@ -271,55 +271,55 @@ A. Create AI MOA user in EMR
 			- Pin (local) Enable: (uncheck or check)
 			- Force Password Reset: **No**
 		- Save settings by clicking "Add Record"
-	5. Update "config.yaml" file with AI, MOA login information.
+5. Update "config.yaml" file with AI, MOA login information.
 			(Please note: be sure to secure the server installation from any unauthorized access or use.)
 
 B. Create CONFIDENTIAL, UNATTACHED patient demographic record in EMR**
 
 	Aimee AI will file documents that do not have any corresponding patient record in the EMR to a generic chart for audit, tracking, and recovery purposes. This allows you to find records that are unattached to an actual patient, and make corrections (reattach to correct file). You may also use this to file away advertisements and junk faxes. It is best practice to label the document with the document's patient name, so your staff can do a search in the Document Manager to retrieve it if it was a mistake to file it in "CONFIDENTIAL, UNATTACHED"
 
-	1. Login to EMR
-	2. Click "Search" for a patient.
+1. Login to EMR
+2. Click "Search" for a patient.
 		- Enter "confidential" and click "Search", to check if existing patient record named "CONFIDENTIAL, UNATTACHED"
 		- If one exist, then note down the demographic number of this chart, to specify as the "default_unidentified_patient_tagging_name:" field in "workflow-config.yaml"
-	3. Create Demographic:
+3. Create Demographic:
 		- Click "Create Demographic" and create a new chart
 		- Lastname: CONFIDENTIAL
 		- Firstname: UNATTACHED
 		- Health Card Type: Other
-	4. Update "workflow-config.yaml"
+4. Update "workflow-config.yaml"
 		- Note the Demographic Number for "CONFIDENTIAL, UNATTACHED" and enter it as the "default_unidentified_patient_tagging_name:" for the YAML file.
 
 C. Create missing Document Categories
 
-	AI-MOA is developed for identify and tagging according to certain Document Category Types as defined in "workflow-config.yaml".
+AI-MOA is developed for identify and tagging according to certain Document Category Types as defined in "workflow-config.yaml".
 	Some category names are missing in the default EMR installation. Check for document category types and create these missing categories so you can see the labels that Aimee AI tag.
 
-	1. Login to EMR
-	2. Administration -> System Management -> Document Categories:
+1. Login to EMR
+2. Administration -> System Management -> Document Categories:
 		- Under "Demographic Document Categories", Show "all or 100" categories
 		- Check for the presence of this standard Document Categories, and "Add New" for any missing categories (or Update Status to make them "A" - Active)
 
-		**AI-MOA Standard Document Categories**
+**AI-MOA Standard Document Categories**
 
-		advertisement
-		consent
-		consult
-		diagnostics
-		insurance
-		lab
-		legal
-		miscellaneous
-		*notifications*
-		oldchart
-		*others*
-		pathology
-		pharmacy
-		photo
-		radiology
-		referral
-		request
-		requisition
+- advertisement
+- consent
+- consult
+- diagnostics
+- insurance
+- lab
+- legal
+- miscellaneous
+- *notifications*
+- oldchart
+- *others*
+- pathology
+- pharmacy
+- photo
+- radiology
+- referral
+- request
+- requisition
 
 		
 ## Maintenance Operations ##
