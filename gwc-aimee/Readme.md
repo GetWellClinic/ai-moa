@@ -47,7 +47,24 @@ If you plan on installing this in a VM such as on ProxMox VE, here are some tips
 - Enable IOMMU in BIOS
 - Enable [PCI passthrough](https://pve.proxmox.com/wiki/PCI_Passthrough) for Proxmox VE. This is a helpful Youtube [instructional video](https://www.youtube.com/watch?v=TWX3iWcka_0)
 
-2. Install NVIDIA RTX video card drivers
+2. Clone the AI-MOA repository from Github
+
+You will need to have your Github user name and a personal access token (generated from your account on Github). Github no longer allows 'git clone' access with passwords, and must use an access token generated from your user account online from Github.
+```
+cd /opt
+sudo git clone https://github.com/getwellclinic/ai-moa.git
+cd /opt/ai-moa
+sudo chown $USER /opt/ai-moa/* -R
+```
+
+(Optional:) You can checkout the branch you will be using. The default is "main" branch.
+To use another branch such as "gwc-dev"
+```
+cd /opt/ai-moa
+git checkout dev-gwc
+```
+
+3. Install NVIDIA RTX video card drivers
 
 Install your GPU in the PCIe slot, boot up your server, and install the video card drivers for your machine.
 
@@ -99,7 +116,7 @@ nvidia-smi
 +-----------------------------------------------------------------------------------------+
 ```
 
-3. Install NVIDIA Toolkit Container
+4. Install NVIDIA Toolkit Container
 
 Add the Repository for NVIDIA Container Toolkit
 ```
@@ -117,7 +134,7 @@ Restart the server for the installation to take effect.
 sudo shutdown -r now
 ```
 
-4. Install Docker and Docker Compose
+5. Install Docker and Docker Compose
 
 Follow online instructions to install Docker and Docker Compose.
 
@@ -128,27 +145,27 @@ Use our custom "install-docker.sh" scrip to install automatically:
 sudo ./install-docker.sh
 ```
 
-5. Configure Docker to use NVIDIA Container Toolkit
+6. Configure Docker to use NVIDIA Container Toolkit
 ```
 sudo nvidia-ctk runtime configure --runtime=docker
 sudo systemctl restart docker
 ```
 
-6. Install AI LLM Container
+7. Install AI LLM Container
 
 This installed the default AI Lare Language Model Docker Container for AI-MOA.
 ```
 sudo ./install-llm.sh
 ```
 
-7. Install Aimee AI (AI-MOA)
+8. Install Aimee AI (AI-MOA)
 
 This installs "Aimee AI" version of AI-MOA, by setting up custom settings and prerequisites.
 ```
 ./install-aimoa.sh
 ```
 
-8. Install *Aimee AI* as a system service (Recommended)
+9. Install *Aimee AI* as a system service (Recommended)
 
 This optional step, installs *Aimee AI* as a system service that automatically starts at system startup/reboot.
 If you install this option, both the LLM Container and AI-MOA will start in the background and keep running.
