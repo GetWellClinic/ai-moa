@@ -246,33 +246,33 @@ Aimee AI will access the EMR with a user account you create for her.
 
 1. Login to EMR
 2. Administration -> Add a Provider Record:
-		- Provider No: **200**
-		- Last Name: AI
-		- First Name: MOA
-		- Sites Assigned: (select your site)
-		- Status: Active
+	- Provider No: **200**
+	- Last Name: AI
+	- First Name: MOA
+	- Sites Assigned: (select your site)
+	- Status: Active
 3. Administration -> Assign Role to Provider:
-		- Find Provider No. **200** (MOA AI)
-			- Add "doctor" role
-			- Add "receptionist" role
-		- Scroll to bottom: Update Primary EMR Role:
-			- Select Provider: AI, MOA
-			- Assign AI, MOA primary Role: **receptionist**
-			- Click "Update Primary EMR Role" to save settings.
+	- Find Provider No. **200** (MOA AI)
+		- Add "doctor" role
+		- Add "receptionist" role
+	- Scroll to bottom: Update Primary EMR Role:
+		- Select Provider: AI, MOA
+		- Assign AI, MOA primary Role: **receptionist**
+		- Click "Update Primary EMR Role" to save settings.
 4. Administration -> Add a Login Record:
-		- Create new user for Aimee AI
-			- User Name: aimoa
-			- Password: *********
-			- Confirm: *********
-			- Provider No: **200**
-			- Expiry Date: (**uncheck box**)
-			- Time Cycling Pin (2FA): **No**
-			- Pin (remote) Enable: **Checkmark**/yes
-			- Pin (local) Enable: (uncheck or check)
-			- Force Password Reset: **No**
+	- Create new user for Aimee AI
+		- User Name: aimoa
+		- Password: *********
+		- Confirm: *********
+		- Provider No: **200**
+		- Expiry Date: (**uncheck box**)
+		- Time Cycling Pin (2FA): **No**
+		- Pin (remote) Enable: **Checkmark**/yes
+		- Pin (local) Enable: (uncheck or check)
+		- Force Password Reset: **No**
 		- Save settings by clicking "Add Record"
 5. Update "config.yaml" file with AI, MOA login information.
-			(Please note: be sure to secure the server installation from any unauthorized access or use.)
+(Please note: be sure to secure the server installation from any unauthorized access or use.)
 
 **Create CONFIDENTIAL, UNATTACHED patient demographic record in EMR**
 
@@ -280,15 +280,15 @@ Aimee AI will file documents that do not have any corresponding patient record i
 
 1. Login to EMR
 2. Click "Search" for a patient.
-		- Enter "confidential" and click "Search", to check if existing patient record named "CONFIDENTIAL, UNATTACHED"
-		- If one exist, then note down the demographic number of this chart, to specify as the "default_unidentified_patient_tagging_name:" field in "workflow-config.yaml"
+	- Enter "confidential" and click "Search", to check if existing patient record named "CONFIDENTIAL, UNATTACHED"
+	- If one exist, then note down the demographic number of this chart, to specify as the "default_unidentified_patient_tagging_name:" field in "workflow-config.yaml"
 3. Create Demographic:
-		- Click "Create Demographic" and create a new chart
+	- Click "Create Demographic" and create a new chart
 		- Lastname: CONFIDENTIAL
 		- Firstname: UNATTACHED
 		- Health Card Type: Other
 4. Update "workflow-config.yaml"
-		- Note the Demographic Number for "CONFIDENTIAL, UNATTACHED" and enter it as the "default_unidentified_patient_tagging_name:" for the YAML file.
+	- Note the Demographic Number for "CONFIDENTIAL, UNATTACHED" and enter it as the "default_unidentified_patient_tagging_name:" for the YAML file.
 
 **Create missing Document Categories**
 
