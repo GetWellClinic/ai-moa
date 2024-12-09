@@ -5,6 +5,7 @@ LICENSE: GNU Affero General Public License Version 3
 
 *Document Version 2024.12.08*
 
+
 ## Introduction: ##
 
 Aimee AI is a sweet, polite, and helpful medical office assistant that sorts, labels, describes the content of documents,
