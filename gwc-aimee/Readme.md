@@ -71,7 +71,7 @@ nano Readme.md
 ```
 cd /opt/ai-moa/gwc-aimee
 ls -l -h
-sudo chmod ugo+x *.sh
+sudo chmod ug+x *.sh
 sudo chmod g-x install*
 sudo chmod g-x uninstall*
 ```
