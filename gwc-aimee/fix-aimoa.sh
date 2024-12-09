@@ -26,5 +26,10 @@ AIMOA=$(pwd)
 /bin/echo ""
 /bin/sleep 5s
 
+# Protect installation files
+/bin/chmod guo+x $AIMOA/gwc-aimee/*
+/bin/chmod o-x $AIMOA/gwc-aimee/install*
+/bin/chmod o-x $AIMOA/gwc-aimee/uninstall*
+
 # Release file lock on workflow-config.yaml
 # release_lock
