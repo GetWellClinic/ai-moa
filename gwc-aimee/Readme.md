@@ -1,4 +1,4 @@
-# Aimee AI (AI-MOA)#
+# Aimee AI (AI-MOA) #
 *Copyright © 2024 by Spring Health Corporation*
 *Toronto, Ontario, Canada*
 LICENSE: GNU Affero General Public License Version 3
@@ -49,10 +49,10 @@ If you plan on installing this in a VM such as on ProxMox VE, here are some tips
 
 Install your GPU in the PCIe slot, boot up your server, and install the video card drivers for your machine.
 
-** Install NVIDIA Video Driver **
+**Install NVIDIA Video Driver**
 
 Check for NVIDIA video card drivers
-'''
+```
 sudo apt-get update
 sudo apt-get install ubuntu-drivers-common
 sudo ubuntu-drivers devices
@@ -242,7 +242,7 @@ To exit/stop Aimee AI
 Ctrl-C
 ```
 
-** Watching the workflow.logs **
+**Watching the workflow.logs**
 
 You can also watch realtime logs of AI-MOA.
 ```
