@@ -7,7 +7,6 @@ LICENSE: GNU Affero General Public License Version 3
 <p align="center">
   <img src="https://getwellclinic.ca/images/GetWellClinic/Logos-Icons/AimeeAI.png" alt="Aimee AI" />
 </p>
-
 ## Introduction: ##
 
 Aimee AI is a sweet, polite, and helpful medical office assistant that sorts, labels, describes the content of documents,
