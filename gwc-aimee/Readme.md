@@ -180,7 +180,7 @@ Install "Aimee AI" as a system service
 To configure your *Aimee AI*, please edit the parameters in the following configuration files.
 ```
 sudo nano ../config/config.yaml
-sudo nano ../src/workflow-config.yaml
+sudo nano ../config/workflow-config.yaml
 ```
 
 ### 1. Edit "../config/config.yaml" file ###
@@ -194,7 +194,7 @@ emr:
 	pin:
 ```
 
-When you are ready to process documents, edit the "../src/workflow-config.yaml" file to the last document
+When you are ready to process documents, edit the "../config/workflow-config.yaml" file to the last document
 in your EMR from where you want to start AI-MOA to start processing documents.
 The default "pending: 9999999" has been set at a very unlikely high number to prevent default installations
 from processing live documents until you are ready.
