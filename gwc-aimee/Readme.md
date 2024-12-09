@@ -391,7 +391,7 @@ Fix this by running:
 sudo ./fix-aimoa.sh
 ```
 
-### AI-MOA is running, but no documents being process ###
+### AI-MOA is running, but no documents being processed ###
 
 This may happen because of a file lock on config.yaml
 
