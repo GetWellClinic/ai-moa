@@ -67,6 +67,15 @@ ls -l -h
 nano Readme.md
 ```
 
+**Set file permissions to enable run installation scripts**
+```
+cd /opt/ai-moa/gwc-aimee
+ls -l -h
+sudo chmod ugo+x *.sh
+sudo chmod g-x install*
+sudo chmod g-x uninstall*
+```
+
 ### 3. Install NVIDIA RTX video card drivers ###
 
 Install your GPU in the PCIe slot, boot up your server, and install the video card drivers for your machine.
