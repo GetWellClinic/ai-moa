@@ -1,0 +1,5 @@
+# Use caddy image
+FROM alpindale/aphrodite-openai:v0.6.2
+
+# Set permissions for non root user in directories we will need
+RUN mkdir -p /.cache && chown -R 1000:1000 /.cache

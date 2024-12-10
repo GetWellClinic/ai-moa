@@ -1,0 +1,99 @@
+#!/bin/bash
+# This custom script installs Get Well Clinic's version of AI-MOA (Aimee AI)
+# Note: To correctly use automatic detection of AI-MOA path, this script must be installed and run in subdirectory 'gwc-aimee'
+# This install script should be run as 'sudo ./install-aimoa.sh'
+# Version 2024.12.08
+
+# Hardware Requirements:
+#	NVIDIA RTX video card installed with at least 12 GB VRAM
+
+# Software Requirements:
+#	NVIDIA graphics drivers installed
+#	Docker installed
+#	Docker Compose installed
+#	NVIDIA Container Toolkit installed
+#	AI-MOA installed in preferably in /opt/ai-moa directory
+# 	Python 3.x installed
+# 	Python package installed:
+#		pip
+#		virtualenv
+#
+
+# Automatic detection of base directory
+cd ..
+AIMOA=$(pwd)
+
+/bin/echo "AI-MOA (Aimee AI) will be installed and setup with the following specified base directory for AI-MOA..."
+/bin/echo $(pwd)
+/bin/echo ""
+/bin/echo "...if the above directory is not the correct base directory for AI-MOA, please Ctrl-C to cancel installation now...!"
+/bin/sleep 10s
+/bin/echo ""
+# Create the logs directory if it doesn't exist
+/bin/echo "Creating log directory..."
+/bin/mkdir -p $AIMOA/logs
+
+# Create the static directory if it doesn't exist
+/bin/echo "Creating src/static directory..."
+/bin/mkdir -p $AIMOA/src/static
+
+# Create the llm-container/models directory if it doesn't exist
+/bin/echo "Creating llm-container/models directory..."
+/bin/mkdir -p $AIMOA/llm-container/models
+
+# Backup config files
+/bin/echo "Backing up config files..."
+/bin/cp $AIMOA/config/config.yaml $AIMOA/config/config.yaml.default
+/bin/cp $AIMOA/config/workflow-config.yaml $AIMOA/config/workflow-config.yaml.default
+/bin/cp $AIMOA/config/provider_list.yaml $AIMOA/config/provider_list.yaml.$(date +'%Y-%m-%d')
+/bin/echo "Removing provider_list for clean start..."
+/bin/sleep 5s
+/bin/rm $AIMOA/config/provider_list.yaml
+
+# Confirm your local timezone is set:
+/bin/timedatectl
+/bin/echo ""
+/bin/echo "...please confirm that above details of your system has your correct desired timezone..."
+/bin/echo "...if your timezone is not set properly, your document files may be marked with the wrong dates...!"
+/bin/echo "	(Hint: use 'timedatectl set-timezone' to change your timezone)"
+/bin/sleep 5s
+
+# Create Python virtual environment for AI-MOA libraries and dependency packages:
+/bin/echo "Creating python virtual environment for AI-MOA dependencies..."
+/bin/sleep 5s
+virtualenv $AIMOA/.env
+# Install python dependencies for AI-MOA from requirements.txt
+/bin/echo "Installing Python libraries and dependencies required for running AI-MOA in python virual environment..."
+/bin/sleep 5s
+# Activate virtual environment and install in python packages in virtual environment
+source $AIMOA/.env/bin/activate
+pip install -r $AIMOA/src/requirements.txt
+
+# Create Linux user and group for 'aimoa':
+/usr/sbin/adduser aimoa
+# Add current user to 'aimoa' group
+/usr/sbin/usermod -a -G aimoa $USER
+
+# Fixing file permissions for AI-MOA:
+/bin/echo "Fixing file permissions for AI-MOA to 'rw-rw-r-- aimoa aimoa' ..."
+/bin/sleep 5s
+# Modify user:group permissions:
+/bin/chown aimoa:aimoa $AIMOA/* -R
+# Add read-write permission to 'aimoa' group members
+/bin/chmod g+rw $AIMOA/* -R
+/bin/echo "Confirming current user belonging to the following groups (check for 'aimoa')..."
+/usr/bin/groups $USER
+/bin/echo ""
+/bin/sleep 5s
+
+# Install google-chrome
+/bin/echo "Installing Google Chrome for AI-MOA..."
+/bin/echo "...adding Chrome repository to system sources..."
+# Add Chrome repository key to keychain
+/bin/wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+# Add Chrome repo to system sources
+/bin/echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list
+apt-get update
+# Install google-chrome-stable
+apt-get -y install google-chrome-stable
+

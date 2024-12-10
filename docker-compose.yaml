@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  ai_moa:
+    build: .
+    volumes:
+      - ./src:/app/src
+      - ./src/config.yaml:/app/src/config.yaml
+      - ./src/workflow-config.yaml:/app/src/workflow-config.yaml
+      - ./input:/app/input
+      - ./output:/app/output
+    ports:
+      - "8000:8000"
+    restart: always
+    command: python src/main.py
