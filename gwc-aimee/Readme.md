@@ -187,6 +187,12 @@ Install "Aimee AI" as a system service
 ./install-services.sh
 ```
 
+## (Optional) Install a test EMR with OSCAR v.19 Community Edition ##
+
+If you wish to test out AI-MOA with your own free OSCAR v.19 CE, visit OscarGalaxy.org and follow the instructions on installing your own OSCAR.
+
+[Installation instructions for OSCAR EMR v.19 Community Edition](https://oscargalaxy.org/knowledge-base/oscar-19-installation/)
+
 
 ## Configuration ##
 
