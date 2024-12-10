@@ -37,6 +37,14 @@ AIMOA=$(pwd)
 /bin/echo "Creating src/static directory..."
 /bin/mkdir -p $AIMOA/src/static
 
+# Create the config director if it doesn't exit
+/bin/echo "Creating config directory"
+/bin/mkdir -p $AIMOA/config
+
+# Initialize permissions
+/bin/chmod g+rw $AIMOA/config -R
+/bin/chmod g+rw $AIMOA/src
+
 # Create the llm-container/models directory if it doesn't exist
 /bin/echo "Creating llm-container/models directory..."
 /bin/mkdir -p $AIMOA/llm-container/models

@@ -37,11 +37,16 @@ export PYTHONWARNINGS="ignore:Unverified HTTPS request"
 /bin/echo $WORKFLOW_CONFIG_FILE
 /bin/echo $PYTHONWARNINGS
 
+# Initialize permissions
+/bin/chown aimoa:aimoa $AIMOA/src/*
+/bin/chmod g+rw $AIMOA/config -R
+/bin/chmod g+rw $AIMOA/src/*
+
 # Command to start AI-MOA
 /bin/echo "Starting AI-MOA..."
-cd $AIMOA/src
 # main version
-python main.py --config $AIMOA/src/config.yaml --workflow-config $AIMOA/src/workflow-config.yaml --cron-interval */2 --run-immediately
+python3 $AIMOA/src/main.py --config $AIMOA/src/config.yaml --workflow-config $AIMOA/src/workflow-config.yaml --cron-interval */2 --run-immediately
+# cd $AIMOA/src
 # (huey version)
 # huey_consumer main.huey
 
