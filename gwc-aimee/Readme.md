@@ -1,10 +1,10 @@
 # Aimee AI (AI-MOA) #
-*Copyright © 2024 by Spring Health Corporation*
-*Toronto, Ontario, Canada*
-LICENSE: GNU Affero General Public License Version 3
-
-*Document Version 2024.12.08*
-
+*Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
+*LICENSE: GNU Affero General Public License Version 3*<br />
+**Document Version 2024.12.09**
+<p align="center">
+  <img src="https://getwellclinic.ca/images/GetWellClinic/Logos-Icons/AimeeAI.png" alt="Aimee AI">
+</p>
 
 ## Introduction: ##
 
@@ -62,6 +62,18 @@ sudo chown $USER /opt/ai-moa/* -R
 ```
 cd /opt/ai-moa
 git checkout dev-gwc-aimee
+cd gwc-aimee
+ls -l -h
+nano Readme.md
+```
+
+**Set file permissions to enable run installation scripts**
+```
+cd /opt/ai-moa/gwc-aimee
+ls -l -h
+sudo chmod ug+x *.sh
+sudo chmod g-x install*
+sudo chmod g-x uninstall*
 ```
 
 ### 3. Install NVIDIA RTX video card drivers ###
@@ -172,7 +184,7 @@ If you install this option, both the LLM Container and AI-MOA will start in the 
 
 Install "Aimee AI" as a system service
 ```
-./install-aimoa.sh
+./install-services.sh
 ```
 
 
@@ -210,10 +222,10 @@ To find out what is the last document uploaded:
 inbox:
 	pending: #######
 ```
-** WARNING ** Once you save this config.yaml file with the new pending ###,
+**WARNING** Once you save this config.yaml file with the new pending ###,
 your AI-MOA will likely start processing the InBox PDF documents !
 
-** Check if there is a lock on config.yaml file: **
+**Check if there is a lock on config.yaml file:**
 During processing, there is "lock:status:true" on the config files. However, this may sometimes be left on
 inadvertantly and prevent the AI-MOA from processing the next file.
 Sometimes, you may need to reset the "lock:status:false".
@@ -384,16 +396,21 @@ sudo ../uninstall-aimoa.sh
 
 ### Fixing Permissions ###
 
-Sometimes, Aimee AI won't run propertly because the permission for user:group are not set properly.
+Sometimes, Aimee AI won't run properly, and your get permission errors in the log, because the permission for user:group are not set properly.
 
 Fix this by running:
 ```
 sudo ./fix-aimoa.sh
 ```
 
-### AI-MOA is running, but no documents being process ###
+### AI-MOA is running, but no documents being processed ###
 
 This may happen because of a file lock on config.yaml
+
+Stop AI-MOA first before editing the config.yaml file
+```
+sudo service ai-moa stop
+```
 
 Edit config.yaml and remove file lock by setting "lock:status:false"
 ```
@@ -403,6 +420,11 @@ Change setting to "false"
 ```
 lock:
 	status: false
+```
+
+Restart the AI-MOA service
+```
+sudo service ai-moa start
 ```
 
 
