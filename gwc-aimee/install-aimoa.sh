@@ -2,7 +2,7 @@
 # This custom script installs Get Well Clinic's version of AI-MOA (Aimee AI)
 # Note: To correctly use automatic detection of AI-MOA path, this script must be installed and run in subdirectory 'gwc-aimee'
 # This install script should be run as 'sudo ./install-aimoa.sh'
-# Version 2024.12.08
+# Version 2024.12.10
 
 # Hardware Requirements:
 #	NVIDIA RTX video card installed with at least 12 GB VRAM
@@ -43,9 +43,9 @@ AIMOA=$(pwd)
 
 # Backup config files
 /bin/echo "Backing up config files..."
-/bin/cp $AIMOA/config/config.yaml $AIMOA/config/config.yaml.default
-/bin/cp $AIMOA/config/workflow-config.yaml $AIMOA/config/workflow-config.yaml.default
-/bin/cp $AIMOA/config/provider_list.yaml $AIMOA/config/provider_list.yaml.$(date +'%Y-%m-%d')
+/bin/cp $AIMOA/src/config.yaml $AIMOA/src/config.yaml.$(date +'%Y-%m-%d')
+/bin/cp $AIMOA/src/workflow-config.yaml $AIMOA/src/workflow-config.yaml.$(date +'%Y-%m-%d')
+/bin/cp $AIMOA/src/provider_list.yaml $AIMOA/src/provider_list.yaml.$(date +'%Y-%m-%d')
 /bin/echo "Removing provider_list for clean start..."
 /bin/sleep 5s
 /bin/rm $AIMOA/config/provider_list.yaml
