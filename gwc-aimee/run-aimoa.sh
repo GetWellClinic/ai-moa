@@ -25,8 +25,8 @@ AIPYTHONENV=$(pwd)/.venv
 source $AIPYTHONENV/bin/activate
 
 # Export environment variables specifying location of config files
-export CONFIG_FILE=$AIMOA/config/config.yaml
-export WORKFLOW_CONFIG_FILE=$AIMOA/config/workflow-config.yaml
+export CONFIG_FILE=$AIMOA/src/config.yaml
+export WORKFLOW_CONFIG_FILE=$AIMOA/src/workflow-config.yaml
 
 # Option to disable warnings when using a self-signed SSL certificate for servers, quiet the logging
 export PYTHONWARNINGS="ignore:Unverified HTTPS request"
@@ -37,10 +37,19 @@ export PYTHONWARNINGS="ignore:Unverified HTTPS request"
 /bin/echo $WORKFLOW_CONFIG_FILE
 /bin/echo $PYTHONWARNINGS
 
-# Command to start AI-MOA (dev-gwc/huey version)
+# Initialize permissions (otherwise AI-MOA can't read-wrote config files, or save provider list)
+/bin/chown aimoa:aimoa $AIMOA/src/*
+/bin/chown aimoa:aimoa $AIMOA/config/*
+/bin/chmod g+rw $AIMOA/config -R
+/bin/chmod g+rw $AIMOA/src/*
+
+# Command to start AI-MOA
 /bin/echo "Starting AI-MOA..."
-cd $AIMOA/src
-huey_consumer main.huey
+# main version
+cd $AIMOA
+python3 main.py --config $AIMOA/config/config.yaml --workflow-config $AIMOA/config/workflow-config.yaml --cron-interval */5 --run-immediately
+# (huey version)
+# huey_consumer main.huey
 
 # Returning to previous path location
 cd $CURRENT

@@ -8,9 +8,9 @@
 
 ## Introduction: ##
 
-Aimee AI is helpful medical office assistant that sorts, labels, describes the content of documents,
-tags to ordering provider, and attaches faxes/scans to the patient's chart in the EMR. Aimee AI (AI Medical Office Assistant)
-operates locally, so no private data leaves the server.
+Aimee AI is a helpful medical office assistant that sorts, labels, describes the content of documents,
+tags to ordering provider, and attaches faxes/scans to the patient's chart in the EMR. Aimee AI operates locally,
+so no private data leaves the server.
 
 ### Requirements: ###
 
@@ -187,16 +187,22 @@ Install "Aimee AI" as a system service
 ./install-services.sh
 ```
 
+## (Optional) Install a test EMR with OSCAR v.19 Community Edition ##
+
+If you wish to test out AI-MOA with your own free OSCAR v.19 CE, visit OscarGalaxy.org and follow the instructions on installing your own OSCAR.
+
+[Installation instructions for OSCAR EMR v.19 Community Edition](https://oscargalaxy.org/knowledge-base/oscar-19-installation/)
+
 
 ## Configuration ##
 
 To configure your *Aimee AI*, please edit the parameters in the following configuration files.
 ```
-sudo nano ../config/config.yaml
-sudo nano ../config/workflow-config.yaml
+sudo nano ../src/config.yaml
+sudo nano ../src/workflow-config.yaml
 ```
 
-### 1. Edit "../config/config.yaml" file ###
+### 1. Edit "../src/config.yaml" file ###
 
 Particularly, pay attention to the section on "emr" that is unique to your EMR server.
 ```
@@ -234,7 +240,7 @@ lock:
 	status: false
 ```
 
-### 2. Edit "../config/provider_list.yaml" file ###
+### 2. Edit "../src/provider_list.yaml" file ###
 
 Once you run AI-MOA once, it will attempt to automatically upload a Report by Template and generate
 a SQL search to extract the provider names and provider_id from your EMR.
@@ -245,7 +251,7 @@ does not need to match documents to that name. If there are too many similar pro
 confuse the LLM.
 
 ```
-sudo nano ../config/provider_list.yaml
+sudo nano ../src/provider_list.yaml
 ```
 
 If you do not see this file, wait, or complete the configuration steps and then start Aimee AI manually by command line (See section: Maintenance Operations)
@@ -414,7 +420,7 @@ sudo service ai-moa stop
 
 Edit config.yaml and remove file lock by setting "lock:status:false"
 ```
-sudo nano ../config/config.yaml
+sudo nano ../src/config.yaml
 ```
 Change setting to "false"
 ```
