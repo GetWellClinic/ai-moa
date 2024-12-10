@@ -1,0 +1,6 @@
+.idea
+.aid*
+.env
+.vs
+logs/
+llm-container/models
