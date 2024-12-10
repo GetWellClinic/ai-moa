@@ -184,7 +184,7 @@ If you install this option, both the LLM Container and AI-MOA will start in the 
 
 Install "Aimee AI" as a system service
 ```
-./install-aimoa.sh
+./install-services.sh
 ```
 
 
@@ -222,10 +222,10 @@ To find out what is the last document uploaded:
 inbox:
 	pending: #######
 ```
-** WARNING ** Once you save this config.yaml file with the new pending ###,
+**WARNING** Once you save this config.yaml file with the new pending ###,
 your AI-MOA will likely start processing the InBox PDF documents !
 
-** Check if there is a lock on config.yaml file: **
+**Check if there is a lock on config.yaml file:**
 During processing, there is "lock:status:true" on the config files. However, this may sometimes be left on
 inadvertantly and prevent the AI-MOA from processing the next file.
 Sometimes, you may need to reset the "lock:status:false".
@@ -396,7 +396,7 @@ sudo ../uninstall-aimoa.sh
 
 ### Fixing Permissions ###
 
-Sometimes, Aimee AI won't run propertly because the permission for user:group are not set properly.
+Sometimes, Aimee AI won't run properly, and your get permission errors in the log, because the permission for user:group are not set properly.
 
 Fix this by running:
 ```
@@ -407,6 +407,11 @@ sudo ./fix-aimoa.sh
 
 This may happen because of a file lock on config.yaml
 
+Stop AI-MOA first before editing the config.yaml file
+```
+sudo service ai-moa stop
+```
+
 Edit config.yaml and remove file lock by setting "lock:status:false"
 ```
 sudo nano ../config/config.yaml
@@ -415,6 +420,11 @@ Change setting to "false"
 ```
 lock:
 	status: false
+```
+
+Restart the AI-MOA service
+```
+sudo service ai-moa start
 ```
 
 
