@@ -8,9 +8,9 @@
 
 ## Introduction: ##
 
-Aimee AI is a sweet, polite, and helpful medical office assistant that sorts, labels, describes the content of documents,
-tags to ordering provider, and attaches faxes/scans to the patient's chart in the EMR. We have developed her as
-an AI-MOA (AI Medical Office Assistant) that is locally hosted so no private data leaves the server.
+Aimee AI is helpful medical office assistant that sorts, labels, describes the content of documents,
+tags to ordering provider, and attaches faxes/scans to the patient's chart in the EMR. Aimee AI (AI Medical Office Assistant)
+operates locally, so no private data leaves the server.
 
 ### Requirements: ###
 
