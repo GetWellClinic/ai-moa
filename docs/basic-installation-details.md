@@ -238,6 +238,24 @@ ocr:
 ### Chrome browser configuration for headless operation.
 chrome:
   options:
-    headless: false  # Whether to run Chrome in headless mode (without GUI). False means it will run with a GUI.
+    headless: true  # Whether to run Chrome in headless mode (without GUI). False means it will run with a GUI.
 
 `headless`: Whether to run Chrome in headless mode (without GUI). False means it will run with a GUI.
+
+## Starting AI-MOA
+
+Once you have installed, and configured AI-MOA, you can start AI-MOA by executing the following command:
+```
+cd src
+python3 main.py --run-immediately
+```
+
+If you get run errors, be sure to check read-write permissions are set for your user for
+../config directory and the config files in ../config/*
+as AI-MOA will need to save/write "provider_list.yaml" to the config directory and also needs to be able to write to "config.yaml" file.
+
+You can also specify the location of config files by passing on some parameters, when executing start command:
+```
+python3 main.py --config ../config/config.yaml --workflow-config ../config/workflow-config.yaml --cron-interval */5 --run-immediately
+```
+
