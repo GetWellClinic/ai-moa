@@ -92,13 +92,18 @@ pip install -r $AIMOA/src/requirements.txt
 # Add current user to 'aimoa' group
 /usr/sbin/usermod -a -G aimoa $USER
 
-# Fixing file permissions for AI-MOA:
+# Initialize file permissions for AI-MOA:
 /bin/echo "Fixing file permissions for AI-MOA to 'rw-rw-r-- aimoa aimoa' ..."
 /bin/sleep 5s
-# Modify user:group permissions:
+# Modify user:group permissions
 /bin/chown aimoa:aimoa $AIMOA/* -R
-# Add read-write permission to 'aimoa' group members
-/bin/chmod g+rw $AIMOA/* -R
+# Fix permissions so AI MOA can read-write
+/bin/chown $USER:$USER $AIMOA/config $AIMOA/logs -R
+/bin/chmod ug+rwx $AIMOA/config $AIMOA/logs
+/bin/chmod ug+rw $AIMOA/config/* $AIMOA/logs/*
+# Protect config.yaml from Other users
+/bin/chmod o-rwx $AIMOA/config
+# Confirm user belongs to group "aimoa"
 /bin/echo "Confirming current user belonging to the following groups (check for 'aimoa')..."
 /usr/bin/groups $USER
 /bin/echo ""
