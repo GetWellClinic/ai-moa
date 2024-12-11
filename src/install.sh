@@ -29,4 +29,13 @@ chmod o-rw ../config/config.yaml
 # Install Python dependencies from requirements.txt
 pip install -r requirements.txt
 
-
+echo "Be sure to edit configuration files, before starting AI-MOA:"
+echo "		config.yaml"
+echo "		workflow-config.yaml"
+echo ""
+echo "To START running AI-MOA, use the following command:"
+echo "		python3 main.py"
+echo ""
+echo "...or specify location of config files with startup parameters:"
+echo "		python3 main.py --config ../config/config.yaml --workflow-config ../config/workflow-config.yaml --cron-interval */5 --run-immediately"
+echo """
