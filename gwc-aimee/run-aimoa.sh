@@ -25,8 +25,8 @@ AIPYTHONENV=$(pwd)/.venv
 source $AIPYTHONENV/bin/activate
 
 # Export environment variables specifying location of config files
-export CONFIG_FILE=$AIMOA/src/config.yaml
-export WORKFLOW_CONFIG_FILE=$AIMOA/src/workflow-config.yaml
+export CONFIG_FILE=$AIMOA/config/config.yaml
+export WORKFLOW_CONFIG_FILE=$AIMOA/config/workflow-config.yaml
 
 # Option to disable warnings when using a self-signed SSL certificate for servers, quiet the logging
 export PYTHONWARNINGS="ignore:Unverified HTTPS request"
