@@ -18,9 +18,7 @@ AIMOA=$(pwd)
 
 # Modify user:group permissions:
 /bin/chown aimoa:aimoa $AIMOA/* -R
-
 # Fix permissions so AI MOA can read-write
-/bin/chown $USER:$USER $AIMOA/config $AIMOA/logs -R
 /bin/chmod ug+rwx $AIMOA/config $AIMOA/logs
 /bin/chmod ug+rw $AIMOA/config/* $AIMOA/logs/*
 # Protect config.yaml from Other users
