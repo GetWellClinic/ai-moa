@@ -68,32 +68,73 @@ ai-moa/
 ## Setup and Installation
 
 1. Clone the repository:
-   ```
-   git clone https://github.com/GetWellClinic/ai-moa.git
-   cd ai-moa
-   ```
+	
+	```
+	git clone https://github.com/GetWellClinic/ai-moa.git
+	cd ai-moa
+	```
 
-2. Create and activate a virtual environment:
-   ```
-   python -m venv venv
-   source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
-   ```
+2. Create config, logs, and static directories:
 
-3. Install dependencies:
-   ```
-   pip install -r src/requirements.txt
-   ```
+	```
+	mkdir -p logs config src/static
+	```
 
-4. Configure the application:
-   - Configure the src/config.yaml and update the settings
-   - Configure the src/workflow-config.yaml and customize the workflow
+3. Create and activate a virtual environment:
 
-5. Run the application:
+	```
+	python -m venv venv
+	source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+	```
+
+4. Install dependencies:
+	
+	Install python dependencies inside python virtual environment:
+	```
+	pip install -r src/requirements.txt
+	```
+
+	Install google-chrome
+	```
+	wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+	echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list
+	apt-get update
+	apt-get install google-chrome-stable
+	```
+
+5. Configure the application:
+	
+	Install the config files by copying the src/ * .yaml.examples config files to directory config/ * .yaml
+	```
+	cp src/config.yaml.example config/config.yaml
+	cp src/workflow-config.yaml.example config/workflow-config.yaml
+	cp src/template_providerlist.txt config/
+	```
+
+	Set the permissions on directory and files:
+	```
+	chmod ug+rwx config logs
+	chmod ug+rw config/* logs/*
+	chmod o-rwx config
+	```
+
+	A. Edit config/config.yaml and customize the application settings. (Mandatory)
+
+	B. Edit the config/workflow-config.yaml to customize the workflow. (Default works)
+
+6. Run the application:
    ```
    cd src/
    python main.py
    ```
-   
+
+   You can use some parameter flags to customize the startup: (ie.)
+	--config ../config/config.yaml
+	--workflow-config ../config/workflow-config.yaml
+	--run-immediately
+	--cron-interval */5
+
+
 ## Contributing
 
 Contributions to AI-MOA are welcome. Please follow these steps:
