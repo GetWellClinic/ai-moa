@@ -4,3 +4,5 @@
 .vs
 logs/
 llm-container/models
+config/provider_list.yaml
+src/provider_list.yaml
