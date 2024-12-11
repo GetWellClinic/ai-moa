@@ -22,7 +22,7 @@ cp workflow-config.yaml.example ../config/workflow-config.yaml
 
 # Fix permissions so AI MOA can read-write
 chown $USER:$USER ../config/*
-chmod ug+rw ../config -R
+chmod ug+rwx ../config -R
 chown $USER:$USER ../config/*
 chown ug+rwx../logs -R
 # Protect config.yaml from Other users
