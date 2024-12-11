@@ -2,6 +2,7 @@
 ### AI-MOA (AI-powered Medical Office Assistant) ###
 **COPYRIGHT © 2024 by Spring Health Corporation <office(at)springhealth.org>**
 *Toronto, Ontario, Canada*
+
 SUMMARY: This file is part of the Get Well Clinic's original "AI-MOA" project's collection of software, documentation, and configuration files.
 
 AI-MOA is an advanced, AI-powered Medical Office Assistant designed to automate various tasks in a medical office setting.
