@@ -38,15 +38,15 @@ export PYTHONWARNINGS="ignore:Unverified HTTPS request"
 /bin/echo $PYTHONWARNINGS
 
 # Initialize permissions (otherwise AI-MOA can't read-wrote config files, or save provider list)
-/bin/chown aimoa:aimoa $AIMOA/src/*
-/bin/chown aimoa:aimoa $AIMOA/config/*
-/bin/chmod g+rw $AIMOA/config -R
-/bin/chmod g+rw $AIMOA/src/*
+#/bin/chown aimoa:aimoa $AIMOA/src/*
+#/bin/chown aimoa:aimoa $AIMOA/config/*
+#/bin/chmod g+rw $AIMOA/config -R
+#/bin/chmod g+rw $AIMOA/src/*
 
 # Command to start AI-MOA
 /bin/echo "Starting AI-MOA..."
 # main version
-cd $AIMOA
+cd $AIMOA/src
 python3 main.py --config $AIMOA/config/config.yaml --workflow-config $AIMOA/config/workflow-config.yaml --cron-interval */5 --run-immediately
 # (huey version)
 # huey_consumer main.huey
