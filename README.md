@@ -128,8 +128,8 @@ ai-moa/
    python main.py
    ```
 
-   You can use some parameter flags to customize the startup: (ie.)
-	--config ../config/config.yaml
+	You can use some parameter flags to customize the startup: (ie.)
+	--config ../config/config.yaml
 	--workflow-config ../config/workflow-config.yaml
 	--run-immediately
 	--cron-interval */5
