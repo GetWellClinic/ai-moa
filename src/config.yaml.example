@@ -67,8 +67,8 @@ file_processing:
 # Huey configuration for task scheduling and logging.
 huey:
   always_eager: true  # If true, tasks will be executed immediately without waiting for the scheduled time.
-  console_level: DEBUG  # Log level for console output.
-  file_level: INFO  # Log level for file output.
+  console_level: INFO  # Log level for console output. (ie. INFO, DEBUG, WARN, ERROR, FATAL etc. )
+  file_level: INFO  # Log level for file output. (ie. INFO, DEBUG etc. )
   name: workflow_queue  # Name of the task queue.
   results: true  # If true, task results will be stored.
   store_none: false  # Whether or not to store task results.

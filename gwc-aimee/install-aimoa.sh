@@ -104,6 +104,15 @@ pip install -r $AIMOA/src/requirements.txt
 /bin/echo ""
 /bin/sleep 5s
 
+# Protect installation files
+/bin/echo "Enabling scripts, and protecting installation files..."
+/bin/chmod guo+x $AIMOA/gwc-aimee/*
+/bin/chmod o-x $AIMOA/gwc-aimee/install*
+/bin/chmod o-x $AIMOA/gwc-aimee/uninstall*
+# Protect config directory
+/bin/echo "Protecting ../config directory..."
+/bin/chmod o-rwx $AIMOA/config
+
 # Install google-chrome
 /bin/echo "Installing Google Chrome for AI-MOA..."
 /bin/echo "...adding Chrome repository to system sources..."
