@@ -203,11 +203,11 @@ If you wish to test out AI-MOA with your own free OSCAR v.19 CE, visit OscarGala
 
 To configure your *Aimee AI*, please edit the parameters in the following configuration files.
 ```
-sudo nano ../src/config.yaml
-sudo nano ../src/workflow-config.yaml
+sudo nano ../config/config.yaml
+sudo nano ../config/workflow-config.yaml
 ```
 
-### 1. Edit "../src/config.yaml" file ###
+### 1. Edit "../config/config.yaml" file ###
 
 Particularly, pay attention to the section on "emr" that is unique to your EMR server.
 ```
@@ -245,7 +245,7 @@ lock:
 	status: false
 ```
 
-### 2. Edit "../src/provider_list.yaml" file ###
+### 2. Edit "../config/provider_list.yaml" file ###
 
 Once you run AI-MOA once, it will attempt to automatically upload a Report by Template and generate
 a SQL search to extract the provider names and provider_id from your EMR.
@@ -256,7 +256,7 @@ does not need to match documents to that name. If there are too many similar pro
 confuse the LLM.
 
 ```
-sudo nano ../src/provider_list.yaml
+sudo nano ../config/provider_list.yaml
 ```
 
 If you do not see this file, wait, or complete the configuration steps and then start Aimee AI manually by command line (See section: Maintenance Operations)
@@ -425,7 +425,7 @@ sudo service ai-moa stop
 
 Edit config.yaml and remove file lock by setting "lock:status:false"
 ```
-sudo nano ../src/config.yaml
+sudo nano ../config/config.yaml
 ```
 Change setting to "false"
 ```
