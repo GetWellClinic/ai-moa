@@ -4,8 +4,7 @@
 .vs
 logs/
 llm-container/models
-config/provider_list.yaml
-src/provider_list.yaml
-/config/workflow-config.yaml.backup
-/config/workflow-config.yaml
-/config/config.yaml
+config/provider_list.yaml*
+src/provider_list.yaml*
+config/config.yaml*
+config/workflow-config.yaml*
