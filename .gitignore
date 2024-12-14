@@ -7,4 +7,3 @@ llm-container/models
 config/provider_list.yaml*
 src/provider_list.yaml*
 config/config.yaml*
-config/workflow-config.yaml*
