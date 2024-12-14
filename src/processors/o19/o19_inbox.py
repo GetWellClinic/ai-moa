@@ -163,6 +163,7 @@ def get_inbox_pendingdocs_documents(self):
 
 					if file_response.status_code == 200 and file_response.content:
 						self.config.set_shared_state('current_file', file_response.content)
+						self.logger.info(f"Fetched EMR document from Pending Docs...Processing Document No: {item}.")
 						return True
 					else:
 						self.logger.error(f"An error occurred: {file_response.status_code}")
@@ -229,6 +230,7 @@ def get_inbox_incomingdocs_documents(self):
 						if file_response.status_code == 200  and file_response.content:
 							self.file_name = option.get_attribute('value')
 							self.config.set_shared_state('current_file', file_response.content)
+							self.logger.info(f"Fetched EMR document from Incoming Docs...Processing Document No: {item}.")
 							return True
 						else:
 							self.logger.error(f"An error occurred: {file_response.status_code}")

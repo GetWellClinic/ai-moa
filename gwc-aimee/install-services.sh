@@ -21,8 +21,8 @@ AIMOA=$(pwd)
 # Edit the AI-MOA services to match installed AI-MOA base directory:
 /bin/cp $AIMOA/gwc-aimee/services/ai-moa.service.default $AIMOA/gwc-aimee/services/ai-moa.service
 /bin/cp $AIMOA/gwc-aimee/services/llm-container.service.default $AIMOA/gwc-aimee/services/llm-container.service
-/bin/sed -i 's#/opt/ai-moa#$AIMOA#g' $AIMOA/gwc-aimee/services/ai-moa.service
-/bin/sed -i 's#/opt/ai-moa#$AIMOA#g' $AIMOA/gwc-aimee/services/llm-container.service
+/bin/sed -i 's#/opt/ai-moa#'"$AIMOA"'#g' $AIMOA/gwc-aimee/services/ai-moa.service
+/bin/sed -i 's#/opt/ai-moa#'"$AIMOA"'#g' $AIMOA/gwc-aimee/services/llm-container.service
 
 # Install AI-MOA and LLM Container as system services in Linux:
 /bin/cp $AIMOA/gwc-aimee/services/ai-moa.service /etc/systemd/system/
@@ -39,7 +39,7 @@ AIMOA=$(pwd)
 
 /bin/echo "ai-moa.service and llm-container.service has been installed as system services in /etc/systemd/system/"
 /bin/echo "AI-MOA will start automatically on system reboot !"
-/bin/echo "'
+/bin/echo ""
 # To stop services temporarily: 'sudo system ai-moa stop' , 'sudo system llm-container stop'
 /bin/echo "	Tips:"
 /bin/echo "		to stop AI-MOA 'sudo system ai-moa stop'"

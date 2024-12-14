@@ -29,8 +29,12 @@ services:
     environment:
       - MODEL_NAME=${MODEL_NAME:-/models/gemma-2-2b-it}
       - HF_TOKEN=${HF_TOKEN}
+    # Command to run when the container starts:
+    #
+    # Specify parameters that fit your situation, ie. 12 GB VRAM GPU should use --gpu_memory_utilization 0.8 for ~10 GB usage of VRAM:
     command: --model ${MODEL_NAME:-/models/gemma-2-2b-it} --enable-chunked-prefill --max_model_len 20000 --gpu_memory_utilization 0.8
-    # Command to run when the container starts
+    # For 16 GB VRAM GPU, you can set a lower --gpu_memory_utilization 0.625 for ~10 GB usage of VRAM:
+    # command: --model ${MODEL_NAME:-/models/gemma-2-2b-it} --enable-chunked-prefill --max_model_len 20000 --gpu_memory_utilization 0.625
   caddy:
     # Service for the Caddy container
     container_name: caddy-llm-container # Name of the container

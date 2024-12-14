@@ -30,9 +30,10 @@ cd $AIMOA/llm-container/models
 
 # Specify the environmental variables for model name for use by LLM container and AI-MOA
 /bin/echo "Using the following LLM model..."
-/bin/echo $MODEL_NAME
 # This environmental variable must be set before running AI-MOA
-export MODEL_NAME="/models/Mistral-7B-Instruct-v0.3.Q8_0.gguf”
+# Default: export MODEL_NAME="/models/Mistral-7B-Instruct-v0.3.Q8_0.gguf"
+export MODEL_NAME="/models/Mistral-7B-Instruct-v0.3.Q8_0.gguf"
+/bin/echo $MODEL_NAME
 
 # Fix permissions:
 /bin/chown aimoa:aimoa $AIMOA/llm-container/models -R
