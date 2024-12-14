@@ -98,7 +98,7 @@ lock:
 
 # Logging configuration, including file location, format, and log level.
 logging:
-  console_level: DEBUG  # Log level for console output.
+  console_level: INFO  # Log level for console output.
   file_level: INFO  # Log level for file output.
   filename: ../logs/workflow.log  # Log file location.
   format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'  # Log format.
