@@ -19,12 +19,20 @@
 #		virtualenv
 #
 
+# CONFIGURATION:
+# 
+# Autodetect first administrator username:
+USERNAME=$(awk -F':' -v uid=1000 '$3 == uid { print $1 }' /etc/passwd)
+# Override username to be added to "aimoa" group permissions, to allow username to run AI-MOA:
+# USERNAME=
+
 # Automatic detection of base directory
 cd ..
 AIMOA=$(pwd)
 
 /bin/echo "AI-MOA (Aimee AI) will be installed and setup with the following specified base directory for AI-MOA..."
-/bin/echo $(pwd)
+/bin/echo ""
+/bin/echo "Base directory: "$(pwd)
 /bin/echo ""
 /bin/echo "...if the above directory is not the correct base directory for AI-MOA, please Ctrl-C to cancel installation now...!"
 /bin/sleep 10s
@@ -91,6 +99,7 @@ pip install -r $AIMOA/src/requirements.txt
 /usr/sbin/adduser aimoa
 # Add current user to 'aimoa' group
 /usr/sbin/usermod -a -G aimoa $USER
+/usr/sbin/usermod -a -G aimoa $USERNAME
 
 # Initialize file permissions for AI-MOA:
 /bin/echo "Fixing file permissions for AI-MOA to 'rw-rw-r-- aimoa aimoa' ..."
@@ -105,6 +114,7 @@ pip install -r $AIMOA/src/requirements.txt
 # Confirm user belongs to group "aimoa"
 /bin/echo "Confirming current user belonging to the following groups (check for 'aimoa')..."
 /usr/bin/groups $USER
+/usr/bin/groups $USERNAME
 /bin/echo ""
 /bin/sleep 5s
 
