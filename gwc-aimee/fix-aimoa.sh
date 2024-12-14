@@ -18,11 +18,11 @@ AIMOA=$(pwd)
 
 # Add default first administrator username to "aimoa" group
 USERNAME=$(awk -F':' -v uid=1000 '$3 == uid { print $1 }' /etc/passwd)
-/usr/sbin/usermod -a -G aimoa $USERNAME
+/usr/sbin/usermod -a -G aimoa "$USERNAME"
 
 # Modify user:group permissions:
 /bin/chown aimoa:aimoa $AIMOA/* -R
-/bin/chown aimoa:aimoa $AIMOA/.env/* -R
+/bin/chown aimoa:aimoa $AIMOA/.env/* -R -P
 # Fix permissions so AI MOA can read-write
 /bin/chmod ug+rwx $AIMOA/config $AIMOA/logs $AIMOA/.env
 /bin/chmod ug+rw $AIMOA/config/* $AIMOA/logs/* $AIMOA/.env/*
