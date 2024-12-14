@@ -22,18 +22,21 @@ AIMOA=$(pwd)
 # SPECIFY LLM Model to be used with AI-MOA:
 
 # Option 1:
-# Specify local GGUF LLM Model in local /models/ directory, use relative path:
-export MODEL_NAME="$AIMOA/llm-container/models/Mistral-7B-Instruct-v0.3.Q8_0.gguf"
+# Specify local GGUF LLM Model in local "/models/*" directory, use relative path:
+# Default: export MODEL_NAME="/models/Mistral-7B-Instruct-v0.3.Q8_0.gguf"
+export MODEL_NAME="/models/Mistral-7B-Instruct-v0.3.Q8_0.gguf"
+/bin/echo "Using LLM model: "$MODEL_NAME
 
 # Option 2:
 # Get Hugging Face LLM models directly from website, need to sign-in with Hugging Face user token to download models:
-# export HF_TOKEN="{private_token}"
+export HF_TOKEN="{private_token}"
 # export MODEL_NAME="RichardErkhov/Mistral-7B-Instruct-v0.3.Q8_0.gguf"
 # export MODEL_NAME="microsoft/Phi-3.5-mini-instruct"
+/bin/echo "HuggingFace private token set: "$HF_TOKEN
 
 # Run AI LLM Containers:
 # Note: Two containers will start, one for Aphrodite LLM container, the other is Caddy which operates the encrypted reverse proxy for SSL/TLS
-# cd llm-container
+# cd $AIMOA/llm-container
 # docker compose up -d
 #
 docker compose -f $AIMOA/llm-container/docker-compose.yml up -d

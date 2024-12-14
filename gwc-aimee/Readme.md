@@ -60,7 +60,11 @@ You will need to have your Github user name and a personal access token (generat
 cd /opt
 sudo git clone https://github.com/getwellclinic/ai-moa.git
 cd /opt/ai-moa
-sudo chown $USER /opt/ai-moa/* -R
+```
+
+Change the ownership of files to your username:
+```
+sudo chown {username} /opt/ai-moa/* -R
 ```
 
 **Select the "Aimee IA" branch to Git checkout** ```dev-gwc-aimee```. (The default branch is usually "main")
@@ -179,7 +183,7 @@ sudo ./install-llm.sh
 
 This installs "Aimee AI" version of AI-MOA, by setting up custom settings and prerequisites.
 ```
-./install-aimoa.sh
+sudo ./install-aimoa.sh
 ```
 
 Add your username to the group "aimoa" so it can run AI-MOA:
@@ -194,7 +198,7 @@ If you install this option, both the LLM Container and AI-MOA will start in the 
 
 Install "Aimee AI" as a system service
 ```
-./install-services.sh
+sudo ./install-services.sh
 ```
 
 ## (Optional) Install a test EMR with OSCAR v.19 Community Edition ##
