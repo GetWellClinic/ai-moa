@@ -67,7 +67,7 @@ Change the ownership of files to your username:
 sudo chown {username} /opt/ai-moa/* -R
 ```
 
-**Select the "Aimee IA" branch to Git checkout** ```dev-gwc-aimee```. (The default branch is usually "main")
+**Select the "Aimee AI" branch to Git checkout** ```dev-gwc-aimee```. (The default branch is usually "main")
 ```
 cd /opt/ai-moa
 git checkout dev-gwc-aimee
