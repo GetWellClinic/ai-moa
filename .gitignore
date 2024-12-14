@@ -4,6 +4,7 @@
 .vs
 logs/
 llm-container/models
-config/provider_list.yaml
-src/provider_list.yaml
+config/provider_list.yaml*
+src/provider_list.yaml*
 venv
+config/config.yaml*
