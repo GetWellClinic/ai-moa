@@ -182,6 +182,11 @@ This installs "Aimee AI" version of AI-MOA, by setting up custom settings and pr
 ./install-aimoa.sh
 ```
 
+Add your username to the group "aimoa" so it can run AI-MOA:
+```
+sudo usermod -a -G aimoa {username}
+```
+
 ### 9. Install *Aimee AI* as a system service (Recommended) ###
 
 This optional step, installs *Aimee AI* as a system service that automatically starts at system startup/reboot.
@@ -333,7 +338,7 @@ AI-MOA is developed for identify and tagging according to certain Document Categ
 	- lab
 	- legal
 	- miscellaneous
-	- *notifications*
+	- notification
 	- oldchart
 	- *others*
 	- pathology

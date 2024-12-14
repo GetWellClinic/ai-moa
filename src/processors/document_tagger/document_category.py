@@ -83,7 +83,6 @@ def get_category_type(self):
             if word.lower().startswith(category.lower()):
                 return True, category
 
-
     return True, self.default_values.get('default_category', '').lower()
 
 

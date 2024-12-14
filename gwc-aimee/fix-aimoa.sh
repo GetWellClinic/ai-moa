@@ -16,16 +16,22 @@ AIMOA=$(pwd)
 /bin/echo "Fixing file permissions for AI-MOA to 'rw-rw-r-- aimoa aimoa' ..."
 /bin/sleep 5s
 
+# Add default first administrator username to "aimoa" group
+USERNAME=$(awk -F':' -v uid=1000 '$3 == uid { print $1 }' /etc/passwd)
+/usr/sbin/usermod -a -G aimoa $USERNAME
+
 # Modify user:group permissions:
 /bin/chown aimoa:aimoa $AIMOA/* -R
+/bin/chown aimoa:aimoa $AIMOA/.env/* -R
 # Fix permissions so AI MOA can read-write
-/bin/chmod ug+rwx $AIMOA/config $AIMOA/logs
-/bin/chmod ug+rw $AIMOA/config/* $AIMOA/logs/*
+/bin/chmod ug+rwx $AIMOA/config $AIMOA/logs $AIMOA/.env
+/bin/chmod ug+rw $AIMOA/config/* $AIMOA/logs/* $AIMOA/.env/*
 # Protect config.yaml from Other users
 /bin/chmod o-rwx $AIMOA/config
 
 /bin/echo "Confirming current user belonging to the following groups (check for 'aimoa')..."
 /usr/bin/groups $USER
+/usr/bin/groups $USERNAME
 /bin/echo ""
 /bin/sleep 5s
 
@@ -38,3 +44,9 @@ AIMOA=$(pwd)
 
 # Release file lock on workflow-config.yaml
 # release_lock
+
+# Reminder to add username to group aimoa
+/bin/echo ""
+/bin/echo "Remember to also add your username to "aimoa" group so your username can run AI-MOA...!"
+/bin/echo "		(sudo usermod -a -G aimoa username)"
+/bin/echo ""
