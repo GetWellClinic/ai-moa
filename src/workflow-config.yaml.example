@@ -415,7 +415,7 @@ ai_prompts:
     Follow this format strictly and DO NOT add any other text other than JSON object in the response!
 
   get_provider: >
-    For context, some doctors' names may include middle names or middle intials. Based on the above document, select the appropriate provider from the following list containing firstname and lastname that matches the health provider that the document is written to, the referring physician, mentions the doctor's name, or carbon copied to. Remember, favour a doctor provider over a clinic, if no provider matches then select 'oscardoc', and only return the provider number (eg: 20) nothing else.
+    For context, some doctors names may include middle names or middle intials. Based on the above document, select the appropriate provider from the following list containing firstname and lastname that matches the health provider that the document is written to, the referring physician, mentions the doctor name, or carbon copied to. Remember, favour a doctor provider over a clinic, if no provider matches then select 'oscardoc', and only return the provider number (eg: 20) nothing else.
 
   build_sub_prompt: >
     For the following question if confidence level is more than 85% give the answer in one word using the format 'True' else 'False'.

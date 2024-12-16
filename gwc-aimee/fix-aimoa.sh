@@ -26,6 +26,8 @@ USERNAME=$(awk -F':' -v uid=1000 '$3 == uid { print $1 }' /etc/passwd)
 # Fix permissions so AI MOA can read-write
 /bin/chmod ug+rwx $AIMOA/config $AIMOA/logs $AIMOA/.env
 /bin/chmod ug+rw $AIMOA/config/* $AIMOA/logs/* $AIMOA/.env/*
+/bin/chmod ug+rw $AIMOA/llm-container/models
+/bin/chmod ug+rw $AIMOA/src/*.lock
 # Protect config.yaml from Other users
 /bin/chmod o-rwx $AIMOA/config
 

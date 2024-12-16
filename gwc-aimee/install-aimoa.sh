@@ -96,7 +96,7 @@ source $AIMOA/.env/bin/activate
 pip install -r $AIMOA/src/requirements.txt
 
 # Create Linux user and group for 'aimoa':
-/usr/sbin/adduser aimoa
+/usr/sbin/useradd -m aimoa	# Requires home directory for google-chrome files
 # Add current user to 'aimoa' group
 /usr/sbin/usermod -a -G aimoa $USER
 /usr/sbin/usermod -a -G aimoa $USERNAME
@@ -109,6 +109,7 @@ pip install -r $AIMOA/src/requirements.txt
 # Fix permissions so AI MOA can read-write
 /bin/chmod ug+rwx $AIMOA/config $AIMOA/logs
 /bin/chmod ug+rw $AIMOA/config/* $AIMOA/logs/*
+/bin/chmod ug+rw $AIMOA/llm-container/models
 # Protect config.yaml from Other users
 /bin/chmod o-rwx $AIMOA/config
 # Confirm user belongs to group "aimoa"
