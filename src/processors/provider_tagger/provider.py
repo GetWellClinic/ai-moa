@@ -48,7 +48,7 @@ def get_provider_list(self):
         >>> print(result)
         (True, 123)  # if a provider ID is successfully extracted
     """
-	file_name = self.config.get('provider_list.output_file', '')
+	file_name = self.config.get('provider_list.output_file', '../config/provider_list.yaml') # Specify location of provider_list.yaml
 
 	provider_list = self.get_provider_list_filemode(self,file_name)
 

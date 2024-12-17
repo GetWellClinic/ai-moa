@@ -63,7 +63,8 @@ AIMOA=$(pwd)
 /bin/cp $AIMOA/config/config.yaml $AIMOA/config/config.yaml.$(date +'%Y-%m-%d')
 /bin/cp $AIMOA/src/workflow-config.yaml $AIMOA/src/workflow-config.yaml.$(date +'%Y-%m-%d')
 /bin/cp $AIMOA/config/workflow-config.yaml $AIMOA/config/workflow-config.yaml.$(date +'%Y-%m-%d')
-/bin/cp $AIMOA/src/provider_list.yaml $AIMOA/src/provider_list.yaml.$(date +'%Y-%m-%d')
+/bin/cp $AIMOA/config/provider_list.yaml $AIMOA/config/provider_list.yaml.$(date +'%Y-%m-%d')
+/bin/cp $AIMOA/src/config/provider_list.yaml $AIMOA/src/config/provider_list.yaml.$(date +'%Y-%m-%d')
 # Create config files in config directory
 /bin/echo "Creating config files from templates..."
 /bin/cp $AIMOA/src/config.yaml.example $AIMOA/config/config.yaml
@@ -74,6 +75,7 @@ AIMOA=$(pwd)
 /bin/echo "Removing provider_list for clean start..."
 /bin/sleep 5s
 /bin/rm $AIMOA/config/provider_list.yaml
+/bin/rm $AIMOA/src/config/provider_list.yaml
 # Missing provider list will cause AI-MOA to regenerate the list
 
 # Confirm your local timezone is set:

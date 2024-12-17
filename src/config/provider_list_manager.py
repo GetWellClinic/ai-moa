@@ -259,7 +259,7 @@ class ProviderListManager:
             
             provider_list = {'providers': providers}
             try:
-                output_file = self.config.get('provider_list.output_file', 'config/provider_list.yaml')
+                output_file = self.config.get('provider_list.output_file', '../config/provider_list.yaml')
                 self.logger.info("Saving provider details to yaml file.")
                 with open(output_file, 'w') as file:
                     yaml.dump(provider_list, file, default_flow_style=False)
