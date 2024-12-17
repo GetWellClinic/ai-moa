@@ -136,7 +136,7 @@ pip install -r $AIMOA/src/requirements.txt
 # Add Chrome repository key to keychain
 /bin/wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
 # Add Chrome repo to system sources
-/bin/echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list
+/bin/echo "deb http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee -a /etc/apt/sources.list.d/google.list
 apt-get update
 # Install google-chrome-stable
 apt-get -y install google-chrome-stable
