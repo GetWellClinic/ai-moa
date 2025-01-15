@@ -77,7 +77,7 @@ def update_o19(self):
 	self.provider_number.append(default_provider_id)
 
 	for category in self.document_categories:
-		if category['name'] == self.fileType:
+		if category['name'].lower() == self.fileType:
 			try:
 				self.provider_number.append(category['default_tagger'])
 			except KeyError:
