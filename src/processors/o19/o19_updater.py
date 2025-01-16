@@ -41,7 +41,7 @@ def update_o19(self):
         True  # if the update is successful
     """
 	self.fileType = self.config.get_shared_state('get_category_type')[1].lower()
-	self.document_description = self.config.get_shared_state('get_document_description')[1]
+	self.document_description = self.config.get_shared_state('get_document_description')[1].lstrip()
 	data = self.config.get_shared_state('filter_results')[1]
 
 	try:
