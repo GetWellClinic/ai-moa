@@ -123,7 +123,6 @@ def get_patient_dob(self):
 
     if match:
         query = match.group()
-        # print(query)
 
     pattern = r'\d{4}-\d{2}-\d{2}'
     match = re.search(pattern, query)
@@ -133,7 +132,6 @@ def get_patient_dob(self):
 
     if match:
         query = match.group()
-        # print(query)
     elif matchText:
         query = matchText.group()
         query = self.convert_date(self,query)
@@ -247,6 +245,39 @@ def convert_date(self,query):
     
     return formatted_date
 
+def get_mrp_details(self):
+
+    data = self.config.get_shared_state('filter_results')[1]
+
+    try:
+        data = json.loads(data)
+    except json.JSONDecodeError as e:
+        self.logger.error(f"JSON decoding error: {e}")
+        return False
+
+    formatted_name = data.get('formattedName', '')
+
+    url = f"{self.base_url}/demographic/SearchDemographic.do"
+
+    # Define the payload data
+    payload = {
+                  "query": formatted_name
+                }
+
+    # Send the POST request
+    response = self.session.post(url, data=payload, verify=self.config.get('emr.verify-HTTPS'))
+
+    try:
+        loaded_data = json.loads(response.text)
+    except json.JSONDecodeError as e:
+        self.logger.error(f"JSON decoding error: {e}")
+        return False
+
+    if formatted_name.lower() == loaded_data["results"][0]['formattedName'].lower():
+        data['providerNo'] = loaded_data["results"][0]['providerNo']
+        self.config.set_shared_state('filter_results', (True, json.dumps(data)))
+
+    return True, json.dumps(data)
 
 def get_patient_Html(self,type_of_query,query):
     """

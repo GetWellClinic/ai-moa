@@ -104,6 +104,7 @@ class Workflow:
         self.get_patient_hin = patient.get_patient_hin
         self.get_patient_dob = patient.get_patient_dob
         self.get_patient_name = patient.get_patient_name
+        self.get_mrp_details = patient.get_mrp_details
         self.unidentified_patients = patient.unidentified_patients
         self.filter_results = patient.filter_results
         self.get_patient_Html_Common = patient.get_patient_Html_Common
