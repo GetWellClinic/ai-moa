@@ -246,7 +246,28 @@ def convert_date(self,query):
     return formatted_date
 
 def get_mrp_details(self):
+    """
+    Retrieves and updates the MRP details for the provider based on the 'formattedName'.
+    
+    This method sends a POST request to the demographic search API with the provided 
+    'formattedName', retrieves the provider details, and updates the shared state with 
+    the provider number if a matching formatted name is found.
 
+    Args:
+        self: The instance of the class.
+
+    Returns:
+        tuple: A tuple containing:
+            bool: True if the operation succeeded, False otherwise.
+            str: The updated data in JSON format.
+
+    Raises:
+        JSONDecodeError: If there's an issue decoding the JSON data.
+    
+    Notes:
+        The method expects the 'filter_results' state to contain a JSON string with 
+        a key 'formattedName' which will be used to search for provider details.
+    """
     data = self.config.get_shared_state('filter_results')[1]
 
     try:
