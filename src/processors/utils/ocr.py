@@ -52,21 +52,21 @@ def has_ocr(self):
     Raises:
         Exception: If there is an issue loading or reading the PDF.
     """
-# Removed as fitz module no longer used.
-#    try:
+    # Will be removed as fitz module no longer used.
+    try:
         # Load the PDF from bytes
-#        pdf_bytes = self.config.get_shared_state('current_file')
-#        pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
-#        
-#        for page_num in range(len(pdf_document)):
-#            page = pdf_document.load_page(page_num)
-#            text = page.get_text()
-#            if text.strip():
-#                return True
-#        return False
-#    except Exception as e:
-#        self.logger.error(f"An error occurred in has_ocr: {e}")
-#        return False
+        pdf_bytes = self.config.get_shared_state('current_file')
+        pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
+       
+        for page_num in range(len(pdf_document)):
+            page = pdf_document.load_page(page_num)
+            text = page.get_text()
+            if text.strip():
+                return True
+        return False
+    except Exception as e:
+        self.logger.error(f"An error occurred in has_ocr: {e}")
+        return False
 
 
 def extract_text_from_pdf_file(self):
