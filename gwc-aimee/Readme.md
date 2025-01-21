@@ -1,7 +1,7 @@
 # Aimee AI (AI-MOA) #
 *Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
 *LICENSE: GNU Affero General Public License Version 3*<br />
-**Document Version 2024.12.30**
+**Document Version 2025.01.16**
 <p align="center">
   <img src="https://getwellclinic.ca/images/GetWellClinic/Logos-Icons/AimeeAI-pc.png" alt="Aimee AI">
 </p>
@@ -172,11 +172,11 @@ sudo nvidia-ctk runtime configure --runtime=docker
 sudo systemctl restart docker
 ```
 
-### 7. Install AI LLM Container ###
+### 7. Install AI LLM Model for LLM Container ###
 
-This installed the default AI Lare Language Model Docker Container for AI-MOA.
+This installed the default AI Large Language Model for AI-MOA in LLM Container.
 ```
-sudo ./install-llm.sh
+sudo ./install-model.sh
 ```
 
 ### 8. Install Aimee AI (AI-MOA) ###
@@ -357,6 +357,29 @@ AI-MOA is developed for identify and tagging according to certain Document Categ
 		
 ## Maintenance Operations ##
 
+*Note: These commands and scripts should be run from subdirectory "/gwc-aimee"*
+```
+cd gwc-aimee
+```
+
+### Starting *AI-MOA* Services ###
+
+If AI-MOA: Aimee AI has been installed as a service, ensure that the LLM Container service and the AI-MOA services are running:
+```
+sudo service llm-container status
+sudo service ai-moa status
+```
+To start the services:
+```
+sudo service llm-container start
+sudo service ai-moa start
+```
+To stop the services:
+```
+sudo service llm-container stop
+sudo service ai-moa stop
+```
+
 ### Running *Aimee AI* manually by command line ###
 
 You can run *Aimee AI* manually start/stop with command line.
@@ -389,22 +412,21 @@ To exit/stop watching
 Crtl-C
 ```
 
-
-### Start/Stop LLM Container ###
+### Start/Stop LLM Container Manually ###
 
 The AI LLM Container runs separately in docker as llm-container and caddy.
 If you installed AI-MOA as a system service with "./install-services.sh", then you do not
 need to start/stop LLM Container manually.
 
+To start the LLM Container manually:
+```
+sudo service llm-container stop
+sudo ./run-llm.sh
+````
 To stop the LLM Container manually:
 ```
 sudo ./stop-llm.sh
 ```
-
-To start the LLM Container manually:
-```
-sudo ./run-llm.sh
-````
 
 ## Troubleshooting ##
 
@@ -412,7 +434,7 @@ sudo ./run-llm.sh
 
 To remove "Aimee AI" from running as a system service:
 ```
-sudo ../uninstall-aimoa.sh
+sudo ./uninstall-services.sh
 ```
 
 ### Fixing Permissions ###
