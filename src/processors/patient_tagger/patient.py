@@ -285,20 +285,23 @@ def get_mrp_details(self):
                   "query": formatted_name
                 }
 
-    # Send the POST request
-    response = self.session.post(url, data=payload, verify=self.config.get('emr.verify-HTTPS'))
+    if response.status_code == 200:
+        # Send the POST request
+        response = self.session.post(url, data=payload, verify=self.config.get('emr.verify-HTTPS'))
 
-    try:
-        loaded_data = json.loads(response.text)
-    except json.JSONDecodeError as e:
-        self.logger.error(f"JSON decoding error: {e}")
+        try:
+            loaded_data = json.loads(response.text)
+        except json.JSONDecodeError as e:
+            self.logger.error(f"JSON decoding error: {e}")
+            return False
+
+        if loaded_data['results'] and formatted_name.lower() == loaded_data["results"][0]['formattedName'].lower():
+            data['providerNo'] = loaded_data["results"][0]['providerNo']
+            self.config.set_shared_state('filter_results', (True, json.dumps(data)))
+
+        return True, json.dumps(data)
+    else:
         return False
-
-    if loaded_data['results'] and formatted_name.lower() == loaded_data["results"][0]['formattedName'].lower():
-        data['providerNo'] = loaded_data["results"][0]['providerNo']
-        self.config.set_shared_state('filter_results', (True, json.dumps(data)))
-
-    return True, json.dumps(data)
 
 def get_patient_Html(self,type_of_query,query):
     """
