@@ -67,8 +67,8 @@ def update_o19(self):
 	self.demographic_number = demographic_number
 
 	if provider_no is not None and provider_no != "_" and provider_no != "":
-	    self.mrp = provider_no
-	    self.provider_number.append(provider_no)
+		self.mrp = provider_no
+		self.provider_number.append(provider_no)
 
 	default_provider_id = self.default_values.get('default_provider_tagging_id', '')
 

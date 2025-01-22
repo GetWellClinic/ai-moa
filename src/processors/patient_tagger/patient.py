@@ -294,7 +294,7 @@ def get_mrp_details(self):
         self.logger.error(f"JSON decoding error: {e}")
         return False
 
-    if formatted_name.lower() == loaded_data["results"][0]['formattedName'].lower():
+    if loaded_data['results'] and formatted_name.lower() == loaded_data["results"][0]['formattedName'].lower():
         data['providerNo'] = loaded_data["results"][0]['providerNo']
         self.config.set_shared_state('filter_results', (True, json.dumps(data)))
 
