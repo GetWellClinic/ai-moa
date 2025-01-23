@@ -123,7 +123,6 @@ def get_patient_dob(self):
 
     if match:
         query = match.group()
-        # print(query)
 
     pattern = r'\d{4}-\d{2}-\d{2}'
     match = re.search(pattern, query)
@@ -133,7 +132,6 @@ def get_patient_dob(self):
 
     if match:
         query = match.group()
-        # print(query)
     elif matchText:
         query = matchText.group()
         query = self.convert_date(self,query)
@@ -247,6 +245,63 @@ def convert_date(self,query):
     
     return formatted_date
 
+def get_mrp_details(self):
+    """
+    Retrieves and updates the MRP details for the provider based on the 'formattedName'.
+    
+    This method sends a POST request to the demographic search API with the provided 
+    'formattedName', retrieves the provider details, and updates the shared state with 
+    the provider number if a matching formatted name is found.
+
+    Args:
+        self: The instance of the class.
+
+    Returns:
+        tuple: A tuple containing:
+            bool: True if the operation succeeded, False otherwise.
+            str: The updated data in JSON format.
+
+    Raises:
+        JSONDecodeError: If there's an issue decoding the JSON data.
+    
+    Notes:
+        The method expects the 'filter_results' state to contain a JSON string with 
+        a key 'formattedName' which will be used to search for provider details.
+    """
+    data = self.config.get_shared_state('filter_results')[1]
+
+    try:
+        data = json.loads(data)
+    except json.JSONDecodeError as e:
+        self.logger.error(f"JSON decoding error: {e}")
+        return False
+
+    formatted_name = data.get('formattedName', '')
+
+    url = f"{self.base_url}/demographic/SearchDemographic.do"
+
+    # Define the payload data
+    payload = {
+                  "query": formatted_name
+                }
+
+    # Send the POST request
+    response = self.session.post(url, data=payload, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
+
+    if response.status_code == 200:
+        try:
+            loaded_data = json.loads(response.text)
+        except json.JSONDecodeError as e:
+            self.logger.error(f"JSON decoding error: {e}")
+            return False
+
+        if loaded_data['results'] and formatted_name.lower() == loaded_data["results"][0]['formattedName'].lower():
+            data['providerNo'] = loaded_data["results"][0]['providerNo']
+            self.config.set_shared_state('filter_results', (True, json.dumps(data)))
+
+        return True, json.dumps(data)
+    else:
+        return False
 
 def get_patient_Html(self,type_of_query,query):
     """
@@ -285,7 +340,7 @@ def get_patient_Html(self,type_of_query,query):
                 }
 
     # Send the POST request
-    response = self.session.post(url, data=payload, verify=self.config.get('emr.verify-HTTPS'))
+    response = self.session.post(url, data=payload, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
 
     soup = BeautifulSoup(response.text, 'html.parser')
 

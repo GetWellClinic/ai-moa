@@ -8,7 +8,7 @@
 CURRENT=$(pwd)
 cd ..
 AIMOA=$(pwd)
-AIPYTHONENV=$(pwd)/.venv
+AIPYTHONENV=$(pwd)/.env
 # Override by specifying the full path for AI-MOA base directory and Python virtual environment that contains the installed python pre-requisite packages:
 # AIMOA=/opt/ai-moa
 # AIPYTHONENV=/opt/virtualenv/aimoa

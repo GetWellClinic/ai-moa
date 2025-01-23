@@ -67,6 +67,10 @@ ai-moa/
 
 ## Setup and Installation
 
+Please refer to the [gwc-aimee/Readme.md](gwc-aimee/Readme.md) for a **Complete Packaged Installation of Aimee AI**.
+
+The following is a brief example of the installation steps:
+
 1. Clone the repository:
 	
 	```
@@ -83,8 +87,8 @@ ai-moa/
 3. Create and activate a virtual environment:
 
 	```
-	python -m venv venv
-	source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+	python -m venv .env
+	source .env/bin/activate  # On Windows, use `.env\Scripts\activate`
 	```
 
 4. Install dependencies:
@@ -120,16 +124,19 @@ ai-moa/
 
 	A. Edit config/config.yaml and customize the application settings. (Mandatory)
 
-	B. Edit the config/workflow-config.yaml to customize the workflow. (Default works)
+	B. Edit the config/workflow-config.yaml to customize the workflow. (Default will work)
 
-6. Run the application:
+6. Run the AI-MOA application:
    ```
    cd src/
    python main.py
    ```
+	*NOTE: In order for AI-MOA to function properly, you must also have configured AI-MOA to access an LLM endpoint. For your convenience, we have included a standard "llm-container" docker image that you can easily setup and run a local LLM. Remember to download an appropriate LLM model GGUF file to "llm-container/models/".*
 
 	You can use some parameter flags to customize the startup: (ie.)
-	```	python main.py	--config ../config/config.yaml
+	```
+	python main.py
+	--config ../config/config.yaml
 	--workflow-config ../config/workflow-config.yaml
 	--run-immediately
 	--cron-interval */5

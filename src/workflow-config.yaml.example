@@ -46,10 +46,10 @@ workflow:
       true_next: get_o19_documents
       false_next: get_local_documents
     - name: get_o19_documents
-      true_next: has_ocr
+      true_next: extract_text_doctr
       false_next: release_lock
     - name: get_local_documents
-      true_next: has_ocr
+      true_next: extract_text_doctr
       false_next: release_lock
     - name: has_ocr
       true_next: extract_text_from_pdf_file
@@ -76,20 +76,23 @@ workflow:
       true_next: filter_results
       false_next: get_patient_name
     - name: filter_results
-      true_next: update_o19
+      true_next: get_mrp_details
       false_next: get_patient_name
     - name: get_patient_name
       true_next: filter_results
       false_next: get_patient_dob
     - name: filter_results
-      true_next: update_o19
+      true_next: get_mrp_details
       false_next: get_patient_dob
     - name: get_patient_dob
       true_next: filter_results
       false_next: unidentified_patients
     - name: filter_results
-      true_next: update_o19
+      true_next: get_mrp_details
       false_next: unidentified_patients
+    - name: get_mrp_details
+      true_next: update_o19
+      false_next: update_o19
     - name: unidentified_patients
       true_next: update_o19
       false_next: release_lock

@@ -118,7 +118,7 @@ class LoginManager:
                         "pin": self.pin
                     },
                     verify=self.config.get('emr.verify-HTTPS'),
-                    timeout=10  # Add a timeout to prevent hanging indefinitely
+                    timeout=self.config.get('general_setting.timeout', 300)  # Add a timeout to prevent hanging indefinitely
                 )
                 login_successful = response.url != self.login_url
                 logger.debug(f"Login {'successful' if login_successful else 'failed'}")

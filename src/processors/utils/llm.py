@@ -67,8 +67,13 @@ def query_prompt(self,prompt):
         "character": self.config.get('llm.character'),
         "top_p": self.config.get('llm.top_p')
     }
-    response = requests.post(self.url, headers=self.headers, json=data, verify=self.config.get('ai.verify-HTTPS'))
+    log_llm_response = self.config.get('llm.log_responses', False)
+    response = requests.post(self.url, headers=self.headers, json=data, verify=self.config.get('ai.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
     if response.status_code != 200:
         return False
     content_value = response.json()['choices'][0]['message']['content']
+    if log_llm_response:
+        print('#### LLM Response ####')
+        print(content_value)
+        print('#### End of Response ####')
     return True, content_value
