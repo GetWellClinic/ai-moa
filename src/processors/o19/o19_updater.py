@@ -41,7 +41,7 @@ def update_o19(self):
         True  # if the update is successful
     """
 	self.fileType = self.config.get_shared_state('get_category_type')[1].lower()
-	self.document_description = self.config.get_shared_state('get_document_description')[1]
+	self.document_description = self.config.get_shared_state('get_document_description')[1].lstrip()
 	data = self.config.get_shared_state('filter_results')[1]
 
 	try:
@@ -66,8 +66,9 @@ def update_o19(self):
 	self.fl_name = formatted_name
 	self.demographic_number = demographic_number
 
-	if provider_no is not None:
-	    self.mrp = provider_no
+	if provider_no is not None and provider_no != "_" and provider_no != "":
+		self.mrp = provider_no
+		self.provider_number.append(provider_no)
 
 	default_provider_id = self.default_values.get('default_provider_tagging_id', '')
 
@@ -77,7 +78,7 @@ def update_o19(self):
 	self.provider_number.append(default_provider_id)
 
 	for category in self.document_categories:
-		if category['name'] == self.fileType:
+		if category['name'].lower() == self.fileType:
 			try:
 				self.provider_number.append(category['default_tagger'])
 			except KeyError:
@@ -127,7 +128,7 @@ def update_o19_pendingdocs(self):
 	for value in self.provider_number:
 	    params["flagproviders"].append(value)
 
-	response = self.session.post(url, data=params, verify=self.config.get('emr.verify-HTTPS'))
+	response = self.session.post(url, data=params, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
 
 	if response.status_code == 200:
 		self.logger.info(f"Completed processing document and posted responses to EMR demographic ({self.demographic_number}) for Document No: {self.file_name}")
@@ -188,7 +189,7 @@ def update_o19_incomingdocs(self):
 	for value in self.provider_number:
 	    params["flagproviders"].append(value)
 
-	response = self.session.post(url, data=params, verify=self.config.get('emr.verify-HTTPS'))
+	response = self.session.post(url, data=params, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
 
 	if response.status_code == 200:
 		self.logger.info(f"Completed processing document and posted responses to EMR demographic ({self.demographic_number}) for Document No: {self.file_name}")
