@@ -100,9 +100,10 @@ lock:
 
 # Logging configuration, including file location, format, and log level.
 logging:
+  console_level: INFO   # Log level for console output. (ie. INFO, DEBUG, WARN, ERROR, FATAL etc. )
+  file_level: INFO  # Log level for file output. (ie. INFO, DEBUG etc. )
   filename: ../logs/workflow.log  # Log file location.
   format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'  # Log format.
-  level: INFO  # Log level for capturing detailed information (DEBUG, INFO level etc).
 
 # OCR (Optical Character Recognition) configuration, specifying the device and settings for document scanning.
 ocr:
