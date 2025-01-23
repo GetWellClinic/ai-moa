@@ -92,7 +92,7 @@ llm:
   model: /models/Mistral-7B-Instruct-v0.3.Q8_0.gguf  # Path to the model file being used.
   temperature: 0.1  # Temperature for controlling the randomness of model responses.
   top_p: 0.1  # Top-p sampling for controlling diversity of responses (related to nucleus sampling).
-  llm.log_response = false     # set to true to see LLM output in console
+  llm.log_response: false     # set to true to see LLM output in console
 
 # Lock configuration, to control access to shared resources.
 lock:
