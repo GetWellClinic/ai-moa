@@ -285,10 +285,10 @@ def get_mrp_details(self):
                   "query": formatted_name
                 }
 
-    if response.status_code == 200:
-        # Send the POST request
-        response = self.session.post(url, data=payload, verify=self.config.get('emr.verify-HTTPS'))
+    # Send the POST request
+    response = self.session.post(url, data=payload, verify=self.config.get('emr.verify-HTTPS'))
 
+    if response.status_code == 200:
         try:
             loaded_data = json.loads(response.text)
         except json.JSONDecodeError as e:
