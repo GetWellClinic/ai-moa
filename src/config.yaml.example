@@ -51,6 +51,9 @@ emr:
   system_type: o19  # Type of system, 'o19'.
   username: emr  # Username for EMR login.
 
+general_setting:
+  timeout: 300 # Timeout for request (POST and GET) to avoid indefinitely hanging requests.
+
 # File processing configuration, defining allowed file extensions and directories for input/output.
 file_processing:
   allowed_extensions:

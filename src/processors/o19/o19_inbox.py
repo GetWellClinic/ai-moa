@@ -159,7 +159,7 @@ def get_inbox_pendingdocs_documents(self):
 
 					self.file_name = item
 					file_url = f"{self.base_url}/dms/ManageDocument.do?method=display&doc_no={item}"
-					file_response = self.session.get(file_url, verify=self.config.get('emr.verify-HTTPS'))
+					file_response = self.session.get(file_url, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
 
 					if file_response.status_code == 200 and file_response.content:
 						self.config.set_shared_state('current_file', file_response.content)
@@ -225,7 +225,7 @@ def get_inbox_incomingdocs_documents(self):
 						update_time = split_string[1]
 
 						pdf_url = f"{self.base_url}/dms/ManageDocument.do?method=displayIncomingDocs&curPage=1&pdfDir=File&queueId=1&pdfName={option.get_attribute('value')}"
-						file_response = self.session.get(pdf_url, verify=self.config.get('emr.verify-HTTPS'))
+						file_response = self.session.get(pdf_url, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
 
 						if file_response.status_code == 200  and file_response.content:
 							self.file_name = option.get_attribute('value')

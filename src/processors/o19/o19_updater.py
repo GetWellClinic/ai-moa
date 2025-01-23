@@ -128,7 +128,7 @@ def update_o19_pendingdocs(self):
 	for value in self.provider_number:
 	    params["flagproviders"].append(value)
 
-	response = self.session.post(url, data=params, verify=self.config.get('emr.verify-HTTPS'))
+	response = self.session.post(url, data=params, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
 
 	if response.status_code == 200:
 		self.logger.info(f"Completed processing document and posted responses to EMR demographic ({self.demographic_number}) for Document No: {self.file_name}")
@@ -189,7 +189,7 @@ def update_o19_incomingdocs(self):
 	for value in self.provider_number:
 	    params["flagproviders"].append(value)
 
-	response = self.session.post(url, data=params, verify=self.config.get('emr.verify-HTTPS'))
+	response = self.session.post(url, data=params, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
 
 	if response.status_code == 200:
 		self.logger.info(f"Completed processing document and posted responses to EMR demographic ({self.demographic_number}) for Document No: {self.file_name}")

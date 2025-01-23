@@ -76,7 +76,7 @@ class ProviderListManager:
             requests.RequestException: If there is an error making the login request.
         """
         response = self.session.post(f"{self.base_url}/login.do",
-                                     data={"username": self.username, "password": self.password, "pin": self.pin}, verify=self.config.get('emr.verify-HTTPS'))
+                                     data={"username": self.username, "password": self.password, "pin": self.pin}, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
         if response.url == f"{self.base_url}/login.do":
             self.logger.info("Login failed.")
         else:
@@ -103,7 +103,7 @@ class ProviderListManager:
             with open(template_file, 'rb') as file:
                 files = {'templateFile': (template_file, file, 'text/plain')}
                 data = {'action': 'add'}
-                response = self.session.post(url, files=files, data=data, verify=self.config.get('emr.verify-HTTPS'))
+                response = self.session.post(url, files=files, data=data, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
                 if(response.status_code == 200):
                     self.logger.info("Template uploaded successfully.")
                     return True
@@ -128,7 +128,7 @@ class ProviderListManager:
         url = f"{self.base_url}/oscarReport/reportByTemplate/homePage.jsp?templates=all"
 
         # Send the POST request
-        response = self.session.get(url, verify=self.config.get('emr.verify-HTTPS'))
+        response = self.session.get(url, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
 
         soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -177,7 +177,7 @@ class ProviderListManager:
         
         if self.check_template_file():
             url = f"{self.base_url}/oscarReport/reportByTemplate/homePage.jsp?templates=all"
-            response = self.session.get(url, verify=self.config.get('emr.verify-HTTPS'))
+            response = self.session.get(url, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
             soup = BeautifulSoup(response.text, 'html.parser')
             tbody = soup.find('tbody', id='tableData')
             template_id = self.find_template_id(tbody)
@@ -223,7 +223,7 @@ class ProviderListManager:
         url = f"{self.base_url}/oscarReport/reportByTemplate/GenerateReportAction.do"
         params = {"templateId": template_id, "submitButton": "Run Query"}
         try:
-            response = self.session.post(url, data=params, verify=self.config.get('emr.verify-HTTPS'))
+            response = self.session.post(url, data=params, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
             soup = BeautifulSoup(response.text, 'html.parser')
             input_element = soup.find('input', {'type': 'hidden', 'class': 'btn', 'name': 'csv'})
             if input_element:
