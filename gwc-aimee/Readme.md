@@ -1,7 +1,7 @@
 # Aimee AI (AI-MOA) #
 *Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
 *LICENSE: GNU Affero General Public License Version 3*<br />
-**Document Version 2025.01.16**
+**Document Version 2025.01.23**
 <p align="center">
   <img src="https://getwellclinic.ca/images/GetWellClinic/Logos-Icons/AimeeAI-pc.png" alt="Aimee AI">
 </p>
@@ -262,8 +262,8 @@ It will save to a YAML file, which AI-MOA will use to match to names in document
 
 To improve accuracy, edit the YAML file to delete extraneous or unnecessary providers that AI-MOA
 does not need to match documents to that name. If there are too many similar providers, it can
-confuse the LLM. Be sure to also include middle names after the firstname for health providers if
-some documents may contain the provider's middle names.
+confuse the LLM. If some providers have middle names, you can create multiple entries for the same provider; one for
+each variation of the firstname that could include all or part of the middle name.
 
 ```
 sudo nano ../config/provider_list.yaml

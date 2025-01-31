@@ -93,7 +93,7 @@ llm:
   model: /models/Mistral-7B-Instruct-v0.3.Q8_0.gguf  # Path to the model file being used.
   temperature: 0.1  # Temperature for controlling the randomness of model responses.
   top_p: 0.1  # Top-p sampling for controlling diversity of responses (related to nucleus sampling).
-  llm.log_response = false     # set to true to see LLM output in console
+  log_responses: false     # set to true to see LLM output in console
 
 # Lock configuration, to control access to shared resources.
 lock:
@@ -101,9 +101,10 @@ lock:
 
 # Logging configuration, including file location, format, and log level.
 logging:
+  console_level: INFO   # Log level for console output. (ie. INFO, DEBUG, WARN, ERROR, FATAL etc. )
+  file_level: INFO  # Log level for file output. (ie. INFO, DEBUG etc. )
   filename: ../logs/workflow.log  # Log file location.
   format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'  # Log format.
-  level: INFO  # Log level for capturing detailed information (DEBUG, INFO level etc).
 
 # OCR (Optical Character Recognition) configuration, specifying the device and settings for document scanning.
 ocr:
