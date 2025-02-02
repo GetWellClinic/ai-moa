@@ -1,7 +1,7 @@
 # Aimee AI (AI-MOA) #
 *Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
 *LICENSE: GNU Affero General Public License Version 3*<br />
-**Document Version 2025.01.23**
+**Document Version 2025.02.02**
 <p align="center">
   <img src="https://getwellclinic.ca/images/GetWellClinic/Logos-Icons/AimeeAI-pc.png" alt="Aimee AI">
 </p>
@@ -43,7 +43,7 @@ healthcare team's administrative burden, so we can dedicate ourselves to the ver
 
 ## Installation ##
 
-**Be sure to change working directory to "gwc-aimee" where this readme.md and installation files are stored, before executing the installation files.**
+**Be sure to change working directory to "install" where this readme.md and installation files are stored, before executing the installation files.**
 
 ### 1. Install Ubuntu 22 LTS ###
 
@@ -67,22 +67,19 @@ Change the ownership of files to your username:
 sudo chown {username} /opt/ai-moa/* -R
 ```
 
-**Select the "Aimee AI" branch to Git checkout** ```dev-gwc-aimee```. (The default branch is usually "main")
-```
-cd /opt/ai-moa
-git checkout dev-gwc-aimee
-cd gwc-aimee
-ls -l -h
-nano Readme.md
-```
-
 **Set file permissions to enable run installation scripts**
 ```
-cd /opt/ai-moa/gwc-aimee
+cd /opt/ai-moa/install
 ls -l -h
 sudo chmod ug+x *.sh
 sudo chmod g-x install*
 sudo chmod g-x uninstall*
+```
+
+Change working directory to "install" for accessing the installation scripts:
+```
+cd /opt/ai-moa/install
+ls -l -h
 ```
 
 ### 3. Install NVIDIA RTX video card drivers ###
@@ -357,9 +354,9 @@ AI-MOA is developed for identify and tagging according to certain Document Categ
 		
 ## Maintenance Operations ##
 
-*Note: These commands and scripts should be run from subdirectory "/gwc-aimee"*
+*Note: These commands and scripts should be run from subdirectory "/install"*
 ```
-cd gwc-aimee
+cd install
 ```
 
 ### Starting *AI-MOA* Services ###
@@ -429,6 +426,10 @@ sudo ./stop-llm.sh
 ```
 
 ## Troubleshooting ##
+
+### Clinic workflow suggestions ###
+
+AI-MOA is not 100% accurate in tagging documents to the correct patient. We recommend having a human medical office administrator review the tagged documents by AI-MOA daily for incorrect matches, and manually Refile the document to correct errors. A quick way to review tagged documents is to run a Search in InBox for All documents recently uploaded within a date range (ie. in the last day). The reviewer can use Rapid Review or Preview to review all the AI-MOA work. Pay attention to "Unassigned, Unassigned" documents; and also confirm that the patient name in the document corresponds to the correct demographic tagged in EMR. The reviewer can click "Acknowledge or Next" to confirm that it has been checked by a human. Any incorrect documents can be sent to Refile and manually corrected through the Incoming Docs document manager.
 
 ### Uninstalling Aimee AI ###
 

@@ -1,0 +1,31 @@
+[Unit]
+Description=AI LLM Container (Aphrodite and Caddy)
+After=network.target
+
+# Assumes the path to AI-MOA base directory is '/opt/ai-moa'; if different, please edit ExecStart and ExecStop paths below:
+
+[Service]
+# AI LLM Container should run as 'root':
+User=root
+Nice=1
+KillMode=control-group
+# KillMode=none
+# KillMode=mixed
+SuccessExitStatus=0 1
+# AI LLM Container should have RemainAfterExit=true to ensure it keeps running
+RemainAfterExit=true
+# ProtectHome=true
+# ProtectSystem=full
+# PrivateDevices=true
+# NoNewPrivileges=true
+WorkingDirectory=/opt/ai-moa/llm-container
+# Edit the correct path to AI-MOA/install:
+ExecStart=/opt/ai-moa/install/run-llm.sh
+# Edit the correct path to AI-MOA/gwc-aimee:
+ExecStop=/opt/ai-moa/install/stop-llm.sh
+Restart=on-failure
+RestartSec=30s
+
+[Install]
+WantedBy=multi-user.target
+

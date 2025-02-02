@@ -23,9 +23,9 @@ AIMOA=$(pwd)
 /usr/bin/systemctl disable llm-container.service
 
 # REMOVE/Uninstall AI-MOA and LLM Container as system services in Linux:
-/bin/mv /etc/systemd/system/ai-moa.service $AIMOA/gwc-aimee/services/ai-moa.service.removed
-/bin/mv /etc/systemd/system/llm-container.service $AIMOA/gwc-aimee/services/llm-container.service.removed
-/bin/echo "ai-moa.service and llm-container.service removed from /etc/systemd/system/ and moved to $AIMOA/gwc-aimee/services/*.services.removed"
+/bin/mv /etc/systemd/system/ai-moa.service $AIMOA/install/services/ai-moa.service.removed
+/bin/mv /etc/systemd/system/llm-container.service $AIMOA/install/services/llm-container.service.removed
+/bin/echo "ai-moa.service and llm-container.service removed from /etc/systemd/system/ and moved to $AIMOA/install/services/*.services.removed"
 # Reload any changes to system service folder /etc/systemd/system
 /usr/bin/systemctl daemon-reload
 /bin/echo ""
