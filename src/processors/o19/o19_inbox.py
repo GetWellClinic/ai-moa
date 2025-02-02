@@ -44,7 +44,7 @@ def get_document_processor_type(self):
     """
 	system_type = self.config.get('aimoa_document_processor.type')
 
-	if system_type == 'o19':
+	if system_type == 'o19' or system_type == 'o15':
 		return True
 
 	return False
@@ -198,9 +198,10 @@ def get_inbox_incomingdocs_documents(self):
 		update_time = self.config.get('inbox.incoming', None)
 
 		for option in select_element.options:
-			if(option.get_attribute('value') != ""):
+			
+			item = option.get_attribute('value')
 
-				item = option.get_attribute('value')
+			if item != "":
 
 				split_string = option.get_attribute('text').split(") ", 1)
 
