@@ -2,7 +2,7 @@
 # This custom script installs Get Well Clinic's version of AI-MOA (Aimee AI)
 # Note: To correctly use automatic detection of AI-MOA path, this script must be installed and run in subdirectory 'gwc-aimee'
 # This install script should be run as 'sudo ./install-aimoa.sh'
-# Version 2024.12.10
+# Version 2025.02.02
 
 # Hardware Requirements:
 #	NVIDIA RTX video card installed with at least 12 GB VRAM
@@ -123,9 +123,9 @@ pip install -r $AIMOA/src/requirements.txt
 
 # Protect installation files
 /bin/echo "Enabling scripts, and protecting installation files..."
-/bin/chmod guo+x $AIMOA/gwc-aimee/*
-/bin/chmod o-x $AIMOA/gwc-aimee/install*
-/bin/chmod o-x $AIMOA/gwc-aimee/uninstall*
+/bin/chmod guo+x $AIMOA/install/*
+/bin/chmod o-x $AIMOA/install/install*
+/bin/chmod o-x $AIMOA/install/uninstall*
 # Protect config directory
 /bin/echo "Protecting ../config directory..."
 /bin/chmod o-rwx $AIMOA/config

@@ -20,13 +20,15 @@
 # ***
 
 # AI configuration for interacting with the AI-MOA service.
+# Version: 2025.02.02
+
 ai:
   uri: https://localhost:3334/v1/chat/completions  # URI endpoint for AI model interactions.
   verify-HTTPS: false
 
 # AI-MOA document processor configuration.
 aimoa_document_processor:
-  type: o19  # Type of document processor being used, 'o19' or 'local'.
+  type: o19  # Type of document processor being used, 'o19', 'o15' or 'local'.
 
 # Chrome browser configuration for headless operation.
 chrome:
@@ -48,7 +50,7 @@ emr:
   incoming_folder_queue: '1'  # Queue number for processing incoming files.
   password: passpwd  # Password for EMR login.
   pin: '123'  # PIN for EMR login.
-  system_type: o19  # Type of system, 'o19'.
+  system_type: o19  # Type of system, 'o19', 'o15'.
   username: emr  # Username for EMR login.
 
 general_setting:
@@ -79,6 +81,7 @@ huey:
 # Inbox configuration.
 inbox:
   pending: 99999999  # Last processed file ID in the inbox, should be set to your last AI-MOA processed/completed file in the inbox.
+  incoming: '2125-01-01 00:00:00' # Timestamp for the last processed file for incoming documents folder, should follow this format and should be set to a value inorder to process files in incoming documents folder.
 
 # LLM (Large Language Model) configuration, including model parameters for AI interactions.
 llm:

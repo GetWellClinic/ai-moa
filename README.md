@@ -67,7 +67,7 @@ ai-moa/
 
 ## Setup and Installation
 
-Please refer to the [gwc-aimee/Readme.md](gwc-aimee/Readme.md) for a **Complete Packaged Installation of Aimee AI**.
+Please refer to the [install/Readme.md](install/Readme.md) for a **Complete Packaged Installation of Aimee AI**.
 
 The following is a brief example of the installation steps:
 

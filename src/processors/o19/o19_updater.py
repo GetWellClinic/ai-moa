@@ -221,6 +221,6 @@ def update_o19_last_processed_file(self):
 		self.config.update_pending_inbox(self.file_name)
 	else:
 		self.config.update_incoming_retries(0)
-		self.config.update_incoming_inbox(self.file_name)
+		self.config.update_incoming_inbox(self.inbox_incoming_lastfile)
 
 	return True

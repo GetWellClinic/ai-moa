@@ -1,9 +1,9 @@
 #!/bin/bash
 # This script helps you install llm-container and ai-moa as a system service running automatically on Linux boot.
-# This script should reside and be run in the AI-MOA subdirectory 'gwc-aimee' in order to properly autodetect base directory for AI-MOA.
+# This script should reside and be run in the AI-MOA subdirectory 'install' in order to properly autodetect base directory for AI-MOA.
 # Run the script as 'sudo ./install-services.sh'
 
-# Version 2024.12.09
+# Version 2025.02.02
 
 # Automatic detect base directory for AI-MOA:
 cd ..
@@ -19,14 +19,14 @@ AIMOA=$(pwd)
 /bin/sleep 10s
 
 # Edit the AI-MOA services to match installed AI-MOA base directory:
-/bin/cp $AIMOA/gwc-aimee/services/ai-moa.service.default $AIMOA/gwc-aimee/services/ai-moa.service
-/bin/cp $AIMOA/gwc-aimee/services/llm-container.service.default $AIMOA/gwc-aimee/services/llm-container.service
-/bin/sed -i 's#/opt/ai-moa#'"$AIMOA"'#g' $AIMOA/gwc-aimee/services/ai-moa.service
-/bin/sed -i 's#/opt/ai-moa#'"$AIMOA"'#g' $AIMOA/gwc-aimee/services/llm-container.service
+/bin/cp $AIMOA/install/services/ai-moa.service.default $AIMOA/install/services/ai-moa.service
+/bin/cp $AIMOA/install/services/llm-container.service.default $AIMOA/install/services/llm-container.service
+/bin/sed -i 's#/opt/ai-moa#'"$AIMOA"'#g' $AIMOA/install/services/ai-moa.service
+/bin/sed -i 's#/opt/ai-moa#'"$AIMOA"'#g' $AIMOA/install/services/llm-container.service
 
 # Install AI-MOA and LLM Container as system services in Linux:
-/bin/cp $AIMOA/gwc-aimee/services/ai-moa.service /etc/systemd/system/
-/bin/cp $AIMOA/gwc-aimee/services/llm-container.service /etc/systemd/system/
+/bin/cp $AIMOA/install/services/ai-moa.service /etc/systemd/system/
+/bin/cp $AIMOA/install/services/llm-container.service /etc/systemd/system/
 # Reload any changes to system service folder /etc/systemd/system
 /usr/bin/systemctl daemon-reload
 

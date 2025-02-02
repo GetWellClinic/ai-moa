@@ -83,7 +83,14 @@ class LoginManager:
         # Locate the login fields and enter credentials
         username_field = driver.find_element(By.NAME, "username")
         password_field = driver.find_element(By.NAME, "password")
-        pin_field = driver.find_element(By.NAME, "pin2")
+
+        system_type = self.config.get('emr.system_type', 'o19')
+
+        if(system_type == 'o15'):
+            pin_field = driver.find_element(By.NAME, "pin")
+        else:
+            pin_field = driver.find_element(By.NAME, "pin2")
+
 
         username_field.send_keys(self.username)
         password_field.send_keys(self.password)

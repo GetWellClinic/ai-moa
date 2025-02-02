@@ -44,7 +44,7 @@ def get_document_processor_type(self):
     """
 	system_type = self.config.get('aimoa_document_processor.type')
 
-	if system_type == 'o19':
+	if system_type == 'o19' or system_type == 'o15':
 		return True
 
 	return False
@@ -195,17 +195,18 @@ def get_inbox_incomingdocs_documents(self):
 		driver.implicitly_wait(10)
 		select_element = Select(driver.find_element(By.ID, "SelectPdfList"))
 
-		update_time = ""
+		update_time = self.config.get('inbox.incoming', None)
 
 		for option in select_element.options:
-			if(option.get_attribute('value') != ""):
+			
+			item = option.get_attribute('value')
+
+			if item != "":
 
 				split_string = option.get_attribute('text').split(") ", 1)
 
 				if(update_time is None or update_time == ""):
 					update_time = split_string[1]
-				else:
-					update_time = self.config.get('inbox.incoming')
 
 				last_file = datetime.strptime(update_time, "%Y-%m-%d %H:%M:%S")
 				current_file = datetime.strptime(split_string[1], "%Y-%m-%d %H:%M:%S")
@@ -217,23 +218,26 @@ def get_inbox_incomingdocs_documents(self):
 
 					if max_retries <= current_retries:  # If max retries is equal to current retries
 						self.config.update_incoming_retries(0)  # Reset the retry count in the configuration
-						self.config.update_incoming_inbox(option.get_attribute('value'))
+						self.config.update_incoming_inbox(split_string[1])
 						self.logger.info(f"Max retries exceeded for document {item}.")
 					else:
 						self.config.update_incoming_retries(current_retries + 1)  # Increment the retry count by 1
 
 						update_time = split_string[1]
 
-						pdf_url = f"{self.base_url}/dms/ManageDocument.do?method=displayIncomingDocs&curPage=1&pdfDir=File&queueId=1&pdfName={option.get_attribute('value')}"
+						pdf_url = f"{self.base_url}/dms/ManageDocument.do?method=displayIncomingDocs&curPage=1&pdfDir={folder}&queueId={queue}&pdfName={option.get_attribute('value')}"
 						file_response = self.session.get(pdf_url, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
 
 						if file_response.status_code == 200  and file_response.content:
 							self.file_name = option.get_attribute('value')
+							self.inbox_incoming_lastfile = update_time
 							self.config.set_shared_state('current_file', file_response.content)
 							self.logger.info(f"Fetched EMR document from Incoming Docs...Processing Document No: {item}.")
 							return True
 						else:
 							self.logger.error(f"An error occurred: {file_response.status_code}")
+
+					break
 
 	return False
 

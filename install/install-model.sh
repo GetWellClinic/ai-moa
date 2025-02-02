@@ -2,10 +2,10 @@
 # Script to download and install default LLM Model
 # Note: To correctly use automatic detection of AI-MOA path, this script must be reside and executed in AI-MOA subdirectory 'gwc-aimee'
 # This script should be run as 'sudo ./install-model.sh'
-# Version 2024.12.09
+# Version 2025.02.02
 
 # CONFIGURATION:
-# Using automatic detection, when this script is installed in AIMOA/gwc-aimee
+# Using automatic detection, when this script is found under directory "AIMOA/install/":
 cd ..
 AIMOA=$(pwd)
 # Override with specifying full path to AI-MOA installed directory:
