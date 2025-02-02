@@ -75,6 +75,7 @@ class Workflow:
         self.login_manager = login_manager
         self.base_url = config.get('emr.base_url')
         self.file_name = ''
+        self.inbox_incoming_lastfile = ''
         self.enable_ocr_gpu = config.get('ocr.enable_gpu', True)
         self.url = config.get('ai.uri', "https://localhost:3334/v1/chat/completions")
         self.headers = {
