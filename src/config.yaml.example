@@ -20,6 +20,8 @@
 # ***
 
 # AI configuration for interacting with the AI-MOA service.
+# Version: 2025.02.02
+
 ai:
   uri: https://localhost:3334/v1/chat/completions  # URI endpoint for AI model interactions.
   verify-HTTPS: false
@@ -79,7 +81,7 @@ huey:
 # Inbox configuration.
 inbox:
   pending: 99999999  # Last processed file ID in the inbox, should be set to your last AI-MOA processed/completed file in the inbox.
-  incoming: '2020-12-29 12:40:30' # Timestamp for the last processed file for incoming documents folder, should follow this format and should be set to a value inorder to process files in incoming documents folder.
+  incoming: '2125-01-01 00:00:00' # Timestamp for the last processed file for incoming documents folder, should follow this format and should be set to a value inorder to process files in incoming documents folder.
 
 # LLM (Large Language Model) configuration, including model parameters for AI interactions.
 llm:
