@@ -83,6 +83,7 @@ class Workflow:
             "Content-Type": "application/json"
         }
         self.update_o19 = o19_updater.update_o19
+        self.view_output = o19_updater.view_output
         self.update_o19_pendingdocs = o19_updater.update_o19_pendingdocs
         self.update_o19_incomingdocs = o19_updater.update_o19_incomingdocs
         self.update_o19_last_processed_file = o19_updater.update_o19_last_processed_file

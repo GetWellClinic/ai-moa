@@ -44,10 +44,7 @@ def get_document_processor_type(self):
     """
 	system_type = self.config.get('aimoa_document_processor.type')
 
-	if system_type == 'o19' or system_type == 'o15':
-		return True
-
-	return False
+	return system_type in ['o19', 'o15']
 
 
 def check_lock(self):
