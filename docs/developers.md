@@ -19,7 +19,7 @@ config/workflow-config.yaml
 
 1. Create a new module by adding a new folder "your_folder" to the `src/processors/` directory.
 2. Create an `src/processors/your_folder/__init__.py` file to define the methods that will be used in the application.
-3. Create your Python file (ie. "new_feature.py" with the required defined functions (ie. "new_function") and save it in the `src/processors/your_folder` folder.
+3. Create your Python file (ie. `new_feature.py` with the required defined functions (ie. "new_function") and save it in the `src/processors/your_folder/` folder.
 4. Edit `src/processors/workflow/emr_workflow.py` and import the functions into the "Workflow" class using the "from ... import" statement, and initialize the WorkFlow class by adding the functions as variables to access them from anywhere during the workflow execution.
 
 	Example:
@@ -28,7 +28,7 @@ config/workflow-config.yaml
 	
 	class Workflow:
 		def __init__(self, config: ConfigManager, session_manager: SessionManager, login_manager: LoginManager):
-			self.new_function = feature.new_function
+			self.new_function = new_feature.new_function
 	```
 
 5. Add the function to the `workflow:steps:` in `config/workflow-config.yaml` file based on the required functionality.
