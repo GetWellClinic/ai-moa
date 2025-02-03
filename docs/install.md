@@ -19,7 +19,7 @@ healthcare team's administrative burden, so we can dedicate ourselves to the ver
 
 ## Installation ##
 
-Please refer to the [install/Readme.md](install/Readme.md) for a **Complete Packaged Installation of "AI-MOA: Aimee AI"**.
+Please refer to the [../install/Readme.md](install/Readme.md) for a **Complete Packaged Installation of "AI-MOA: Aimee AI"**.
 
 The documentation in "docs" is a work-in-progress and may be incomplete.
 
