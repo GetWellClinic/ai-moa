@@ -1,4 +1,7 @@
 # AI-MOA Developers Guide
+*Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
+*LICENSE: GNU Affero General Public License Version 3*<br />
+**Document Version 2025.02.02**
 
 ## Adding to the code:
 
@@ -7,17 +10,28 @@ AI-MOA follows the Explicit Module Export approach along with a Workflow Engine,
 ## New Module
 
 #### Files needed:
-#### your_module/__init__.py
-#### your_module/your_python_file.py
-#### processors/workflow/emr_workflow.py
-#### workflow-config.yaml
+```
+src/processors/your_folder/__init__.py
+src/processors/your_folder/your_python_file.py
+src/processors/workflow/emr_workflow.py
+config/workflow-config.yaml
+```
 
+1. Create a new module by adding a new folder "your_folder" to the `src/processors/` directory.
+2. Create an `src/processors/your_folder/__init__.py` file to define the methods that will be used in the application.
+3. Create your Python file (ie. "new_feature.py" with the required defined functions (ie. "new_function") and save it in the `src/processors/your_folder` folder.
+4. Edit `src/processors/workflow/emr_workflow.py` and import the functions into the "Workflow" class using the "from ... import" statement, and initialize the WorkFlow class by adding the functions as variables to access them from anywhere during the workflow execution.
 
-1. Create a new module by adding a new folder to the `src/` directory.
-2. Create an `__init__.py` file to define the methods that will be used in the application.
-3. Create the Python file with the required functions and save it in the module folder.
-4. Import the functions into the Workflow class using the import statement, and add the functions as variables to access them from anywhere during the workflow execution.
-5. Add the function to the `workflow-config.yaml` file based on the required functionality.
+	Example:
+	```
+	from ..your_folder import new_feature
+	
+	class Workflow:
+		def __init__(self, config: ConfigManager, session_manager: SessionManager, login_manager: LoginManager):
+			self.new_function = feature.new_function
+	```
+
+5. Add the function to the `workflow:steps:` in `config/workflow-config.yaml` file based on the required functionality.
 6. Test the code and check the logs to verify if the function is being triggered.
 
 
