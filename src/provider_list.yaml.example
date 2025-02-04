@@ -1,4 +1,5 @@
 providers:
+# Copy this template to "config/provider_list.yaml", or edit the AI-MOA generated copy from your EMR already present in "config" directory.
 # Follow this template and add all the providers in your EMR system. Duplicate entries with middle name variations for first_name.
 - first_name: David
   last_name: Chan
