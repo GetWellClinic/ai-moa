@@ -141,18 +141,18 @@ def process_workflow_task(config_file: str, workflow_config_file: str) -> None:
     with AIMOAAutomation(config_file, workflow_config_file) as ai_moa:
         ai_moa.process_workflow()
 
-# Global variable to store command-line arguments
-args = None
-
-# Global variable to store command-line arguments
-args = None
-
 def get_cron_interval():
     """
     Get the cron interval from command line argument, environment variable, or default value.
     Command line argument takes precedence over environment variable.
     """
-    global args
+
+    # The function get_cron_interval() is executed before argparse is processed in the main() function;
+    # hence, the following code is used to ensure proper argument (--cron-interval) parsing.
+    parser = argparse.ArgumentParser(description="AI-MOA Automation")
+    parser.add_argument("--cron-interval", help="Cron interval for scheduling tasks (e.g. '*/5' for every 5 minutes)")
+    args = parser.parse_args()
+
     default_interval = '*/5'
     env_interval = os.environ.get('CRON_INTERVAL')
     
