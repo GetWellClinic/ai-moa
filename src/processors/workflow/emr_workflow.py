@@ -151,7 +151,12 @@ class Workflow:
         current_step = self.steps[0]
 
         while current_step:
-            result = self.execute_task(current_step)
+            try:
+                result = self.execute_task(current_step)
+            except SystemExit as e:
+                self.logger.error(f"An error occurred: {e}")
+                self.logger.error("Exiting from workflow execution.")
+                return
             
             if result:
                 next_step_name = current_step['true_next']
