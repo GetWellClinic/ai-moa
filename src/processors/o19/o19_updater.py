@@ -224,3 +224,62 @@ def update_o19_last_processed_file(self):
 		self.config.update_incoming_inbox(self.inbox_incoming_lastfile)
 
 	return True
+
+def view_output(self):
+	"""
+    Displays various outputs based on the shared state values.
+    
+    This method retrieves different pieces of information from the shared state, such as:
+    - Document type
+    - Document description
+    - Provider ID
+    - Demographic details
+    - MRP details
+
+    For each piece of information, it checks if the value is available and prints the result.
+    If the value is not available, a message is displayed instructing the user to use the corresponding function
+    to retrieve the required information.
+
+    Returns:
+        bool: True if the information was successfully displayed.
+    """
+	print('############# View Function Outputs ##############')
+
+	# Get and display category type
+	result = self.config.get_shared_state('get_category_type', default=None)
+	if result is not None and len(result) > 1:
+		print(f'Document type: {result[1]}')
+	else:
+		print("{Use category function to get document category.}")
+
+	# Get and display document description
+	result = self.config.get_shared_state('get_document_description', default=None)
+	if result is not None and len(result) > 1:
+		print(f'Document description: {result[1]}')
+	else:
+		print("{Use document description function to get document description.}")
+
+	# Get and display provider
+	result = self.config.get_shared_state('get_provider_list', default=None)
+	if result is not None and len(result) > 1:
+		print(f'Provider Id (based on get_provider prompt): {result[1]}')
+	else:
+		print("{Use provider list function to get provider list.}")
+
+	# Get and display demographic details
+	result = self.config.get_shared_state('filter_results', default=None)
+	if result is not None and len(result) > 1:
+		print(f'Demographic details (based on get_patient_hin, get_patient_name, get_patient_dob): {result[1]}')
+	else:
+		print("{Use patient functions to get demographic information.}")
+
+	# Get and display MRP details
+	result = self.config.get_shared_state('get_mrp_details', default=None)
+	if result is not None and len(result) > 1:
+		print(f'MRP details for demographic: {result[1]}')
+	else:
+		print("{Use get_mrp_details function to get mrp details .}")
+
+	print('##################################################')
+
+	return True

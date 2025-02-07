@@ -37,6 +37,8 @@ default_values:
     Miscellaneous
 
 # Workflow Configuration
+# Note: Use the view_output function to view the output from the workflow. It can be used to view the document category, document description, provider details, demographic details, and MRP information. The view_output function should be called after the relevant function calls to ensure proper results.
+
 workflow:
   steps:
     - name: check_lock
@@ -97,6 +99,9 @@ workflow:
       true_next: update_o19
       false_next: release_lock
     - name: update_o19
+      true_next: view_output
+      false_next: view_output
+    - name: view_output
       true_next: release_lock
       false_next: release_lock
     - name: release_lock
