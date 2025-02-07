@@ -241,7 +241,7 @@ def view_output(self):
     to retrieve the required information.
 
     Returns:
-        bool: Always returns False (this could be modified as needed).
+        bool: True if the information was successfully displayed.
     """
 	print('############# View Function Outputs ##############')
 
@@ -282,4 +282,4 @@ def view_output(self):
 
 	print('##################################################')
 
-	return False
+	return True
