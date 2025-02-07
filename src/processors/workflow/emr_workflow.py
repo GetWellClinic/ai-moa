@@ -83,6 +83,7 @@ class Workflow:
             "Content-Type": "application/json"
         }
         self.update_o19 = o19_updater.update_o19
+        self.view_output = o19_updater.view_output
         self.update_o19_pendingdocs = o19_updater.update_o19_pendingdocs
         self.update_o19_incomingdocs = o19_updater.update_o19_incomingdocs
         self.update_o19_last_processed_file = o19_updater.update_o19_last_processed_file
@@ -150,7 +151,12 @@ class Workflow:
         current_step = self.steps[0]
 
         while current_step:
-            result = self.execute_task(current_step)
+            try:
+                result = self.execute_task(current_step)
+            except SystemExit as e:
+                self.logger.error(f"An error occurred: {e}")
+                self.logger.error("Exiting from workflow execution.")
+                return
             
             if result:
                 next_step_name = current_step['true_next']
