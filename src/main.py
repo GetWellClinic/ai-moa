@@ -141,6 +141,29 @@ def process_workflow_task(config_file: str, workflow_config_file: str) -> None:
     with AIMOAAutomation(config_file, workflow_config_file) as ai_moa:
         ai_moa.process_workflow()
 
+def args_parse_aimoa():
+    """
+    Parses command-line arguments for AI-MOA automation.
+
+    This function sets up an argument parser and returns the parsed arguments.
+    It supports the following arguments:
+        --config: Path to the configuration file.
+        --workflow-config: Path to the workflow configuration file.
+        --cron-interval: Cron interval for scheduling tasks (e.g., '*/5' for every 5 minutes).
+        --run-immediately: If set, the task will run immediately when started.
+
+    Returns:
+        argparse.Namespace: The parsed arguments as an object with attributes corresponding
+                            to the command-line arguments.
+    """
+    parser = argparse.ArgumentParser(description="AI-MOA Automation")
+    parser.add_argument("--config", help="Path to the config file")
+    parser.add_argument("--workflow-config", help="Path to the workflow config file")
+    parser.add_argument("--cron-interval", help="Cron interval for scheduling tasks (e.g. '*/5' for every 5 minutes)")
+    parser.add_argument("--run-immediately", action="store_true", help="Run the task immediately when started")
+    args = parser.parse_args()
+    return args
+
 def get_cron_interval():
     """
     Get the cron interval from command line argument, environment variable, or default value.
@@ -149,9 +172,7 @@ def get_cron_interval():
 
     # The function get_cron_interval() is executed before argparse is processed in the main() function;
     # hence, the following code is used to ensure proper argument (--cron-interval) parsing.
-    parser = argparse.ArgumentParser(description="AI-MOA Automation")
-    parser.add_argument("--cron-interval", help="Cron interval for scheduling tasks (e.g. '*/5' for every 5 minutes)")
-    args = parser.parse_args()
+    args = args_parse_aimoa()
 
     default_interval = '*/5'
     env_interval = os.environ.get('CRON_INTERVAL')
@@ -198,12 +219,7 @@ def main_loop():
         logger.info("Main loop ended.")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="AI-MOA Automation")
-    parser.add_argument("--config", help="Path to the config file")
-    parser.add_argument("--workflow-config", help="Path to the workflow config file")
-    parser.add_argument("--cron-interval", help="Cron interval for scheduling tasks (e.g. '*/5' for every 5 minutes)")
-    parser.add_argument("--run-immediately", action="store_true", help="Run the task immediately when started")
-    args = parser.parse_args()
+    args = args_parse_aimoa()
 
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
