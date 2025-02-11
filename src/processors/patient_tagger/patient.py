@@ -162,11 +162,15 @@ def get_patient_hin(self):
 
     type_of_query = "search_hin"
 
-    pattern = r'\b\d{6,}[A-Za-z]*\b'
+    pattern = r'\b[A-Za-z]*\d{6,}[A-Za-z]*\b'
     match = re.search(pattern, query)
-    if match:
-        query = match.group()
-        query = query[:-2]
+    if match is None:
+        return False
+
+    query = match.group()
+
+    # Remove leading and trailing letters
+    query = re.sub(r'^[A-Za-z]+|[A-Za-z]+$', '', query)
 
     return self.get_patient_Html_Common(self,query,type_of_query)
 
@@ -325,10 +329,13 @@ def get_patient_Html(self,type_of_query,query):
     """
     url = f"{self.base_url}/demographic/demographiccontrol.jsp"
 
+    if type_of_query != "search_demographic_no":
+        query = f"%{query}%"
+
     # Define the payload data
     payload = {
                   "search_mode": type_of_query,
-                  "keyword": "%"+query+"%",
+                  "keyword": query,
                   "orderby": ["last_name", "first_name"],
                   "dboperation": "search_titlename",
                   "limit1": 0,
@@ -414,4 +421,52 @@ def unidentified_patients(self):
         }
     patient_json = json.dumps(patient_data)
     self.config.set_shared_state('filter_results', (True, patient_json))
+    default_error_manager_id = self.default_values.get('default_error_manager_id', None)
+    if default_error_manager_id:
+        self.config.set_shared_state('error_manager', default_error_manager_id)
     return True
+
+def verify_demographic_number(self):
+    """
+    Verifies if the demographic number exists in the system by searching for it
+    in a specific table in the HTML.
+
+    This method extracts the demographic number from a shared state, decodes
+    the JSON data, constructs a regex pattern, and checks if the demographic
+    number exists in the table retrieved by `get_patient_Html`.
+
+    Returns:
+        bool: True if the demographic number is found in the system, False otherwise.
+        str: The query used to search, in case the demographic number is found.
+    
+    Logs:
+        - Logs a success message if the demographic number is verified.
+        - Logs an error if there is a JSON decoding issue.
+        - Logs a message if the demographic number doesn't exist in the system.
+    """
+    data = self.config.get_shared_state('filter_results')[1]
+
+    try:
+        data = json.loads(data)
+    except json.JSONDecodeError as e:
+        self.logger.error(f"JSON decoding error: {e}")
+        return False
+
+    # Extract values safely using get()
+    query = data.get('demographicNo', '')
+
+    type_of_query = "search_demographic_no"
+
+    table = self.get_patient_Html(self,type_of_query,query)
+
+    pattern = r"\bdemographic_no=" + str(query) + r"&\b"
+    compiled_pattern = re.compile(pattern)
+
+    if table:
+        if compiled_pattern.search(str(table)):
+            self.logger.info(f"Verified demographic number in the system.")
+            return True,query
+    
+    self.logger.info(f"Demographic number doesn't exists in the system.")
+
+    return False

@@ -108,6 +108,7 @@ class Workflow:
         self.get_patient_name = patient.get_patient_name
         self.get_mrp_details = patient.get_mrp_details
         self.unidentified_patients = patient.unidentified_patients
+        self.verify_demographic_number = patient.verify_demographic_number
         self.filter_results = patient.filter_results
         self.get_patient_Html_Common = patient.get_patient_Html_Common
         self.convert_date = patient.convert_date

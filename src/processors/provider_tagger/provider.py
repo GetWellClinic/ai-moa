@@ -24,7 +24,7 @@ import yaml
 from config import ProviderListManager
 
 def get_provider_list(self):
-	"""
+    """
     Retrieves a provider ID from the OCR text or defaults to a pre-configured provider ID.
 
     This method processes the provider list from a file specified in the configuration and attempts to 
@@ -48,29 +48,33 @@ def get_provider_list(self):
         >>> print(result)
         (True, 123)  # if a provider ID is successfully extracted
     """
-	file_name = self.config.get('provider_list.output_file', '../config/provider_list.yaml') # Specify location of provider_list.yaml
+    file_name = self.config.get('provider_list.output_file', '../config/provider_list.yaml') # Specify location of provider_list.yaml
 
-	provider_list = self.get_provider_list_filemode(self,file_name)
+    provider_list = self.get_provider_list_filemode(self,file_name)
 
-	default_provider_id = self.default_values.get('default_provider_tagging_id', '')
+    default_provider_id = self.default_values.get('default_provider_tagging_id', '')
 
 
-	if provider_list is None:
-	    #If provider list is empty return default provider id for notifiying
-	    return True, default_provider_id
+    if provider_list is None:
+        #If provider list is empty return default provider id for notifiying
+        return True, default_provider_id
 
-	prompt = self.ai_prompts.get('get_provider', '')
+    prompt = self.ai_prompts.get('get_provider', '')
 
-	prompt = f"\n{self.ocr_text}.\n" + prompt + str(provider_list)
-	text = self.query_prompt(self,prompt)[1]
+    prompt = f"\n{self.ocr_text}.\n" + prompt + str(provider_list)
+    text = self.query_prompt(self,prompt)[1]
 
-	match = re.search(r'\b\d+\b', text)
+    match = re.search(r'\b\d+\b', text)
 
-	if match:
-	    numerical_value = int(match.group())
-	    return True, numerical_value
-	else:
-	    return True,default_provider_id
+    if match:
+        numerical_value = int(match.group())
+        return True, numerical_value
+    else:
+        default_error_manager_id = self.default_values.get('default_error_manager_id', None)
+        if default_error_manager_id:
+            self.config.set_shared_state('error_manager', default_error_manager_id)
+        return True,default_provider_id
+
 
 
 def get_provider_list_filemode(self,file_path):
