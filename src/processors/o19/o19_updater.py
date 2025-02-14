@@ -77,6 +77,11 @@ def update_o19(self):
 
 	self.provider_number.append(default_provider_id)
 
+	error_manager = self.config.get_shared_state('error_manager')
+
+	if error_manager:
+		self.provider_number.append(error_manager)
+
 	for category in self.document_categories:
 		if category['name'].lower() == self.fileType:
 			try:

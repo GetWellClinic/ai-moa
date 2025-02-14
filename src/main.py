@@ -37,7 +37,7 @@ from datetime import datetime
 from threading import Event
 from typing import Optional
 
-print("AI-MOA version 1.0; licensed under AGPL3.0, see LICENSE file. (c) Spring Health Corporation")
+print("AI-MOA version 1.1; licensed under AGPL3.0, see LICENSE file. (c) Spring Health Corporation")
 print("")
 print("Starting AI-MOA...")
 print("...waiting for Huey task scheduler to start interval...")
@@ -66,13 +66,18 @@ class AIMOAAutomation:
     Handles the processing of workflows and documents.
     """
 
-    def __init__(self, config_file: str, workflow_config_file: str) -> None:
+    def __init__(self, config_file: str, workflow_config_file: str, reset_lock: bool) -> None:
         """
         Initialize the AIMOAAutomation instance with the provided configuration files.
         """
         self.config: ConfigManager = ConfigManager(config_file, workflow_config_file)
         setup_logging(self.config)
         self.logger: logging.Logger = logger
+
+        if reset_lock and self.config.get('lock.status'):
+            self.config.update_lock_status(False)
+            self.logger.info(f"Lock set to False, --reset-lock was used while starting the application.")
+
         self.session_manager: SessionManager = SessionManager(self.config)
         self.login_manager: LoginManager = LoginManager(self.config)
         self.workflow: Workflow = Workflow(self.config,self.session_manager,self.login_manager)
@@ -132,13 +137,14 @@ class AIMOAAutomation:
         duration: float = (end_time - start_time).total_seconds()
         self.logger.info("Workflow task completed. Duration: %s seconds", duration)
 
-@huey.task(expires=1800, retries=3, retry_delay=10)
-def process_workflow_task(config_file: str, workflow_config_file: str) -> None:
+@huey.task(expires=1, retries=3, retry_delay=10)
+def process_workflow_task(config_file: str, workflow_config_file: str, reset_lock: bool) -> None:
     """
     Process the workflow as a Huey task.
-    Task expires after 30 minutes and retries up to 3 times.
+    In this workflow setup, if Task does not start, it is removed from Huey queu after 1 second, and retries up to 3 times.
+    If the Task is set to cron repeat every 1 minute, expiring a waiting task in queu prevents duplicate tasks being placed in Huey queu if the previous task is not completed, and allows for faster processing when enqueing attempts occur at every 1 minute intervals.
     """
-    with AIMOAAutomation(config_file, workflow_config_file) as ai_moa:
+    with AIMOAAutomation(config_file, workflow_config_file, reset_lock) as ai_moa:
         ai_moa.process_workflow()
 
 def args_parse_aimoa():
@@ -161,6 +167,7 @@ def args_parse_aimoa():
     parser.add_argument("--workflow-config", help="Path to the workflow config file")
     parser.add_argument("--cron-interval", help="Cron interval for scheduling tasks (e.g. '*/5' for every 5 minutes)")
     parser.add_argument("--run-immediately", action="store_true", help="Run the task immediately when started")
+    parser.add_argument("--reset-lock", action="store_true", help="Run the task while bypassing the process lock, if set.")
     args = parser.parse_args()
     return args
 
@@ -197,7 +204,7 @@ def schedule_tasks() -> None:
     """
     logger.info("Running scheduled tasks")
     try:
-        process_workflow_task(config_file, workflow_config_file)
+        process_workflow_task(config_file, workflow_config_file, reset_lock)
     except Exception as e:
         logger.exception("Error during scheduled task execution: %s", e)
 
@@ -227,6 +234,7 @@ if __name__ == "__main__":
     # Load configuration files
     config_file = args.config or os.environ.get('AIMOA_CONFIG') or os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.yaml")
     workflow_config_file = args.workflow_config or os.environ.get('AIMOA_WORKFLOW_CONFIG') or os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "workflow-config.yaml")
+    reset_lock = args.reset_lock    
     
     try:
         check_config_files_exist(config_file, workflow_config_file)
@@ -243,7 +251,7 @@ if __name__ == "__main__":
 
     if run_immediately:
         logger.info("Running task immediately...")
-        process_workflow_task(config_file, workflow_config_file)
+        process_workflow_task(config_file, workflow_config_file, reset_lock)
 
     try:
         logger.info("Starting Huey consumer...")
