@@ -25,6 +25,7 @@ from config import ConfigManager
 from auth import LoginManager, SessionManager
 from ai_moa_utils import setup_logging
 import os
+import requests
 from ..utils import local_files
 from ..utils import ocr
 from ..utils import llm
@@ -154,8 +155,18 @@ class Workflow:
         while current_step:
             try:
                 result = self.execute_task(current_step)
-            except SystemExit as e:
+            except (requests.ConnectionError, requests.Timeout, requests.RequestException) as e:
+                self.config.update_lock_status(False)
+                self.logger.info(f"Lock released.")
                 self.logger.error(f"An error occurred: {e}")
+                self.logger.info(f"Stopping workflow task, processing Document No. {self.file_name}")
+                self.logger.error("Exiting from workflow execution.")
+                return
+            except SystemExit as e:
+                self.config.update_lock_status(False)
+                self.logger.info(f"Lock released.")
+                self.logger.error(f"An error occurred: {e}")
+                self.logger.info(f"Stopping workflow task, processing Document No. {self.file_name}")
                 self.logger.error("Exiting from workflow execution.")
                 return
             
