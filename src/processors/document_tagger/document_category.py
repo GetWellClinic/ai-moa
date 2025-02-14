@@ -115,6 +115,18 @@ def get_document_description(self):
                 name = 'get_document_description_' + task['name']
                 self.config.set_shared_state(name, previous_response)
 
+            # Check if there is more than one line
+            if previous_response.count('\n') > 0:
+                # Split the response into lines
+                lines = previous_response.split('\n')
+                
+                # Iterate over lines to find the first non-empty line
+                for line in lines:
+                    if line.strip():  # Check if the line is not empty (ignores leading/trailing spaces)
+                        # Update previous_response with the first non-empty line
+                        previous_response = line
+                        break
+
             return True, previous_response
 
     return False

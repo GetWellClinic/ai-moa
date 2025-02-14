@@ -75,11 +75,13 @@ def query_prompt(self,prompt):
     except Timeout:
         self.config.update_lock_status(False)
         self.logger.info(f"Lock released.")
+        self.logger.info(f"An error occurred waiting for LLM response, exceeded time out. Stopping task processing Document No. {self.file_name}")
         raise SystemExit("Stopping task due to LLM timed out.")
     except RequestException as e:
         self.config.update_lock_status(False)
         self.logger.info(f"Lock released.")
-        raise SystemExit("Stopping task due to LLM timed out.")
+        self.logger.info(f"An error occurred waiting for LLM response, LLM Request Exception. Stopping task processing Document No. {self.file_name}")
+        raise SystemExit("Stopping task due to LLM Request Exception.")
     else:
         if response.status_code != 200:
             return False

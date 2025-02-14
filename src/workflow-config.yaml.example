@@ -35,6 +35,9 @@ default_values:
     2000-01-01
   default_category: >
     Miscellaneous
+  default_error_manager_id:
+    # Sets the id for the default error manager (o19,o15 provider list value), used when the provider or demographic is not identified.
+    999998
 
 # Workflow Configuration
 # Note: Use the view_output function to view the output from the workflow. It can be used to view the document category, document description, provider details, demographic details, and MRP information. The view_output function should be called after the relevant function calls to ensure proper results.
@@ -78,18 +81,27 @@ workflow:
       true_next: filter_results
       false_next: get_patient_name
     - name: filter_results
+      true_next: verify_demographic_number
+      false_next: get_patient_name
+    - name: verify_demographic_number
       true_next: get_mrp_details
       false_next: get_patient_name
     - name: get_patient_name
       true_next: filter_results
       false_next: get_patient_dob
     - name: filter_results
+      true_next: verify_demographic_number
+      false_next: get_patient_dob
+    - name: verify_demographic_number
       true_next: get_mrp_details
       false_next: get_patient_dob
     - name: get_patient_dob
       true_next: filter_results
       false_next: unidentified_patients
     - name: filter_results
+      true_next: verify_demographic_number
+      false_next: unidentified_patients
+    - name: verify_demographic_number
       true_next: get_mrp_details
       false_next: unidentified_patients
     - name: get_mrp_details
