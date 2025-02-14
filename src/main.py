@@ -37,7 +37,7 @@ from datetime import datetime
 from threading import Event
 from typing import Optional
 
-print("AI-MOA version 1.0; licensed under AGPL3.0, see LICENSE file. (c) Spring Health Corporation")
+print("AI-MOA version 1.1; licensed under AGPL3.0, see LICENSE file. (c) Spring Health Corporation")
 print("")
 print("Starting AI-MOA...")
 print("...waiting for Huey task scheduler to start interval...")
@@ -141,7 +141,8 @@ class AIMOAAutomation:
 def process_workflow_task(config_file: str, workflow_config_file: str, reset_lock: bool) -> None:
     """
     Process the workflow as a Huey task.
-    Task expires after 30 minutes and retries up to 3 times.
+    In this workflow setup, if Task does not start, it is removed from Huey queu after 1 second, and retries up to 3 times.
+    If the Task is set to cron repeat every 1 minute, expiring a waiting task in queu prevents duplicate tasks being placed in Huey queu if the previous task is not completed, and allows for faster processing when enqueing attempts occur at every 1 minute intervals.
     """
     with AIMOAAutomation(config_file, workflow_config_file, reset_lock) as ai_moa:
         ai_moa.process_workflow()

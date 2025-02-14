@@ -20,7 +20,7 @@
 # ***
 
 # default values
-# Prompt Version: KC-2024.01.28
+# Prompt Version: KC-2024.02.14
 #
 default_values:
   default_provider_tagging_id:
@@ -37,6 +37,7 @@ default_values:
     Miscellaneous
   default_error_manager_id:
     # Sets the id for the default error manager (o19,o15 provider list value), used when the provider or demographic is not identified.
+    # 62
     999998
 
 # Workflow Configuration
@@ -417,7 +418,7 @@ ai_prompts:
 
   get_patient_hin: >
     Answer only to the following question in one word, one word only;
-    For context, the health card number is a 10 digit number, that sometimes may be broken up by two sapces, and refer to 'HCN', 'HC#', 'HC:', 'PHN', 'Personal Health Number', 'Health Insurance Number', 'HIN', 'healthcard', 'HN:', or 'OHIP:'. In one word, one word only, what is the 10 digit health card number of the patient found in the document?
+    For context, the health card number is a 10 digit number, that sometimes may be broken up by spaces, and refer to 'HCN', 'HC#', 'HC:', 'PHN', 'Personal Health Number', 'Health Insurance Number', 'HIN', 'healthcard', 'HN:', or 'OHIP:'. In one word, one word only, what is the 10 digit health card number of the patient found in the document?
     If the health card number is unavailable, do not invent a number, only return False, no other words.
 
   get_patient_name: >
