@@ -15,9 +15,9 @@ AIMOAPATH=/opt/ai-moa
 
 # Change permission for user:group to AI-MOA group
 /bin/echo "Fixing AI-MOA permissions..."
-/bin/chown $GROUP:$GROUP $AIMOAPATH -R
+/bin/chown '$GROUP':'$GROUP' '$AIMOAPATH' -R
 # Add read-write permissions to config files to fix permissions on *.yaml.lock files
-/bin/chmod g+rw $AIMOAPATH/config/*
+/bin/chmod g+rw '$AIMOAPATH'/config/*
 
 # Display files and timestamp
 /bin/find /tmp -mtime $DAYS -type d -name '.com.google.Chrome*' -printf '%t\t%p\n'
@@ -32,8 +32,8 @@ AIMOAPATH=/opt/ai-moa
 # Delete files older than $DAYS
 /bin/echo "DELETING Chrome/Chromium /tmp files..."
 /bin/sleep 2s
-/bin/find /tmp -mtime $DAYS -type d -name '.com.google.Chrome*' -exec /bin/rm -rf {} \;
-/bin/find /tmp -mtime $DAYS -type d -name '.org.chromium.Chromium*' -exec /bin/rm -rf {} \;
+/bin/find /tmp -mtime $DAYS -type d -name '.com.google.Chrome*' -exec /bin/rm -rf '{}' \;
+/bin/find /tmp -mtime $DAYS -type d -name '.org.chromium.Chromium*' -exec /bin/rm -rf '{}' \;
 
 # Confirmation
 /bin/echo ""
