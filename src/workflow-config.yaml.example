@@ -20,7 +20,7 @@
 # ***
 
 # default values
-# Prompt Version: KC-2024.02.14
+# Prompt Version: KC-2024.02.18
 #
 default_values:
   default_provider_tagging_id:
@@ -36,7 +36,7 @@ default_values:
   default_category: >
     Miscellaneous
   default_error_manager_id:
-    # Sets the id for the default error manager (o19,o15 provider list value), used when the provider or demographic is not identified.
+    # Sets the id for the default clinic error manager who will review error documents (o19,o15 provider_no value), used when the provider or demographic is not identified.
     # 62
     999998
 
@@ -126,7 +126,7 @@ workflow:
 # Note: Each document category can have a separate "default_tagger" to be additionally tagged for that specific category as Well
 document_categories:
   - name: Lab
-    default_tagger: 200
+    # default_tagger: 200
     description: >
       These are laboratory tests received by a medical clinic notifying physicians of patient test results or messages.
     tasks:
@@ -141,7 +141,7 @@ document_categories:
           For reference, use this LABRESULT LIST: Routine, CBC, ECG, MMR, VZ, H. pylori serology, hepatitis serology, HIV, VDRL, HIV, HSV PCR, fungal, EBV serology, AFB sputum culture, FIT normal, FIT Abnormal, FIT requisition rejected, PAP cytopathology, thyroid function, hormones, Quantiferon TB Gold, urinalysis, PSA, Vitamin D, viral load, ANA, RF, ESR, CK, CA-125, CEA, ds-DNA, PFT.
 
   - name: Consult
-    default_tagger: 200
+    # default_tagger: 200
     description: >
       These are consult reports from medical specialists/programs/services, and admission reports/discharge summaries from hospitals/clinics for the purpose of exchanging communications between healthcare professionals.
     tasks:
@@ -157,7 +157,7 @@ document_categories:
           For reference, use this SPECIALTY LIST: Anesthesiology, Family Medicine, Cardiology, Gastroenterology, Respirology, Pulmonology, Dermatology, Orthopedics, Neurology, Hematology, Endocrinology, Rheumatology, Nephrology, Ophthalmology, Optometry, Audiology, Rheumatology, Psychiatry, Chiropractic, Obstetrics, Gynecology, OB GYN, Urology, Fertility, General Internal Medicine, Oncology, Infectious Disease, Allergy and Immunology, Gerontology, Gastrointestinal Surgery, Podiatry, Speech and Language, Chiropody, Dental, Maxillofacial Surgery, ED Visit, Emergency Visit, Home Care, Physiotherapy, Occupational Therapy, Dietitian, Endoscopy, Palliative Care, Psychotherapy, Psychology, Infectious Disease, Neurosurgery, Spine Surgery, Gastroscopy, Colonoscopy, Plastic Surgery, Vascular Surgery, Pediatrics, Physical Medicine and Rehabilitation, Physiatry and Rehab, Hepatology, Hematopathology, Intensive Care Unit, Admission Consult, Nuclear Medicine, Radiology, Pain Management, Genetics, Hepatobiliary Surgery, Colorectal Surgery, Cardiac Surgery, Plastic & Reconstructive Surgery, Sleep Medicine, Sleep Study, Sport Medicine, Vascular Surgery, Thoracic Surgery, Otolaryngology, ENT, Hematology-Oncology, Gynecologic Oncology, Neonatology, Interventional Cardiology, Clinical Genetics, Pediatric Cardiology, Pediatric Endocrinology, Pediatric Gastroenterology, Pediatric, Pediatric Nephrology, Pediatric Neurology, Pediatric Pulmonology, Pediatric Rheumatology, Pediatric Surgery, Pediatric Urology, General Surgery, Pediatric Respirology, Anesthesiology, Surgical Outpatient, Pain Management, Public Health, Communicable Disease Control, Acquired Brain Injury, Physician Assistant, Nurse Practitioner, Home and Community, Health atHome, COVID Clinic, Walk-In, Urgent Care, Fracture Clinic, Discharge Summary.
 
   - name: Insurance
-    default_tagger: 44
+    # default_tagger: 44
     description: >
       These are documents from medical health insurance companies, requesting medical records for insurance, and attending physician statements.
     tasks:
@@ -171,7 +171,7 @@ document_categories:
           For reference, use this CATEGORY LIST for reason type: Authorization for Release, Request for Attending Physician Statement, Request for Medical Records, Request for further information, Attending Physician Statement report, Request from WSIB.
 
   - name: Legal
-    default_tagger: 44
+    # default_tagger: 44
     description: >
       These are correspondence documents between a lawyer's law firm and a physician's clinic, or documents that contain legal agreements.
     tasks:
@@ -229,7 +229,7 @@ document_categories:
           For reference, use this PATHOLOGY LIST: Duodenum biopsy, Gastric biopsy, Colon biopsy, Bone marrow biopsy, Endometrial Biopsy, FNA biopsy, HPV PCR, PAP cytopathology, STI tests, GC & Chlam, HIV, Skin Biopsy, Blood Culture, Urinalysis, Culture and Sensitivity, CBC, Liver Function, Thyroid Function, Immune Serology, Inflammatory Markers, Genetics, Coagulation Profile, Tissue Biopsy, Sputum sample, PAP cytology, Gyn Cytology.
 
   - name: Consent
-    default_tagger: 44
+    # default_tagger: 44
     description: >
       These documents are patient consent forms for an action, and clinic registration forms.
     tasks:
@@ -288,11 +288,11 @@ document_categories:
         prompt: >
           Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document. Review only the first 1 to 3 pages of the above document and provide only the output using in the specified output format, without labeling it as 'output format:'. After review perform the following steps.
           1. Select one referral type from CATEGORY LIST provided below, based more strongly on the content in the first and second page.
-          2. Select one specialty from SPECIALIST LIST. If the confidency level for the specialty is less than 50% then select the word 'Other'.
+          2. Select one specialty from SPECIALIST LIST. "Offers essential primary care support for patients referred by the Emergency Department" refer to "Nurse Practitioner" specialty. If the confidency level for the specialty is less than 50% then select the word 'Other'.
           Use this output format template: referral - specialty (consultant doctor/name of clinic/program). Ensure this output format template is followed precisely including brackets () and -, and the output must end without a period. Prioritize selecting the consultant doctor who is the specialist, over the clinic name.
           For reference these are examples using this output template: Health Care Connect (Get Well Clinic) John Doe, Referral - Cardiology (Dr. John Habot), Referral - Sleep Study (Polyclinic Sleep Diagnostic), Referral to GWC (Dr. Copeland) psychotherapy, Referral - Get Well Clinic (Weight Management Program), Referral - Neurology (Dr. Prigozhikh).
           For reference, use this CATAGORY LIST: Referral, Health Care Connect, Health atHome.
-          For reference, use this SPECIALIST LIST: Homecare, Weight Management, Psychotherapy, Cardiology, Neurology, Geriatrics, ENT, Audiology, Otolaryngology, Plastic Surgery, Opthalmology, Mental Health, Psychiatry, Dermatology, Orthopedics, Rheumatology, Respirology, Hepatology, Gastroenterology, Endocrinology, Proctology, Urology, Nephrology, Obstetrics, Gynecology, Hematology, Oncology, Breast Diagnostic Centre, SCOPE, Dietitian, Chiropody, Neurology, Endoscopy, Fertility, Infectious Disease, Optometry, Family Medicine, Palliative Care, Pediatrics, Physiatry, Pain, Sleep and Language, Sports Medicine, Allied Health, Home and Community Care.
+          For reference, use this SPECIALIST LIST: Homecare, Weight Management, Psychotherapy, Cardiology, Neurology, Geriatrics, ENT, Audiology, Otolaryngology, Plastic Surgery, Opthalmology, Mental Health, Psychiatry, Dermatology, Orthopedics, Rheumatology, Respirology, Hepatology, Gastroenterology, Endocrinology, Proctology, Urology, Nephrology, Obstetrics, Gynecology, Hematology, Oncology, Breast Diagnostic Centre, SCOPE, Dietitian, Chiropody, Neurology, Endoscopy, Fertility, Infectious Disease, Optometry, Family Medicine, Palliative Care, Pediatrics, Physiatry, Pain, Sleep and Language, Sports Medicine, Allied Health, Home and Community Care, Nurse Practitioner.
 
   - name: Request
     description: >
@@ -308,6 +308,7 @@ document_categories:
           For reference, use this CATEGORY LIST: Request for Medical Records, Request for Records, Request to Transfer Medical Care, Request for  Health Information, Request for more Information, Other Request.
 
   - name: Advertisement
+    # default_tagger: 4
     description: >
       These are marketing, promotional, or advertisement related documents. Usually not about a particular patient.
     tasks:
