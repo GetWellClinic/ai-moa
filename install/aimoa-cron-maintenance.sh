@@ -2,7 +2,7 @@
 # This script periodically clears /tmp director of temporary Chrome/Chromium temp files
 # and fixes permission to AI-MOA config files
 # Version 2025.02.18
-# Instructions: Edit and confirm location of AI-MOA install scripts, and then install this to crontab with "sudo crontab -e"
+# Instructions: Edit and confirm location of AI-MOA install scripts; and then install this to crontab with "sudo crontab -e" to run periodically
 # 0 6 * * * /opt/ai-moa/install/aimoa-cron-maintenance.sh
 
 # CONFIG
@@ -14,6 +14,7 @@ GROUP=aimoa
 AIMOAPATH=/opt/ai-moa
 
 # Change permission for user:group to AI-MOA group
+/bin/echo "Fixing AI-MOA permissions..."
 /bin/chown $GROUP:$GROUP $AIMOAPATH -R
 # Add read-write permissions to config files to fix permissions on *.yaml.lock files
 /bin/chmod g+rw $AIMOAPATH/config/*
