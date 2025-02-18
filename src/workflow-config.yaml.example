@@ -20,7 +20,7 @@
 # ***
 
 # default values
-# Prompt Version: KC-2024.02.18
+# Prompt Version: KC-2024.02.19
 #
 default_values:
   default_provider_tagging_id:
@@ -37,7 +37,7 @@ default_values:
     Miscellaneous
   default_error_manager_id:
     # Sets the id for the default clinic error manager who will review error documents (o19,o15 provider_no value), used when the provider or demographic is not identified.
-    # 62
+    #62
     999998
 
 # Workflow Configuration
@@ -157,7 +157,7 @@ document_categories:
           For reference, use this SPECIALTY LIST: Anesthesiology, Family Medicine, Cardiology, Gastroenterology, Respirology, Pulmonology, Dermatology, Orthopedics, Neurology, Hematology, Endocrinology, Rheumatology, Nephrology, Ophthalmology, Optometry, Audiology, Rheumatology, Psychiatry, Chiropractic, Obstetrics, Gynecology, OB GYN, Urology, Fertility, General Internal Medicine, Oncology, Infectious Disease, Allergy and Immunology, Gerontology, Gastrointestinal Surgery, Podiatry, Speech and Language, Chiropody, Dental, Maxillofacial Surgery, ED Visit, Emergency Visit, Home Care, Physiotherapy, Occupational Therapy, Dietitian, Endoscopy, Palliative Care, Psychotherapy, Psychology, Infectious Disease, Neurosurgery, Spine Surgery, Gastroscopy, Colonoscopy, Plastic Surgery, Vascular Surgery, Pediatrics, Physical Medicine and Rehabilitation, Physiatry and Rehab, Hepatology, Hematopathology, Intensive Care Unit, Admission Consult, Nuclear Medicine, Radiology, Pain Management, Genetics, Hepatobiliary Surgery, Colorectal Surgery, Cardiac Surgery, Plastic & Reconstructive Surgery, Sleep Medicine, Sleep Study, Sport Medicine, Vascular Surgery, Thoracic Surgery, Otolaryngology, ENT, Hematology-Oncology, Gynecologic Oncology, Neonatology, Interventional Cardiology, Clinical Genetics, Pediatric Cardiology, Pediatric Endocrinology, Pediatric Gastroenterology, Pediatric, Pediatric Nephrology, Pediatric Neurology, Pediatric Pulmonology, Pediatric Rheumatology, Pediatric Surgery, Pediatric Urology, General Surgery, Pediatric Respirology, Anesthesiology, Surgical Outpatient, Pain Management, Public Health, Communicable Disease Control, Acquired Brain Injury, Physician Assistant, Nurse Practitioner, Home and Community, Health atHome, COVID Clinic, Walk-In, Urgent Care, Fracture Clinic, Discharge Summary.
 
   - name: Insurance
-    default_tagger: 44
+    # default_tagger: 44
     description: >
       These are documents from medical health insurance companies, requesting medical records for insurance, and attending physician statements.
     tasks:
@@ -171,7 +171,7 @@ document_categories:
           For reference, use this CATEGORY LIST for reason type: Authorization for Release, Request for Attending Physician Statement, Request for Medical Records, Request for further information, Attending Physician Statement report, Request from WSIB.
 
   - name: Legal
-    default_tagger: 44
+    # default_tagger: 44
     description: >
       These are correspondence documents between a lawyer's law firm and a physician's clinic, or documents that contain legal agreements.
     tasks:
@@ -229,7 +229,7 @@ document_categories:
           For reference, use this PATHOLOGY LIST: Duodenum biopsy, Gastric biopsy, Colon biopsy, Bone marrow biopsy, Endometrial Biopsy, FNA biopsy, HPV PCR, PAP cytopathology, STI tests, GC & Chlam, HIV, Skin Biopsy, Blood Culture, Urinalysis, Culture and Sensitivity, CBC, Liver Function, Thyroid Function, Immune Serology, Inflammatory Markers, Genetics, Coagulation Profile, Tissue Biopsy, Sputum sample, PAP cytology, Gyn Cytology.
 
   - name: Consent
-    default_tagger: 44
+    # default_tagger: 44
     description: >
       These documents are patient consent forms for an action, and clinic registration forms.
     tasks:
@@ -308,7 +308,7 @@ document_categories:
           For reference, use this CATEGORY LIST: Request for Medical Records, Request for Records, Request to Transfer Medical Care, Request for  Health Information, Request for more Information, Other Request.
 
   - name: Advertisement
-    default_tagger: 4
+    # default_tagger: 4
     description: >
       These are marketing, promotional, or advertisement related documents. Usually not about a particular patient.
     tasks:
@@ -375,7 +375,7 @@ ai_prompts:
 
     Photo: This refers to photographs related to the patient’s condition.
 
-    Consent: This refers to documents that contain patient consent forms such as those authorization for healthcare providers and organizations to release patients medical records, patient consent to office medical/surgical procedures, or patients acknowledge/agree to governing law and jurisdiction agreement; this does not include the requests to transfer copy or original of the patients medical records to specific healthcare providers. These documents contain headings similar to the following phrases: Authorization to Release Medical Records, Patient Registration and Consent, Consent to Release Records, Authorization for Release to Third Party, Governing Law and Jurisdiction Agreement, Consent to Assessment Treatment & Release, First Visit or Change of Information. These documents might also mention a 'Circle of Care' request, which means it is a consent request. The form will be filled out by the patient (or their substitute decision maker) and includes their signature. 
+    Consent: This refers to documents that contain patient consent forms such as those authorization for healthcare providers and organizations to release patients medical records, patient consent to office medical/surgical procedures, or patients acknowledge/agree to governing law and jurisdiction agreement; this does not include the requests to transfer copy or original of the patients medical records to specific healthcare providers. These documents contain headings similar to the following phrases: Authorization to Release Medical Records, Patient Registration and Consent, Consent to Release Records, Authorization for Release to Third Party, Governing Law and Jurisdiction Agreement, Consent to Assessment Treatment & Release. These documents might also mention a 'Circle of Care' request, which means it is a consent request. The form will be filled out by the patient (or their substitute decision maker) and includes their signature. Documents containing the phrase "FIRST VISIT or CHANGE of INFORMATION (REGISTATION)" always refer to Consent category type.
 
     Pathology: This refers to documents related to detail findings from tissue biopsy, fluid sample obtained from body fluids, fine needle aspiration, PAP cytology, aspirates, tissue scrapings, vaginal smear, yeast or bacterial vaginosis, cancerous and precancerous conditions, microbiology, for analysis and diagnosis. This category includes reports from a pathologist. These reports include reports on the presence or absence of yeast or bacterial vaginosis. This category does not include reports from a Dermatologist.
 
