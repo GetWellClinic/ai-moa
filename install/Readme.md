@@ -158,7 +158,7 @@ Follow online instructions to install Docker and Docker Compose.
 
 Or
 
-Use our custom "install-docker.sh" scrip to install automatically:
+Use our custom "install-docker.sh" script to install automatically:
 ```
 sudo ./install-docker.sh
 ```
