@@ -1,7 +1,7 @@
 # Aimee AI (AI-MOA) #
 *Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
 *LICENSE: GNU Affero General Public License Version 3*<br />
-**Document Version 2025.02.02**
+**Document Version 2025.02.18**
 <p align="center">
   <img src="https://getwellclinic.ca/images/GetWellClinic/Logos-Icons/AimeeAI-pc.png" alt="Aimee AI">
 </p>
@@ -409,6 +409,20 @@ To exit/stop watching
 Crtl-C
 ```
 
+**AI-MOA Maintenance cron job**
+
+- AI-MOA may accumulate browser temp files in /tmp directory.
+- Depending on how a user updates or edits config files, misconfigured file permissions may cause unexpected errors when running the program with user prileges.
+
+Consider installing the "aimoa-cron-maintenance.sh" script in sudoer's crontab to run periodically to fix permissions and clear the /tmp directory files accumulated by AI-MOA.
+
+```sudo crontab -e```
+
+Add the following to the crontab file:
+```
+0 6 * * *	/opt/ai-moa/install/aimoa-cron-maintenance.sh
+```
+
 ### Start/Stop LLM Container Manually ###
 
 The AI LLM Container runs separately in docker as llm-container and caddy.
@@ -425,7 +439,7 @@ To stop the LLM Container manually:
 sudo ./stop-llm.sh
 ```
 
-## Troubleshooting ##
+## Troubleshooting and Tips ##
 
 ### Clinic workflow suggestions ###
 
