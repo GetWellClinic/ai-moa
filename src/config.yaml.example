@@ -20,7 +20,7 @@
 # ***
 
 # AI configuration for interacting with the AI-MOA service.
-# Version: 2025.02.02
+# Version: 2025.02.21
 
 ai:
   uri: https://localhost:3334/v1/chat/completions  # URI endpoint for AI model interactions.
@@ -28,33 +28,33 @@ ai:
 
 # AI-MOA document processor configuration.
 aimoa_document_processor:
-  type: o19  # Type of document processor being used, 'o19', 'o15' or 'local'.
+  type: o19  # Type of document processor being used. (ie. 'o19', 'o15' or 'local')
 
 # Chrome browser configuration for headless operation.
 chrome:
   options:
-    headless: true  # Whether to run Chrome in headless mode (without GUI). False means it will run with a GUI.
+    headless: true  # Whether to run Chrome in headless mode (without GUI). 'false' means it will run with a GUI.
 
 # Document processing configuration, including directories for input files.
 document_processor:
   local:
     input_directory: ../app/input  # Directory where input files for document processing are stored.
-  system_type: local  # Type of system, 'local'.
+  system_type: local  # Type of system. (ie 'local')
 
 # EMR (Electronic Medical Record) configuration for connecting to an EMR system.
 emr:
   base_url: http://127.0.0.1:8080/oscar  # Base URL for the EMR system.
-  verify-HTTPS: false
-  document_folder: pending  # Folder where pending documents to be processed are stored in o19.
-  incoming_folder: File  # Folder where incoming documents to be processed are stored in o19.
-  incoming_folder_queue: '1'  # Queue number for processing incoming files.
+  verify-HTTPS: false   # This flag allows for ignoring warnings for self-signed TLS/SSL certificates in a development environment.
+  document_folder: pending  # Folder where pending documents to be processed are stored in o19. (ie. 'pending', or 'incoming')
+  incoming_folder: Fax  # Folder where incoming documents to be processed are stored in o19. (ie. 'Fax', 'File', 'Mail', or 'Refile')
+  incoming_folder_queue: '1'  # Queue number for processing incoming files. (ie. '1', '2' etc.)
   password: passpwd  # Password for EMR login.
   pin: '123'  # PIN for EMR login.
-  system_type: o19  # Type of system, 'o19', 'o15'.
+  system_type: o19  # Type of system. (ie. 'o19', or 'o15')
   username: emr  # Username for EMR login.
 
 general_setting:
-  timeout: 300 # Timeout for request (POST and GET) to avoid indefinitely hanging requests.
+  timeout: 300 # Timeout in seconds for request (POST and GET) to avoid indefinitely hanging requests.
 
 # File processing configuration, defining allowed file extensions and directories for input/output.
 file_processing:
@@ -99,7 +99,7 @@ llm:
 
 # Lock configuration, to control access to shared resources.
 lock:
-  status: false  # Indicates whether a lock is active or not (false means no lock). If AI-MOA running but not processing, reset lock status to false.
+  status: false  # Indicates whether a lock is active or not (false means no lock). If AI-MOA running but not processing, reset lock status to 'false'.
 
 # Logging configuration, including file location, format, and log level.
 logging:
@@ -116,5 +116,5 @@ ocr:
 
 # Provider list configuration, for generating or managing provider data.
 provider_list:
-  output_file: ../config/provider_list.yaml  # Output file for storing the provider list.
-  template_file: ../config/template_providerlist.txt  # Template file for provider list formatting.
+  output_file: ../config/provider_list.yaml  # Config file for list of clinic providers that AI-MOA will recognize and tag. Manually edit and clean up extraneous providers in this generated list.
+  template_file: ../config/template_providerlist.txt  # Template file for Query By Template to extract sample provider list and output to 'output_file'.
