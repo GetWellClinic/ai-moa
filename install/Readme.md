@@ -1,7 +1,7 @@
 # Aimee AI (AI-MOA) #
 *Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
 *LICENSE: GNU Affero General Public License Version 3*<br />
-**Document Version 2025.02.02**
+**Document Version 2025.02.18**
 <p align="center">
   <img src="https://getwellclinic.ca/images/GetWellClinic/Logos-Icons/AimeeAI-pc.png" alt="Aimee AI">
 </p>
@@ -158,7 +158,7 @@ Follow online instructions to install Docker and Docker Compose.
 
 Or
 
-Use our custom "install-docker.sh" scrip to install automatically:
+Use our custom "install-docker.sh" script to install automatically:
 ```
 sudo ./install-docker.sh
 ```
@@ -409,6 +409,20 @@ To exit/stop watching
 Crtl-C
 ```
 
+**AI-MOA Maintenance cron job**
+
+- AI-MOA may accumulate browser temp files in /tmp directory.
+- Depending on how a user updates or edits config files, misconfigured file permissions may cause unexpected errors when running the program with user prileges.
+
+Consider installing the `aimoa-cron-maintenance.sh` script in sudoer's crontab to run periodically to fix permissions and clear the /tmp directory files accumulated by AI-MOA.
+
+`sudo crontab -e`
+
+Add the following to the crontab file:
+```
+0 6 * * *	/opt/ai-moa/install/aimoa-cron-maintenance.sh
+```
+
 ### Start/Stop LLM Container Manually ###
 
 The AI LLM Container runs separately in docker as llm-container and caddy.
@@ -425,11 +439,11 @@ To stop the LLM Container manually:
 sudo ./stop-llm.sh
 ```
 
-## Troubleshooting ##
+## Troubleshooting and Tips ##
 
 ### Clinic workflow suggestions ###
 
-AI-MOA is not 100% accurate in tagging documents to the correct patient. We recommend having a human medical office administrator review the tagged documents by AI-MOA daily for incorrect matches, and manually Refile the document to correct errors. A quick way to review tagged documents is to run a Search in InBox for All documents recently uploaded within a date range (ie. in the last day). The reviewer can use Rapid Review or Preview to review all the AI-MOA work. Pay attention to "Unassigned, Unassigned" documents; and also confirm that the patient name in the document corresponds to the correct demographic tagged in EMR. The reviewer can click "Acknowledge or Next" to confirm that it has been checked by a human. Any incorrect documents can be sent to Refile and manually corrected through the Incoming Docs document manager.
+AI-MOA is not 100% accurate in tagging documents to the correct patient. We recommend having a human medical office administrator act as `default_error_manager_id` to review the tagged documents by AI-MOA daily for incorrect matches, and manually Refile the document to correct errors. Unassigned or documents tagged to `default_unidentified_patient_tagging_id` will be also tagged to the medical office administrator (`default_error_manager_id`) to review in their InBox. A quick way to also review tagged documents is to run a Search in InBox for All documents recently uploaded within a date range (ie. in the last day). The reviewer can use Rapid Review or Preview to review all the AI-MOA work. Pay attention to "Unassigned, Unassigned" documents; and also confirm that the patient name in the document corresponds to the correct demographic tagged in EMR. The reviewer can click "Acknowledge or Next" to confirm that it has been checked by a human. Any incorrect documents can be sent to Refile and manually corrected through the Incoming Docs document manager.
 
 ### Uninstalling Aimee AI ###
 

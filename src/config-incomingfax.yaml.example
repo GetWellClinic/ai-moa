@@ -1,0 +1,120 @@
+# COPYRIGHT © 2024 by Spring Health Corporation <office(at)springhealth.org>
+# Toronto, Ontario, Canada
+# SUMMARY: This file is part of the Get Well Clinic's original "AI-MOA" project's collection of software,
+# documentation, and configuration files.
+# These programs, documentation, and configuration files are made available to you as open source
+# in the hopes that your clinic or organization may find it useful and improve your care to the public
+# by reducing administrative burden for your staff and service providers.
+# NO WARRANTY: This software and related documentation is provided "AS IS" and WITHOUT ANY WARRANTY of any kind;
+# and WITHOUT EXPRESS OR IMPLIED WARRANTY OF SUITABILITY, MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+# LICENSE: This software is licensed under the "GNU Affero General Public License Version 3".
+# Please see LICENSE file for full details. Or contact the Free Software Foundation for more details.
+# ***
+# NOTICE: We hope that you will consider contributing to our common source code repository so that
+# others may benefit from your shared work.
+# However, if you distribute this code or serve this application to users in modified form,
+# or as part of a derivative work, you are required to make your modified or derivative work
+# source code available under the same herein described license.
+# Please notify Spring Health Corp <office(at)springhealth.org> where your modified or derivative work
+# source code can be acquired publicly in its latest most up-to-date version, within one month.
+# ***
+
+# AI configuration for interacting with the AI-MOA service.
+# Version: 2025.02.21
+
+ai:
+  uri: https://localhost:3334/v1/chat/completions  # URI endpoint for AI model interactions.
+  verify-HTTPS: false
+
+# AI-MOA document processor configuration.
+aimoa_document_processor:
+  type: o19  # Type of document processor being used. (ie. 'o19', 'o15' or 'local')
+
+# Chrome browser configuration for headless operation.
+chrome:
+  options:
+    headless: true  # Whether to run Chrome in headless mode (without GUI). 'false' means it will run with a GUI.
+
+# Document processing configuration, including directories for input files.
+document_processor:
+  local:
+    input_directory: ../app/input  # Directory where input files for document processing are stored.
+  system_type: local  # Type of system. (ie 'local')
+
+# EMR (Electronic Medical Record) configuration for connecting to an EMR system.
+emr:
+  base_url: http://127.0.0.1:8080/oscar  # Base URL for the EMR system.
+  verify-HTTPS: false   # This flag allows for ignoring warnings for self-signed TLS/SSL certificates in a development environment.
+  document_folder: incoming  # Folder where pending documents to be processed are stored in o19. (ie. 'pending', or 'incoming')
+  incoming_folder: Fax  # Folder where incoming documents to be processed are stored in o19. (ie. 'Fax', 'File', 'Mail', or 'Refile')
+  incoming_folder_queue: '1'  # Queue number for processing incoming files. (ie. '1', '2' etc.)
+  password: passpwd  # Password for EMR login.
+  pin: '123'  # PIN for EMR login.
+  system_type: o19  # Type of system. (ie. 'o19', or 'o15')
+  username: emr  # Username for EMR login.
+
+general_setting:
+  timeout: 300 # Timeout in seconds for request (POST and GET) to avoid indefinitely hanging requests.
+
+# File processing configuration, defining allowed file extensions and directories for input/output.
+file_processing:
+  allowed_extensions:
+    - .pdf   # Allowed file extensions for processing.
+    - .jpg
+    - .png
+    - .tiff
+  incoming_retries: 0  # Number of retries for incoming files before giving up.
+  input_directory: ../app/input  # Directory for incoming files to be processed.
+  max_retries: 3  # Maximum retries for file processing before failure.
+  output_directory: ../app/output  # Directory where processed files are output.
+  pending_retries: 1  # Number of retries for the current file in processing.
+
+# Huey configuration for task scheduling and logging.
+huey:
+  always_eager: true  # If true, tasks will be executed immediately without waiting for the scheduled time.
+  console_level: INFO  # Log level for console output. (ie. INFO, DEBUG, WARN, ERROR, FATAL etc. )
+  file_level: INFO  # Log level for file output. (ie. INFO, DEBUG etc. )
+  name: IncomingDocs-Fax_queue  # Name of the task queue.
+  results: true  # If true, task results will be stored.
+  store_none: false  # Whether or not to store task results.
+  
+# Inbox configuration.
+inbox:
+  pending: 99999999  # Last processed file ID in the inbox, should be set to your last AI-MOA processed/completed file in the inbox.
+  incoming: '2125-01-01 00:00:00' # Timestamp for the last processed file for incoming documents folder, should follow this format and should be set to a value inorder to process files in incoming documents folder.
+
+# LLM (Large Language Model) configuration, including model parameters for AI interactions.
+llm:
+  character: Assistant  # Character or role the AI model will take (Assistant).
+  chat_template: '{{ bos_token }}{% for message in messages %}{% if (message[''role'']
+    == ''user'') != (loop.index0 % 2 == 0) %}{{ raise_exception(''Conversation roles
+    must alternate user/assistant/user/assistant...'') }}{% endif %}{% if message[''role'']
+    == ''user'' %}{{ ''[INST] '' + message[''content''] + '' [/INST]'' }}{% elif message[''role'']
+    == ''assistant'' %}{{ message[''content''] + eos_token}}{% else %}{{ raise_exception(''Only
+    user and assistant roles are supported!'') }}{% endif %}{% endfor %}'
+  model: /models/Mistral-7B-Instruct-v0.3.Q8_0.gguf  # Path to the model file being used.
+  temperature: 0.1  # Temperature for controlling the randomness of model responses.
+  top_p: 0.1  # Top-p sampling for controlling diversity of responses (related to nucleus sampling).
+  log_responses: false     # set to true to see LLM output in console
+
+# Lock configuration, to control access to shared resources.
+lock:
+  status: false  # Indicates whether a lock is active or not (false means no lock). If AI-MOA running but not processing, reset lock status to 'false'.
+
+# Logging configuration, including file location, format, and log level.
+logging:
+  console_level: INFO   # Log level for console output. (ie. INFO, DEBUG, WARN, ERROR, FATAL etc. )
+  file_level: INFO  # Log level for file output. (ie. INFO, DEBUG etc. )
+  filename: ../logs/workflow-incomingfax.log  # Log file location.
+  format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'  # Log format.
+
+# OCR (Optical Character Recognition) configuration, specifying the device and settings for document scanning.
+ocr:
+  device: cuda:0  # Device used for OCR processing.
+  enable_gpu: true  # Whether to enable GPU support for OCR (faster processing).
+  page_limit: 10  # Maximum number of pages to process in OCR; if the document exceeds this limit, additional pages will be ignored.
+
+# Provider list configuration, for generating or managing provider data.
+provider_list:
+  output_file: ../config/provider_list.yaml  # Config file for list of clinic providers that AI-MOA will recognize and tag. Manually edit and clean up extraneous providers in this generated list.
+  template_file: ../config/template_providerlist.txt  # Template file for Query By Template to extract sample provider list and output to 'output_file'.
