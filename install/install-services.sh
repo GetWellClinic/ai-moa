@@ -45,7 +45,7 @@ AIMOA=$(pwd)
 /usr/sbin/service ai-moa start
 /usr/sbin/service ai-moa-incomingfax start
 
-/bin/echo "ai-moa.service, aim-moa-incomingfax.service and llm-container.service has been installed as system services in /etc/systemd/system/"
+/bin/echo "ai-moa.service, ai-moa-incomingfax.service and llm-container.service has been installed as system services in /etc/systemd/system/"
 /bin/echo "AI-MOA will start automatically on system reboot !"
 /bin/echo ""
 # To stop services temporarily: 'sudo system ai-moa stop' , 'sudo system ai-moa-incomingfax stop', 'sudo system llm-container stop'

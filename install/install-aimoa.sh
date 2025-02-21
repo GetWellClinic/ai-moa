@@ -39,30 +39,30 @@ AIMOA=$(pwd)
 /bin/echo ""
 # Create the logs directory if it doesn't exist
 /bin/echo "Creating log directory..."
-/bin/mkdir -p $AIMOA/logs
+/bin/mkdir -p '$AIMOA/logs'
 
 # Create the static directory if it doesn't exist
 /bin/echo "Creating src/static directory..."
-/bin/mkdir -p $AIMOA/src/static
+/bin/mkdir -p '$AIMOA/src/static'
 
 # Create the config directory if it doesn't exit. For local configuration files.
 /bin/echo "Creating config directory"
-/bin/mkdir -p $AIMOA/config
+/bin/mkdir -p '$AIMOA/config'
 
 # Create the app directories if it doesn't exit. For local folder document processing.
 /bin/echo "Creating app directories"
-/bin/mkdir -p $AIMOA/app
-/bin/mkdir -p $AIMOA/app/input
-/bin/mkdir -p $AIMOA/app/output
+/bin/mkdir -p '$AIMOA/app'
+/bin/mkdir -p '$AIMOA/app/input'
+/bin/mkdir -p '$AIMOA/app/output'
 
 # Initialize permissions
-/bin/chmod g+rw $AIMOA/config -R
-/bin/chmod g+rw $AIMOA/app/ -R
-/bin/chmod g+rw $AIMOA/src/*
+/bin/chmod g+rw '$AIMOA/config' -R
+/bin/chmod g+rw '$AIMOA/app/' -R
+/bin/chmod g+rw '$AIMOA/src/*'
 
 # Create the llm-container/models directory if it doesn't exist
 /bin/echo "Creating llm-container/models directory..."
-/bin/mkdir -p $AIMOA/llm-container/models
+/bin/mkdir -p '$AIMOA/llm-container/models'
 
 # Backup config files
 /bin/echo "Backing up old config files..."
