@@ -33,9 +33,9 @@ healthcare team's administrative burden, so we can dedicate ourselves to the ver
 - NVIDIA RTX 4060 video card, 16 GB VRAM
 
 **Software**
-- Ubuntu Server LTS (ie. Ubuntu 22 LTS)
-- Python 3.10+ (pre-installed with Ubuntu 22 LTS)
-- gcc installed (pre-installed with Ubuntu 22 LTS)
+- Windows 10+
+- Windows Subsystem for Linux (WSL 2)
+- Python 3.10+
 - Git installed
 - NVIDIA video card drivers installed
 - NVIDIA Container Toolkit drivers installed
