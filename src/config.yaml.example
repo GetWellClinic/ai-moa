@@ -20,7 +20,7 @@
 # ***
 
 # AI configuration for interacting with the AI-MOA service.
-# Version: 2025.02.21
+# Version: 2025.02.22
 
 ai:
   uri: https://localhost:3334/v1/chat/completions  # URI endpoint for AI model interactions.
@@ -69,14 +69,14 @@ file_processing:
   output_directory: ../app/output  # Directory where processed files are output.
   pending_retries: 1  # Number of retries for the current file in processing.
 
-# Huey configuration for task scheduling and logging.
-huey:
-  always_eager: true  # If true, tasks will be executed immediately without waiting for the scheduled time.
-  console_level: INFO  # Log level for console output. (ie. INFO, DEBUG, WARN, ERROR, FATAL etc. )
-  file_level: INFO  # Log level for file output. (ie. INFO, DEBUG etc. )
-  name: workflow_queue  # Name of the task queue.
-  results: true  # If true, task results will be stored.
-  store_none: false  # Whether or not to store task results.
+# Huey configuration for task scheduling and logging. 
+# huey:
+#  always_eager: true  # If true, tasks will be executed immediately without waiting for the scheduled time.
+#  console_level: INFO  # Log level for console output. (ie. INFO, DEBUG, WARN, ERROR, FATAL etc. )
+#  file_level: INFO  # Log level for file output. (ie. INFO, DEBUG etc. )
+#  name: workflow_queue  # Name of the task queue.
+#  results: true  # If true, task results will be stored.
+#  store_none: false  # Whether or not to store task results.
   
 # Inbox configuration.
 inbox:
