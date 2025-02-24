@@ -183,17 +183,22 @@ If you want AI-MOA to start automatically on Windows startup, and run continuous
 
 Open "Windows Task Schedule" and create a new scheduled task with the following parameters:
 
+Create a Task: "LLM-Container"
+- Security Options: run task as an administrator account
+- Triggers: "At startup"
+- Actions: Program/script "C:\opt\ai-moa\windows\run-llm.bat"
+- Settings: Disable "Stop the task if it runs longer than"; Enable "Run task as soon as possible after a scheduled start is missed"; If the task fails, restart every "5 minutes" for "3" times; If the task is already running, then the following rule applies: "Do not start a new instance".
+
 Create a Task: "AI-MOA"
 - Security Options: run task as an administrator account
-- Triggers: "Daily" Task, that Recurs every "1" day, and in Advanced Settings: Repeat task every "1 hour" for a duration of "Indefinitely"
+- Triggers: "At startup"; Delay task for 30 seconds. 
 - Actions: Program/script "C:\opt\ai-moa\windows\run-aimoa.bat"
+- Settings: Disable "Stop the task if it runs longer than"; Enable "Run task as soon as possible after a scheduled start is missed"; If the task fails, restart every "5 minutes" for "3" times; Disable "Stop the task if it runs longer than"; If the task is already running, then the following rule applies: "Do not start a new instance".
 
-Creat a Task: "LLM-Container"
-- Security Options: run task as an administrator account
-- Triggers: On startup
-- Actions: Program/script "C:\opt\ai-moa\windows\run-llm.bat"
+Alternative: You can install AI-MOA "run-aimoa.bat" as a Windows Service (so it restarts if unexpected crashes). Consider https://nssm.cc/
 
-You may manually enable and start the above tasks in the Task Schedule, or reboot Windows to see if they start automatically.
+**To start AI-MOA, be sure to manually start LLM-Container and AI-MOA in Windows Task Scheduler, or reboot Windows to see if it starts automatically.**
+
 
 
 ## (Optional) Install a test EMR with OSCAR v.19 Community Edition ##
