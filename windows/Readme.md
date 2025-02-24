@@ -56,8 +56,11 @@ healthcare team's administrative burden, so we can dedicate ourselves to the ver
 Python, PyTorch, and CUDA support needs to tightly matched with versions that are compatible with each other. For example, Pytorch on Windows only support Python 3.9-3.12 (as of Feb 2025). Python 2.x is not supported.
 
 *Check Python, PyTorch, CUDA Toolkit version compatibility*
+
 https://pytorch.org/get-started/locally/
+
 *CUDA Toolkit Downloads, for your reference*
+
 https://developer.nvidia.com/cuda-downloads
 
 For example, a working combination is: Python 3.10, PyTorch 2.2, and CUDA 11.8
@@ -65,9 +68,11 @@ For example, a working combination is: Python 3.10, PyTorch 2.2, and CUDA 11.8
 AI-MOA was tested to work on Python 3.10. You may install higher versions of Python, but be sure that Pytorch is supported for that version and that there is also an NVIDIA CUDA Toolkit available for that version as well. You can install also multiple versions of Python on the same Windows, just reference the version you want to use when invoking a python script.
 
 Download an install the latest Python 3.10.x:
+
 https://www.python.org/downloads/windows/
-*Tip: Create a folder C:\Tools, and install Python in a subdirectory under Tools ie. C:\Tools\Python3.10*
-*This makes it easier to reference the full path of python.exe when using command line or adding it to Windows Task Scheduler.*
+
+*Tip: Create a folder C:\Tools, and install Python in a subdirectory under Tools ie. C:\Tools\Python3.10
+This makes it easier to reference the full path of python.exe when using command line or adding it to Windows Task Scheduler.*
 
 Be sure to add Python to your PATH in Windows Environment variables so that invoking the `python` command by command prompt anywhere will run a default Python without requiring to enter the full path of where Python is installed.
 
@@ -82,19 +87,23 @@ pip install virtualenv
 ### 3. Install Git for Windows ###
 
 Download and install Git for Windows:
+
 https://git-scm.com/downloads/win
 
 ### 4. Install Google Chrome ###
 
 Download and install Google Chrome:
+
 https://www.google.com/chrome
 
 ### 5. Update NVIDIA Graphics Card Drivers ###
 
 Be sure to update your NVIDIA Graphics Card Drivers:
+
 https://www.nvidia.com/en-in/drivers/nvidia-update/
 
 You may or may not need an NVIDIA CUDA Toolkit 11.8:
+
 https://developer.nvidia.com/cuda-11-8-0-download-archive
 
 Check the status of your NVIDIA graphics card:
@@ -120,11 +129,13 @@ You should see something like this:
 ### 6. Install Docker and Docker Compose for Windows ###
 
 Download and install Docker:
+
 https://docs.docker.com/desktop/setup/install/windows-install/
 
 ### 7. Enable Docker Desktop for Windows to support WSL 2 (Windows Subsystem for Linux) GPU Paravirtualization (GPU-PV) on NVIDIA graphics cards ###
 
 Read these instructions and install Windows Subsystem for Linux (WSL 2) and enable WSL2 backend support in Docker Desktop:
+
 https://docs.docker.com/desktop/features/gpu/
 
 ### 8. Clone the AI-MOA repository from Github ###
@@ -147,7 +158,9 @@ dir
 ### 9. Install AI LLM Model for LLM Container ###
 
 Download the AI LLM from Huggingface and copy to `opt\aimoa\llm-container\models\` directory:
+
 https://huggingface.co/RichardErkhov/mistralai_-_Mistral-7B-Instruct-v0.3-gguf
+
 *(Choose the Q8 version "Mistral-7B-Instruct-v0.3.Q8_0.gguf")*
 
 Or you can execute this batch installation script to download and install the default AI Large Language Model for AI-MOA in LLM Container.
