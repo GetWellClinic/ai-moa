@@ -13,7 +13,7 @@
 #	Docker Compose installed
 #	NVIDIA Container Toolkit installed
 #	AI-MOA installed in preferably in /opt/ai-moa directory
-# 	Python 3.x installed
+# 	Python 3.10+ installed
 # 	Python package installed:
 #		pip
 #		virtualenv
