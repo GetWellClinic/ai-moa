@@ -21,7 +21,8 @@ if not exist %AIMOA%\llm-container\models mkdir %AIMOA%\llm-container\models
 cd %AIMOA%\llm-container\models
 REM Download default AI LLM model
 echo Downloading default AI-MOA LLM model from Hugging Face...
-bitsadmin.exe /transfer "Download-LLM" /priority FOREGROUND "https://huggingface.co/RichardErkhov/mistralai_-_Mistral-7B-Instruct-v0.3-gguf/resolve/main/Mistral-7B-Instruct-v0.3.Q8_0.gguf" "$AIMOA\llm-container\models\"
+REM bitsadmin.exe /transfer "Download-LLM" /priority FOREGROUND "https://huggingface.co/RichardErkhov/mistralai_-_Mistral-7B-Instruct-v0.3-gguf/resolve/main/Mistral-7B-Instruct-v0.3.Q8_0.gguf" "$AIMOA\llm-container\models\"
+powershell -Command "Invoke-WebRequest -Uri 'https://huggingface.co/RichardErkhov/mistralai_-_Mistral-7B-Instruct-v0.3-gguf/resolve/main/Mistral-7B-Instruct-v0.3.Q8_0.gguf' -OutFile '%AIMOA%\llm-container\models\Mistral-7B-Instruct-v0.3.Q8_0.gguf'"
 
 REM Specify the environmental variables for model name for use by LLM container and AI-MOA
 echo Using the following LLM model...
