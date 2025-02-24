@@ -67,7 +67,7 @@ For example, a working combination is: Python 3.10, PyTorch 2.2, and CUDA 11.8
 
 AI-MOA was tested to work on Python 3.10. You may install higher versions of Python, but be sure that Pytorch is supported for that version and that there is also an NVIDIA CUDA Toolkit available for that version as well. You can install also multiple versions of Python on the same Windows, just reference the version you want to use when invoking a python script.
 
-Download an install the latest Python 3.10.x:
+Download and install the latest Python 3.10.x:
 
 https://www.python.org/downloads/windows/
 
