@@ -49,7 +49,7 @@ healthcare team's administrative burden, so we can dedicate ourselves to the ver
 - Hugging Face [https://huggingface.co](https://huggingface.co) user account and personal private access token generated (Optional)
 
 
-## Installation (for Windows)##
+## Installation (for Windows) ##
 
 ### 1. Install Python 3.10+ ###
 
