@@ -191,7 +191,7 @@ Create a Task: "AI-MOA"
 Creat a Task: "LLM-Container"
 - Security Options: run task as an administrator account
 - Triggers: On startup
-- Actions: Program/script "C:\opt\ai-moa\windpws\run-llm.bat"
+- Actions: Program/script "C:\opt\ai-moa\windows\run-llm.bat"
 
 You may manually enable and start the above tasks in the Task Schedule, or reboot Windows to see if they start automatically.
 
@@ -356,6 +356,23 @@ AI-MOA is developed for identify and tagging according to certain Document Categ
 ### Clinic workflow suggestions ###
 
 AI-MOA is not 100% accurate in tagging documents to the correct patient. We recommend having a human medical office administrator act as `default_error_manager_id` to review the tagged documents by AI-MOA daily for incorrect matches, and manually Refile the document to correct errors. Unassigned or documents tagged to `default_unidentified_patient_tagging_id` will be also tagged to the medical office administrator (`default_error_manager_id`) to review in their InBox. A quick way to also review tagged documents is to run a Search in InBox for All documents recently uploaded within a date range (ie. in the last day). The reviewer can use Rapid Review or Preview to review all the AI-MOA work. Pay attention to "Unassigned, Unassigned" documents; and also confirm that the patient name in the document corresponds to the correct demographic tagged in EMR. The reviewer can click "Acknowledge or Next" to confirm that it has been checked by a human. Any incorrect documents can be sent to Refile and manually corrected through the Incoming Docs document manager.
+
+### Manually Starting/Stopping Aimee AI ###
+
+If AI-MOA is not running automatically as a Windows Task Scheduler, you can start and stop AI-MOA manually:
+
+To Start Aimee AI:
+```
+cd windows
+start-llm.bat
+run-aimoa.bat
+(Press Ctrl-C to stop AI-MOA)
+```
+
+To Stop AI LLM Container:
+```
+stop-llm.bat
+```
 
 
 ## Special Thanks ##
