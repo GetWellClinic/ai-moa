@@ -41,7 +41,7 @@ if not exist %AIMOA%\llm-container\models mkdir %AIMOA%\llm-container\models
 
 REM Create config files from template
 copy src\config.yaml.example config\config.yaml
-copy src\config-incomfingfax.yaml.example config\config-incomingfax.yaml
+copy src\config-incomingfax.yaml.example config\config-incomingfax.yaml
 copy src\workflow-config.yaml.example config\workflow-config.yaml
 copy src\workflow-incomingfax.yaml.example config\workflow-incomingfax.yaml
 copy src\template_providerlist.txt config\

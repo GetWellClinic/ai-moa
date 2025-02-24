@@ -15,8 +15,8 @@ echo Currently specifying the following as the base directory for AI-MOA...
 echo %AIMOA%
 
 echo This 'run-llm.bat' is for starting AI LLM Container by command line.
-echo You do not need to run this if you have installed AI LLM Container as a system service.
-echo	( Hint: To install AI LML Container as a system service...)
+echo You do not need to run this if you have installed AI LLM Container in Windows Task Scheduler.
+echo	( Hint: You can start scheduled tasks in Windows Task Scheduler...)
 timeout /t 3
 
 REM SPECIFY LLM Model to be used with AI-MOA:
