@@ -161,6 +161,7 @@ class Workflow:
                 self.logger.error(f"An error occurred: {e}")
                 self.logger.info(f"Stopping workflow task, processing Document No. {self.file_name}")
                 self.logger.error("Exiting from workflow execution.")
+                self.session.close()
                 return
             except SystemExit as e:
                 self.config.update_lock_status(False)
@@ -168,6 +169,7 @@ class Workflow:
                 self.logger.error(f"An error occurred: {e}")
                 self.logger.info(f"Stopping workflow task, processing Document No. {self.file_name}")
                 self.logger.error("Exiting from workflow execution.")
+                self.session.close()
                 return
             
             if result:
@@ -177,6 +179,7 @@ class Workflow:
             
             if next_step_name == 'exit':
                 self.logger.info("Workflow execution completed")
+                self.session.close()
                 return
 
             # Find the index of the step to pop
@@ -192,4 +195,5 @@ class Workflow:
             
             current_step = next((step for step in self.steps if step['name'] == next_step_name), None)
         
+        self.session.close()
         self.logger.info("Workflow execution completed")
