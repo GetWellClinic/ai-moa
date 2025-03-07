@@ -1,4 +1,7 @@
 # AI-MOA (AI-powered Medical Office Assistant)
+*Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
+*LICENSE: GNU Affero General Public License Version 3*<br />
+**Document Version 2025.03.07**
 
 AI-MOA is an advanced, AI-powered Medical Office Assistant designed to automate various tasks in a medical office setting. It focuses on document processing, workflow management, and seamless integration with the O19 Electronic Medical Record (EMR) system.
 
@@ -67,7 +70,9 @@ ai-moa/
 
 ## Setup and Installation
 
-Please refer to the [install/Readme.md](install/Readme.md) for a **Complete Packaged Installation of Aimee AI**.
+For Linux installation, please refer to the [install/Readme.md](install/Readme.md) for a **Complete Packaged Installation of Aimee AI**.
+
+For Windows installation, please refer to the [windows/Readme.md](windows/Readme.md) for guidance.
 
 The following is a brief example of the installation steps:
 
