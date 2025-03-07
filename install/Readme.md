@@ -24,13 +24,13 @@ healthcare team's administrative burden, so we can dedicate ourselves to the ver
 
 *Minimum*
 - 15 GB disk space
-- 24 GB RAM memory
+- 16 GB RAM system memory
 - NVIDIA RTX video card, minimum 12 GB VRAM
 
 *Recommended*
 - 50 GB hard drive space
-- 32 GB RAM memory
-- NVIDIA RTX 4060 video card, 16 GB VRAM
+- 24 GB RAM system memory
+- NVIDIA RTX 4060Ti video card, 16 GB VRAM
 
 **Software**
 - Ubuntu Server LTS (ie. Ubuntu 22 LTS)
