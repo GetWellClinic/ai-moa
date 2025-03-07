@@ -2,7 +2,7 @@
 ## Linux Installation ##
 *Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
 *LICENSE: GNU Affero General Public License Version 3*<br />
-**Document Version 2025.02.24**
+**Document Version 2025.03.07**
 <p align="center">
   <img src="https://getwellclinic.ca/images/GetWellClinic/Logos-Icons/AimeeAI-pc.png" alt="Aimee AI">
 </p>
@@ -453,7 +453,11 @@ sudo ./stop-llm.sh
 
 ### Clinic workflow suggestions ###
 
-AI-MOA is not 100% accurate in tagging documents to the correct patient. We recommend having a human medical office administrator act as `default_error_manager_id` to review the tagged documents by AI-MOA daily for incorrect matches, and manually Refile the document to correct errors. Unassigned or documents tagged to `default_unidentified_patient_tagging_id` will be also tagged to the medical office administrator (`default_error_manager_id`) to review in their InBox. A quick way to also review tagged documents is to run a Search in InBox for All documents recently uploaded within a date range (ie. in the last day). The reviewer can use Rapid Review or Preview to review all the AI-MOA work. Pay attention to "Unassigned, Unassigned" documents; and also confirm that the patient name in the document corresponds to the correct demographic tagged in EMR. The reviewer can click "Acknowledge or Next" to confirm that it has been checked by a human. Any incorrect documents can be sent to Refile and manually corrected through the Incoming Docs document manager.
+AI-MOA is not 100% accurate in tagging documents to the correct patient.
+We recommend having a human medical office administrator act as `default_error_manager_id` to review the tagged documents by AI-MOA daily for incorrect matches, and manually Refile the document to correct errors.
+Unassigned or documents tagged to `default_unidentified_patient_tagging_id` will be also tagged to the medical office administrator (`default_error_manager_id`) to review in their InBox.
+A quick way to also review tagged documents is to run a Search in InBox for All documents recently uploaded within a date range (ie. in the last day). The reviewer can use Rapid Review or Preview to review all the AI-MOA work. Pay attention to "Unassigned, Unassigned" documents; and also confirm that the patient name in the document corresponds to the correct demographic tagged in EMR. The reviewer can click "Acknowledge or Next" to confirm that it has been checked by a human.
+Any incorrect documents can be sent to Refile and manually corrected through the Incoming Docs document manager.
 
 ### Uninstalling Aimee AI ###
 
@@ -494,6 +498,17 @@ Restart the AI-MOA service
 ```
 sudo service ai-moa start
 ```
+
+### AI-MOA is able to log-in but times out when attempting to retrieve Pending documents in EMR ###
+
+This is sometimes caused by a delay in retrieving too many "Active" documents in the Pending queue. You can check how many documents have not been acknowledged yet in "InBox -> Pending Docs -> Default queue".
+To reduce the time for the EMR website to load the list of documents, you can increase the speed of the EMR (increase CPU, increase memory), or you can File/Acknowledge all the stale documents in Pending Docs.
+A fast way of bulk setting all stale documents to "Inactive" is through the database. If you have access to the database, you can run these commands:
+```
+SELECT * FROM queue_document_link WHERE status="A";
+UPDATE queue_document_link SET status="I" WHERE status="A" and document_id<######;
+```
+
 
 
 ## Special Thanks ##
