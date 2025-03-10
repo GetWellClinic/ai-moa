@@ -2,7 +2,7 @@
 ## Linux Installation ##
 *Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
 *LICENSE: GNU Affero General Public License Version 3*<br />
-**Document Version 2025.03.07**
+**Document Version 2025.03.10**
 <p align="center">
   <img src="https://getwellclinic.ca/images/GetWellClinic/Logos-Icons/AimeeAI-pc.png" alt="Aimee AI">
 </p>
@@ -201,7 +201,8 @@ sudo usermod -a -G aimoa {username}
 This optional step, installs *Aimee AI* as a system service that automatically starts at system startup/reboot.
 If you install this option, both the LLM Container and AI-MOA will start in the background and keep running.
 
-Install "Aimee AI" as a system service
+Install "Aimee AI" as a system service.
+*This will install ../install/services/ai-moa.service and ../install/services/ai-moa-incomingfax.service as a system service in /etc/systemd/system/*
 ```
 sudo ./install-services.sh
 ```
@@ -375,30 +376,35 @@ If AI-MOA: Aimee AI has been installed as a service, ensure that the LLM Contain
 ```
 sudo service llm-container status
 sudo service ai-moa status
+sudo service ai-moa-incomingfax status
 ```
 To start the services:
 ```
 sudo service llm-container start
 sudo service ai-moa start
+sudo service ai-moa-incomingfax start
 ```
 To stop the services:
 ```
 sudo service llm-container stop
 sudo service ai-moa stop
+sudo service ai-moa-incomingfax stop
 ```
 
 ### Running *Aimee AI* manually by command line ###
 
 You can run *Aimee AI* manually start/stop with command line.
 
-Stop the Aimee AI system service (ai-moa.service)
+Stop the Aimee AI system service (ai-moa.service, ai-moa-incomingfax.service)
 ```
 sudo service ai-moa stop
+sudo service ai-moa-incomingfax stop
 ```
 
 Check Aimee AI system status
 ```
-sudo service status
+sudo service ai-moa status
+sudo service ai-moa-incomingfax status
 ```
 
 Start *Aimee AI* manually
@@ -414,9 +420,10 @@ Ctrl-C
 You can also watch realtime logs of AI-MOA.
 ```
 ./watch-aimoa-logs.sh
+./watch-aimoa-incomingfax-logs.sh
 
 To exit/stop watching
-Crtl-C
+Ctrl-C
 ```
 
 **AI-MOA Maintenance cron job**
@@ -482,11 +489,13 @@ This may happen because of a file lock on config.yaml
 Stop AI-MOA first before editing the config.yaml file
 ```
 sudo service ai-moa stop
+sudo service ai-moa-incomingfax stop
 ```
 
 Edit config.yaml and remove file lock by setting "lock:status:false"
 ```
 sudo nano ../config/config.yaml
+sudo nano ../config/config-incomingfax.yaml
 ```
 Change setting to "false"
 ```
@@ -497,6 +506,7 @@ lock:
 Restart the AI-MOA service
 ```
 sudo service ai-moa start
+sudo service ai-moa-incomingfax start
 ```
 
 ### AI-MOA is able to log-in but times out when attempting to retrieve Pending documents in EMR ###
