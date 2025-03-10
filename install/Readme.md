@@ -423,7 +423,7 @@ You can also watch realtime logs of AI-MOA.
 ./watch-aimoa-incomingfax-logs.sh
 
 To exit/stop watching
-Crtl-C
+Ctrl-C
 ```
 
 **AI-MOA Maintenance cron job**
