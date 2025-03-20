@@ -114,6 +114,8 @@ class Workflow:
         self.get_patient_Html_Common = patient.get_patient_Html_Common
         self.convert_date = patient.convert_date
         self.get_patient_Html = patient.get_patient_Html
+        self.compare_demographic_results = patient.compare_demographic_results
+        self.decode_json = patient.decode_json
 
 
 

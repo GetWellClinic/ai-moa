@@ -46,7 +46,7 @@ def get_patient_name(self):
     """
     prompt = f"\n{self.ocr_text}.\n" + self.ai_prompts.get('get_patient_name', '')
     text = self.query_prompt(self,prompt)[1]
-    query = text
+    query = text.lower()
 
     type_of_query = "search_name"
 
@@ -59,6 +59,11 @@ def get_patient_name(self):
     if len(parts) > 1:
         query = parts[1]
 
+    pattern = r'\bnot provided\b.*?[.!?]'
+    match = re.search(pattern, query)
+    if match:
+        return False
+
 
     pattern = r'\bfull name of the patient\b.*?[.!?]'
     match = re.search(pattern, query)
@@ -67,11 +72,7 @@ def get_patient_name(self):
 
     if query:
 
-        if '.' in query:
-            query = query.replace('.', '')
-
-        if ',' in query:
-            query = query.replace(',', '')
+        query = re.sub(r'[.,]', '', query)
 
         parts = query.split(' is ')
         if len(parts) > 1:
@@ -83,16 +84,25 @@ def get_patient_name(self):
             return False
 
         all_combinations = list(itertools.permutations(name_parts))
-        formatted_combinations = [f"%{combo[0]}%,%{'%'.join(combo[1:])}%" for combo in all_combinations]
+        formatted_combinations = [f"%{combo[0][:3]}%,%{combo[1][:5]}%" 
+                                for combo in all_combinations 
+                                if len(combo[0]) >= 2 and len(combo[1]) >= 3]
+
+        # Initialize an empty string to store all the table results
+        all_tables = ""
 
         for combo in formatted_combinations:
             table = self.get_patient_Html(self,type_of_query,combo)
 
             if table:
-                self.config.set_shared_state('type_of_query',type_of_query)
-                self.config.set_shared_state('type_of_query_table',str(table))
-                return True,str(table)
+                all_tables += str(table)
 
+
+        if all_tables:
+            self.config.set_shared_state('type_of_query',type_of_query)
+            self.config.set_shared_state('type_of_query_table',all_tables)
+            return True,all_tables
+    
     return False
 
 
@@ -114,7 +124,7 @@ def get_patient_dob(self):
     """
     prompt = f"\n{self.ocr_text}.\n" + self.ai_prompts.get('get_patient_dob', '')
     text = self.query_prompt(self,prompt)[1]
-    query = text
+    query = text.lower()
 
     type_of_query = "search_dob"
 
@@ -136,7 +146,28 @@ def get_patient_dob(self):
         query = matchText.group()
         query = self.convert_date(self,query)
 
-    return self.get_patient_Html_Common(self,query,type_of_query)
+    # Splitting the query
+    try:
+        year, month, day = query.split('-')
+    except ValueError:
+        self.logger.error(f"Error: The query '{query}' is not in the expected 'YYYY-MM-DD' format.")
+        return False
+
+    formatted_dates = [f"{year}-{month}-{day}", f"{year}-{day}-{month}"]
+    
+    responses = []
+
+    for date in formatted_dates:
+        result, table = self.get_patient_Html_Common(self,date,type_of_query)
+        if result:
+            responses.append(table)
+
+    if responses:
+        response_str = "\n".join(responses)
+        self.config.set_shared_state('type_of_query_table', response_str)
+        return True, response_str
+
+    return False
 
 
 
@@ -158,7 +189,7 @@ def get_patient_hin(self):
     """
     prompt = f"\n{self.ocr_text}.\n" + self.ai_prompts.get('get_patient_hin', '')
     text = self.query_prompt(self,prompt)[1]
-    query = text
+    query = text.lower()
 
     type_of_query = "search_hin"
 
@@ -172,7 +203,13 @@ def get_patient_hin(self):
     # Remove leading and trailing letters
     query = re.sub(r'^[A-Za-z]+|[A-Za-z]+$', '', query)
 
-    return self.get_patient_Html_Common(self,query,type_of_query)
+    search_match = re.search(re.escape(query), self.ocr_text)
+    
+    if search_match:
+        return self.get_patient_Html_Common(self,query,type_of_query)
+
+    return False
+
 
 
 
@@ -193,11 +230,7 @@ def get_patient_Html_Common(self, query, type_of_query):
         >>> print(result)
         (True, '<html_table>')  # if a matching patient record is found
     """
-    if '.' in query:
-        query = query.replace('.', '')
-
-    if ',' in query:
-        query = query.replace(',', '')
+    query = re.sub(r'[.,]', '', query)
 
     table = self.get_patient_Html(self,type_of_query,query)
 
@@ -206,7 +239,7 @@ def get_patient_Html_Common(self, query, type_of_query):
         self.config.set_shared_state('type_of_query_table',str(table))
         return True,str(table)
     else:
-        return False
+        return False, ''
 
 
 
@@ -378,7 +411,14 @@ def filter_results(self):
     table = self.config.get_shared_state('type_of_query_table')
     if type_of_query is not None:
         prompt = f"\n{table}.\n{self.ocr_text}.\n" + self.ai_prompts.get('get_patient_result_filter', '')
-        text = self.query_prompt(self,prompt)[1]
+        
+        result = self.query_prompt(self, prompt)
+        
+        if isinstance(result, bool):
+            return False
+
+        text = result[1]
+
         match = re.search(r'```json\n(.*?)```', text, re.DOTALL)
 
         if match:
@@ -470,3 +510,88 @@ def verify_demographic_number(self):
     self.logger.info(f"Demographic number doesn't exists in the system.")
 
     return False
+
+
+def compare_demographic_results(self):
+    """
+    Compares the demographic data (DOB, Name, and HIN) to determine if they match.
+
+    This method retrieves the demographic data from the shared state, decodes it, 
+    and compares the demographic numbers (demographicNo) across the different data types.
+    The function returns `True` if any combination of the data matches, and sets 
+    the shared state 'filter_results' with the matching data.
+
+    Returns:
+        bool: True if demographic numbers match, False otherwise.
+        dict or None: The matching demographic data or None if no match found.
+    """
+    data_dob = self.config.get_shared_state('search_dobfilter')
+    data_name = self.config.get_shared_state('search_namefilter')
+    data_hin = self.config.get_shared_state('search_hinfilter')
+
+    data_dob = self.decode_json(self, data_dob, "dob")
+    data_name = self.decode_json(self, data_name, "name")
+    data_hin = self.decode_json(self, data_hin, "hin")
+
+
+    if not data_dob and not data_name and not data_hin:
+        self.logger.info(f"Demographic data not available.")
+        return False
+
+    # Check if all three demographic numbers match
+    if data_dob is not None and data_name is not None and data_hin is not None:
+        if data_dob.get('demographicNo') == data_name.get('demographicNo') == data_hin.get('demographicNo'):
+            return True, data_dob
+    
+    # Check if two demographic numbers match
+    if data_dob is not None and data_name is not None:
+        if data_dob.get('demographicNo') == data_name.get('demographicNo'):
+            self.config.set_shared_state('filter_results', (True, data_dob))
+            return True, data_dob
+    
+    if data_name is not None and data_hin is not None:
+        if data_name.get('demographicNo') == data_hin.get('demographicNo'):
+            self.config.set_shared_state('filter_results', (True, data_name))
+            return True, data_name
+    
+    if data_dob is not None and data_hin is not None:
+        if data_dob.get('demographicNo') == data_hin.get('demographicNo'):
+            self.config.set_shared_state('filter_results', (True, data_dob))
+            return True, data_dob
+
+    if data_hin is not None:
+        self.config.set_shared_state('filter_results', (True, data_hin))
+        return True, data_hin
+
+    if data_name is not None:
+        self.config.set_shared_state('filter_results', (True, data_name))
+        return True, data_name
+
+    if data_dob is not None:
+        self.config.set_shared_state('filter_results', (True, data_dob))
+        return True, data_dob
+
+    return False
+
+
+
+def decode_json(self, data, label):
+    """
+    Attempts to decode a JSON string into a Python object.
+
+    Args:
+        data (str): The JSON string to decode.
+        label (str): A label used for logging, indicating which data is being processed.
+
+    Returns:
+        object or None: Returns the decoded Python object if successful, or None if an error occurs.
+        
+    Logs:
+        If decoding fails, an error is logged with the provided label and error details.
+    """
+    try:
+        if data:
+            return json.loads(data)
+    except json.JSONDecodeError as e:
+        self.logger.error(f"JSON decoding error for {label}: {e}")
+    return None
