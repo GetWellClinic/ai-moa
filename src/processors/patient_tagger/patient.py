@@ -73,6 +73,7 @@ def get_patient_name(self):
     if query:
 
         query = re.sub(r'[.,]', '', query)
+        query = re.sub(r'[-]', ' ', query)
 
         parts = query.split(' is ')
         if len(parts) > 1:
@@ -84,7 +85,7 @@ def get_patient_name(self):
             return False
 
         all_combinations = list(itertools.permutations(name_parts))
-        formatted_combinations = [f"%{combo[0][:3]}%,%{combo[1][:5]}%" 
+        formatted_combinations = [f"%{combo[0][:4]}%,%{combo[1][:5]}%" 
                                 for combo in all_combinations 
                                 if len(combo[0]) >= 2 and len(combo[1]) >= 3]
 
@@ -468,48 +469,78 @@ def unidentified_patients(self):
 
 def verify_demographic_number(self):
     """
-    Verifies if the demographic number exists in the system by searching for it
-    in a specific table in the HTML.
+    Verify if the demographic number exists in the system.
 
-    This method extracts the demographic number from a shared state, decodes
-    the JSON data, constructs a regex pattern, and checks if the demographic
-    number exists in the table retrieved by `get_patient_Html`.
+    This method retrieves the demographic number from the shared state, 
+    decodes the JSON data, and verifies its existence using `verify_demographic_data`.
 
     Returns:
-        bool: True if the demographic number is found in the system, False otherwise.
-        str: The query used to search, in case the demographic number is found.
-    
+        tuple:
+            - bool: True if the demographic number is found, False otherwise.
+            - str: The demographic number if found, otherwise an empty string.
+
     Logs:
         - Logs a success message if the demographic number is verified.
         - Logs an error if there is a JSON decoding issue.
-        - Logs a message if the demographic number doesn't exist in the system.
+        - Logs a message if the demographic number does not exist in the system.
     """
-    data = self.config.get_shared_state('filter_results')[1]
+    data = self.decode_json(self, self.config.get_shared_state('filter_results')[1], "dob")
 
-    try:
-        data = json.loads(data)
-    except json.JSONDecodeError as e:
-        self.logger.error(f"JSON decoding error: {e}")
+    if not data:
         return False
 
+    return self.verify_demographic_data(self, data)
+
+def verify_demographic_data(self, data):
+    """
+    Verify the presence of a patient's demographic data in the system.
+
+    This function extracts demographic details (number, name, and date of birth) from the provided 
+    data dictionary and checks if they exist in the patient HTML table retrieved from the system.
+
+    Args:
+        data (dict): A dictionary containing patient demographic information with keys:
+            - 'demographicNo' (str): The demographic number.
+            - 'formattedName' (str): The formatted name.
+            - 'formattedDob' (str): The formatted date of birth.
+
+    Returns:
+        tuple:
+            - (bool): `True` if all demographic details are found in the system, otherwise `False`.
+            - (str): The demographic number if found, else an empty string.
+
+    Logs:
+        - "Verified demographic number in the system." if all details match.
+        - "Demographic number doesn't exist in the system." if any detail is missing.
+    """
+
     # Extract values safely using get()
-    query = data.get('demographicNo', '')
+    demographic_no = data.get('demographicNo', '')
+    name = data.get('formattedName', '')
+    dob = data.get('formattedDob', '')
 
     type_of_query = "search_demographic_no"
 
-    table = self.get_patient_Html(self,type_of_query,query)
+    table = self.get_patient_Html(self,type_of_query,demographic_no)
 
-    pattern = r"\bdemographic_no=" + str(query) + r"&\b"
-    compiled_pattern = re.compile(pattern)
+    # Compile patterns once
+    demographic_pattern = re.compile(rf"\bdemographic_no={demographic_no}&\b")
+    name_pattern = re.compile(rf"<td\s+class=\"name\"\s*>{re.escape(name)}</td>")
+    dob_pattern = re.compile(rf"<td\s+class=\"dob\"\s*>{re.escape(dob)}</td>")
+
 
     if table:
-        if compiled_pattern.search(str(table)):
+        has_demographic_no = demographic_pattern.search(str(table))
+        has_name_td = name_pattern.search(str(table))
+        has_dob_td = dob_pattern.search(str(table))
+        if has_demographic_no and has_name_td and dob_pattern:
             self.logger.info(f"Verified demographic number in the system.")
-            return True,query
+            return True
     
     self.logger.info(f"Demographic number doesn't exists in the system.")
 
     return False
+
 
 
 def compare_demographic_results(self):
@@ -533,6 +564,15 @@ def compare_demographic_results(self):
     data_name = self.decode_json(self, data_name, "name")
     data_hin = self.decode_json(self, data_hin, "hin")
 
+    if data_dob is not None and not self.verify_demographic_data(self, data_dob):
+        data_dob = None
+
+    if data_name is not None and not self.verify_demographic_data(self, data_name):
+        data_name = None
+
+    if data_hin is not None and not self.verify_demographic_data(self, data_hin):
+        data_hin = None
+
 
     if not data_dob and not data_name and not data_hin:
         self.logger.info(f"Demographic data not available.")
@@ -541,38 +581,84 @@ def compare_demographic_results(self):
     # Check if all three demographic numbers match
     if data_dob is not None and data_name is not None and data_hin is not None:
         if data_dob.get('demographicNo') == data_name.get('demographicNo') == data_hin.get('demographicNo'):
+            self.logger.info("Match (all three) found when comparing demographic number.")
             return True, data_dob
     
     # Check if two demographic numbers match
     if data_dob is not None and data_name is not None:
         if data_dob.get('demographicNo') == data_name.get('demographicNo'):
-            self.config.set_shared_state('filter_results', (True, data_dob))
-            return True, data_dob
+            self.config.set_shared_state('filter_results', (True, json.dumps(data_dob)))
+            self.logger.info("Match (dob and name) found when comparing filter result demographic number.")
+            return True, json.dumps(data_dob)
     
     if data_name is not None and data_hin is not None:
         if data_name.get('demographicNo') == data_hin.get('demographicNo'):
-            self.config.set_shared_state('filter_results', (True, data_name))
-            return True, data_name
+            self.config.set_shared_state('filter_results', (True, json.dumps(data_name)))
+            self.logger.info("Match (name and hin) found when comparing filter result demographic number.")
+            return True, json.dumps(data_name)
     
     if data_dob is not None and data_hin is not None:
         if data_dob.get('demographicNo') == data_hin.get('demographicNo'):
-            self.config.set_shared_state('filter_results', (True, data_dob))
-            return True, data_dob
+            self.config.set_shared_state('filter_results', (True, json.dumps(data_dob)))
+            self.logger.info("Match (dob and hin) found when comparing filter result demographic number.")
+            return True, json.dumps(data_dob)
 
     if data_hin is not None:
-        self.config.set_shared_state('filter_results', (True, data_hin))
-        return True, data_hin
+        result, matched_data = self.compare_name_with_ocr(self,data_hin)
+        if result:
+            return result, matched_data
 
     if data_name is not None:
-        self.config.set_shared_state('filter_results', (True, data_name))
-        return True, data_name
+        result, matched_data = self.compare_name_with_ocr(self,data_name)
+        if result:
+            return result, matched_data
 
     if data_dob is not None:
-        self.config.set_shared_state('filter_results', (True, data_dob))
-        return True, data_dob
+        result, matched_data = self.compare_name_with_ocr(self,data_dob)
+        if result:
+            return result, matched_data
 
     return False
 
+def compare_name_with_ocr(self, data):
+    """
+    Function to compare the formattedName from the provided data with the OCR text.
+    
+    Args:
+        data (dict): The data dictionary containing 'formattedName'.
+    
+    Returns:
+        tuple: (True, data) if a match is found, (False,) otherwise.
+    """
+    if data is not None:
+        name = data.get('formattedName')  # Get the 'formattedName' from the provided data
+        if name:
+            name = re.sub(r'[-,]', ' ', name)  # Replace '-' and ',' with spaces
+            name = re.sub(r'\s+', ' ', name)   # Normalize multiple spaces to a single space
+            name_parts = name.split()          # Split the name into parts
+            flag = False
+            
+
+            # Check if all part length
+            if all(len(part) <= 3 for part in name_parts):
+                # We check if every part in name_parts has a match in OCR
+                if all(re.search(r'\b' + re.escape(part) + r'\b', self.ocr_text, re.IGNORECASE) for part in name_parts):
+                    flag = True
+            else:
+                for part in name_parts:
+                    if len(part) > 3:  # Only check for parts longer than 3 characters
+                        match = re.search(r'\b' + re.escape(part) + r'\b', self.ocr_text, re.IGNORECASE)
+                        if match:
+                            flag = True
+            
+            if flag:
+                self.logger.info("Match found when comparing filter result name with document name.")
+                self.config.set_shared_state('filter_results', (True, json.dumps(data)))
+                return True, json.dumps(data)  # Return True if match is found, with data
+            else:
+                self.logger.info("No match found when comparing filter result name with document name.")
+    
+    return False, None
 
 
 def decode_json(self, data, label):

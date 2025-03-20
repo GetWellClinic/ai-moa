@@ -19,6 +19,6 @@
 # source code can be acquired publicly in its latest most up-to-date version, within one month.
 # ***
 
-from .patient import decode_json, compare_demographic_results, verify_demographic_number, get_patient_hin, get_patient_dob, get_patient_name, filter_results, get_patient_Html_Common, convert_date, get_patient_Html, unidentified_patients
+from .patient import verify_demographic_data, compare_name_with_ocr, decode_json, compare_demographic_results, verify_demographic_number, get_patient_hin, get_patient_dob, get_patient_name, filter_results, get_patient_Html_Common, convert_date, get_patient_Html, unidentified_patients
 
-__all__ = ['decode_json', 'compare_demographic_results', 'verify_demographic_number', 'get_patient_hin', 'get_patient_dob', 'get_patient_name', 'get_mrp_details', 'filter_results', 'get_patient_Html_Common', 'convert_date', 'get_patient_Html', 'unidentified_patients']
+__all__ = ['verify_demographic_data', 'compare_name_with_ocr', 'decode_json', 'compare_demographic_results', 'verify_demographic_number', 'get_patient_hin', 'get_patient_dob', 'get_patient_name', 'get_mrp_details', 'filter_results', 'get_patient_Html_Common', 'convert_date', 'get_patient_Html', 'unidentified_patients']
