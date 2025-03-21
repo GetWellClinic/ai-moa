@@ -135,7 +135,15 @@ def get_patient_dob(self):
     if match:
         query = match.group()
 
-    pattern = r'\d{4}-\d{2}-\d{2}'
+    # Regex pattern for DD-MM-YYYY
+    pattern = r'\b(\d{2})-(\d{2})-(\d{4})\b'
+    match = re.search(pattern, query)
+
+    if match:
+        day, month, year = match.groups()
+        query = f"{year}-{month}-{day}"
+
+    pattern = r'\b(\d{4})-(\d{2})-(\d{2})\b'
     match = re.search(pattern, query)
 
     patternText = r'\b(?:January|February|March|April|May|June|July|August|September|October|November|December) \d{1,2}, \d{4}\b'
@@ -484,7 +492,7 @@ def verify_demographic_number(self):
         - Logs an error if there is a JSON decoding issue.
         - Logs a message if the demographic number does not exist in the system.
     """
-    data = self.decode_json(self, self.config.get_shared_state('filter_results')[1], "dob")
+    data = self.decode_json(self, self.config.get_shared_state('filter_results')[1], "verify_demographic_number")
 
     if not data:
         return False
@@ -516,7 +524,6 @@ def verify_demographic_data(self, data):
 
     # Extract values safely using get()
     demographic_no = data.get('demographicNo', '')
-    name = data.get('formattedName', '')
     dob = data.get('formattedDob', '')
 
     type_of_query = "search_demographic_no"
@@ -525,19 +532,30 @@ def verify_demographic_data(self, data):
 
     # Compile patterns once
     demographic_pattern = re.compile(rf"\bdemographic_no={demographic_no}&\b")
-    name_pattern = re.compile(rf"<td\s+class=\"name\"\s*>{re.escape(name)}</td>")
     dob_pattern = re.compile(rf"<td\s+class=\"dob\"\s*>{re.escape(dob)}</td>")
+    name_pattern = r'<td class="name">(.*?)</td>'
 
 
     if table:
         has_demographic_no = demographic_pattern.search(str(table))
-        has_name_td = name_pattern.search(str(table))
         has_dob_td = dob_pattern.search(str(table))
-        if has_demographic_no and has_name_td and dob_pattern:
-            self.logger.info(f"Verified demographic number in the system.")
+        match = re.search(name_pattern, str(table))
+
+        if match:
+            text = match.group(1)
+        else:
+            return False
+
+        text = re.sub(r'[.,]', '', text)
+        text = re.sub(r'[-]', ' ', text)
+
+        result, matched_data = self.compare_name_with_text(self,data,text)
+
+        if has_demographic_no and has_dob_td and result:
+            self.logger.info(f"Verified demographic data with system data.")
             return True
     
-    self.logger.info(f"Demographic number doesn't exists in the system.")
+    self.logger.info(f"Demographic data doesn't exists or incorrect based on the system.")
 
     return False
 
@@ -575,7 +593,7 @@ def compare_demographic_results(self):
 
 
     if not data_dob and not data_name and not data_hin:
-        self.logger.info(f"Demographic data not available.")
+        self.logger.info(f"Demographic data not available or invalid.")
         return False
 
     # Check if all three demographic numbers match
@@ -604,23 +622,23 @@ def compare_demographic_results(self):
             return True, json.dumps(data_dob)
 
     if data_hin is not None:
-        result, matched_data = self.compare_name_with_ocr(self,data_hin)
-        if result:
-            return result, matched_data
-
-    if data_name is not None:
-        result, matched_data = self.compare_name_with_ocr(self,data_name)
+        result, matched_data = self.compare_name_with_text(self,data_hin,self.ocr_text)
         if result:
             return result, matched_data
 
     if data_dob is not None:
-        result, matched_data = self.compare_name_with_ocr(self,data_dob)
+        result, matched_data = self.compare_name_with_text(self,data_dob,self.ocr_text)
+        if result:
+            return result, matched_data
+
+    if data_name is not None:
+        result, matched_data = self.compare_name_with_text(self,data_name,self.ocr_text)
         if result:
             return result, matched_data
 
     return False
 
-def compare_name_with_ocr(self, data):
+def compare_name_with_text(self, data, text):
     """
     Function to compare the formattedName from the provided data with the OCR text.
     
@@ -642,21 +660,21 @@ def compare_name_with_ocr(self, data):
             # Check if all part length
             if all(len(part) <= 3 for part in name_parts):
                 # We check if every part in name_parts has a match in OCR
-                if all(re.search(r'\b' + re.escape(part) + r'\b', self.ocr_text, re.IGNORECASE) for part in name_parts):
+                if all(re.search(r'\b' + re.escape(part) + r'\b', text, re.IGNORECASE) for part in name_parts):
                     flag = True
             else:
                 for part in name_parts:
                     if len(part) > 3:  # Only check for parts longer than 3 characters
-                        match = re.search(r'\b' + re.escape(part) + r'\b', self.ocr_text, re.IGNORECASE)
+                        match = re.search(r'\b' + re.escape(part) + r'\b', text, re.IGNORECASE)
                         if match:
                             flag = True
             
             if flag:
-                self.logger.info("Match found when comparing filter result name with document name.")
+                self.logger.info("Match found when cross checking names.")
                 self.config.set_shared_state('filter_results', (True, json.dumps(data)))
                 return True, json.dumps(data)  # Return True if match is found, with data
             else:
-                self.logger.info("No match found when comparing filter result name with document name.")
+                self.logger.info("No match found when cross checking names.")
     
     return False, None
 
