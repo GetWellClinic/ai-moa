@@ -23,15 +23,10 @@ import yaml
 import requests
 from typing import List, Dict, Optional
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 
 import logging
 
 logger = logging.getLogger(__name__)
-from auth.login_manager import LoginManager
 
 class ProviderListManager:
     """
@@ -172,8 +167,6 @@ class ProviderListManager:
             self.logger.debug("Chrome headless mode enabled")
         if not self.config.get('emr.verify-HTTPS', False):
             chrome_options.add_argument('--ignore-certificate-errors')
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
-        login_manager = LoginManager(self.config)
         
         if self.check_template_file():
             url = f"{self.base_url}/oscarReport/reportByTemplate/homePage.jsp?templates=all"
@@ -188,7 +181,7 @@ class ProviderListManager:
             else:
                 self.logger.info("Template id not found")
         
-        driver.quit()
+        self.session.close()
 
     def find_template_id(self, tbody: BeautifulSoup) -> Optional[str]:
         """

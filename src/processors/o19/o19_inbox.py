@@ -151,6 +151,9 @@ def get_inbox_pendingdocs_documents(self):
 					self.config.update_pending_retries(0)  # Reset the retry count in the configuration
 					self.config.update_pending_inbox(item)
 					self.logger.info(f"Max retries exceeded for document {item}.")
+					driver.close()
+					driver.quit()
+					return False
 				else:
 					self.config.update_pending_retries(current_retries + 1)  # Increment the retry count by 1
 
@@ -161,10 +164,16 @@ def get_inbox_pendingdocs_documents(self):
 					if file_response.status_code == 200 and file_response.content:
 						self.config.set_shared_state('current_file', file_response.content)
 						self.logger.info(f"Fetched EMR document from Pending Docs...Processing Document No: {item}.")
+						driver.close()
+						driver.quit()
 						return True
 					else:
 						self.logger.error(f"An error occurred: {file_response.status_code}")
-
+						driver.close()
+						driver.quit()
+						return False
+		driver.close()
+		driver.quit()
 	return False
 
 
@@ -203,7 +212,11 @@ def get_inbox_incomingdocs_documents(self):
 				split_string = option.get_attribute('text').split(") ", 1)
 
 				if(update_time is None or update_time == ""):
-					update_time = split_string[1]
+					# Handle the case where the key is not set
+					self.logger.info(f"Incoming documents last processed file details missing in configuration.")
+					driver.close()
+					driver.quit()
+					return False
 
 				last_file = datetime.strptime(update_time, "%Y-%m-%d %H:%M:%S")
 				current_file = datetime.strptime(split_string[1], "%Y-%m-%d %H:%M:%S")
@@ -217,6 +230,9 @@ def get_inbox_incomingdocs_documents(self):
 						self.config.update_incoming_retries(0)  # Reset the retry count in the configuration
 						self.config.update_incoming_inbox(split_string[1])
 						self.logger.info(f"Max retries exceeded for document {item}.")
+						driver.close()
+						driver.quit()
+						return False
 					else:
 						self.config.update_incoming_retries(current_retries + 1)  # Increment the retry count by 1
 
@@ -230,12 +246,17 @@ def get_inbox_incomingdocs_documents(self):
 							self.inbox_incoming_lastfile = update_time
 							self.config.set_shared_state('current_file', file_response.content)
 							self.logger.info(f"Fetched EMR document from Incoming Docs...Processing Document No: {item}.")
+							driver.close()
+							driver.quit()
 							return True
 						else:
 							self.logger.error(f"An error occurred: {file_response.status_code}")
+							driver.close()
+							driver.quit()
+							return False
 
-					break
-
+		driver.close()
+		driver.quit()
 	return False
 
 
@@ -268,9 +289,13 @@ def get_driver(self):
 		if self.login_manager.is_login_successful(self.login_manager.login_with_selenium(driver)):
 			return driver
 		else:
+			driver.close()
+			driver.quit()
 			return False
 
 	except Exception as e:
 		# Handle the exception (log it, re-raise, return None, etc.)
 		self.logger.error(f"An error occurred: {e}")
+		driver.close()
+		driver.quit()
 		return False
