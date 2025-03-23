@@ -2,7 +2,7 @@
 # This custom script installs Get Well Clinic's version of AI-MOA (Aimee AI)
 # Note: To correctly use automatic detection of AI-MOA path, this script must be installed and run in subdirectory 'install'
 # This install script should be run as 'sudo ./install-aimoa.sh'
-# Version 2025.02.21
+# Version 2025.03.23
 
 # Hardware Requirements:
 #	NVIDIA RTX video card installed with at least 12 GB VRAM
@@ -142,6 +142,16 @@ pip install -r $AIMOA/src/requirements.txt
 /bin/chmod o-rwx $AIMOA/config
 /bin/echo "Protecting ../app directory..."
 /bin/chmod o-rwx $AIMOA/app -R
+
+# Install aimoa-cron-maintenance.sh as cronjob
+AIMOA-CRON="1 * * * * $AIMOA/install/aimoa-cron-maintenance.sh"
+# Check if already exists, and add if not exist
+if sudo crontab -u root -l 2>/dev/null | /bin/grep -Fq "$AIMOA-CRON"; then
+	/bin/echo "Cron job already exists. Skipping adding aimoa-cron-maintenance.sh...Please verify correct installation of existing cron job...!"
+else
+	(sudo crontab -u root -l 2>/dev/null; /bin/echo "$AIMOA-CRON") | sudo crontab -
+	/bin/echo "Added aimoa-cron-maintenance.sh to sudo crontab...successful."
+fi
 
 # Install google-chrome
 /bin/echo "Installing Google Chrome for AI-MOA..."
