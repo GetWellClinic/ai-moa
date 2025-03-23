@@ -2,7 +2,7 @@
 ## Linux Installation ##
 *Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
 *LICENSE: GNU Affero General Public License Version 3*<br />
-**Document Version 2025.03.10**
+**Document Version 2025.03.23**
 <p align="center">
   <img src="https://getwellclinic.ca/images/GetWellClinic/Logos-Icons/AimeeAI-pc.png" alt="Aimee AI">
 </p>
@@ -437,7 +437,7 @@ Consider installing the `aimoa-cron-maintenance.sh` script in sudoer's crontab t
 
 Add the following to the crontab file:
 ```
-0 6 * * *	/opt/ai-moa/install/aimoa-cron-maintenance.sh
+1 * * * *	/opt/ai-moa/install/aimoa-cron-maintenance.sh
 ```
 
 ### Start/Stop LLM Container Manually ###
