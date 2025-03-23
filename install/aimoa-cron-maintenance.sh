@@ -1,13 +1,13 @@
 #!/bin/bash
 # This script periodically clears /tmp director of temporary Chrome/Chromium temp files
 # and fixes permission to AI-MOA config files
-# Version 2025.02.18
+# Version 2025.03.22
 # Instructions: Edit and confirm location of AI-MOA install scripts; and then install this to crontab with "sudo crontab -e" to run periodically
 # 0 6 * * * /opt/ai-moa/install/aimoa-cron-maintenance.sh
 
 # CONFIG
-# Files to delete older than how many days:
-DAYS=1
+# Files to delete older than how many days: (0.05 days is 1.2 hrs)
+DAYS=0.05
 # AI-MOA group user
 GROUP=aimoa
 # Path of AI-MOA (Please confirm/edit)
