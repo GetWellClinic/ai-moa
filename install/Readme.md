@@ -475,7 +475,7 @@ Optional: change the working branch to another branch (ie. dev)
 	```
 If you have modified code, you will need to stash any of your local changes before the Git pull overwrites your changes with the latest Github repo code. (Please note, this procedure will not replace your ../config/* files or delete your ../llm-container/models/* files.)
 ```
-git stash --all
+git stash
 git pull
 ```
 Fix the permissions for AI-MOA:
