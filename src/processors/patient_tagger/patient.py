@@ -159,7 +159,7 @@ def get_patient_dob(self):
     try:
         year, month, day = query.split('-')
     except ValueError:
-        self.logger.error(f"Error: The query '{query}' is not in the expected 'YYYY-MM-DD' format.")
+        self.logger.info(f"The query '{query}' is not in the expected 'YYYY-MM-DD' format.")
         return False
 
     formatted_dates = [f"{year}-{month}-{day}", f"{year}-{day}-{month}"]
@@ -623,19 +623,59 @@ def compare_demographic_results(self):
 
     if data_hin is not None:
         result, matched_data = self.compare_name_with_text(self,data_hin,self.ocr_text)
-        if result:
+        if result and self.compare_demographic_results_llm(self, data_hin):
             return result, matched_data
 
     if data_dob is not None:
         result, matched_data = self.compare_name_with_text(self,data_dob,self.ocr_text)
-        if result:
+        if result and self.compare_demographic_results_llm(self, data_dob):
             return result, matched_data
 
     if data_name is not None:
         result, matched_data = self.compare_name_with_text(self,data_name,self.ocr_text)
-        if result:
+        if result and self.compare_demographic_results_llm(self, data_name):
             return result, matched_data
 
+    return False
+
+def compare_demographic_results_llm(self, data):
+    """
+    Compares the demographic results from the provided data with the OCR text and
+    returns a boolean indicating whether a match was found based on the AI's response.
+
+    The function constructs a prompt by combining the data, predefined LLM prompts, 
+    and OCR text, then queries the LLM. If the result contains the word "yes", it 
+    is further processed (removing specific punctuation and replacing hyphens with spaces) 
+    before being checked against the pattern.
+
+    Args:
+        data (str): The data containing demographic information to be compared.
+
+    Returns:
+        bool: True if the LLM's response contains the word 'yes' followed by any characters,
+              indicating a positive match. False otherwise, or if the result is not a valid boolean.
+    """
+    prompt = f"\n{self.ocr_text}\n" + self.ai_prompts.get('compare_demographic_results_llm', '') + f"\n {data} \n"
+
+    result = self.query_prompt(self, prompt)
+
+    if isinstance(result, bool):
+        return False
+
+    query = result[1].lower()
+
+    query = re.sub(r'[.,]', '', query)
+    query = re.sub(r'[-]', ' ', query)
+
+    pattern = r'\byes\b.*?'
+    match = re.search(pattern, query)
+
+    if match:
+        self.logger.info(f"Demographic data verified by LLM and matches the document.")
+        return True
+
+    self.logger.info(f"Demographic data verified by LLM and does not match with the document.")
+    
     return False
 
 def compare_name_with_text(self, data, text):
@@ -697,5 +737,5 @@ def decode_json(self, data, label):
         if data:
             return json.loads(data)
     except json.JSONDecodeError as e:
-        self.logger.error(f"JSON decoding error for {label}: {e}")
+        self.logger.info(f"JSON decoding error for {label}: {e}")
     return None
