@@ -141,6 +141,10 @@ def get_inbox_pendingdocs_documents(self):
 		    # Handle the case where the key is not set
 		    last_processed_file = 0
 		for item in script_value['DOC']:
+			if not item:
+				driver.close()
+				driver.quit()
+				return False
 			item = int(item)
 			if(item > last_processed_file):
 
