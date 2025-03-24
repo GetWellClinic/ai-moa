@@ -1,8 +1,8 @@
 #!/bin/bash
 # This custom script installs Get Well Clinic's version of AI-MOA (Aimee AI)
-# Note: To correctly use automatic detection of AI-MOA path, this script must be installed and run in subdirectory 'gwc-aimee'
+# Note: To correctly use automatic detection of AI-MOA path, this script must be installed and run in subdirectory 'install'
 # This install script should be run as 'sudo ./install-aimoa.sh'
-# Version 2025.02.02
+# Version 2025.03.23
 
 # Hardware Requirements:
 #	NVIDIA RTX video card installed with at least 12 GB VRAM
@@ -13,7 +13,7 @@
 #	Docker Compose installed
 #	NVIDIA Container Toolkit installed
 #	AI-MOA installed in preferably in /opt/ai-moa directory
-# 	Python 3.x installed
+# 	Python 3.10+ installed
 # 	Python package installed:
 #		pip
 #		virtualenv
@@ -39,36 +39,47 @@ AIMOA=$(pwd)
 /bin/echo ""
 # Create the logs directory if it doesn't exist
 /bin/echo "Creating log directory..."
-/bin/mkdir -p $AIMOA/logs
+/bin/mkdir -p '$AIMOA/logs'
 
 # Create the static directory if it doesn't exist
 /bin/echo "Creating src/static directory..."
-/bin/mkdir -p $AIMOA/src/static
+/bin/mkdir -p '$AIMOA/src/static'
 
-# Create the config director if it doesn't exit
+# Create the config directory if it doesn't exit. For local configuration files.
 /bin/echo "Creating config directory"
-/bin/mkdir -p $AIMOA/config
+/bin/mkdir -p '$AIMOA/config'
+
+# Create the app directories if it doesn't exit. For local folder document processing.
+/bin/echo "Creating app directories"
+/bin/mkdir -p '$AIMOA/app'
+/bin/mkdir -p '$AIMOA/app/input'
+/bin/mkdir -p '$AIMOA/app/output'
 
 # Initialize permissions
-/bin/chmod g+rw $AIMOA/config -R
-/bin/chmod g+rw $AIMOA/src/*
+/bin/chmod g+rw '$AIMOA/config' -R
+/bin/chmod g+rw '$AIMOA/app/' -R
+/bin/chmod g+rw '$AIMOA/src/*'
 
 # Create the llm-container/models directory if it doesn't exist
 /bin/echo "Creating llm-container/models directory..."
-/bin/mkdir -p $AIMOA/llm-container/models
+/bin/mkdir -p '$AIMOA/llm-container/models'
 
 # Backup config files
 /bin/echo "Backing up old config files..."
 /bin/cp $AIMOA/src/config.yaml $AIMOA/src/config.yaml.$(date +'%Y-%m-%d')
 /bin/cp $AIMOA/config/config.yaml $AIMOA/config/config.yaml.$(date +'%Y-%m-%d')
+/bin/cp $AIMOA/config/config-incomingfax.yaml $AIMOA/config/config-incomingfax.yaml.$(date +'%Y-%m-%d')
 /bin/cp $AIMOA/src/workflow-config.yaml $AIMOA/src/workflow-config.yaml.$(date +'%Y-%m-%d')
 /bin/cp $AIMOA/config/workflow-config.yaml $AIMOA/config/workflow-config.yaml.$(date +'%Y-%m-%d')
+/bin/cp $AIMOA/config/workflow-config-incomingfax.yaml $AIMOA/config/workflow-config-incomingfax.yaml.$(date +'%Y-%m-%d')
 /bin/cp $AIMOA/config/provider_list.yaml $AIMOA/config/provider_list.yaml.$(date +'%Y-%m-%d')
 /bin/cp $AIMOA/src/config/provider_list.yaml $AIMOA/src/config/provider_list.yaml.$(date +'%Y-%m-%d')
 # Create config files in config directory
 /bin/echo "Creating config files from templates..."
 /bin/cp $AIMOA/src/config.yaml.example $AIMOA/config/config.yaml
+/bin/cp $AIMOA/src/config-incomingfax.yaml.example $AIMOA/config/config-incomingfax.yaml
 /bin/cp $AIMOA/src/workflow-config.yaml.example $AIMOA/config/workflow-config.yaml
+/bin/cp $AIMOA/src/workflow-config.yaml.example $AIMOA/config/workflow-config-incomingfax.yaml
 /bin/cp $AIMOA/src/template_providerlist.txt $AIMOA/config/
 /bin/echo "...remember to edit the config files in ../config/* to customize to your installation."
 # Initialize installation to re-fresh provider list
@@ -109,8 +120,8 @@ pip install -r $AIMOA/src/requirements.txt
 # Modify user:group permissions
 /bin/chown aimoa:aimoa $AIMOA/* -R
 # Fix permissions so AI MOA can read-write
-/bin/chmod ug+rwx $AIMOA/config $AIMOA/logs
-/bin/chmod ug+rw $AIMOA/config/* $AIMOA/logs/*
+/bin/chmod ug+rwx $AIMOA/config $AIMOA/logs $AIMOA/app $AIMOA/app/input $AIMOA/app/output
+/bin/chmod ug+rw $AIMOA/config/* $AIMOA/logs/* $AIMOA/app/input/* $AIMOA/app/output/*
 /bin/chmod ug+rw $AIMOA/llm-container/models
 # Protect config.yaml from Other users
 /bin/chmod o-rwx $AIMOA/config
@@ -126,9 +137,21 @@ pip install -r $AIMOA/src/requirements.txt
 /bin/chmod guo+x $AIMOA/install/*
 /bin/chmod o-x $AIMOA/install/install*
 /bin/chmod o-x $AIMOA/install/uninstall*
-# Protect config directory
+# Protect directories from Other Users
 /bin/echo "Protecting ../config directory..."
 /bin/chmod o-rwx $AIMOA/config
+/bin/echo "Protecting ../app directory..."
+/bin/chmod o-rwx $AIMOA/app -R
+
+# Install aimoa-cron-maintenance.sh as cronjob
+AIMOA-CRON="1 * * * * $AIMOA/install/aimoa-cron-maintenance.sh"
+# Check if already exists, and add if not exist
+if sudo crontab -u root -l 2>/dev/null | /bin/grep -Fq "$AIMOA-CRON"; then
+	/bin/echo "Cron job already exists. Skipping adding aimoa-cron-maintenance.sh...Please verify correct installation of existing cron job...!"
+else
+	(sudo crontab -u root -l 2>/dev/null; /bin/echo "$AIMOA-CRON") | sudo crontab -
+	/bin/echo "Added aimoa-cron-maintenance.sh to sudo crontab...successful."
+fi
 
 # Install google-chrome
 /bin/echo "Installing Google Chrome for AI-MOA..."

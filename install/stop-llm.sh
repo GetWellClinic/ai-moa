@@ -1,6 +1,6 @@
 #!/bin/bash
 # Shutdown script for local AI LLM Docker Containers
-# Version 2024.12.09
+# Version 2025.02.23
 
 # CONFIGURATION:
 # Automatic detection of base directory for AI-MOA:
@@ -26,7 +26,7 @@ export MODEL_NAME="$AIMOA/llm-container/models/Mistral-7B-Instruct-v0.3.Q8_0.ggu
 # export MODEL_NAME="microsoft/Phi-3.5-mini-instruct"
 
 # Run AI LLM Containers:
-# Note: Two containers will start, one for Aphrodite LLM container, the other is Caddy which operates the encrypted reverse proxy for SSL/TLS
+# Note: Two containers will stop, one for Aphrodite LLM container, the other is Caddy which operates the encrypted reverse proxy for SSL/TLS
 # cd llm-container
 # docker compose down -d
 #
