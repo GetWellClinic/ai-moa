@@ -2,7 +2,7 @@
 ## Linux Installation ##
 *Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
 *LICENSE: GNU Affero General Public License Version 3*<br />
-**Document Version 2025.03.23**
+**Document Version 2025.03.24**
 <p align="center">
   <img src="https://getwellclinic.ca/images/GetWellClinic/Logos-Icons/AimeeAI-pc.png" alt="Aimee AI">
 </p>
@@ -455,6 +455,37 @@ To stop the LLM Container manually:
 ```
 sudo ./stop-llm.sh
 ```
+
+### Upgrading AI-MOA from Github repository ###
+
+You can upgrade to the latest code by doing a Git pull.
+
+Backup the config directory just in case.
+```
+sudo cp /opt/ai-moa/config /opt/ai-moa/config.backup -r
+```
+Show the current working branch code (ie. main or dev)
+```
+cd /opt/ai-moa
+git branch --show-current
+```
+Optional: change the working branch to another branch (ie. dev)
+	```
+	git checkout dev
+	```
+If you have modified code, you will need to stash any of your local changes before the Git pull overwrites your changes with the latest Github repo code. (Please note, this procedure will not replace your ../config/* files or delete your ../llm-container/models/* files.)
+```
+git stash --all
+git pull
+```
+Fix the permissions for AI-MOA:
+```
+cd /opt/ai-moa/install
+sudo chmod +x fix-aimoa.sh
+sudo ./fix-aimoa.sh
+```
+You can then edit any files for your own custom settings. (ie. Custom ../src/run-aimoa.sh startup parameters, or ../llm-container/docker-compose.yml VRAM parameters)
+
 
 ## Troubleshooting and Tips ##
 
