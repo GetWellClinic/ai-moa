@@ -1,8 +1,8 @@
 # Aimee AI (AI-MOA) #
-## Linux Installation ##
-*Copyright Â© 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
+## Windows Installation ##
+*Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
 *LICENSE: GNU Affero General Public License Version 3*<br />
-**Document Version 2025.03.24**
+**Document Version 2025.03.07**
 <p align="center">
   <img src="https://getwellclinic.ca/images/GetWellClinic/Logos-Icons/AimeeAI-pc.png" alt="Aimee AI">
 </p>
@@ -24,188 +24,182 @@ healthcare team's administrative burden, so we can dedicate ourselves to the ver
 
 *Minimum*
 - 15 GB disk space
-- 16 GB RAM system memory
+- 16 GB RAM memory
 - NVIDIA RTX video card, minimum 12 GB VRAM
 
 *Recommended*
 - 50 GB hard drive space
-- 24 GB RAM system memory
+- 24 GB RAM memory
 - NVIDIA RTX 4060Ti video card, 16 GB VRAM
 
 **Software**
-- Ubuntu Server LTS (ie. Ubuntu 22 LTS)
-- Python 3.10+ (pre-installed with Ubuntu 22 LTS)
-- gcc installed (pre-installed with Ubuntu 22 LTS)
+- Windows 10+
+- Windows Subsystem for Linux (WSL 2)
+- Python 3.10+
 - Git installed
 - NVIDIA video card drivers installed
 - NVIDIA Container Toolkit drivers installed
 - Python pip package manager installed
 - Docker installed
 - Docker Compose installed
-- google-chrome installed
+- Google Chrome browser installed
 
 **Accounts**
 - Github [https://github.com](https://github.com) user account and personal private access token generated
 - Hugging Face [https://huggingface.co](https://huggingface.co) user account and personal private access token generated (Optional)
 
 
-## Installation (for Linux) ##
+## Installation (for Windows) ##
 
-**Be sure to change working directory to "install" where this readme.md and installation files are stored, before executing the installation files.**
+### 1. Install Python 3.10+ ###
 
-### 1. Install Ubuntu 22 LTS ###
+Python, PyTorch, and CUDA support needs to tightly matched with versions that are compatible with each other. For example, Pytorch on Windows only support Python 3.9-3.12 (as of Feb 2025). Python 2.x is not supported.
 
-**Notes:**
-If you plan on installing this in a VM such as on ProxMox VE, here are some tips:
-- Enable virtualization on the bare metal machine in the BIOS
-- Enable IOMMU in BIOS
-- Enable [PCI passthrough](https://pve.proxmox.com/wiki/PCI_Passthrough) for Proxmox VE. This is a helpful Youtube [instructional video](https://www.youtube.com/watch?v=TWX3iWcka_0)
+*Check Python, PyTorch, CUDA Toolkit version compatibility*
 
-### 2. Clone the AI-MOA repository from Github ###
+https://pytorch.org/get-started/locally/
+
+*CUDA Toolkit Downloads, for your reference*
+
+https://developer.nvidia.com/cuda-downloads
+
+For example, a working combination is: Python 3.10, PyTorch 2.2, and CUDA 11.8
+
+AI-MOA was tested to work on Python 3.10. You may install higher versions of Python, but be sure that Pytorch is supported for that version and that there is also an NVIDIA CUDA Toolkit available for that version as well. You can install also multiple versions of Python on the same Windows, just reference the version you want to use when invoking a python script.
+
+Download and install the latest Python 3.10.x:
+
+https://www.python.org/downloads/windows/
+
+*Tip: Create a folder C:\Tools, and install Python in a subdirectory under Tools ie. C:\Tools\Python3.10
+This makes it easier to reference the full path of python.exe when using command line or adding it to Windows Task Scheduler.*
+
+Be sure to add Python to your PATH in Windows Environment variables so that invoking the `python` command by command prompt anywhere will run a default Python without requiring to enter the full path of where Python is installed.
+
+### 2. Install virtualenv package for creating Python virtual environments ###
+
+Open a Command Prompt in Windows (as administrator).
+
+```
+pip install virtualenv
+```
+
+### 3. Install Git for Windows ###
+
+Download and install Git for Windows:
+
+https://git-scm.com/downloads/win
+
+### 4. Install Google Chrome ###
+
+Download and install Google Chrome:
+
+https://www.google.com/chrome
+
+### 5. Update NVIDIA Graphics Card Drivers ###
+
+Be sure to update your NVIDIA Graphics Card Drivers:
+
+https://www.nvidia.com/en-in/drivers/nvidia-update/
+
+You may or may not need an NVIDIA CUDA Toolkit 11.8:
+
+https://developer.nvidia.com/cuda-11-8-0-download-archive
+
+Check the status of your NVIDIA graphics card:
+```
+nvidia-smi
+```
+
+You should see something like this:
+```
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 572.47                 Driver Version: 572.47         CUDA Version: 12.8     |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                  Driver-Model | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 4060 Ti   WDDM  |   00000000:01:00.0  On |                  N/A |
+|  0%   49C    P8             14W /  165W |     484MiB /  16380MiB |      1%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+```
+
+### 6. Install Docker and Docker Compose for Windows ###
+
+Download and install Docker:
+
+https://docs.docker.com/desktop/setup/install/windows-install/
+
+### 7. Enable Docker Desktop for Windows to support WSL 2 (Windows Subsystem for Linux) GPU Paravirtualization (GPU-PV) on NVIDIA graphics cards ###
+
+Read these instructions and install Windows Subsystem for Linux (WSL 2) and enable WSL2 backend support in Docker Desktop:
+
+https://docs.docker.com/desktop/features/gpu/
+
+### 8. Clone the AI-MOA repository from Github ###
 
 You will need to have your Github user name and a personal access token (generated from your account on Github). Github no longer allows 'git clone' access with passwords, and must use an access token generated from your user account online from Github.
 ```
-cd /opt
+cd \
+cd opt
 sudo git clone https://github.com/getwellclinic/ai-moa.git
-cd /opt/ai-moa
-```
-
-Change the ownership of files to your username:
-```
-sudo chown {username} /opt/ai-moa/* -R
-```
-
-**Set file permissions to enable run installation scripts**
-```
-cd /opt/ai-moa/install
-ls -l -h
-sudo chmod ug+x *.sh
-sudo chmod g-x install*
-sudo chmod g-x uninstall*
+cd ai-moa
 ```
 
 Change working directory to "install" for accessing the installation scripts:
 ```
-cd /opt/ai-moa/install
-ls -l -h
+cd \
+cd opt\ai-moa\windows
+dir
 ```
 
-### 3. Install NVIDIA RTX video card drivers ###
+### 9. Install AI LLM Model for LLM Container ###
 
-Install your GPU in the PCIe slot, boot up your server, and install the video card drivers for your machine.
+Download the AI LLM from Huggingface and copy to `opt\aimoa\llm-container\models\` directory:
 
-**Install NVIDIA Video Driver**
+https://huggingface.co/RichardErkhov/mistralai_-_Mistral-7B-Instruct-v0.3-gguf
 
-Check for NVIDIA video card drivers
+*(Choose the Q8 version "Mistral-7B-Instruct-v0.3.Q8_0.gguf")*
+
+Or you can execute this batch installation script to download and install the default AI Large Language Model for AI-MOA in LLM Container.
 ```
-sudo apt-get update
-sudo apt-get install ubuntu-drivers-common
-sudo ubuntu-drivers devices
-```
-
-Select the best driver to install. Pick the latest recommended one. (ie. nvidia-driver-550)
-
-```
-sudo apt-get install nvidia-driver-550
+cd \
+cd opt\ai-moa\windows
+.\install-model.bat
 ```
 
-Reboot the server for the changes to take effect.
-```
-sudo shutdown -r now
-```
-
-Once system is rebooted, check to see if NVIDIA RTX video card is installed:
-``` 
-nvidia-smi
-```
-
-*You should see something like this:*
-```
-+-----------------------------------------------------------------------------------------+
-| NVIDIA-SMI 550.120                Driver Version: 550.120        CUDA Version: 12.4     |
-|-----------------------------------------+------------------------+----------------------+
-| GPU Name 		    Persistence-M | Bus-Id Disp.A 	   | Volatile Uncorr. ECC |
-| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
-|                                         |                        |               MIG M. |
-|=========================================+========================+======================|
-| 0 NVIDIA GeForce RTX 4060 Ti Off 	  |  00000000:06:10.0 Off  |		      N/A |
-|  0%   49C    P8             17W /  165W |   200MiB /  16380MiB   |      0%      Default |
-|                                         |                        |                  N/A |
-+-----------------------------------------+------------------------+----------------------+
-
-+-----------------------------------------------------------------------------------------+
-| Processes:                                                                              |
-|  GPU   GI   CI        PID   Type   Process name                              GPU Memory |
-|        ID   ID                                                               Usage      |
-|=========================================================================================|
-|											  |
-+-----------------------------------------------------------------------------------------+
-```
-
-### 4. Install NVIDIA Toolkit Container ###
-
-Add the Repository for NVIDIA Container Toolkit
-```
-curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \ && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \ sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \ sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
-```
-
-Update and install the latest nvidia-container-toolkit
-```
-sudo apt-get update
-sudo apt-get install nvidia-container-toolkit
-```
-
-Restart the server for the installation to take effect.
-```
-sudo shutdown -r now
-```
-
-### 5. Install Docker and Docker Compose ###
-
-Follow online instructions to install Docker and Docker Compose.
-
-Or
-
-Use our custom "install-docker.sh" script to install automatically:
-```
-sudo ./install-docker.sh
-```
-
-### 6. Configure Docker to use NVIDIA Container Toolkit ###
-```
-sudo nvidia-ctk runtime configure --runtime=docker
-sudo systemctl restart docker
-```
-
-### 7. Install AI LLM Model for LLM Container ###
-
-This installs the default AI Large Language Model for AI-MOA in LLM Container.
-```
-sudo ./install-model.sh
-```
-
-### 8. Install Aimee AI (AI-MOA) ###
+### 10. Install Aimee AI (AI-MOA) ###
 
 This installs "Aimee AI" version of AI-MOA, by setting up custom settings and prerequisites.
 ```
-sudo ./install-aimoa.sh
+.\install-aimoa.bat
 ```
 
-Add your username to the group "aimoa" so it can run AI-MOA:
-```
-sudo usermod -a -G aimoa {username}
-```
+### 11. Create a Windows Task Scheduler for Aimee AI ###
 
-### 9. Install *Aimee AI* as a system service (Recommended) ###
+If you want AI-MOA to start automatically on Windows startup, and run continuously, create Windows Tasks Schedules.
 
-This optional step, installs *Aimee AI* as a system service that automatically starts at system startup/reboot.
-If you install this option, both the LLM Container and AI-MOA will start in the background and keep running.
+Open "Windows Task Schedule" and create a new scheduled task with the following parameters:
 
-Install "Aimee AI" as a system service.
-*This will install ../install/services/ai-moa.service and ../install/services/ai-moa-incomingfax.service as a system service in /etc/systemd/system/*
-```
-sudo ./install-services.sh
-```
+Create a Task: "LLM-Container"
+- Security Options: run task as an administrator account
+- Triggers: "At startup"
+- Actions: Program/script "C:\opt\ai-moa\windows\run-llm.bat"
+- Settings: Disable "Stop the task if it runs longer than"; Enable "Run task as soon as possible after a scheduled start is missed"; If the task fails, restart every "5 minutes" for "3" times; If the task is already running, then the following rule applies: "Do not start a new instance".
+
+Create a Task: "AI-MOA"
+- Security Options: run task as an administrator account
+- Triggers: "At startup"; Delay task for 30 seconds. 
+- Actions: Program/script "C:\opt\ai-moa\windows\run-aimoa.bat"
+- Settings: Disable "Stop the task if it runs longer than"; Enable "Run task as soon as possible after a scheduled start is missed"; If the task fails, restart every "5 minutes" for "3" times; Disable "Stop the task if it runs longer than"; If the task is already running, then the following rule applies: "Do not start a new instance".
+
+Alternative: You can install AI-MOA "run-aimoa.bat" as a Windows Service (so it restarts if unexpected crashes). Consider https://nssm.cc/
+
+**To start AI-MOA, be sure to manually start LLM-Container and AI-MOA in Windows Task Scheduler, or reboot Windows to see if it starts automatically.**
+
+
 
 ## (Optional) Install a test EMR with OSCAR v.19 Community Edition ##
 
@@ -213,16 +207,15 @@ If you wish to test out AI-MOA with your own free OSCAR v.19 CE, visit OscarGala
 
 [Installation instructions for OSCAR EMR v.19 Community Edition](https://oscargalaxy.org/knowledge-base/oscar-19-installation/)
 
-
 ## Configuration ##
 
-To configure your *Aimee AI*, please edit the parameters in the following configuration files.
+To configure your *Aimee AI*, please edit the parameters in the following configuration files in a text editor:
 ```
-sudo nano ../config/config.yaml
-sudo nano ../config/workflow-config.yaml
+..\config\config.yaml
+..\config\workflow-config.yaml
 ```
 
-### 1. Edit "../config/config.yaml" file ###
+### 1. Edit "..\config\config.yaml" file ###
 
 Particularly, pay attention to the section on "emr" that is unique to your EMR server.
 ```
@@ -262,7 +255,7 @@ lock:
 	status: false
 ```
 
-### 2. Edit "../config/provider_list.yaml" file ###
+### 2. Edit "..\config\provider_list.yaml" file ###
 
 Once you run AI-MOA once, it will attempt to automatically upload a Report by Template and generate
 a SQL search to extract the provider names and provider_id from your EMR.
@@ -274,7 +267,7 @@ confuse the LLM. If some providers have middle names, you can create multiple en
 each variation of the first name that could include all or part of the middle name.
 
 ```
-sudo nano ../config/provider_list.yaml
+..\config\provider_list.yaml
 ```
 
 If you do not see this file, wait, or complete the configuration steps and then start Aimee AI manually by command line (See section: Maintenance Operations)
@@ -362,130 +355,6 @@ AI-MOA is developed for identify and tagging according to certain Document Categ
 	- request
 	- requisition
 
-		
-## Maintenance Operations ##
-
-*Note: These commands and scripts should be run from subdirectory "/install"*
-```
-cd install
-```
-
-### Starting *AI-MOA* Services ###
-
-If AI-MOA: Aimee AI has been installed as a service, ensure that the LLM Container service and the AI-MOA services are running:
-```
-sudo service llm-container status
-sudo service ai-moa status
-sudo service ai-moa-incomingfax status
-```
-To start the services:
-```
-sudo service llm-container start
-sudo service ai-moa start
-sudo service ai-moa-incomingfax start
-```
-To stop the services:
-```
-sudo service llm-container stop
-sudo service ai-moa stop
-sudo service ai-moa-incomingfax stop
-```
-
-### Running *Aimee AI* manually by command line ###
-
-You can run *Aimee AI* manually start/stop with command line.
-
-Stop the Aimee AI system service (ai-moa.service, ai-moa-incomingfax.service)
-```
-sudo service ai-moa stop
-sudo service ai-moa-incomingfax stop
-```
-
-Check Aimee AI system status
-```
-sudo service ai-moa status
-sudo service ai-moa-incomingfax status
-```
-
-Start *Aimee AI* manually
-```
-./run-aimoa.sh
-
-To exit/stop Aimee AI
-Ctrl-C
-```
-
-**Watching the workflow.logs**
-
-You can also watch realtime logs of AI-MOA.
-```
-./watch-aimoa-logs.sh
-./watch-aimoa-incomingfax-logs.sh
-
-To exit/stop watching
-Ctrl-C
-```
-
-**AI-MOA Maintenance cron job**
-
-- AI-MOA may accumulate browser temp files in /tmp directory.
-- Depending on how a user updates or edits config files, misconfigured file permissions may cause unexpected errors when running the program with user prileges.
-
-Consider installing the `aimoa-cron-maintenance.sh` script in sudoer's crontab to run periodically to fix permissions and clear the /tmp directory files accumulated by AI-MOA.
-
-`sudo crontab -e`
-
-Add the following to the crontab file:
-```
-1 * * * *	/opt/ai-moa/install/aimoa-cron-maintenance.sh
-```
-
-### Start/Stop LLM Container Manually ###
-
-The AI LLM Container runs separately in docker as llm-container and caddy.
-If you installed AI-MOA as a system service with "./install-services.sh", then you do not
-need to start/stop LLM Container manually.
-
-To start the LLM Container manually:
-```
-sudo service llm-container stop
-sudo ./run-llm.sh
-````
-To stop the LLM Container manually:
-```
-sudo ./stop-llm.sh
-```
-
-### Upgrading AI-MOA from Github repository ###
-
-You can upgrade to the latest code by doing a Git pull.
-
-Backup the config directory just in case.
-```
-sudo cp /opt/ai-moa/config /opt/ai-moa/config.backup -r
-```
-Show the current working branch code (ie. main or dev)
-```
-cd /opt/ai-moa
-git branch --show-current
-```
-Optional: change the working branch to another branch (ie. dev)
-	```
-	git checkout dev
-	```
-If you have modified code, you will need to stash any of your local changes before the Git pull overwrites your changes with the latest Github repo code. (Please note, this procedure will not replace your ../config/* files or delete your ../llm-container/models/* files.)
-```
-git stash
-git pull
-```
-Fix the permissions for AI-MOA:
-```
-cd /opt/ai-moa/install
-sudo chmod +x fix-aimoa.sh
-sudo ./fix-aimoa.sh
-```
-You can then edit any files for your own custom settings. (ie. Custom ../src/run-aimoa.sh startup parameters, or ../llm-container/docker-compose.yml VRAM parameters)
-
 
 ## Troubleshooting and Tips ##
 
@@ -497,47 +366,21 @@ Unassigned or documents tagged to `default_unidentified_patient_tagging_id` will
 A quick way to also review tagged documents is to run a Search in InBox for All documents recently uploaded within a date range (ie. in the last day). The reviewer can use Rapid Review or Preview to review all the AI-MOA work. Pay attention to "Unassigned, Unassigned" documents; and also confirm that the patient name in the document corresponds to the correct demographic tagged in EMR. The reviewer can click "Acknowledge or Next" to confirm that it has been checked by a human.
 Any incorrect documents can be sent to Refile and manually corrected through the Incoming Docs document manager.
 
-### Uninstalling Aimee AI ###
+### Manually Starting/Stopping Aimee AI ###
 
-To remove "Aimee AI" from running as a system service:
+If AI-MOA is not running automatically as a Windows Task Scheduler, you can start and stop AI-MOA manually:
+
+To Start Aimee AI:
 ```
-sudo ./uninstall-services.sh
-```
-
-### Fixing Permissions ###
-
-Sometimes, Aimee AI won't run properly, and your get permission errors in the log, because the permission for user:group are not set properly.
-
-Fix this by running:
-```
-sudo ./fix-aimoa.sh
+cd windows
+start-llm.bat
+run-aimoa.bat
+(Press Ctrl-C to stop AI-MOA)
 ```
 
-### AI-MOA is running, but no documents being processed ###
-
-This may happen because of a file lock on config.yaml
-
-Stop AI-MOA first before editing the config.yaml file
+To Stop AI LLM Container:
 ```
-sudo service ai-moa stop
-sudo service ai-moa-incomingfax stop
-```
-
-Edit config.yaml and remove file lock by setting "lock:status:false"
-```
-sudo nano ../config/config.yaml
-sudo nano ../config/config-incomingfax.yaml
-```
-Change setting to "false"
-```
-lock:
-	status: false
-```
-
-Restart the AI-MOA service
-```
-sudo service ai-moa start
-sudo service ai-moa-incomingfax start
+stop-llm.bat
 ```
 
 ### AI-MOA is able to log-in but times out when attempting to retrieve Pending documents in EMR ###
@@ -551,12 +394,9 @@ UPDATE queue_document_link SET status="I" WHERE status="A" and document_id<#####
 ```
 
 
-
 ## Special Thanks ##
 
 This project was made possible through Conestoga College, in part, with funding from
 NSERC Applied Research and Technology Partnership Grant
 and
 Get Well Clinic | Spring Health Corporation
-
-
