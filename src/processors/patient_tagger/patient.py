@@ -87,7 +87,7 @@ def get_patient_name(self):
         all_combinations = list(itertools.permutations(name_parts))
         formatted_combinations = [f"%{combo[0][:4]}%,%{combo[1][:5]}%" 
                                 for combo in all_combinations 
-                                if len(combo[0]) >= 2 and len(combo[1]) >= 3]
+                                if len(combo) > 1 and len(combo[0]) >= 2 and len(combo[1]) >= 3]
 
         # Initialize an empty string to store all the table results
         all_tables = ""
