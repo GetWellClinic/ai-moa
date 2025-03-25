@@ -87,7 +87,7 @@ def get_patient_name(self):
         all_combinations = list(itertools.permutations(name_parts))
         formatted_combinations = [f"%{combo[0][:4]}%,%{combo[1][:5]}%" 
                                 for combo in all_combinations 
-                                if len(combo[0]) >= 2 and len(combo[1]) >= 3]
+                                if len(combo) > 1 and len(combo[0]) >= 2 and len(combo[1]) >= 3]
 
         # Initialize an empty string to store all the table results
         all_tables = ""
@@ -159,7 +159,7 @@ def get_patient_dob(self):
     try:
         year, month, day = query.split('-')
     except ValueError:
-        self.logger.error(f"Error: The query '{query}' is not in the expected 'YYYY-MM-DD' format.")
+        self.logger.info(f"The query '{query}' is not in the expected 'YYYY-MM-DD' format.")
         return False
 
     formatted_dates = [f"{year}-{month}-{day}", f"{year}-{day}-{month}"]
@@ -549,6 +549,7 @@ def verify_demographic_data(self, data):
         text = re.sub(r'[.,]', '', text)
         text = re.sub(r'[-]', ' ', text)
 
+        self.logger.info(f"Comparing LLM response name with demographic search result name.")
         result, matched_data = self.compare_name_with_text(self,data,text)
 
         if has_demographic_no and has_dob_td and result:
@@ -582,12 +583,15 @@ def compare_demographic_results(self):
     data_name = self.decode_json(self, data_name, "name")
     data_hin = self.decode_json(self, data_hin, "hin")
 
+    self.logger.info(f"Verifying LLM demographic data (DOB) with system data.")
     if data_dob is not None and not self.verify_demographic_data(self, data_dob):
         data_dob = None
 
+    self.logger.info(f"Verifying LLM demographic data (Name) with system data.")
     if data_name is not None and not self.verify_demographic_data(self, data_name):
         data_name = None
 
+    self.logger.info(f"Verifying LLM demographic data (HIN) with system data.")
     if data_hin is not None and not self.verify_demographic_data(self, data_hin):
         data_hin = None
 
@@ -622,20 +626,63 @@ def compare_demographic_results(self):
             return True, json.dumps(data_dob)
 
     if data_hin is not None:
+        self.logger.info(f"Comparing LLM response name with document for HIN.")
         result, matched_data = self.compare_name_with_text(self,data_hin,self.ocr_text)
-        if result:
+        if result and self.compare_demographic_results_llm(self, data_hin):
             return result, matched_data
 
     if data_dob is not None:
+        self.logger.info(f"Comparing LLM response name with document for DOB.")
         result, matched_data = self.compare_name_with_text(self,data_dob,self.ocr_text)
-        if result:
+        if result and self.compare_demographic_results_llm(self, data_dob):
             return result, matched_data
 
     if data_name is not None:
+        self.logger.info(f"Comparing LLM response name with document for NAME.")
         result, matched_data = self.compare_name_with_text(self,data_name,self.ocr_text)
-        if result:
+        if result and self.compare_demographic_results_llm(self, data_name):
             return result, matched_data
 
+    return False
+
+def compare_demographic_results_llm(self, data):
+    """
+    Compares the demographic results from the provided data with the OCR text and
+    returns a boolean indicating whether a match was found based on the AI's response.
+
+    The function constructs a prompt by combining the data, predefined LLM prompts, 
+    and OCR text, then queries the LLM. If the result contains the word "yes", it 
+    is further processed (removing specific punctuation and replacing hyphens with spaces) 
+    before being checked against the pattern.
+
+    Args:
+        data (str): The data containing demographic information to be compared.
+
+    Returns:
+        bool: True if the LLM's response contains the word 'yes' followed by any characters,
+              indicating a positive match. False otherwise, or if the result is not a valid boolean.
+    """
+    prompt = f"\n{self.ocr_text}\n" + self.ai_prompts.get('compare_demographic_results_llm', '') + f"\n {data} \n"
+
+    result = self.query_prompt(self, prompt)
+
+    if isinstance(result, bool):
+        return False
+
+    query = result[1].lower()
+
+    query = re.sub(r'[.,]', '', query)
+    query = re.sub(r'[-]', ' ', query)
+
+    pattern = r'\byes\b.*?'
+    match = re.search(pattern, query)
+
+    if match:
+        self.logger.info(f"Demographic data verified by LLM and matches the document.")
+        return True
+
+    self.logger.info(f"Demographic data verified by LLM and does not match with the document.")
+    
     return False
 
 def compare_name_with_text(self, data, text):
@@ -697,5 +744,5 @@ def decode_json(self, data, label):
         if data:
             return json.loads(data)
     except json.JSONDecodeError as e:
-        self.logger.error(f"JSON decoding error for {label}: {e}")
+        self.logger.info(f"JSON decoding error for {label}: {e}")
     return None

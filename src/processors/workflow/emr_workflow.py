@@ -118,6 +118,7 @@ class Workflow:
         self.decode_json = patient.decode_json
         self.compare_name_with_text = patient.compare_name_with_text
         self.verify_demographic_data = patient.verify_demographic_data
+        self.compare_demographic_results_llm = patient.compare_demographic_results_llm
 
 
 
