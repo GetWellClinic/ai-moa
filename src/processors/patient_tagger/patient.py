@@ -549,6 +549,7 @@ def verify_demographic_data(self, data):
         text = re.sub(r'[.,]', '', text)
         text = re.sub(r'[-]', ' ', text)
 
+        self.logger.info(f"Comparing LLM response name with demographic search result name.")
         result, matched_data = self.compare_name_with_text(self,data,text)
 
         if has_demographic_no and has_dob_td and result:
@@ -582,12 +583,15 @@ def compare_demographic_results(self):
     data_name = self.decode_json(self, data_name, "name")
     data_hin = self.decode_json(self, data_hin, "hin")
 
+    self.logger.info(f"Verifying LLM demographic data (DOB) with system data.")
     if data_dob is not None and not self.verify_demographic_data(self, data_dob):
         data_dob = None
 
+    self.logger.info(f"Verifying LLM demographic data (Name) with system data.")
     if data_name is not None and not self.verify_demographic_data(self, data_name):
         data_name = None
 
+    self.logger.info(f"Verifying LLM demographic data (HIN) with system data.")
     if data_hin is not None and not self.verify_demographic_data(self, data_hin):
         data_hin = None
 
@@ -622,16 +626,19 @@ def compare_demographic_results(self):
             return True, json.dumps(data_dob)
 
     if data_hin is not None:
+        self.logger.info(f"Comparing LLM response name with document for HIN.")
         result, matched_data = self.compare_name_with_text(self,data_hin,self.ocr_text)
         if result and self.compare_demographic_results_llm(self, data_hin):
             return result, matched_data
 
     if data_dob is not None:
+        self.logger.info(f"Comparing LLM response name with document for DOB.")
         result, matched_data = self.compare_name_with_text(self,data_dob,self.ocr_text)
         if result and self.compare_demographic_results_llm(self, data_dob):
             return result, matched_data
 
     if data_name is not None:
+        self.logger.info(f"Comparing LLM response name with document for NAME.")
         result, matched_data = self.compare_name_with_text(self,data_name,self.ocr_text)
         if result and self.compare_demographic_results_llm(self, data_name):
             return result, matched_data
