@@ -20,7 +20,8 @@
 # ***
 
 # default values
-# Prompt Version: KC-2024.03.07
+# Workflow Version: 2025.03.25
+# Prompt Version: 2025.03.25
 #
 default_values:
   default_provider_tagging_id:
@@ -442,7 +443,7 @@ ai_prompts:
     Follow this format strictly and DO NOT add any other text other than JSON object in the response!
 
   get_provider: >
-    Based on the above document, select the appropriate provider from the following list containing firstname and lastname that matches the health provider/physician/doctor; do not select a patient name from the document. For context, to differentiate between a doctor name from a patient name, the patient will have a date of birth. Remember, prioritize a doctor/health provider over a clinic, if no provider matches then select 'oscardoc', and only return the provider number (example: 999998) nothing else.
+    Based on the above document, select the appropriate provider from the following list containing firstname and lastname that matches the health provider/physician/doctor; do not select a patient name from the document. For context, to differentiate between a doctor name from a patient name, the patient will have a date of birth. Remember, prioritize a doctor/health provider over a clinic, if no provider matches from the list then select 'oscardoc'; and only return the provider number (example: 999998) nothing else.
 
   build_sub_prompt: >
     For the following question if confidence level is more than 85% give the answer in one word using the format 'True' else 'False'.
