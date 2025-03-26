@@ -119,6 +119,7 @@ class Workflow:
         self.compare_name_with_text = patient.compare_name_with_text
         self.verify_demographic_data = patient.verify_demographic_data
         self.compare_demographic_results_llm = patient.compare_demographic_results_llm
+        self.remove_mrp_details = patient.remove_mrp_details
 
 
 

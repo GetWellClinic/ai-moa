@@ -349,6 +349,45 @@ def get_mrp_details(self):
     else:
         return False
 
+def remove_mrp_details(self):
+    """
+    Removes MRP details from the 'filter_results' shared state by decoding, modifying, 
+    and re-encoding the data.
+
+    This method retrieves the second item from the 'filter_results' shared state, attempts 
+    to decode it as JSON, and logs any JSON decoding errors. The 'providerNo' key in the 
+    decoded data is updated with the value "_". The modified data is then re-encoded to a 
+    JSON string and stored back in the shared state.
+
+    Returns:
+        bool: True if the operation is successful, False if there is a JSON decoding error.
+
+    Raises:
+        json.JSONDecodeError: If the data cannot be decoded as JSON, an error is logged, 
+        and False is returned.
+    """
+    filter_results = self.config.get_shared_state('filter_results')
+
+    # Check if 'filter_results' exists and has at least two elements
+    if filter_results is None or len(filter_results) < 2:
+        self.logger.error("'filter_results' is missing or has insufficient data.")
+        return False
+
+    data = filter_results[1]
+
+    try:
+        data = json.loads(data)
+    except json.JSONDecodeError as e:
+        self.logger.error(f"JSON decoding error: {e}")
+        return False
+
+    data['providerNo'] = "_"
+    self.config.set_shared_state('filter_results', (True, json.dumps(data)))
+    self.logger.error("Removed MRP info from data.")
+
+    return True
+
+
 def get_patient_Html(self,type_of_query,query):
     """
     Retrieves patient records from the system based on the search query.
