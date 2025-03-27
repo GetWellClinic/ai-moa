@@ -211,6 +211,7 @@ sudo ./install-services.sh
 Option 2: Install the full *Aimee AI Suite* with multiple workflows as a system service (minimum 16 GB VRAM GPU)
 
 *This will install the following as system services in /etc/systemd/system/
+
 	../install/services/ai-moa.service
 	../install/services/ai-moa-incomingfax.service
 	../install/services/ai-moa-incomingfile.service
