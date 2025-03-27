@@ -196,12 +196,14 @@ Add your username to the group "aimoa" so it can run AI-MOA:
 sudo usermod -a -G aimoa {username}
 ```
 
-### 9. Install *AI-MOA* as a system service ###
+### 9. Install *AI-MOA* as a system service (for automatic production use)###
 
-This optional step, installs *AI-MOA* as a system service that automatically starts at system startup/reboot.
+This step installs *AI-MOA* as a system service that automatically starts at system startup/reboot.
 If you install this option, both the LLM Container and AI-MOA will start in the background and keep running.
 
 Option 1: Install one workflow "AI-MOA" as a system service (minimum 12 GB VRAM GPU)
+- PendingDocs default workflow processing only (full tagging and filing)
+- You can customize the default config.yaml to process other queues like IncomingDocs Fax/File/Mail instead.
 
 *This will install ../install/services/ai-moa.service and ../install/services/llm-container.service as a system service in /etc/systemd/system/*
 ```
@@ -209,6 +211,10 @@ sudo ./install-services.sh
 ```
 
 Option 2: Install the full *Aimee AI Suite* with multiple workflows as a system service (minimum 16 GB VRAM GPU)
+- PendingDocs default workflow processing (full tagging and filing)
+- IncomingDocs/Fax default workflow processing (full tagging and filing)
+- IncomingDocs/File custom workflow processing (files the PDF to patient demographic only, does not tag providers or MRP)
+
 
 *This will install ai-moa.service, ai-moa-incomingfax.service, ai-moa-incomingfile.service, and llm-container.service*
 ```
