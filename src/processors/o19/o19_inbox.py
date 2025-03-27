@@ -19,7 +19,7 @@
 # source code can be acquired publicly in its latest most up-to-date version, within one month.
 # ***
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
@@ -232,7 +232,8 @@ def get_inbox_incomingdocs_documents(self):
 
 					if max_retries <= current_retries:  # If max retries is equal to current retries
 						self.config.update_incoming_retries(0)  # Reset the retry count in the configuration
-						self.config.update_incoming_inbox(split_string[1])
+						current_file_plus_one_second = current_file + timedelta(seconds=1)
+						self.config.update_incoming_inbox(str(current_file_plus_one_second))
 						self.logger.info(f"Max retries exceeded for document {item}.")
 						driver.close()
 						driver.quit()
