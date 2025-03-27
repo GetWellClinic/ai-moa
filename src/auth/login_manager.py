@@ -62,6 +62,7 @@ class LoginManager:
         self.pin = config.get('emr.pin')
         self.base_url = config.get('emr.base_url')
         self.login_url = f"{self.base_url}/login.do"
+        self.login_url_pro = f"{self.base_url}/#/"
         self.max_retries = config.get('login.max_retries', 5)
         self.initial_retry_delay = config.get('login.initial_retry_delay', 1)
         logger.debug("LoginManager initialized")
@@ -78,26 +79,37 @@ class LoginManager:
         :rtype: str
         """
         logger.info(f"Attempting Selenium login for user: {self.username}")
-        driver.get(self.login_url)
+        
+        system_type = self.config.get('emr.system_type', 'o19')
+        
+        if(system_type != 'opro'):
+            driver.get(self.login_url)
+        else:
+            driver.get(self.login_url_pro)
+
+        driver.implicitly_wait(10)
 
         # Locate the login fields and enter credentials
         username_field = driver.find_element(By.NAME, "username")
         password_field = driver.find_element(By.NAME, "password")
+        
+        if(system_type != 'opro'):
+            if(system_type == 'o15'):
+                pin_field = driver.find_element(By.NAME, "pin")
+            else:
+                pin_field = driver.find_element(By.NAME, "pin2")
 
-        system_type = self.config.get('emr.system_type', 'o19')
-
-        if(system_type == 'o15'):
-            pin_field = driver.find_element(By.NAME, "pin")
-        else:
-            pin_field = driver.find_element(By.NAME, "pin2")
-
+            pin_field.send_keys(self.pin)
 
         username_field.send_keys(self.username)
         password_field.send_keys(self.password)
-        pin_field.send_keys(self.pin)
 
-        # Submit the login form
-        pin_field.send_keys(Keys.RETURN)
+        if(system_type != 'opro'):
+            # Submit the login form
+            pin_field.send_keys(Keys.RETURN)
+        else:
+            password_field.send_keys(Keys.RETURN)
+        
         logger.debug("Login form submitted")
 
         return driver.current_url
