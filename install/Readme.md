@@ -202,12 +202,14 @@ This optional step, installs *AI-MOA* as a system service that automatically sta
 If you install this option, both the LLM Container and AI-MOA will start in the background and keep running.
 
 Option 1: Install one workflow "AI-MOA" as a system service (minimum 12 GB VRAM GPU)
+
 *This will install ../install/services/ai-moa.service and ../install/services/llm-container.service as a system service in /etc/systemd/system/*
 ```
 sudo ./install-services.sh
 ```
 
 Option 2: Install the full *Aimee AI Suite* with multiple workflows as a system service (minimum 16 GB VRAM GPU)
+
 *This will install the following as system services in /etc/systemd/system/
 	../install/services/ai-moa.service
 	../install/services/ai-moa-incomingfax.service
