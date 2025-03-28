@@ -128,6 +128,8 @@ class LoginManager:
         session = requests.Session()
         retry_delay = self.initial_retry_delay
 
+        system_type = self.config.get('emr.system_type', 'o19')
+
         if(system_type != 'opro'):
             self.login_url = self.login_url
         else:
