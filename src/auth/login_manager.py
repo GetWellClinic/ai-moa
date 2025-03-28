@@ -62,6 +62,7 @@ class LoginManager:
         self.pin = config.get('emr.pin')
         self.base_url = config.get('emr.base_url')
         self.login_url = f"{self.base_url}/login.do"
+        self.login_url_pro = f"{self.base_url}/kaiemr/#/"
         self.max_retries = config.get('login.max_retries', 5)
         self.initial_retry_delay = config.get('login.initial_retry_delay', 1)
         logger.debug("LoginManager initialized")
@@ -81,7 +82,10 @@ class LoginManager:
         
         system_type = self.config.get('emr.system_type', 'o19')
         
-        driver.get(self.login_url)
+        if(system_type != 'opro'):
+            driver.get(self.login_url)
+        else:
+            driver.get(self.login_url_pro)
 
         driver.implicitly_wait(10)
 
@@ -105,6 +109,7 @@ class LoginManager:
             pin_field.send_keys(Keys.RETURN)
         else:
             password_field.send_keys(Keys.RETURN)
+            self.base_url = f"{self.base_url}/oscar"
         
         logger.debug("Login form submitted")
 
