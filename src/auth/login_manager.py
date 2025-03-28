@@ -62,7 +62,6 @@ class LoginManager:
         self.pin = config.get('emr.pin')
         self.base_url = config.get('emr.base_url')
         self.login_url = f"{self.base_url}/login.do"
-        self.login_url_pro = f"{self.base_url}/#/"
         self.max_retries = config.get('login.max_retries', 5)
         self.initial_retry_delay = config.get('login.initial_retry_delay', 1)
         logger.debug("LoginManager initialized")
@@ -82,10 +81,7 @@ class LoginManager:
         
         system_type = self.config.get('emr.system_type', 'o19')
         
-        if(system_type != 'opro'):
-            driver.get(self.login_url)
-        else:
-            driver.get(self.login_url_pro)
+        driver.get(self.login_url)
 
         driver.implicitly_wait(10)
 
