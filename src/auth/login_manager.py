@@ -62,7 +62,7 @@ class LoginManager:
         self.pin = config.get('emr.pin')
         self.base_url = config.get('emr.base_url')
         self.login_url = f"{self.base_url}/login.do"
-        self.login_url_pro = f"{self.base_url}/kaiemr/#/"
+        self.login_url_pro = f"{self.base_url}/kaiemr/"
         self.max_retries = config.get('login.max_retries', 5)
         self.initial_retry_delay = config.get('login.initial_retry_delay', 1)
         logger.debug("LoginManager initialized")
