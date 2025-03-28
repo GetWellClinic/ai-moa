@@ -128,6 +128,11 @@ class LoginManager:
         session = requests.Session()
         retry_delay = self.initial_retry_delay
 
+        if(system_type != 'opro'):
+            self.login_url = self.login_url
+        else:
+            self.login_url = self.login_url_pro
+
         for attempt in range(self.max_retries):
             try:
                 response = session.post(
@@ -142,6 +147,8 @@ class LoginManager:
                 )
                 login_successful = response.url != self.login_url
                 logger.debug(f"Login {'successful' if login_successful else 'failed'}")
+                if(system_type == 'opro'):
+                    self.base_url = f"{self.base_url}/oscar"
                 return session, login_successful
             except (requests.ConnectionError, requests.Timeout, requests.RequestException) as e:
                 logger.error(f"Attempt {attempt + 1} failed: {str(e)}")
