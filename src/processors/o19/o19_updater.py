@@ -133,8 +133,10 @@ def update_o19_pendingdocs(self):
 	params["flagproviders"] = []
 
 	for value in self.provider_number:
-	    params["flagproviders"].append(value)
+		params["flagproviders"].append(value)
 
+	self.headers['Referer'] = url
+	self.session.headers.update(self.headers)
 	response = self.session.post(url, data=params, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
 
 	if response.status_code == 200:
@@ -194,7 +196,10 @@ def update_o19_incomingdocs(self):
 	params["flagproviders"] = []
 
 	for value in self.provider_number:
-	    params["flagproviders"].append(value)
+		params["flagproviders"].append(value)
+
+	self.headers['Referer'] = url
+	self.session.headers.update(self.headers)
 
 	response = self.session.post(url, data=params, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
 

@@ -160,9 +160,11 @@ def get_inbox_pendingdocs_documents(self):
 					return False
 				else:
 					self.config.update_pending_retries(current_retries + 1)  # Increment the retry count by 1
-
 					self.file_name = item
 					file_url = f"{self.base_url}/dms/ManageDocument.do?method=display&doc_no={item}"
+					self.get_driver_session(self, driver)
+					self.headers['Referer'] = file_url
+					self.session.headers.update(self.headers)
 					file_response = self.session.get(file_url, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
 
 					if file_response.status_code == 200 and file_response.content:
@@ -244,6 +246,9 @@ def get_inbox_incomingdocs_documents(self):
 						update_time = split_string[1]
 
 						pdf_url = f"{self.base_url}/dms/ManageDocument.do?method=displayIncomingDocs&curPage=1&pdfDir={folder}&queueId={queue}&pdfName={option.get_attribute('value')}"
+						self.get_driver_session(self, driver)
+						self.headers['Referer'] = pdf_url
+						self.session.headers.update(self.headers)
 						file_response = self.session.get(pdf_url, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
 
 						if file_response.status_code == 200  and file_response.content:
@@ -304,3 +309,25 @@ def get_driver(self):
 		driver.close()
 		driver.quit()
 		return False
+
+def get_driver_session(self, driver):
+	"""
+	Retrieves the session cookies from a Selenium WebDriver and sets them in the current session.
+
+	This method checks the system type specified in the configuration (defaulting to 'o19'). 
+	If the system type is either 'opro' or 'opro_pin', it retrieves the cookies from the
+	provided Selenium WebDriver instance and sets them in the session's cookie jar.
+
+	Args:
+	driver (selenium.webdriver): The Selenium WebDriver instance from which cookies will
+	                              be retrieved.
+
+	Returns:
+		None: This method does not return anything. It modifies the session's cookies directly.
+	"""
+	system_type = self.config.get('emr.system_type', 'o19')
+	
+	if(system_type == 'opro' or system_type == 'opro_pin'):
+		cookies = driver.get_cookies()
+		for cookie in cookies:
+			self.session.cookies.set(cookie['name'], cookie['value'])

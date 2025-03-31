@@ -24,6 +24,7 @@ import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import requests
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 from config import ConfigManager
 
@@ -62,7 +63,6 @@ class LoginManager:
         self.pin = config.get('emr.pin')
         self.base_url = config.get('emr.base_url')
         self.login_url = f"{self.base_url}/login.do"
-        self.login_url_pro = f"{self.base_url}/kaiemr/"
         self.max_retries = config.get('login.max_retries', 5)
         self.initial_retry_delay = config.get('login.initial_retry_delay', 1)
         logger.debug("LoginManager initialized")
@@ -78,23 +78,26 @@ class LoginManager:
         :return: The current URL after login attempt.
         :rtype: str
         """
-        logger.info(f"Attempting Selenium login for user: {self.username}")
+        logger.info(f"Attempting Selenium login for user.")
+        print(f"Attempting Selenium login for user: {self.username}")
         
         system_type = self.config.get('emr.system_type', 'o19')
         
-        if(system_type != 'opro'):
-            driver.get(self.login_url)
+        if(system_type == 'opro' or system_type == 'opro_pin'):
+            driver.get(self.base_url)
         else:
-            driver.get(self.login_url_pro)
-
-        driver.implicitly_wait(10)
+            driver.get(self.login_url)
+        
+        driver.implicitly_wait(30)
 
         # Locate the login fields and enter credentials
         username_field = driver.find_element(By.NAME, "username")
         password_field = driver.find_element(By.NAME, "password")
-        
+
+        driver.implicitly_wait(30)
+
         if(system_type != 'opro'):
-            if(system_type == 'o15'):
+            if(system_type == 'o15' or system_type == 'opro_pin'):
                 pin_field = driver.find_element(By.NAME, "pin")
             else:
                 pin_field = driver.find_element(By.NAME, "pin2")
@@ -109,11 +112,23 @@ class LoginManager:
             pin_field.send_keys(Keys.RETURN)
         else:
             password_field.send_keys(Keys.RETURN)
-            self.base_url = f"{self.base_url}/oscar"
-        
+
         logger.debug("Login form submitted")
 
-        return driver.current_url
+        try:
+
+            firstmenu_field = driver.find_element(By.ID, "firstMenu")
+
+            driver.implicitly_wait(30)
+            
+            return driver.current_url
+
+        except TimeoutException:
+            logger.debug("Timeout, element not found")
+            return self.login_url
+        except NoSuchElementException:
+            logger.debug("Error; element not found")
+            return self.login_url
 
     def login_with_requests(self):
         """
@@ -127,13 +142,6 @@ class LoginManager:
         logger.info(f"Attempting requests login for user: {self.username}")
         session = requests.Session()
         retry_delay = self.initial_retry_delay
-
-        system_type = self.config.get('emr.system_type', 'o19')
-
-        if(system_type != 'opro'):
-            self.login_url = self.login_url
-        else:
-            self.login_url = self.login_url_pro
 
         for attempt in range(self.max_retries):
             try:
@@ -149,8 +157,6 @@ class LoginManager:
                 )
                 login_successful = response.url != self.login_url
                 logger.debug(f"Login {'successful' if login_successful else 'failed'}")
-                if(system_type == 'opro'):
-                    self.base_url = f"{self.base_url}/oscar"
                 return session, login_successful
             except (requests.ConnectionError, requests.Timeout, requests.RequestException) as e:
                 logger.error(f"Attempt {attempt + 1} failed: {str(e)}")

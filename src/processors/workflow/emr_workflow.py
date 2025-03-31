@@ -26,6 +26,7 @@ from auth import LoginManager, SessionManager
 from ai_moa_utils import setup_logging
 import os
 import requests
+import re
 from ..utils import local_files
 from ..utils import ocr
 from ..utils import llm
@@ -79,10 +80,23 @@ class Workflow:
         self.inbox_incoming_lastfile = ''
         self.enable_ocr_gpu = config.get('ocr.enable_gpu', True)
         self.url = config.get('ai.uri', "https://localhost:3334/v1/chat/completions")
-        self.headers = {
-            "Authorization": f"Bearer {config.get('ai.api_key')}",
-            "Content-Type": "application/json"
-        }
+        
+        self.headers = {}
+        self.origin_url = ''
+
+        pattern = r'^(https?://[^/]+)'
+        match = re.match(pattern, self.base_url)
+
+        if match:
+            base_url = match.group(1)
+            self.origin_url = base_url
+        else:
+            self.logger.info(f"Base url format issue, please cross check base url!")
+            self.origin_url = self.base_url
+
+        self.headers['Origin'] = self.origin_url
+        self.headers['Referer'] = self.base_url
+
         self.update_o19 = o19_updater.update_o19
         self.view_output = o19_updater.view_output
         self.update_o19_pendingdocs = o19_updater.update_o19_pendingdocs
@@ -95,6 +109,7 @@ class Workflow:
         self.get_driver = o19_inbox.get_driver
         self.get_inbox_pendingdocs_documents = o19_inbox.get_inbox_pendingdocs_documents
         self.get_inbox_incomingdocs_documents = o19_inbox.get_inbox_incomingdocs_documents
+        self.get_driver_session = o19_inbox.get_driver_session
         self.get_local_documents = local_files.get_local_documents
         self.has_ocr = ocr.has_ocr
         self.extract_text_doctr = ocr.extract_text_doctr

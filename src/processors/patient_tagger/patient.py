@@ -331,6 +331,9 @@ def get_mrp_details(self):
                   "query": formatted_name
                 }
 
+    self.headers['Referer'] = url
+    self.session.headers.update(self.headers)
+
     # Send the POST request
     response = self.session.post(url, data=payload, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
 
@@ -426,6 +429,9 @@ def get_patient_Html(self,type_of_query,query):
                   "fromMessenger": "False",
                   "outofdomain": ""
                 }
+
+    self.headers['Referer'] = url
+    self.session.headers.update(self.headers)
 
     # Send the POST request
     response = self.session.post(url, data=payload, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
