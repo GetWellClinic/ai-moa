@@ -23,6 +23,15 @@ import yaml
 import requests
 from typing import List, Dict, Optional
 from bs4 import BeautifulSoup
+import re
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 import logging
 
@@ -58,6 +67,26 @@ class ProviderListManager:
         self.pin = workflow.config.get('emr.pin')
         self.base_url = workflow.config.get('emr.base_url')
         self.logger = workflow.logger
+        self.system_type = workflow.config.get('emr.system_type')
+        self.chrome_headless = workflow.config.get('chrome.options.headless')
+        self.verify_https = workflow.config.get('emr.verify-HTTPS')
+        
+        self.headers = {}
+        self.origin_url = ''
+
+        pattern = r'^(https?://[^/]+)'
+        match = re.match(pattern, self.base_url)
+
+        if match:
+            base_url = match.group(1)
+            self.origin_url = base_url
+        else:
+            self.logger.info(f"Base url format issue, please cross check base url!")
+            self.origin_url = self.base_url
+
+        self.headers['Origin'] = self.origin_url
+        self.headers['Referer'] = self.base_url
+
         self.session = requests.Session()
         self.login()
 
@@ -70,12 +99,23 @@ class ProviderListManager:
         Raises:
             requests.RequestException: If there is an error making the login request.
         """
-        response = self.session.post(f"{self.base_url}/login.do",
-                                     data={"username": self.username, "password": self.password, "pin": self.pin}, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
-        if response.url == f"{self.base_url}/login.do":
-            self.logger.info("Login failed.")
+        self.logger.info("Logging in for provider list template configurations.")
+        if(self.system_type == 'opro' or self.system_type == 'opro_pin'):
+            driver = self.get_driver()
+            if driver is not False:
+                cookies = driver.get_cookies()
+                for cookie in cookies:
+                    self.session.cookies.set(cookie['name'], cookie['value'])
+                self.logger.info("Login successful!")
+            else:
+                self.logger.info("Login failed using selenium.")
         else:
-            self.logger.info("Login successful!")
+            response = self.session.post(f"{self.base_url}/login.do",
+                                         data={"username": self.username, "password": self.password, "pin": self.pin}, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
+            if response.url == f"{self.base_url}/login.do":
+                self.logger.info("Login failed.")
+            else:
+                self.logger.info("Login successful!")
 
     def upload_template_file(self) -> bool:
         """
@@ -98,6 +138,8 @@ class ProviderListManager:
             with open(template_file, 'rb') as file:
                 files = {'templateFile': (template_file, file, 'text/plain')}
                 data = {'action': 'add'}
+                self.headers['Referer'] = url
+                self.session.headers.update(self.headers)
                 response = self.session.post(url, files=files, data=data, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
                 if(response.status_code == 200):
                     self.logger.info("Template uploaded successfully.")
@@ -121,6 +163,9 @@ class ProviderListManager:
             bool: `True` if the template exists or was successfully uploaded, otherwise `False`.
         """
         url = f"{self.base_url}/oscarReport/reportByTemplate/homePage.jsp?templates=all"
+
+        self.headers['Referer'] = url
+        self.session.headers.update(self.headers)
 
         # Send the POST request
         response = self.session.get(url, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
@@ -161,15 +206,10 @@ class ProviderListManager:
         Returns:
             None
         """
-        chrome_options = Options()
-        if self.config.get('chrome.options.headless', False):
-            chrome_options.add_argument("--headless")
-            self.logger.debug("Chrome headless mode enabled")
-        if not self.config.get('emr.verify-HTTPS', False):
-            chrome_options.add_argument('--ignore-certificate-errors')
-        
         if self.check_template_file():
             url = f"{self.base_url}/oscarReport/reportByTemplate/homePage.jsp?templates=all"
+            self.headers['Referer'] = url
+            self.session.headers.update(self.headers)
             response = self.session.get(url, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
             soup = BeautifulSoup(response.text, 'html.parser')
             tbody = soup.find('tbody', id='tableData')
@@ -216,6 +256,8 @@ class ProviderListManager:
         url = f"{self.base_url}/oscarReport/reportByTemplate/GenerateReportAction.do"
         params = {"templateId": template_id, "submitButton": "Run Query"}
         try:
+            self.headers['Referer'] = url
+            self.session.headers.update(self.headers)
             response = self.session.post(url, data=params, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
             soup = BeautifulSoup(response.text, 'html.parser')
             input_element = soup.find('input', {'type': 'hidden', 'class': 'btn', 'name': 'csv'})
@@ -261,4 +303,104 @@ class ProviderListManager:
                 self.logger.error(f"Error saving provider list: {e}")
         else:
             self.logger.info('No provider data to save')
+
+
+    def get_driver(self):
+        """
+        Retrieves a Selenium WebDriver instance for interaction with the web-based system.
+
+        This method configures Chrome options and creates a Chrome WebDriver instance using 
+        the `webdriver_manager` library. It then attempts to log in using Selenium. If login is successful, 
+        the driver instance is returned, otherwise, it returns `False`.
+
+        Returns:
+            webdriver.Chrome | bool: The WebDriver instance if login is successful, 
+            `False` otherwise.
+
+        Example:
+            >>> driver = manager.get_driver()
+            >>> print(driver)
+            <selenium.webdriver.chrome.webdriver.WebDriver object at 0x...>  # if login is successful
+        """
+        chrome_options = Options()
+        if self.chrome_headless:
+                chrome_options.add_argument("--headless")
+                self.logger.debug("Chrome headless mode enabled")
+        if not self.verify_https:
+            chrome_options.add_argument('--ignore-certificate-errors')
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+        try:
+
+            if self.login_with_selenium(driver):
+                return driver
+            else:
+                driver.close()
+                driver.quit()
+                return False
+
+        except Exception as e:
+            # Handle the exception (log it, re-raise, return None, etc.)
+            self.logger.error(f"An error occurred: {e}")
+            driver.close()
+            driver.quit()
+            return False
+
+
+    def login_with_selenium(self, driver):
+        """
+        Perform login using Selenium WebDriver.
+
+        Navigates to the login page and submits the login form.
+
+        :param driver: Selenium WebDriver instance.
+        :type driver: selenium.webdriver.Chrome
+        :return: The current URL after login attempt.
+        :rtype: str
+        """
+        logger.info(f"Attempting Selenium login for user.")
+        print(f"Attempting Selenium login for user: {self.username}")
+        
+        driver.get(self.base_url)
+        
+        driver.implicitly_wait(30)
+
+        # Locate the login fields and enter credentials
+        username_field = driver.find_element(By.NAME, "username")
+        password_field = driver.find_element(By.NAME, "password")
+
+        driver.implicitly_wait(30)
+
+        if(self.system_type != 'opro'):
+            if(self.system_type == 'o15' or self.system_type == 'opro_pin'):
+                pin_field = driver.find_element(By.NAME, "pin")
+            else:
+                pin_field = driver.find_element(By.NAME, "pin2")
+
+            pin_field.send_keys(self.pin)
+
+        username_field.send_keys(self.username)
+        password_field.send_keys(self.password)
+
+        if(self.system_type != 'opro'):
+            # Submit the login form
+            pin_field.send_keys(Keys.RETURN)
+        else:
+            password_field.send_keys(Keys.RETURN)
+
+        logger.debug("Login form submitted")
+
+        try:
+
+            firstmenu_field = driver.find_element(By.ID, "firstMenu")
+
+            driver.implicitly_wait(30)
+
+            return True
+
+        except TimeoutException:
+            logger.debug("Timeout, element not found")
+            return False
+        except NoSuchElementException:
+            logger.debug("Error; element not found")
+            return False
 
