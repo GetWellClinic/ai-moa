@@ -133,6 +133,17 @@ def get_inbox_pendingdocs_documents(self):
 	driver = self.get_driver(self)
 	if driver is not False:
 		driver.get(f"{self.base_url}/dms/inboxManage.do?method=getDocumentsInQueues")
+		
+		try:
+			queuenames_field = driver.find_element(By.ID, "queueNames")
+			driver.implicitly_wait(300)
+		except TimeoutException:
+			self.logger.debug("Timeout occurred when loading pending documents.")
+			return False
+		except NoSuchElementException:
+			self.logger.debug("Error occurred when loading pending documents.")
+			return False
+
 		script_value = driver.execute_script("return typeDocLab;")
 		pending_file = self.config.get('inbox.pending')
 		if pending_file is not None:
