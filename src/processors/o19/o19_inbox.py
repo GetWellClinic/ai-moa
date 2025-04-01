@@ -135,8 +135,8 @@ def get_inbox_pendingdocs_documents(self):
 		driver.get(f"{self.base_url}/dms/inboxManage.do?method=getDocumentsInQueues")
 		
 		try:
-			queuenames_field = driver.find_element(By.ID, "queueNames")
 			driver.implicitly_wait(300)
+			queuenames_field = driver.find_element(By.ID, "queueNames")
 		except TimeoutException:
 			self.logger.debug("Timeout occurred when loading pending documents.")
 			return False
