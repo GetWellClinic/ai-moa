@@ -21,7 +21,7 @@
 
 # default values
 # Prompt Version: KC-2025.03.07
-# Workflow Version: Custom-2025.03.25 (Skip tagging providers and MRP, only file to patient)
+# Workflow Version: Custom-2025.04.01 (Skip tagging providers and MRP, only file to patient)
 #
 default_values:
   default_provider_tagging_id:
@@ -44,6 +44,7 @@ default_values:
 # Workflow Configuration
 # Note: Use the view_output function to view the output from the workflow. It can be used to view the document category, document description, provider details, demographic details, and MRP information. The view_output function should be called after the relevant function calls to ensure proper results.
 
+# Custom workflow: Removes tagging providers in document, and removes tagging MRP
 workflow:
   steps:
     - name: check_lock
@@ -74,21 +75,16 @@ workflow:
       true_next: get_document_description
       false_next: release_lock
     - name: get_document_description
-#      true_next: get_provider_list
-      true_next: get_patient_dob
+      true_next: get_provider_list
       false_next: release_lock
-#    - name: get_provider_list
-#      true_next: get_patient_dob
-#      false_next: get_patient_dob
+    - name: get_provider_list
+      true_next: get_patient_dob
+      false_next: get_patient_dob
     - name: get_patient_dob
       true_next: filter_results
       false_next: get_patient_hin
     - name: filter_results
-      true_next: verify_demographic_number
-      false_next: get_patient_hin
-    - name: verify_demographic_number
-#      true_next: get_mrp_details
-      true_next: remove_mrp_details
+      true_next: get_patient_hin
       false_next: get_patient_hin
     - name: get_patient_hin
       true_next: filter_results
@@ -98,20 +94,13 @@ workflow:
       false_next: get_patient_name
     - name: get_patient_name
       true_next: filter_results
-      false_next: get_patient_dob
-    - name: filter_results
-      true_next: get_patient_dob
-      false_next: get_patient_dob
-    - name: get_patient_dob
-      true_next: filter_results
       false_next: compare_demographic_results
     - name: filter_results
       true_next: compare_demographic_results
       false_next: compare_demographic_results
     - name: compare_demographic_results
-      true_next: get_mrp_details
+      true_next: remove_mrp_details
       false_next: unidentified_patients
-#    - name: get_mrp_details
     - name: remove_mrp_details
       true_next: update_o19
       false_next: update_o19

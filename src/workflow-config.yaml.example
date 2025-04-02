@@ -20,8 +20,8 @@
 # ***
 
 # default values
-# Workflow Version: 2025.03.25
 # Prompt Version: 2025.03.25
+# Workflow Version: 2025.04.01
 #
 default_values:
   default_provider_tagging_id:
@@ -83,10 +83,7 @@ workflow:
       true_next: filter_results
       false_next: get_patient_hin
     - name: filter_results
-      true_next: verify_demographic_number
-      false_next: get_patient_hin
-    - name: verify_demographic_number
-      true_next: get_mrp_details
+      true_next: get_patient_hin
       false_next: get_patient_hin
     - name: get_patient_hin
       true_next: filter_results
@@ -95,12 +92,6 @@ workflow:
       true_next: get_patient_name
       false_next: get_patient_name
     - name: get_patient_name
-      true_next: filter_results
-      false_next: get_patient_dob
-    - name: filter_results
-      true_next: get_patient_dob
-      false_next: get_patient_dob
-    - name: get_patient_dob
       true_next: filter_results
       false_next: compare_demographic_results
     - name: filter_results
