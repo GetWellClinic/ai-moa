@@ -2,7 +2,7 @@
 ## Linux Installation ##
 *Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
 *LICENSE: GNU Affero General Public License Version 3*<br />
-**Document Version 2025.03.26**
+**Document Version 2025.04.03**
 <p align="center">
   <img src="https://getwellclinic.ca/images/GetWellClinic/Logos-Icons/AimeeAI-pc.png" alt="Aimee AI">
 </p>
@@ -574,6 +574,23 @@ SELECT * FROM queue_document_link WHERE status="A";
 UPDATE queue_document_link SET status="I" WHERE status="A" and document_id<######;
 ```
 
+### Unable to upload to or access Incoming Docs queue ###
+
+Incoming Docs queue needs to be initialized. The default queue 1 is usually present on default systems, however, the folders "Fax, Mail, File, Refile" have not been created.
+
+- Access the server and add these directories to the corresponding location of "...OscarDocument/incomingdocs/1"
+- Give permissions to group:owner that corresponds to your tomcat version (ie. tomcat9)
+- Verify tomcat user has correct rwx permissions for these folders
+
+```
+ls -l -h /usr/share/oscar-emr/OscarDocument/oscar/incomingdocs
+sudo mkdir /usr/share/oscar-emr/OscarDocument/oscar/incomingdocs/1
+sudo mkdir /usr/share/oscar-emr/OscarDocument/oscar/incomingdocs/1/Fax
+sudo mkdir /usr/share/oscar-emr/OscarDocument/oscar/incomingdocs/1/Mail
+sudo mkdir /usr/share/oscar-emr/OscarDocument/oscar/incomingdocs/1/File
+sudo mkdir /usr/share/oscar-emr/OscarDocument/oscar/incomingdocs/1/Refile
+sudo chown -R tomcat9:tomcat9 /usr/share/oscar-emr/OscarDocument/oscar/incomingdocs/1
+```
 
 
 ## Special Thanks ##
