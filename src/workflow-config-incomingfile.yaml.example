@@ -21,7 +21,7 @@
 
 # default values
 # Prompt Version: KC-2025.03.07
-# Workflow Version: Custom-2025.04.01 (Skip tagging providers and MRP, only file to patient)
+# Workflow Version: Custom-2025.04.04 (Skip tagging providers and MRP, only file to patient)
 #
 default_values:
   default_provider_tagging_id:
@@ -75,11 +75,8 @@ workflow:
       true_next: get_document_description
       false_next: release_lock
     - name: get_document_description
-      true_next: get_provider_list
-      false_next: release_lock
-    - name: get_provider_list
       true_next: get_patient_dob
-      false_next: get_patient_dob
+      false_next: release_lock
     - name: get_patient_dob
       true_next: filter_results
       false_next: get_patient_hin
