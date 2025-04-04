@@ -649,7 +649,7 @@ def compare_demographic_results(self):
     if data_dob is not None and data_name is not None and data_hin is not None:
         if data_dob.get('demographicNo') == data_name.get('demographicNo') == data_hin.get('demographicNo'):
             self.logger.info("Match (all three) found when comparing demographic number.")
-            return True, data_dob
+            return True, json.dumps(data_dob)
     
     # Check if two demographic numbers match
     if data_dob is not None and data_name is not None:
