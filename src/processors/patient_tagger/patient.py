@@ -386,7 +386,7 @@ def remove_mrp_details(self):
 
     data['providerNo'] = "_"
     self.config.set_shared_state('filter_results', (True, json.dumps(data)))
-    self.logger.error("Removed MRP info from data.")
+    self.logger.info("Removed MRP info from data.")
 
     return True
 
