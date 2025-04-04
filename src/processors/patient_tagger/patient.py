@@ -625,15 +625,15 @@ def compare_demographic_results(self):
     data_name = self.decode_json(self, data_name, "name")
     data_hin = self.decode_json(self, data_hin, "hin")
 
-    self.logger.info(f"Verifying LLM demographic data (DOB) with system data.")
+    self.logger.info("Verifying LLM demographic data (DOB) with system data.")
     if data_dob is not None and not self.verify_demographic_data(self, data_dob):
         data_dob = None
 
-    self.logger.info(f"Verifying LLM demographic data (Name) with system data.")
+    self.logger.info("Verifying LLM demographic data (Name) with system data.")
     if data_name is not None and not self.verify_demographic_data(self, data_name):
         data_name = None
 
-    self.logger.info(f"Verifying LLM demographic data (HIN) with system data.")
+    self.logger.info("Verifying LLM demographic data (HIN) with system data.")
     if data_hin is not None and not self.verify_demographic_data(self, data_hin):
         data_hin = None
 
