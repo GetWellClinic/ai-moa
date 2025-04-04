@@ -539,10 +539,7 @@ def verify_demographic_number(self):
     """
     data = self.decode_json(self, self.config.get_shared_state('filter_results')[1], "verify_demographic_number")
 
-    if not data:
-        return False
-
-    return self.verify_demographic_data(self, data)
+    return False if not data else self.verify_demographic_data(self, data)
 
 def verify_demographic_data(self, data):
     """
