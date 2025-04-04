@@ -1,7 +1,7 @@
 @echo off
 REM This custom script installs Get Well Clinic's version of AI-MOA (Aimee AI)
 REM Note: To correctly use automatic detection of AI-MOA path, this script must be installed and run in subdirectory 'windows'
-REM Version 2025.02.21
+REM Version 2025.03.26
 
 REM Hardware Requirements:
 REM	NVIDIA RTX video card installed with at least 12 GB VRAM
@@ -42,8 +42,9 @@ if not exist %AIMOA%\llm-container\models mkdir %AIMOA%\llm-container\models
 REM Create config files from template
 copy src\config.yaml.example config\config.yaml
 copy src\config-incomingfax.yaml.example config\config-incomingfax.yaml
+copy src\config-incomingfile.yaml.example config\config-incomingfile.yaml
 copy src\workflow-config.yaml.example config\workflow-config.yaml
-copy src\workflow-incomingfax.yaml.example config\workflow-incomingfax.yaml
+copy src\workflow-config.yaml.example config\workflow-config-incomingfax.yaml
 copy src\template_providerlist.txt config\
 
 echo ...remember to edit the config files in ..\config\* to customize to your installation.

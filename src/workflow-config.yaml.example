@@ -20,7 +20,8 @@
 # ***
 
 # default values
-# Prompt Version: KC-2024.03.07
+# Prompt Version: 2025.03.25
+# Workflow Version: 2025.04.01
 #
 default_values:
   default_provider_tagging_id:
@@ -82,27 +83,21 @@ workflow:
       true_next: filter_results
       false_next: get_patient_hin
     - name: filter_results
-      true_next: verify_demographic_number
-      false_next: get_patient_hin
-    - name: verify_demographic_number
-      true_next: get_mrp_details
+      true_next: get_patient_hin
       false_next: get_patient_hin
     - name: get_patient_hin
       true_next: filter_results
       false_next: get_patient_name
     - name: filter_results
-      true_next: verify_demographic_number
-      false_next: get_patient_name
-    - name: verify_demographic_number
-      true_next: get_mrp_details
+      true_next: get_patient_name
       false_next: get_patient_name
     - name: get_patient_name
       true_next: filter_results
-      false_next: unidentified_patients
+      false_next: compare_demographic_results
     - name: filter_results
-      true_next: verify_demographic_number
-      false_next: unidentified_patients
-    - name: verify_demographic_number
+      true_next: compare_demographic_results
+      false_next: compare_demographic_results
+    - name: compare_demographic_results
       true_next: get_mrp_details
       false_next: unidentified_patients
     - name: get_mrp_details
@@ -439,7 +434,7 @@ ai_prompts:
     Follow this format strictly and DO NOT add any other text other than JSON object in the response!
 
   get_provider: >
-    Based on the above document, select the appropriate provider from the following list containing firstname and lastname that matches the health provider/physician/doctor; do not select a patient name from the document. For context, to differentiate between a doctor name from a patient name, the patient will have a date of birth. Remember, prioritize a doctor/health provider over a clinic, if no provider matches then select 'oscardoc', and only return the provider number (example: 999998) nothing else.
+    Based on the above document, select the appropriate provider from the following list containing firstname and lastname that matches the health provider/physician/doctor; do not select a patient name from the document. For context, to differentiate between a doctor name from a patient name, the patient will have a date of birth. Remember, prioritize a doctor/health provider over a clinic, if no provider matches from the list then select 'oscardoc'; and only return the provider number (example: 999998) nothing else.
 
   build_sub_prompt: >
     For the following question if confidence level is more than 85% give the answer in one word using the format 'True' else 'False'.
@@ -448,3 +443,7 @@ ai_prompts:
   get_doctor_name: >
     For context, some doctors names may include middle names and middle initials, ignore the middle names. Answer only to the following question in two words; and the answer should be in the following format; do not add 'Dr.' to the reply.
     Format : Lastname, Firstname. What is the lastname and firstname of the doctor who is addressed to in this document? Answer Format (Lastname, Firstname)
+
+  compare_demographic_results_llm: >
+    Do the following JSON details (formattedName) match the patient's details (name) in the above document? Yes or No
+

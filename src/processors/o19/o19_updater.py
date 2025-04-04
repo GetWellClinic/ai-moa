@@ -72,8 +72,10 @@ def update_o19(self):
 
 	default_provider_id = self.default_values.get('default_provider_tagging_id', '')
 
-	if(default_provider_id != self.config.get_shared_state('get_provider_list')[1]):
-		self.provider_number.append(self.config.get_shared_state('get_provider_list')[1])
+	provider_list = self.config.get_shared_state('get_provider_list')
+
+	if(provider_list is not None and default_provider_id != provider_list[1]):
+		self.provider_number.append(provider_list[1])
 
 	self.provider_number.append(default_provider_id)
 

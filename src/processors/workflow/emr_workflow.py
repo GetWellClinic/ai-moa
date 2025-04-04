@@ -25,6 +25,7 @@ from config import ConfigManager
 from auth import LoginManager, SessionManager
 from ai_moa_utils import setup_logging
 import os
+import requests
 from ..utils import local_files
 from ..utils import ocr
 from ..utils import llm
@@ -113,6 +114,12 @@ class Workflow:
         self.get_patient_Html_Common = patient.get_patient_Html_Common
         self.convert_date = patient.convert_date
         self.get_patient_Html = patient.get_patient_Html
+        self.compare_demographic_results = patient.compare_demographic_results
+        self.decode_json = patient.decode_json
+        self.compare_name_with_text = patient.compare_name_with_text
+        self.verify_demographic_data = patient.verify_demographic_data
+        self.compare_demographic_results_llm = patient.compare_demographic_results_llm
+        self.remove_mrp_details = patient.remove_mrp_details
 
 
 
@@ -154,9 +161,21 @@ class Workflow:
         while current_step:
             try:
                 result = self.execute_task(current_step)
-            except SystemExit as e:
+            except (requests.ConnectionError, requests.Timeout, requests.RequestException) as e:
+                self.config.update_lock_status(False)
+                self.logger.info(f"Lock released.")
                 self.logger.error(f"An error occurred: {e}")
+                self.logger.info(f"Stopping workflow task, processing Document No. {self.file_name}")
                 self.logger.error("Exiting from workflow execution.")
+                self.session.close()
+                return
+            except SystemExit as e:
+                self.config.update_lock_status(False)
+                self.logger.info(f"Lock released.")
+                self.logger.error(f"An error occurred: {e}")
+                self.logger.info(f"Stopping workflow task, processing Document No. {self.file_name}")
+                self.logger.error("Exiting from workflow execution.")
+                self.session.close()
                 return
             
             if result:
@@ -166,6 +185,7 @@ class Workflow:
             
             if next_step_name == 'exit':
                 self.logger.info("Workflow execution completed")
+                self.session.close()
                 return
 
             # Find the index of the step to pop
@@ -181,4 +201,5 @@ class Workflow:
             
             current_step = next((step for step in self.steps if step['name'] == next_step_name), None)
         
+        self.session.close()
         self.logger.info("Workflow execution completed")
