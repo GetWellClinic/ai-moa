@@ -117,6 +117,11 @@ def update_o19_pendingdocs(self):
     """
 	url = f"{self.base_url}/dms/ManageDocument.do"
 
+	system_type = self.config.get('emr.system_type', 'o19')
+
+	if(system_type == 'opro'):
+		url = f"{self.base_url}/documentManager/ManageDocument.do"
+
 	# Define the parameters for pending doc
 	params = {
 	    "method": "documentUpdateAjax",
@@ -165,6 +170,11 @@ def update_o19_incomingdocs(self):
         True  # if the incoming document was successfully updated
     """
 	url = f"{self.base_url}/dms/ManageDocument.do"
+
+	system_type = self.config.get('emr.system_type', 'o19')
+
+	if(system_type == 'opro'):
+		url = f"{self.base_url}/documentManager/ManageDocument.do"
 
 	# Define the parameters for incoming doc
 	params = {

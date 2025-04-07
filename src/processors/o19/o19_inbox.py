@@ -132,7 +132,12 @@ def get_inbox_pendingdocs_documents(self):
     """
 	driver = self.get_driver(self)
 	if driver is not False:
-		driver.get(f"{self.base_url}/dms/inboxManage.do?method=getDocumentsInQueues")
+		system_type = self.config.get('emr.system_type', 'o19')
+
+		if(system_type == 'opro'):
+			driver.get(f"{self.base_url}/documentManager/inboxManage.do?method=getDocumentsInQueues")
+		else:
+			driver.get(f"{self.base_url}/dms/inboxManage.do?method=getDocumentsInQueues")
 		
 		try:
 			driver.implicitly_wait(300)
@@ -173,6 +178,8 @@ def get_inbox_pendingdocs_documents(self):
 					self.config.update_pending_retries(current_retries + 1)  # Increment the retry count by 1
 					self.file_name = item
 					file_url = f"{self.base_url}/dms/ManageDocument.do?method=display&doc_no={item}"
+					if(system_type == 'opro'):
+						file_url = f"{self.base_url}/documentManager/ManageDocument.do?method=display&doc_no={item}"
 					self.get_driver_session(self, driver)
 					self.headers['Referer'] = file_url
 					self.session.headers.update(self.headers)
@@ -213,7 +220,13 @@ def get_inbox_incomingdocs_documents(self):
 	if driver is not False:
 		queue = self.config.get('emr.incoming_folder_queue')
 		folder = self.config.get('emr.incoming_folder')
-		driver.get(f"{self.base_url}/dms/incomingDocs.jsp")
+		system_type = self.config.get('emr.system_type', 'o19')
+
+		if(system_type == 'opro'):
+			driver.get(f"{self.base_url}/documentManager/incomingDocs.jsp")
+		else:
+			driver.get(f"{self.base_url}/dms/incomingDocs.jsp")
+
 		driver.execute_script(f"loadPdf('{queue}', '{folder}');")
 		driver.implicitly_wait(10)
 		select_element = Select(driver.find_element(By.ID, "SelectPdfList"))
@@ -257,6 +270,8 @@ def get_inbox_incomingdocs_documents(self):
 						update_time = split_string[1]
 
 						pdf_url = f"{self.base_url}/dms/ManageDocument.do?method=displayIncomingDocs&curPage=1&pdfDir={folder}&queueId={queue}&pdfName={option.get_attribute('value')}"
+						if(system_type == 'opro'):
+							pdf_url = f"{self.base_url}/documentManager/ManageDocument.do?method=displayIncomingDocs&curPage=1&pdfDir={folder}&queueId={queue}&pdfName={option.get_attribute('value')}"
 						self.get_driver_session(self, driver)
 						self.headers['Referer'] = pdf_url
 						self.session.headers.update(self.headers)
