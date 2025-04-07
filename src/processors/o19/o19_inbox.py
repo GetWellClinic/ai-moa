@@ -32,10 +32,10 @@ def get_document_processor_type(self):
     Determines the document processor type based on the configuration.
 
     This method checks the system type set in the configuration (`aimoa_document_processor.type`) 
-    and returns `True` if the system type is 'o19'. Otherwise, it returns `False`.
+    and returns `True` if the system type is 'emr'. Otherwise, it returns `False`.
 
     Returns:
-        bool: `True` if the system type is 'o19', otherwise `False`.
+        bool: `True` if the system type is 'emr', otherwise `False`.
 
     Example:
         >>> processor_type = manager.get_document_processor_type()
@@ -44,7 +44,7 @@ def get_document_processor_type(self):
     """
 	system_type = self.config.get('aimoa_document_processor.type')
 
-	return system_type in ['o19', 'o15']
+	return system_type in ['emr']
 
 
 def check_lock(self):
