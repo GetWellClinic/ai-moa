@@ -20,8 +20,8 @@
 # ***
 
 # default values
-# Prompt Version: KC-2025.03.07
-# Workflow Version: Custom-2025.04.04 (Skip tagging providers and MRP, only file to patient)
+# Prompt Version: KC-2025.04.08
+# Workflow Version: Custom-2025.04.08 (Skip tagging providers and MRP, only file to patient)
 #
 default_values:
   default_provider_tagging_id:
@@ -55,7 +55,7 @@ workflow:
       false_next: get_local_documents
     - name: get_o19_documents
       true_next: extract_text_doctr
-      false_next: release_lock
+      false_next: unidentified_patients
     - name: get_local_documents
       true_next: extract_text_doctr
       false_next: release_lock
@@ -126,12 +126,12 @@ document_categories:
       - name: get_document_description
         prompt: >
           Act as if you are a medical office assistant who follows direction precisely and consistantly when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as 'output format:', 'report type:', or 'diagnostics'. After review perform the following steps.
-          1. Based on the document, select one report type from this SUBLIST: Immunity, Serology, Sputum, Culture, Fecal Immunochemical Test, FIT, ECG, Routine, Hematology, Urinalysis, Microbiology, Lipids, Biochemistry, Genetics, Lab Results, Hormones, Tumour Markers.
+          1. Based on the document, select one report type from this SUBLIST: Immunity, Serology, Sputum, Culture, Fecal Immunochemical Test, FIT, ECG, Routine, Hematology, Urinalysis, Microbiology, Lipids, Biochemistry, Genetics, Lab Results, Hormones, Tumour Markers, Aspirate.
           2. Identify the name of the laboratory/hospital that performed the tests in the lab report, use the english name if there is both English and French. Replace 'feLabs' with 'LifeLabs'.
           3. Select the lab tests from the LABRESULT LIST. Omit routine blood work such as complete blood count, glucose, Hba1c, creatine, electrolytes, and cholesterol profile. Merge all sub-types of similar lab types in to general type categories like 'Hepatitis B Surface Antigen, Hepatitis B Surface Antibody, Hepatitis C Antibody' becomes 'hepatitis'. Complete blood count subtypes such as leukocyte, erthrocyte, haemoglobin, hematocrit, mean cell, platelets, neutrophils, lymphocytes, eosinophils, these refer to 'Routine' lab test. Electrocardiogram measurements such as QT, QTc, Axis, V1, aVR, these refer to 'ECG'.
           Follow this output format template: report (laboratory/hospital) lab tests. Ensure the output format template is followed including brackets (); use the sublist for report type; include only the lab tests in labresult list; patient names are never part of output, and the output should end without a period.
           For reference these are example using this output template: Serology (Public Health) hepatitis, Bloodwork (LifeLabs) CBC, FIT (LifeLabs) FIT requisition rejected, Immunity (Public Health) MMR.
-          For reference, use this LABRESULT LIST: Routine, CBC, ECG, MMR, VZ, H. pylori serology, hepatitis serology, HIV, VDRL, HIV, HSV PCR, fungal, EBV serology, AFB sputum culture, FIT normal, FIT Abnormal, FIT requisition rejected, PAP cytopathology, thyroid function, hormones, Quantiferon TB Gold, urinalysis, PSA, Vitamin D, viral load, ANA, RF, ESR, CK, CA-125, CEA, ds-DNA, PFT.
+          For reference, use this LABRESULT LIST: Routine, CBC, ECG, MMR, VZ, H. pylori serology, hepatitis serology, HIV, VDRL, HIV, HSV PCR, fungal, EBV serology, AFB sputum culture, FIT normal, FIT Abnormal, FIT requisition rejected, PAP cytopathology, thyroid function, hormones, Quantiferon TB Gold, urinalysis, PSA, Vitamin D, viral load, ANA, RF, ESR, CK, CA-125, CEA, ds-DNA, PFT, Bone marrow aspirate.
 
   - name: Consult
     # default_tagger: 200
@@ -147,7 +147,7 @@ document_categories:
           4. Without using the first name or last name of the patients, describe the sub-type or general nature of this medical report in less than 5 words. Never directly reference the patient by any type of name. If document specialty type is ‘Emergency’ this general nature of the medical report should be described as a trauma or acute illness in less than 5 words. Ensure the sub-type/general nature description is less than 5 words.
           Use the following output format template: specialty (physician/health provider or hospital/organization) sub-type or general nature. Ensure the output format template is followed precisely including brackets (), the output must not be enclosed with quotation marks, without mentioning the words 'specialty' or 'keywords', and the output must end without a period. Do not include a summary or explanation in the output.
           For reference, these are examples using this output template: Allergy and Immunology (Dr. Adora Smith) allergy test, Infectious Disease (Dr. Clara Yip) sepsis, Cardiology (Dr. Paul Simon) chest pain, Emergency Consult (Dr. Walter Hammel, Humber River) abdo pain, Discharge Summary (Dr. Gord Pincet, UHN) appendicitis.
-          For reference, use this SPECIALTY LIST: Anesthesiology, Family Medicine, Cardiology, Gastroenterology, Respirology, Pulmonology, Dermatology, Orthopedics, Neurology, Hematology, Endocrinology, Rheumatology, Nephrology, Ophthalmology, Optometry, Audiology, Rheumatology, Psychiatry, Chiropractic, Obstetrics, Gynecology, OB GYN, Urology, Fertility, General Internal Medicine, Oncology, Infectious Disease, Allergy and Immunology, Gerontology, Gastrointestinal Surgery, Podiatry, Speech and Language, Chiropody, Dental, Maxillofacial Surgery, ED Visit, Emergency Visit, Home Care, Physiotherapy, Occupational Therapy, Dietitian, Endoscopy, Palliative Care, Psychotherapy, Psychology, Infectious Disease, Neurosurgery, Spine Surgery, Gastroscopy, Colonoscopy, Plastic Surgery, Vascular Surgery, Pediatrics, Physical Medicine and Rehabilitation, Physiatry and Rehab, Hepatology, Hematopathology, Intensive Care Unit, Admission Consult, Nuclear Medicine, Radiology, Pain Management, Genetics, Hepatobiliary Surgery, Colorectal Surgery, Cardiac Surgery, Plastic & Reconstructive Surgery, Sleep Medicine, Sleep Study, Sport Medicine, Vascular Surgery, Thoracic Surgery, Otolaryngology, ENT, Hematology-Oncology, Gynecologic Oncology, Neonatology, Interventional Cardiology, Clinical Genetics, Pediatric Cardiology, Pediatric Endocrinology, Pediatric Gastroenterology, Pediatric, Pediatric Nephrology, Pediatric Neurology, Pediatric Pulmonology, Pediatric Rheumatology, Pediatric Surgery, Pediatric Urology, General Surgery, Pediatric Respirology, Anesthesiology, Surgical Outpatient, Pain Management, Public Health, Communicable Disease Control, Acquired Brain Injury, Physician Assistant, Nurse Practitioner, Home and Community, Health atHome, COVID Clinic, Walk-In, Urgent Care, Fracture Clinic, Discharge Summary.
+          For reference, use this SPECIALTY LIST: Anesthesiology, Family Medicine, Cardiology, Gastroenterology, Respirology, Pulmonology, Dermatology, Orthopedics, Neurology, Hematology, Endocrinology, Rheumatology, Nephrology, Ophthalmology, Optometry, Audiology, Rheumatology, Psychiatry, Chiropractic, Obstetrics, Gynecology, OB GYN, Urology, Fertility, General Internal Medicine, Oncology, Infectious Disease, Allergy and Immunology, Gerontology, Gastrointestinal Surgery, Podiatry, Speech and Language, Chiropody, Dental, Maxillofacial Surgery, ED Visit, Emergency Visit, Home Care, Physiotherapy, Occupational Therapy, Dietitian, Endoscopy, Palliative Care, Psychotherapy, Psychology, Infectious Disease, Neurosurgery, Spine Surgery, Gastroscopy, Colonoscopy, Plastic Surgery, Vascular Surgery, Pediatrics, Physical Medicine and Rehabilitation, Physiatry and Rehab, Hepatology, Hematopathology, Intensive Care Unit, Admission Consult, Nuclear Medicine, Radiology, Pain Management, Genetics, Hepatobiliary Surgery, Colorectal Surgery, Cardiac Surgery, Plastic & Reconstructive Surgery, Sleep Medicine, Sleep Study, Sport Medicine, Vascular Surgery, Thoracic Surgery, Otolaryngology, ENT, Hematology-Oncology, Gynecologic Oncology, Neonatology, Interventional Cardiology, Clinical Genetics, Pediatric Cardiology, Pediatric Endocrinology, Pediatric Gastroenterology, Pediatric, Pediatric Nephrology, Pediatric Neurology, Pediatric Pulmonology, Pediatric Rheumatology, Pediatric Surgery, Pediatric Urology, General Surgery, Pediatric Respirology, Anesthesiology, Surgical Outpatient, Pain Management, Public Health, Communicable Disease Control, Acquired Brain Injury, Physician Assistant, Nurse Practitioner, Home and Community, Health atHome, COVID Clinic, Walk-In, Urgent Care, Fracture Clinic, Discharge Summary, Surgical Oncology.
 
   - name: Insurance
     # default_tagger: 44
@@ -214,7 +214,7 @@ document_categories:
       - name: get_document_description
         prompt: >
           Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document. Review the above document and provide only the output using the specified output format, without labeling it as 'output format:'. After reviewing the document, perform through the following steps.
-          1. Select the specimen type from PATHOLOGY LIST provided below. Group and merge by specimen type. If the provided pathology list does not provide a strong match select the word 'Other'.
+          1. Select the specimen type from PATHOLOGY LIST provided below. Group and merge by specimen type. If the provided pathology list does not provide a strong match select the word 'Other'. For context, tissue or bone aspiration refer to biopsy.
           2. Identify the name of laboratory/hospital/department that performed the test.
           3. Compose a short summary of significant/positive/serious pathology results in less than 5 words; keep the number of summary items to less than 2. 
           Use the following output format template: specimen (laboratory/hospital/department) summary. Ensure this output format template is followed precisely including brackets (), the output must not be enclosed with quotation marks, and the output must end without a period. A laboratory with the address of 100 International Blvd Toronto has the name LifeLabs. Ensure the summary is less than 5 words.
@@ -281,7 +281,7 @@ document_categories:
         prompt: >
           Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document. Review only the first 1 to 3 pages of the above document and provide only the output using in the specified output format, without labeling it as 'output format:'. After review perform the following steps.
           1. Select one referral type from CATEGORY LIST provided below, based more strongly on the content in the first and second page.
-          2. Select one specialty from SPECIALIST LIST. "Offers essential primary care support for patients referred by the Emergency Department" refer to "Nurse Practitioner" specialty. If the confidency level for the specialty is less than 50% then select the word 'Other'.
+          2. Select one specialty from SPECIALIST LIST. Documents with title "(NYCCC)- Referral Form" refer to "Nurse Practitioner" specialty. If the confidency level for the specialty is less than 50% then select the word 'Other'.
           Use this output format template: referral - specialty (consultant doctor/name of clinic/program). Ensure this output format template is followed precisely including brackets () and -, and the output must end without a period. Prioritize selecting the consultant doctor who is the specialist, over the clinic name.
           For reference these are examples using this output template: Health Care Connect (Get Well Clinic) John Doe, Referral - Cardiology (Dr. John Habot), Referral - Sleep Study (Polyclinic Sleep Diagnostic), Referral to GWC (Dr. Copeland) psychotherapy, Referral - Get Well Clinic (Weight Management Program), Referral - Neurology (Dr. Prigozhikh).
           For reference, use this CATAGORY LIST: Referral, Health Care Connect, Health atHome.
