@@ -50,6 +50,7 @@ emr:
   incoming_folder_queue: '1'  # Queue number for processing incoming files. (ie. '1', '2' etc.)
   password: passpwd  # Password for EMR login.
   pin: '123'  # PIN for EMR login.
+  login_pin_field: true # If set to true, the system will assume that there is a PIN field on the login page. Set this to false if there is no PIN field on the login page.
   system_type: o19  # Type of system. (ie. 'o19', or 'o15')
   username: emr  # Username for EMR login.
 
