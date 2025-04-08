@@ -147,7 +147,7 @@ class LoginManager:
         chrome_options = Options()
         if self.config.get('chrome.options.headless', False):
                 chrome_options.add_argument("--headless")
-                self.logger.debug("Chrome headless mode enabled")
+                logger.debug("Chrome headless mode enabled")
         if not self.config.get('emr.verify-HTTPS', False):
             chrome_options.add_argument('--ignore-certificate-errors')
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
@@ -162,7 +162,7 @@ class LoginManager:
         :return: A tuple containing the session and a boolean indicating success.
         :rtype: Tuple[requests.Session, bool]
         """
-        logger.info(f"Attempting requests login for user: {self.username}")
+        logger.info("Creating session and driver.")
         session = requests.Session()
         
         driver, flag = self.get_driver()

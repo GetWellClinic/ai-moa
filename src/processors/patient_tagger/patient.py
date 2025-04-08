@@ -507,6 +507,8 @@ def unidentified_patients(self):
         >>> print(result)
         True  # if the unidentified patient data was successfully set
     """
+    if self.file_name == '':
+        return False
     patient_data = {
             "formattedDob": self.default_values.get('default_unidentified_patient_tagging_dob', ''),
             "formattedName": self.default_values.get('default_unidentified_patient_tagging_name', ''),

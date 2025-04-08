@@ -53,7 +53,7 @@ workflow:
       false_next: get_local_documents
     - name: get_o19_documents
       true_next: extract_text_doctr
-      false_next: release_lock
+      false_next: unidentified_patients
     - name: get_local_documents
       true_next: extract_text_doctr
       false_next: release_lock
