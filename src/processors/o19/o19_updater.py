@@ -119,7 +119,7 @@ def update_o19_pendingdocs(self):
 
 	system_type = self.config.get('emr.system_type', 'o19')
 
-	if(system_type == 'opro'):
+	if(system_type == 'openo'):
 		url = f"{self.base_url}/documentManager/ManageDocument.do"
 
 	# Define the parameters for pending doc
@@ -173,7 +173,7 @@ def update_o19_incomingdocs(self):
 
 	system_type = self.config.get('emr.system_type', 'o19')
 
-	if(system_type == 'opro'):
+	if(system_type == 'openo'):
 		url = f"{self.base_url}/documentManager/ManageDocument.do"
 
 	# Define the parameters for incoming doc

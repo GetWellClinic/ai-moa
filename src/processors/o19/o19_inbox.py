@@ -131,7 +131,7 @@ def get_inbox_pendingdocs_documents(self):
 		driver = self.driver
 		system_type = self.config.get('emr.system_type', 'o19')
 
-		if(system_type == 'opro'):
+		if(system_type == 'openo'):
 			driver.get(f"{self.base_url}/documentManager/inboxManage.do?method=getDocumentsInQueues")
 		else:
 			driver.get(f"{self.base_url}/dms/inboxManage.do?method=getDocumentsInQueues")
@@ -175,7 +175,7 @@ def get_inbox_pendingdocs_documents(self):
 					self.config.update_pending_retries(current_retries + 1)  # Increment the retry count by 1
 					self.file_name = item
 					file_url = f"{self.base_url}/dms/ManageDocument.do?method=display&doc_no={item}"
-					if(system_type == 'opro'):
+					if(system_type == 'openo'):
 						file_url = f"{self.base_url}/documentManager/ManageDocument.do?method=display&doc_no={item}"
 					self.headers['Referer'] = file_url
 					self.session.headers.update(self.headers)
@@ -212,7 +212,7 @@ def get_inbox_incomingdocs_documents(self):
 		folder = self.config.get('emr.incoming_folder')
 		system_type = self.config.get('emr.system_type', 'o19')
 
-		if(system_type == 'opro'):
+		if(system_type == 'openo'):
 			driver.get(f"{self.base_url}/documentManager/incomingDocs.jsp")
 		else:
 			driver.get(f"{self.base_url}/dms/incomingDocs.jsp")
@@ -260,7 +260,7 @@ def get_inbox_incomingdocs_documents(self):
 						self.config.update_incoming_retries(current_retries + 1)  # Increment the retry count by 1
 
 						pdf_url = f"{self.base_url}/dms/ManageDocument.do?method=displayIncomingDocs&curPage=1&pdfDir={folder}&queueId={queue}&pdfName={option.get_attribute('value')}"
-						if(system_type == 'opro'):
+						if(system_type == 'openo'):
 							pdf_url = f"{self.base_url}/documentManager/ManageDocument.do?method=displayIncomingDocs&curPage=1&pdfDir={folder}&queueId={queue}&pdfName={option.get_attribute('value')}"
 						self.headers['Referer'] = pdf_url
 						self.session.headers.update(self.headers)
