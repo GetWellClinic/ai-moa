@@ -22,10 +22,11 @@
 from typing import Dict, Any, List
 from huey import crontab, MemoryHuey
 from config import ConfigManager
-from auth import LoginManager, SessionManager
+from auth import SessionManager
 from ai_moa_utils import setup_logging
 import os
 import requests
+import re
 from ..utils import local_files
 from ..utils import ocr
 from ..utils import llm
@@ -49,7 +50,7 @@ class Workflow:
     :ivar task_results: Stores the results of each task executed in the workflow.
     :vartype task_results: dict
     """
-    def __init__(self, config: ConfigManager, session_manager: SessionManager, login_manager: LoginManager):
+    def __init__(self, config: ConfigManager, session_manager: SessionManager):
         """
         Initializes the Workflow with configuration settings.
 
@@ -73,16 +74,30 @@ class Workflow:
         self.filepath = config.get('document_processor.local.input_directory', '/app/input')
         self.ocr_text = None
         self.session = session_manager.get_session()
-        self.login_manager = login_manager
+        self.driver = session_manager.get_driver()
+        self.login_successful = session_manager.get_login_successful()
         self.base_url = config.get('emr.base_url')
         self.file_name = ''
         self.inbox_incoming_lastfile = ''
         self.enable_ocr_gpu = config.get('ocr.enable_gpu', True)
         self.url = config.get('ai.uri', "https://localhost:3334/v1/chat/completions")
-        self.headers = {
-            "Authorization": f"Bearer {config.get('ai.api_key')}",
-            "Content-Type": "application/json"
-        }
+        
+        self.headers = {}
+        self.origin_url = ''
+
+        pattern = r'^(https?://[^/]+)'
+        match = re.match(pattern, self.base_url)
+
+        if match:
+            base_url = match.group(1)
+            self.origin_url = base_url
+        else:
+            self.logger.info(f"Base url format issue, please cross check base url!")
+            self.origin_url = self.base_url
+
+        self.headers['Origin'] = self.origin_url
+        self.headers['Referer'] = self.base_url
+
         self.update_o19 = o19_updater.update_o19
         self.view_output = o19_updater.view_output
         self.update_o19_pendingdocs = o19_updater.update_o19_pendingdocs
@@ -92,7 +107,6 @@ class Workflow:
         self.release_lock = o19_inbox.release_lock
         self.get_document_processor_type = o19_inbox.get_document_processor_type
         self.get_o19_documents = o19_inbox.get_o19_documents
-        self.get_driver = o19_inbox.get_driver
         self.get_inbox_pendingdocs_documents = o19_inbox.get_inbox_pendingdocs_documents
         self.get_inbox_incomingdocs_documents = o19_inbox.get_inbox_incomingdocs_documents
         self.get_local_documents = local_files.get_local_documents
@@ -167,7 +181,6 @@ class Workflow:
                 self.logger.error(f"An error occurred: {e}")
                 self.logger.info(f"Stopping workflow task, processing Document No. {self.file_name}")
                 self.logger.error("Exiting from workflow execution.")
-                self.session.close()
                 return
             except SystemExit as e:
                 self.config.update_lock_status(False)
@@ -175,7 +188,6 @@ class Workflow:
                 self.logger.error(f"An error occurred: {e}")
                 self.logger.info(f"Stopping workflow task, processing Document No. {self.file_name}")
                 self.logger.error("Exiting from workflow execution.")
-                self.session.close()
                 return
             
             if result:
@@ -185,7 +197,6 @@ class Workflow:
             
             if next_step_name == 'exit':
                 self.logger.info("Workflow execution completed")
-                self.session.close()
                 return
 
             # Find the index of the step to pop
@@ -201,5 +212,4 @@ class Workflow:
             
             current_step = next((step for step in self.steps if step['name'] == next_step_name), None)
         
-        self.session.close()
         self.logger.info("Workflow execution completed")

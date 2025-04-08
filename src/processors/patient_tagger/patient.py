@@ -331,6 +331,9 @@ def get_mrp_details(self):
                   "query": formatted_name
                 }
 
+    self.headers['Referer'] = url
+    self.session.headers.update(self.headers)
+
     # Send the POST request
     response = self.session.post(url, data=payload, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
 
@@ -383,7 +386,7 @@ def remove_mrp_details(self):
 
     data['providerNo'] = "_"
     self.config.set_shared_state('filter_results', (True, json.dumps(data)))
-    self.logger.error("Removed MRP info from data.")
+    self.logger.info("Removed MRP info from data.")
 
     return True
 
@@ -426,6 +429,9 @@ def get_patient_Html(self,type_of_query,query):
                   "fromMessenger": "False",
                   "outofdomain": ""
                 }
+
+    self.headers['Referer'] = url
+    self.session.headers.update(self.headers)
 
     # Send the POST request
     response = self.session.post(url, data=payload, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
@@ -501,6 +507,8 @@ def unidentified_patients(self):
         >>> print(result)
         True  # if the unidentified patient data was successfully set
     """
+    if self.file_name == '':
+        return False
     patient_data = {
             "formattedDob": self.default_values.get('default_unidentified_patient_tagging_dob', ''),
             "formattedName": self.default_values.get('default_unidentified_patient_tagging_name', ''),
@@ -533,10 +541,7 @@ def verify_demographic_number(self):
     """
     data = self.decode_json(self, self.config.get_shared_state('filter_results')[1], "verify_demographic_number")
 
-    if not data:
-        return False
-
-    return self.verify_demographic_data(self, data)
+    return False if not data else self.verify_demographic_data(self, data)
 
 def verify_demographic_data(self, data):
     """
@@ -622,15 +627,15 @@ def compare_demographic_results(self):
     data_name = self.decode_json(self, data_name, "name")
     data_hin = self.decode_json(self, data_hin, "hin")
 
-    self.logger.info(f"Verifying LLM demographic data (DOB) with system data.")
+    self.logger.info("Verifying LLM demographic data (DOB) with system data.")
     if data_dob is not None and not self.verify_demographic_data(self, data_dob):
         data_dob = None
 
-    self.logger.info(f"Verifying LLM demographic data (Name) with system data.")
+    self.logger.info("Verifying LLM demographic data (Name) with system data.")
     if data_name is not None and not self.verify_demographic_data(self, data_name):
         data_name = None
 
-    self.logger.info(f"Verifying LLM demographic data (HIN) with system data.")
+    self.logger.info("Verifying LLM demographic data (HIN) with system data.")
     if data_hin is not None and not self.verify_demographic_data(self, data_hin):
         data_hin = None
 
@@ -643,7 +648,7 @@ def compare_demographic_results(self):
     if data_dob is not None and data_name is not None and data_hin is not None:
         if data_dob.get('demographicNo') == data_name.get('demographicNo') == data_hin.get('demographicNo'):
             self.logger.info("Match (all three) found when comparing demographic number.")
-            return True, data_dob
+            return True, json.dumps(data_dob)
     
     # Check if two demographic numbers match
     if data_dob is not None and data_name is not None:

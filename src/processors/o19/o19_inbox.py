@@ -20,22 +20,19 @@
 # ***
 
 from datetime import datetime, timedelta
-from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 def get_document_processor_type(self):
 	"""
     Determines the document processor type based on the configuration.
 
     This method checks the system type set in the configuration (`aimoa_document_processor.type`) 
-    and returns `True` if the system type is 'o19'. Otherwise, it returns `False`.
+    and returns `True` if the system type is 'emr'. Otherwise, it returns `False`.
 
     Returns:
-        bool: `True` if the system type is 'o19', otherwise `False`.
+        bool: `True` if the system type is 'emr', otherwise `False`.
 
     Example:
         >>> processor_type = manager.get_document_processor_type()
@@ -44,7 +41,7 @@ def get_document_processor_type(self):
     """
 	system_type = self.config.get('aimoa_document_processor.type')
 
-	return system_type in ['o19', 'o15']
+	return system_type in ['emr']
 
 
 def check_lock(self):
@@ -130,9 +127,25 @@ def get_inbox_pendingdocs_documents(self):
         >>> print(pending_docs_fetched)
         True  # if pending documents are fetched successfully
     """
-	driver = self.get_driver(self)
-	if driver is not False:
-		driver.get(f"{self.base_url}/dms/inboxManage.do?method=getDocumentsInQueues")
+	if self.login_successful:
+		driver = self.driver
+		system_type = self.config.get('emr.system_type', 'o19')
+
+		if(system_type == 'openo'):
+			driver.get(f"{self.base_url}/documentManager/inboxManage.do?method=getDocumentsInQueues")
+		else:
+			driver.get(f"{self.base_url}/dms/inboxManage.do?method=getDocumentsInQueues")
+		
+		try:
+			driver.implicitly_wait(300)
+			queuenames_field = driver.find_element(By.ID, "queueNames")
+		except TimeoutException:
+			self.logger.debug("Timeout occurred when loading pending documents.")
+			return False
+		except NoSuchElementException:
+			self.logger.debug("Error occurred when loading pending documents.")
+			return False
+
 		script_value = driver.execute_script("return typeDocLab;")
 		pending_file = self.config.get('inbox.pending')
 		if pending_file is not None:
@@ -142,8 +155,6 @@ def get_inbox_pendingdocs_documents(self):
 		    last_processed_file = 0
 		for item in script_value['DOC']:
 			if not item:
-				driver.close()
-				driver.quit()
 				return False
 			item = int(item)
 			if(item > last_processed_file):
@@ -153,31 +164,30 @@ def get_inbox_pendingdocs_documents(self):
 
 				if max_retries <= current_retries:  # If max retries is equal to current retries
 					self.config.update_pending_retries(0)  # Reset the retry count in the configuration
-					self.config.update_pending_inbox(item)
-					self.logger.info(f"Max retries exceeded for document {item}.")
-					driver.close()
-					driver.quit()
+					tag_skipped_files = self.config.get('emr.tag_skipped_files')
+					if tag_skipped_files:
+						self.file_name = item
+					else:
+						self.config.update_pending_inbox(item)
+						self.logger.info(f"Max retries exceeded for processing. Skipping document No: {item}.")
 					return False
 				else:
 					self.config.update_pending_retries(current_retries + 1)  # Increment the retry count by 1
-
 					self.file_name = item
 					file_url = f"{self.base_url}/dms/ManageDocument.do?method=display&doc_no={item}"
+					if(system_type == 'openo'):
+						file_url = f"{self.base_url}/documentManager/ManageDocument.do?method=display&doc_no={item}"
+					self.headers['Referer'] = file_url
+					self.session.headers.update(self.headers)
 					file_response = self.session.get(file_url, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
 
 					if file_response.status_code == 200 and file_response.content:
 						self.config.set_shared_state('current_file', file_response.content)
 						self.logger.info(f"Fetched EMR document from Pending Docs...Processing Document No: {item}.")
-						driver.close()
-						driver.quit()
 						return True
 					else:
 						self.logger.error(f"An error occurred: {file_response.status_code}")
-						driver.close()
-						driver.quit()
 						return False
-		driver.close()
-		driver.quit()
 	return False
 
 
@@ -196,11 +206,17 @@ def get_inbox_incomingdocs_documents(self):
         >>> print(incoming_docs_fetched)
         True  # if incoming documents are fetched successfully
     """
-	driver = self.get_driver(self)
-	if driver is not False:
+	if self.login_successful:
+		driver = self.driver
 		queue = self.config.get('emr.incoming_folder_queue')
 		folder = self.config.get('emr.incoming_folder')
-		driver.get(f"{self.base_url}/dms/incomingDocs.jsp")
+		system_type = self.config.get('emr.system_type', 'o19')
+
+		if(system_type == 'openo'):
+			driver.get(f"{self.base_url}/documentManager/incomingDocs.jsp")
+		else:
+			driver.get(f"{self.base_url}/dms/incomingDocs.jsp")
+
 		driver.execute_script(f"loadPdf('{queue}', '{folder}');")
 		driver.implicitly_wait(10)
 		select_element = Select(driver.find_element(By.ID, "SelectPdfList"))
@@ -218,12 +234,11 @@ def get_inbox_incomingdocs_documents(self):
 				if(update_time is None or update_time == ""):
 					# Handle the case where the key is not set
 					self.logger.info(f"Incoming documents last processed file details missing in configuration.")
-					driver.close()
-					driver.quit()
 					return False
 
 				last_file = datetime.strptime(update_time, "%Y-%m-%d %H:%M:%S")
 				current_file = datetime.strptime(split_string[1], "%Y-%m-%d %H:%M:%S")
+				update_time = split_string[1]
 
 				if last_file <= current_file:
 
@@ -232,18 +247,23 @@ def get_inbox_incomingdocs_documents(self):
 
 					if max_retries <= current_retries:  # If max retries is equal to current retries
 						self.config.update_incoming_retries(0)  # Reset the retry count in the configuration
-						current_file_plus_one_second = current_file + timedelta(seconds=1)
-						self.config.update_incoming_inbox(str(current_file_plus_one_second))
-						self.logger.info(f"Max retries exceeded for document {item}.")
-						driver.close()
-						driver.quit()
+						tag_skipped_files = self.config.get('emr.tag_skipped_files')
+						if tag_skipped_files:
+							self.file_name = option.get_attribute('value')
+							self.inbox_incoming_lastfile = update_time
+						else:
+							current_file_plus_one_second = current_file + timedelta(seconds=1)
+							self.config.update_incoming_inbox(str(current_file_plus_one_second))
+							self.logger.info(f"Max retries exceeded for processing. Skipping document No: {item}.")
 						return False
 					else:
 						self.config.update_incoming_retries(current_retries + 1)  # Increment the retry count by 1
 
-						update_time = split_string[1]
-
 						pdf_url = f"{self.base_url}/dms/ManageDocument.do?method=displayIncomingDocs&curPage=1&pdfDir={folder}&queueId={queue}&pdfName={option.get_attribute('value')}"
+						if(system_type == 'openo'):
+							pdf_url = f"{self.base_url}/documentManager/ManageDocument.do?method=displayIncomingDocs&curPage=1&pdfDir={folder}&queueId={queue}&pdfName={option.get_attribute('value')}"
+						self.headers['Referer'] = pdf_url
+						self.session.headers.update(self.headers)
 						file_response = self.session.get(pdf_url, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
 
 						if file_response.status_code == 200  and file_response.content:
@@ -251,56 +271,8 @@ def get_inbox_incomingdocs_documents(self):
 							self.inbox_incoming_lastfile = update_time
 							self.config.set_shared_state('current_file', file_response.content)
 							self.logger.info(f"Fetched EMR document from Incoming Docs...Processing Document No: {item}.")
-							driver.close()
-							driver.quit()
 							return True
 						else:
 							self.logger.error(f"An error occurred: {file_response.status_code}")
-							driver.close()
-							driver.quit()
 							return False
-
-		driver.close()
-		driver.quit()
 	return False
-
-
-def get_driver(self):
-	"""
-    Retrieves a Selenium WebDriver instance for interaction with the web-based system.
-
-    This method configures Chrome options and creates a Chrome WebDriver instance using 
-    the `webdriver_manager` library. It then attempts to log in using Selenium. If login is successful, 
-    the driver instance is returned, otherwise, it returns `False`.
-
-    Returns:
-        webdriver.Chrome | bool: The WebDriver instance if login is successful, 
-        `False` otherwise.
-
-    Example:
-        >>> driver = manager.get_driver()
-        >>> print(driver)
-        <selenium.webdriver.chrome.webdriver.WebDriver object at 0x...>  # if login is successful
-    """
-	chrome_options = Options()
-	if self.config.get('chrome.options.headless', False):
-            chrome_options.add_argument("--headless")
-            self.logger.debug("Chrome headless mode enabled")
-	if not self.config.get('emr.verify-HTTPS', False):
-		chrome_options.add_argument('--ignore-certificate-errors')
-	driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
-	try:
-
-		if self.login_manager.is_login_successful(self.login_manager.login_with_selenium(driver)):
-			return driver
-		else:
-			driver.close()
-			driver.quit()
-			return False
-
-	except Exception as e:
-		# Handle the exception (log it, re-raise, return None, etc.)
-		self.logger.error(f"An error occurred: {e}")
-		driver.close()
-		driver.quit()
-		return False

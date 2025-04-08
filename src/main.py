@@ -30,7 +30,7 @@ import os
 from huey import MemoryHuey, crontab
 from huey.consumer import Consumer
 from config import ConfigManager
-from auth import LoginManager, SessionManager
+from auth import SessionManager
 from processors import Workflow
 from ai_moa_utils.logging_setup import setup_logging
 from datetime import datetime
@@ -79,8 +79,9 @@ class AIMOAAutomation:
             self.logger.info(f"Lock set to False, --reset-lock was used while starting the application.")
 
         self.session_manager: SessionManager = SessionManager(self.config)
-        self.login_manager: LoginManager = LoginManager(self.config)
-        self.workflow: Workflow = Workflow(self.config,self.session_manager,self.login_manager)
+        document_processor_type = self.config.get('aimoa_document_processor.type', 'emr')
+        self.session_manager.create_session()
+        self.workflow: Workflow = Workflow(self.config,self.session_manager)
 
         self.logger.info("AIMOAAutomation initialized with config: %s", config_file)
 
@@ -130,8 +131,6 @@ class AIMOAAutomation:
         except Exception as e:
             self.logger.exception("An unexpected error occurred: %s", e)
             raise
-        finally:
-            self.cleanup()
 
         end_time: datetime = datetime.now()
         duration: float = (end_time - start_time).total_seconds()
