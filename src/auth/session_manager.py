@@ -53,23 +53,23 @@ class SessionManager:
         """
         self.config = config
         self.login_manager = LoginManager(config)
-        self.session, login_successful = self.login_manager.login_with_requests()
-        if login_successful:
+        self.session = None
+        self.driver = None
+        self.login_successful = False
+        logger.debug("SessionManager initialized")
+
+    def create_session(self):
+        """
+        Create a new login session and initialize the driver.
+
+        Calls the login manager to perform login and sets the session, 
+        driver, and login success status. Logs the outcome of the login attempt.
+        """
+        self.session, self.driver, self.login_successful = self.login_manager.login()
+        if self.login_successful:
             logger.info("Login successful!")
         else:
             logger.error("Login failed.")
-        logger.debug("SessionManager initialized")
-
-    def login(self):
-        """
-        Attempt to log in and create a new session.
-
-        Returns:
-            bool: True if login was successful, False otherwise.
-        """
-        logger.info("Attempting to log in and create a new session")
-        self.session, login_successful = self.login_manager.login_with_requests()
-        return login_successful
 
     def get_session(self):
         """
@@ -80,3 +80,38 @@ class SessionManager:
         """
         logger.debug("Retrieving current session")
         return self.session
+
+    def get_driver(self):
+        """
+        Get the current driver object.
+
+        Returns:
+            The current driver object.
+        """
+        logger.debug("Retrieving current driver")
+        return self.driver
+
+    def get_login_successful(self):
+        """
+        Return the login success status.
+
+        Logs and returns whether the login was successful.
+
+        Returns:
+            bool: True if login was successful, False otherwise.
+        """
+        logger.debug("Retrieving login successful")
+        return self.login_successful
+
+    def close(self):
+        """
+        Close the browser driver and session.
+
+        Safely shuts down the Selenium WebDriver and HTTP session,
+        and logs each step in the shutdown process.
+        """
+        logger.debug("Closing dirver.")
+        self.driver.close()
+        self.driver.quit()
+        self.session.close()
+        logger.debug("Closing session.")
