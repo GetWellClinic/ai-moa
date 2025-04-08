@@ -80,8 +80,7 @@ class AIMOAAutomation:
 
         self.session_manager: SessionManager = SessionManager(self.config)
         document_processor_type = self.config.get('aimoa_document_processor.type', 'emr')
-        if document_processor_type == "emr":
-            self.session_manager.create_session()
+        self.session_manager.create_session()
         self.workflow: Workflow = Workflow(self.config,self.session_manager)
 
         self.logger.info("AIMOAAutomation initialized with config: %s", config_file)
