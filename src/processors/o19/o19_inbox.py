@@ -167,8 +167,12 @@ def get_inbox_pendingdocs_documents(self):
 
 				if max_retries <= current_retries:  # If max retries is equal to current retries
 					self.config.update_pending_retries(0)  # Reset the retry count in the configuration
-					self.config.update_pending_inbox(item)
-					self.logger.info(f"Max retries exceeded for processing. Skipping document No: {item}.")
+					tag_skipped_files = self.config.get('emr.tag_skipped_files')
+					if tag_skipped_files:
+						self.file_name = item
+					else:
+						self.config.update_pending_inbox(item)
+						self.logger.info(f"Max retries exceeded for processing. Skipping document No: {item}.")
 					return False
 				else:
 					self.config.update_pending_retries(current_retries + 1)  # Increment the retry count by 1
@@ -237,6 +241,7 @@ def get_inbox_incomingdocs_documents(self):
 
 				last_file = datetime.strptime(update_time, "%Y-%m-%d %H:%M:%S")
 				current_file = datetime.strptime(split_string[1], "%Y-%m-%d %H:%M:%S")
+				update_time = split_string[1]
 
 				if last_file <= current_file:
 
@@ -245,14 +250,17 @@ def get_inbox_incomingdocs_documents(self):
 
 					if max_retries <= current_retries:  # If max retries is equal to current retries
 						self.config.update_incoming_retries(0)  # Reset the retry count in the configuration
-						current_file_plus_one_second = current_file + timedelta(seconds=1)
-						self.config.update_incoming_inbox(str(current_file_plus_one_second))
-						self.logger.info(f"Max retries exceeded for processing. Skipping document No: {item}.")
+						tag_skipped_files = self.config.get('emr.tag_skipped_files')
+						if tag_skipped_files:
+							self.file_name = option.get_attribute('value')
+							self.inbox_incoming_lastfile = update_time
+						else:
+							current_file_plus_one_second = current_file + timedelta(seconds=1)
+							self.config.update_incoming_inbox(str(current_file_plus_one_second))
+							self.logger.info(f"Max retries exceeded for processing. Skipping document No: {item}.")
 						return False
 					else:
 						self.config.update_incoming_retries(current_retries + 1)  # Increment the retry count by 1
-
-						update_time = split_string[1]
 
 						pdf_url = f"{self.base_url}/dms/ManageDocument.do?method=displayIncomingDocs&curPage=1&pdfDir={folder}&queueId={queue}&pdfName={option.get_attribute('value')}"
 						if(system_type == 'opro'):

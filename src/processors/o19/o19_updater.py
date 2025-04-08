@@ -40,8 +40,8 @@ def update_o19(self):
         >>> print(update_status)
         True  # if the update is successful
     """
-	self.fileType = self.config.get_shared_state('get_category_type')[1].lower()
-	self.document_description = self.config.get_shared_state('get_document_description')[1].lstrip()
+	self.fileType = self.config.get_shared_state('get_category_type', default=(True, 'others'))[1].lower()
+	self.document_description = self.config.get_shared_state('get_document_description', default=(True, 'Max retries exceeded document'))[1].lstrip()
 	data = self.config.get_shared_state('filter_results')[1]
 
 	try:
