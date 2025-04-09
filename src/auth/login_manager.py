@@ -82,8 +82,7 @@ class LoginManager:
         """
         logger.info(f"Attempting Selenium login for user.")
 
-        # Print is used to avoid logging username into log file.
-        print(f"Attempting Selenium login for user: {self.username[:2]}*****")
+        logger.debug(f"Attempting Selenium login for user: {self.username[:2]}*****")
         
         need_pin_field = self.config.get('emr.login_pin_field', False)
         system_type = self.config.get('emr.system_type', 'o19')
