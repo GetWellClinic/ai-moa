@@ -80,7 +80,7 @@ class LoginManager:
         :return: The current URL after login attempt.
         :rtype: str
         """
-        logger.info(f"Attempting Selenium login for user.")
+        logger.info("Attempting Selenium login for user.")
 
         logger.debug(f"Attempting Selenium login for user: {self.username[:2]}*****")
         
