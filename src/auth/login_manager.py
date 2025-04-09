@@ -168,9 +168,8 @@ class LoginManager:
 
         if flag:
             session = self.get_driver_session(session, driver)
-            return session, driver, flag
-        else:
-            return session, driver, flag
+
+        return session, driver, flag
 
     def is_login_successful(self, current_url):
         """
