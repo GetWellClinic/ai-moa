@@ -40,8 +40,8 @@ def update_o19(self):
         >>> print(update_status)
         True  # if the update is successful
     """
-	self.fileType = self.config.get_shared_state('get_category_type')[1].lower()
-	self.document_description = self.config.get_shared_state('get_document_description')[1].lstrip()
+	self.fileType = self.config.get_shared_state('get_category_type', default=(True, 'others'))[1].lower()
+	self.document_description = self.config.get_shared_state('get_document_description', default=(True, 'Max retries exceeded document'))[1].lstrip()
 	data = self.config.get_shared_state('filter_results')[1]
 
 	try:
@@ -117,6 +117,11 @@ def update_o19_pendingdocs(self):
     """
 	url = f"{self.base_url}/dms/ManageDocument.do"
 
+	system_type = self.config.get('emr.system_type', 'o19')
+
+	if(system_type == 'openo'):
+		url = f"{self.base_url}/documentManager/ManageDocument.do"
+
 	# Define the parameters for pending doc
 	params = {
 	    "method": "documentUpdateAjax",
@@ -133,8 +138,10 @@ def update_o19_pendingdocs(self):
 	params["flagproviders"] = []
 
 	for value in self.provider_number:
-	    params["flagproviders"].append(value)
+		params["flagproviders"].append(value)
 
+	self.headers['Referer'] = url
+	self.session.headers.update(self.headers)
 	response = self.session.post(url, data=params, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
 
 	if response.status_code == 200:
@@ -163,6 +170,11 @@ def update_o19_incomingdocs(self):
         True  # if the incoming document was successfully updated
     """
 	url = f"{self.base_url}/dms/ManageDocument.do"
+
+	system_type = self.config.get('emr.system_type', 'o19')
+
+	if(system_type == 'openo'):
+		url = f"{self.base_url}/documentManager/ManageDocument.do"
 
 	# Define the parameters for incoming doc
 	params = {
@@ -194,7 +206,10 @@ def update_o19_incomingdocs(self):
 	params["flagproviders"] = []
 
 	for value in self.provider_number:
-	    params["flagproviders"].append(value)
+		params["flagproviders"].append(value)
+
+	self.headers['Referer'] = url
+	self.session.headers.update(self.headers)
 
 	response = self.session.post(url, data=params, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
 

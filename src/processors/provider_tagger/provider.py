@@ -78,7 +78,7 @@ def get_provider_list(self):
 
 
 def get_provider_list_filemode(self,file_path):
-	"""
+    """
     Loads the provider list from a YAML file.
 
     This method attempts to open and read a YAML file containing a list of providers. If the file is found 
@@ -87,28 +87,28 @@ def get_provider_list_filemode(self,file_path):
     the generation of the provider list.
 
     Args:
-        file_path (str): The path to the YAML file containing the provider list.
+    file_path (str): The path to the YAML file containing the provider list.
 
     Returns:
-        list: 
-            - A list of providers (from the YAML file) if the file is successfully read.
-            - An empty list if the file is not found or an error occurs while reading it.
+    list: 
+    - A list of providers (from the YAML file) if the file is successfully read.
+    - An empty list if the file is not found or an error occurs while reading it.
 
     Example:
-        >>> provider_list = manager.get_provider_list_filemode('/path/to/provider_list.yaml')
-        >>> print(provider_list)
-        [{'provider_id': 123, 'name': 'Provider A'}, {'provider_id': 124, 'name': 'Provider B'}] 
-        # a list of providers loaded from the YAML file
+    >>> provider_list = manager.get_provider_list_filemode('/path/to/provider_list.yaml')
+    >>> print(provider_list)
+    [{'provider_id': 123, 'name': 'Provider A'}, {'provider_id': 124, 'name': 'Provider B'}] 
+    # a list of providers loaded from the YAML file
     """
-	try:
-		with open(file_path, 'r') as file:
-			provider_list = yaml.safe_load(file)
-			return provider_list.get('providers', [])
-	except FileNotFoundError:
-		manager = ProviderListManager(self)
-		manager.generate_provider_list()
-		self.logger.error(f"Error: The file {file_path} does not exist.")
-		return []
-	except yaml.YAMLError as e:
-		self.logger.error(f"Error reading YAML file: {e}")
-		return []
+    try:
+        with open(file_path, 'r') as file:
+            provider_list = yaml.safe_load(file)
+            return provider_list.get('providers', [])
+    except FileNotFoundError:
+        self.logger.error(f"Error: The file {file_path} does not exist.")
+        manager = ProviderListManager(self)
+        manager.generate_provider_list()
+        return []
+    except yaml.YAMLError as e:
+        self.logger.error(f"Error reading YAML file: {e}")
+        return []

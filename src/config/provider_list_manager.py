@@ -23,6 +23,15 @@ import yaml
 import requests
 from typing import List, Dict, Optional
 from bs4 import BeautifulSoup
+import re
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 import logging
 
@@ -58,24 +67,27 @@ class ProviderListManager:
         self.pin = workflow.config.get('emr.pin')
         self.base_url = workflow.config.get('emr.base_url')
         self.logger = workflow.logger
-        self.session = requests.Session()
-        self.login()
+        self.system_type = workflow.config.get('emr.system_type')
+        self.chrome_headless = workflow.config.get('chrome.options.headless')
+        self.verify_https = workflow.config.get('emr.verify-HTTPS')
+        
+        self.headers = {}
+        self.origin_url = ''
 
-    def login(self) -> None:
-        """
-        Logs in to the EMR system using the provided username, password, and PIN.
+        pattern = r'^(https?://[^/]+)'
+        match = re.match(pattern, self.base_url)
 
-        If the login is successful, a message is logged. If the login fails, an error message is logged.
-
-        Raises:
-            requests.RequestException: If there is an error making the login request.
-        """
-        response = self.session.post(f"{self.base_url}/login.do",
-                                     data={"username": self.username, "password": self.password, "pin": self.pin}, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
-        if response.url == f"{self.base_url}/login.do":
-            self.logger.info("Login failed.")
+        if match:
+            base_url = match.group(1)
+            self.origin_url = base_url
         else:
-            self.logger.info("Login successful!")
+            self.logger.info(f"Base url format issue, please cross check base url!")
+            self.origin_url = self.base_url
+
+        self.headers['Origin'] = self.origin_url
+        self.headers['Referer'] = self.base_url
+
+        self.session = workflow.session
 
     def upload_template_file(self) -> bool:
         """
@@ -98,6 +110,8 @@ class ProviderListManager:
             with open(template_file, 'rb') as file:
                 files = {'templateFile': (template_file, file, 'text/plain')}
                 data = {'action': 'add'}
+                self.headers['Referer'] = url
+                self.session.headers.update(self.headers)
                 response = self.session.post(url, files=files, data=data, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
                 if(response.status_code == 200):
                     self.logger.info("Template uploaded successfully.")
@@ -121,6 +135,9 @@ class ProviderListManager:
             bool: `True` if the template exists or was successfully uploaded, otherwise `False`.
         """
         url = f"{self.base_url}/oscarReport/reportByTemplate/homePage.jsp?templates=all"
+
+        self.headers['Referer'] = url
+        self.session.headers.update(self.headers)
 
         # Send the POST request
         response = self.session.get(url, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
@@ -161,15 +178,10 @@ class ProviderListManager:
         Returns:
             None
         """
-        chrome_options = Options()
-        if self.config.get('chrome.options.headless', False):
-            chrome_options.add_argument("--headless")
-            self.logger.debug("Chrome headless mode enabled")
-        if not self.config.get('emr.verify-HTTPS', False):
-            chrome_options.add_argument('--ignore-certificate-errors')
-        
         if self.check_template_file():
             url = f"{self.base_url}/oscarReport/reportByTemplate/homePage.jsp?templates=all"
+            self.headers['Referer'] = url
+            self.session.headers.update(self.headers)
             response = self.session.get(url, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
             soup = BeautifulSoup(response.text, 'html.parser')
             tbody = soup.find('tbody', id='tableData')
@@ -216,6 +228,8 @@ class ProviderListManager:
         url = f"{self.base_url}/oscarReport/reportByTemplate/GenerateReportAction.do"
         params = {"templateId": template_id, "submitButton": "Run Query"}
         try:
+            self.headers['Referer'] = url
+            self.session.headers.update(self.headers)
             response = self.session.post(url, data=params, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
             soup = BeautifulSoup(response.text, 'html.parser')
             input_element = soup.find('input', {'type': 'hidden', 'class': 'btn', 'name': 'csv'})
@@ -261,4 +275,3 @@ class ProviderListManager:
                 self.logger.error(f"Error saving provider list: {e}")
         else:
             self.logger.info('No provider data to save')
-
