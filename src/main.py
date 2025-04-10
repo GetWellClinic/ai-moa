@@ -37,7 +37,7 @@ from datetime import datetime
 from threading import Event
 from typing import Optional
 
-print("AI-MOA version 1.1; licensed under AGPL3.0, see LICENSE file. (c) Spring Health Corporation")
+print("AI-MOA version 1.2; licensed under AGPL3.0, see LICENSE file. (c) Spring Health Corporation")
 print("")
 print("Starting AI-MOA...")
 print("...waiting for Huey task scheduler to start interval...")
