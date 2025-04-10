@@ -20,7 +20,7 @@
 # ***
 
 # AI configuration for interacting with the AI-MOA service.
-# Version: 2025.04.08
+# Version: 2025.04.09
 
 ai:
   uri: https://localhost:3334/v1/chat/completions  # URI endpoint for AI model interactions.
@@ -48,7 +48,7 @@ emr:
   document_folder: incoming  # Folder where pending documents to be processed are stored in o19. (ie. 'pending', or 'incoming')
   incoming_folder: File  # Folder where incoming documents to be processed are stored in o19. (ie. 'Fax', 'File', 'Mail', or 'Refile')
   incoming_folder_queue: '1'  # Queue number for processing incoming files. (ie. '1', '2' etc.)
-  system_type: o19  # Type of system. (ie. 'o19', or 'o15')
+  system_type: o19  # Type of system. (ie. 'o19', 'openo', 'opro' or 'o15')
   username: emr  # Username for EMR login.
   password: passpwd  # Password for EMR login.
   pin: '123'  # PIN for EMR login.
