@@ -108,6 +108,7 @@ class Workflow:
         self.get_document_processor_type = o19_inbox.get_document_processor_type
         self.get_o19_documents = o19_inbox.get_o19_documents
         self.get_inbox_pendingdocs_documents = o19_inbox.get_inbox_pendingdocs_documents
+        self.get_inbox_pendingdocs_documents_opro = o19_inbox.get_inbox_pendingdocs_documents_opro
         self.get_inbox_incomingdocs_documents = o19_inbox.get_inbox_incomingdocs_documents
         self.get_local_documents = local_files.get_local_documents
         self.has_ocr = ocr.has_ocr
