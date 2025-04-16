@@ -106,7 +106,7 @@ def get_o19_documents(self):
 
 	if system_type == 'pending':
 		system_type = self.config.get('emr.system_type', 'o19')
-		verify_document_ids = self.config.get('emr.opro_pendingdocs_ids_verify', False)
+		verify_document_ids = self.config.get('emr.opro_pendingdocs_ids_auto_increment', False)
 		if system_type == 'opro' and verify_document_ids:
 			"""
 			This is to fix the null status in the 'opro' queue_document_link table.
