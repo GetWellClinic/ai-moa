@@ -2,7 +2,7 @@
 # This custom script installs Get Well Clinic's version of AI-MOA (Aimee AI)
 # Note: To correctly use automatic detection of AI-MOA path, this script must be installed and run in subdirectory 'install'
 # This install script should be run as 'sudo ./install-aimoa.sh'
-# Version 2025.03.26
+# Version 2025.04.27
 
 # Hardware Requirements:
 #	NVIDIA RTX video card installed with at least 12 GB VRAM
@@ -103,6 +103,11 @@ AIMOA=$(pwd)
 # Create Python virtual environment for AI-MOA libraries and dependency packages:
 /bin/echo "Creating python virtual environment for AI-MOA dependencies..."
 /bin/sleep 5s
+# Install virtualenv app
+apt-get -y install python3-virtualenv
+# Install Python pip package manager if not installed
+apt-get -y install python3-pip
+# Create virtual environment
 virtualenv $AIMOA/.env
 # Install python dependencies for AI-MOA from requirements.txt
 /bin/echo "Installing Python libraries and dependencies required for running AI-MOA in python virual environment..."
