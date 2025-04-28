@@ -103,6 +103,7 @@ AIMOA=$(pwd)
 # Create Python virtual environment for AI-MOA libraries and dependency packages:
 /bin/echo "Creating python virtual environment for AI-MOA dependencies..."
 /bin/sleep 5s
+apt-get update
 # Install virtualenv app
 apt-get -y install python3-virtualenv
 # Install Python pip package manager if not installed
