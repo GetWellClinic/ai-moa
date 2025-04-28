@@ -2,7 +2,7 @@
 # This custom script installs Get Well Clinic's version of AI-MOA (Aimee AI)
 # Note: To correctly use automatic detection of AI-MOA path, this script must be installed and run in subdirectory 'install'
 # This install script should be run as 'sudo ./install-aimoa.sh'
-# Version 2025.03.23
+# Version 2025.04.27
 
 # Hardware Requirements:
 #	NVIDIA RTX video card installed with at least 12 GB VRAM
@@ -69,17 +69,20 @@ AIMOA=$(pwd)
 /bin/cp $AIMOA/src/config.yaml $AIMOA/src/config.yaml.$(date +'%Y-%m-%d')
 /bin/cp $AIMOA/config/config.yaml $AIMOA/config/config.yaml.$(date +'%Y-%m-%d')
 /bin/cp $AIMOA/config/config-incomingfax.yaml $AIMOA/config/config-incomingfax.yaml.$(date +'%Y-%m-%d')
+/bin/cp $AIMOA/config/config-incomingfile.yaml $AIMOA/config/config-incomingfile.yaml.$(date +'%Y-%m-%d')
 /bin/cp $AIMOA/src/workflow-config.yaml $AIMOA/src/workflow-config.yaml.$(date +'%Y-%m-%d')
 /bin/cp $AIMOA/config/workflow-config.yaml $AIMOA/config/workflow-config.yaml.$(date +'%Y-%m-%d')
 /bin/cp $AIMOA/config/workflow-config-incomingfax.yaml $AIMOA/config/workflow-config-incomingfax.yaml.$(date +'%Y-%m-%d')
+/bin/cp $AIMOA/config/workflow-config-incomingfile.yaml $AIMOA/config/workflow-config-incomingfile.yaml.$(date +'%Y-%m-%d')
 /bin/cp $AIMOA/config/provider_list.yaml $AIMOA/config/provider_list.yaml.$(date +'%Y-%m-%d')
 /bin/cp $AIMOA/src/config/provider_list.yaml $AIMOA/src/config/provider_list.yaml.$(date +'%Y-%m-%d')
 # Create config files in config directory
 /bin/echo "Creating config files from templates..."
 /bin/cp $AIMOA/src/config.yaml.example $AIMOA/config/config.yaml
 /bin/cp $AIMOA/src/config-incomingfax.yaml.example $AIMOA/config/config-incomingfax.yaml
-/bin/cp $AIMOA/src/workflow-config.yaml.example $AIMOA/config/workflow-config.yaml
-/bin/cp $AIMOA/src/workflow-config.yaml.example $AIMOA/config/workflow-config-incomingfax.yaml
+/bin/cp $AIMOA/src/workflow-config.yaml.example $AIMOA/config/workflow-config.yaml	# Default workflow
+/bin/cp $AIMOA/src/workflow-config.yaml.example $AIMOA/config/workflow-config-incomingfax.yaml	# Uses same default workflow
+/bin/cp $AIMOA/src/workflow-config-incomingfile.yaml.example $AIMOA/config/workflow-config-incomingfile.yaml	# Custom worklow, skips tagging providers and MRP
 /bin/cp $AIMOA/src/template_providerlist.txt $AIMOA/config/
 /bin/echo "...remember to edit the config files in ../config/* to customize to your installation."
 # Initialize installation to re-fresh provider list
@@ -100,6 +103,12 @@ AIMOA=$(pwd)
 # Create Python virtual environment for AI-MOA libraries and dependency packages:
 /bin/echo "Creating python virtual environment for AI-MOA dependencies..."
 /bin/sleep 5s
+apt-get update
+# Install virtualenv app
+apt-get -y install python3-virtualenv
+# Install Python pip package manager if not installed
+apt-get -y install python3-pip
+# Create virtual environment
 virtualenv $AIMOA/.env
 # Install python dependencies for AI-MOA from requirements.txt
 /bin/echo "Installing Python libraries and dependencies required for running AI-MOA in python virual environment..."
@@ -156,6 +165,7 @@ fi
 # Install google-chrome
 /bin/echo "Installing Google Chrome for AI-MOA..."
 /bin/echo "...adding Chrome repository to system sources..."
+/bin/sleep 5s
 # Add Chrome repository key to keychain
 /bin/wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
 # Add Chrome repo to system sources
