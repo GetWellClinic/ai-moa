@@ -1,7 +1,7 @@
 #!/bin/bash
 # This script helps you install Docker, Docker Compose, and Python pip
 # This script should be run as 'sudo ./install-docker.sh'
-# Version 2024.12.09
+# Version 2025.04.27
 
 CURRENT=$(pwd)
 
@@ -21,7 +21,7 @@ cd ~/
 /bin/curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
 
 # Add Docker repository to Apt resources:
-/bin/echo \ "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \ $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \ sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+/bin/echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 apt-get update
 
 # Install latest Docker
@@ -56,7 +56,7 @@ docker --version
 # ** Restart the server for installation to take effect and continue (ie. shutdown -r now) **
 
 # Configure Docker to use NVIDIA Container Toolkit
-/bin/echo "Configuring Docker to use NVIDIA Container Toolkit
+/bin/echo "Configuring Docker to use NVIDIA Container Toolkit"
 nvidia-ctk runtime configure --runtime=docker
 systemctl restart docker
 

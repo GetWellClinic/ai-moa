@@ -1,0 +1,30 @@
+[Unit]
+Description=Aimee AI (AI-MOA) IncomingDocs/File
+After=network.target
+
+# Assumes the path to AI-MOA base directory is '/opt/ai-moa'; if different, please edit ExecStart and ExecStop paths below:
+
+[Service]
+# AI-MOA can run as user 'aimoa' if permissions set properly on all subdirectory and files in AI-MOA
+User=aimoa
+Nice=1
+KillMode=control-group
+# KillMode=none
+# KillMode=mixed
+SuccessExitStatus=0 1
+# RemainAfterExit=true
+# ProtectHome=true
+# ProtectSystem=full
+# PrivateDevices=true
+# NoNewPrivileges=true
+WorkingDirectory=/opt/ai-moa/src
+# Edit the path to AI-MOA/gwc-aimee:
+ExecStart=/opt/ai-moa/install/run-aimoa-incomingfile.sh
+KillSignal=SIGINT
+# ExecStop=
+Restart=on-failure
+RestartSec=30s
+
+[Install]
+WantedBy=multi-user.target
+

@@ -46,7 +46,7 @@ emr:
   base_url: http://127.0.0.1:8080/oscar  # Base URL for the EMR system.
   verify-HTTPS: false   # This flag allows for ignoring warnings for self-signed TLS/SSL certificates in a development environment.
   document_folder: incoming  # Folder where pending documents to be processed are stored in o19. (ie. 'pending', or 'incoming')
-  incoming_folder: Fax  # Folder where incoming documents to be processed are stored in o19. (ie. 'Fax', 'File', 'Mail', or 'Refile')
+  incoming_folder: File  # Folder where incoming documents to be processed are stored in o19. (ie. 'Fax', 'File', 'Mail', or 'Refile')
   incoming_folder_queue: '1'  # Queue number for processing incoming files. (ie. '1', '2' etc.)
   system_type: o19  # Type of system. (ie. 'o19', 'openo', 'opro' or 'o15')
   username: emr  # Username for EMR login.
@@ -107,7 +107,7 @@ lock:
 logging:
   console_level: INFO   # Log level for console output. (ie. INFO, DEBUG, WARN, ERROR, FATAL etc. )
   file_level: INFO  # Log level for file output. (ie. INFO, DEBUG etc. )
-  filename: ../logs/workflow-incomingfax.log  # Log file location.
+  filename: ../logs/workflow-incomingfile.log  # Log file location.
   format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'  # Log format.
 
 # OCR (Optical Character Recognition) configuration, specifying the device and settings for document scanning.

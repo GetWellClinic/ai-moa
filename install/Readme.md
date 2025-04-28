@@ -2,7 +2,7 @@
 ## Linux Installation ##
 *Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
 *LICENSE: GNU Affero General Public License Version 3*<br />
-**Document Version 2025.03.24**
+**Document Version 2025.04.27**
 <p align="center">
   <img src="https://getwellclinic.ca/images/GetWellClinic/Logos-Icons/AimeeAI-pc.png" alt="Aimee AI">
 </p>
@@ -23,12 +23,12 @@ healthcare team's administrative burden, so we can dedicate ourselves to the ver
 **Hardware**
 
 *Minimum*
-- 15 GB disk space
+- 20 GB disk space
 - 16 GB RAM system memory
 - NVIDIA RTX video card, minimum 12 GB VRAM
 
 *Recommended*
-- 50 GB hard drive space
+- 60 GB hard drive space
 - 24 GB RAM system memory
 - NVIDIA RTX 4060Ti video card, 16 GB VRAM
 
@@ -146,7 +146,10 @@ nvidia-smi
 
 Add the Repository for NVIDIA Container Toolkit
 ```
-curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \ && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \ sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \ sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
+  && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+    sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+    sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
 ```
 
 Update and install the latest nvidia-container-toolkit
@@ -196,15 +199,28 @@ Add your username to the group "aimoa" so it can run AI-MOA:
 sudo usermod -a -G aimoa {username}
 ```
 
-### 9. Install *Aimee AI* as a system service (Recommended) ###
+### 9. Install *AI-MOA* as a system service (for automatic production use)###
 
-This optional step, installs *Aimee AI* as a system service that automatically starts at system startup/reboot.
+This step installs *AI-MOA* as a system service that automatically starts at system startup/reboot.
 If you install this option, both the LLM Container and AI-MOA will start in the background and keep running.
 
-Install "Aimee AI" as a system service.
-*This will install ../install/services/ai-moa.service and ../install/services/ai-moa-incomingfax.service as a system service in /etc/systemd/system/*
+Option 1: Install one workflow "AI-MOA" as a system service (minimum 12 GB VRAM GPU)
+- PendingDocs default workflow processing only (full tagging and filing)
+- You can customize the default config.yaml to process other queues like IncomingDocs Fax/File/Mail instead.
+
+*This will install ../install/services/ai-moa.service and ../install/services/llm-container.service as a system service in /etc/systemd/system/*
 ```
 sudo ./install-services.sh
+```
+
+Option 2: Install the full *Aimee AI Suite* with multiple workflows as a system service (minimum 16 GB VRAM GPU)
+- PendingDocs default workflow processing (full tagging and filing)
+- IncomingDocs/Fax default workflow processing (full tagging and filing)
+- IncomingDocs/File custom workflow processing (files the PDF to patient demographic only, does not tag providers or MRP)
+
+*This will install ai-moa.service, ai-moa-incomingfax.service, ai-moa-incomingfile.service, and llm-container.service*
+```
+sudo ./install-services-aimee.sh
 ```
 
 ## (Optional) Install a test EMR with OSCAR v.19 Community Edition ##
@@ -377,18 +393,21 @@ If AI-MOA: Aimee AI has been installed as a service, ensure that the LLM Contain
 sudo service llm-container status
 sudo service ai-moa status
 sudo service ai-moa-incomingfax status
+sudo service ai-moa-incomingfile status
 ```
 To start the services:
 ```
 sudo service llm-container start
 sudo service ai-moa start
 sudo service ai-moa-incomingfax start
+sudo service ai-moa-incomingfile start
 ```
 To stop the services:
 ```
 sudo service llm-container stop
 sudo service ai-moa stop
 sudo service ai-moa-incomingfax stop
+sudo service ai-moa-incomingfile stop
 ```
 
 ### Running *Aimee AI* manually by command line ###
@@ -399,17 +418,21 @@ Stop the Aimee AI system service (ai-moa.service, ai-moa-incomingfax.service)
 ```
 sudo service ai-moa stop
 sudo service ai-moa-incomingfax stop
+sudo service ai-moa-incomingfile stop
 ```
 
 Check Aimee AI system status
 ```
 sudo service ai-moa status
 sudo service ai-moa-incomingfax status
+sudo service ai-moa-incomingfile status
 ```
 
 Start *Aimee AI* manually
 ```
 ./run-aimoa.sh
+./run-aimoa-incomingfax.sh
+./run-aimoa.-incomingfile.sh
 
 To exit/stop Aimee AI
 Ctrl-C
@@ -421,6 +444,7 @@ You can also watch realtime logs of AI-MOA.
 ```
 ./watch-aimoa-logs.sh
 ./watch-aimoa-incomingfax-logs.sh
+./watch-aimoa-incomingfile-logs.sh
 
 To exit/stop watching
 Ctrl-C
@@ -521,12 +545,14 @@ Stop AI-MOA first before editing the config.yaml file
 ```
 sudo service ai-moa stop
 sudo service ai-moa-incomingfax stop
+sudo service ai-moa-incomingfile stop
 ```
 
 Edit config.yaml and remove file lock by setting "lock:status:false"
 ```
 sudo nano ../config/config.yaml
 sudo nano ../config/config-incomingfax.yaml
+sudo nano ../config/config-incomingfile.yaml
 ```
 Change setting to "false"
 ```
@@ -538,6 +564,7 @@ Restart the AI-MOA service
 ```
 sudo service ai-moa start
 sudo service ai-moa-incomingfax start
+sudo service ai-moa-incomingfile start
 ```
 
 ### AI-MOA is able to log-in but times out when attempting to retrieve Pending documents in EMR ###
@@ -550,6 +577,23 @@ SELECT * FROM queue_document_link WHERE status="A";
 UPDATE queue_document_link SET status="I" WHERE status="A" and document_id<######;
 ```
 
+### Unable to upload to or access Incoming Docs queue ###
+
+Incoming Docs queue needs to be initialized. The default queue 1 is usually present on default systems, however, the folders "Fax, Mail, File, Refile" have not been created.
+
+- Access the server and add these directories to the corresponding location of "...OscarDocument/incomingdocs/1"
+- Give permissions to group:owner that corresponds to your tomcat version (ie. tomcat9)
+- Verify tomcat user has correct rwx permissions for these folders
+
+```
+ls -l -h /usr/share/oscar-emr/OscarDocument/oscar/incomingdocs
+sudo mkdir /usr/share/oscar-emr/OscarDocument/oscar/incomingdocs/1
+sudo mkdir /usr/share/oscar-emr/OscarDocument/oscar/incomingdocs/1/Fax
+sudo mkdir /usr/share/oscar-emr/OscarDocument/oscar/incomingdocs/1/Mail
+sudo mkdir /usr/share/oscar-emr/OscarDocument/oscar/incomingdocs/1/File
+sudo mkdir /usr/share/oscar-emr/OscarDocument/oscar/incomingdocs/1/Refile
+sudo chown -R tomcat9:tomcat9 /usr/share/oscar-emr/OscarDocument/oscar/incomingdocs/1
+```
 
 
 ## Special Thanks ##
