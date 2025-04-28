@@ -23,12 +23,12 @@ healthcare team's administrative burden, so we can dedicate ourselves to the ver
 **Hardware**
 
 *Minimum*
-- 15 GB disk space
+- 20 GB disk space
 - 16 GB RAM system memory
 - NVIDIA RTX video card, minimum 12 GB VRAM
 
 *Recommended*
-- 50 GB hard drive space
+- 60 GB hard drive space
 - 24 GB RAM system memory
 - NVIDIA RTX 4060Ti video card, 16 GB VRAM
 
