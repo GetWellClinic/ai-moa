@@ -80,10 +80,9 @@ class LoginManager:
         :return: The current URL after login attempt.
         :rtype: str
         """
-        logger.info(f"Attempting Selenium login for user.")
+        logger.info("Attempting Selenium login for user.")
 
-        # Print is used to avoid logging username into log file.
-        print(f"Attempting Selenium login for user: {self.username}")
+        logger.debug(f"Attempting Selenium login for user: {self.username[:2]}*****")
         
         need_pin_field = self.config.get('emr.login_pin_field', False)
         system_type = self.config.get('emr.system_type', 'o19')
@@ -169,9 +168,8 @@ class LoginManager:
 
         if flag:
             session = self.get_driver_session(session, driver)
-            return session, driver, flag
-        else:
-            return session, driver, flag
+
+        return session, driver, flag
 
     def is_login_successful(self, current_url):
         """
