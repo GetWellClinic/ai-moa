@@ -80,7 +80,7 @@ make run
 
 Once completed, your [FastAPI](https://fastapi.tiangolo.com/) server should be running on port 8002.
 
-See the config.yaml.example, and in workflow-config.yaml, use extract_text_doctr_api instead of extract_text_doctr for configuration details.
+See config.yaml.example, and in workflow-config.yaml, use extract_text_doctr_api instead of extract_text_doctr to use the OCR API endpoint.
 
 ```yaml
 ocr:
