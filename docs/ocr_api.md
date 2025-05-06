@@ -35,23 +35,29 @@ Skip this step if port 8080 on your host machine is not being used by any other 
 
 Edit docker-compose.yml in the doctr/api folder
 
+```Dockerfile
 ports:
       - 8080:8080
+```
 
 to
 
+```Dockerfile
 ports:
       - 8002:8080
-
+```
 
 If you need to use OCR with a GPU, also add the following lines to the docker-compose.yml file.
 
+```Dockerfile
 runtime: nvidia
     environment:
       - NVIDIA_VISIBLE_DEVICES=all  # or "0" for a specific GPU
+```
 
 The updated docker-compose.yml will be as follows:
 
+```Dockerfile
 services:
   web:
     container_name: api_web
@@ -64,6 +70,7 @@ services:
     runtime: nvidia
     environment:
       - NVIDIA_VISIBLE_DEVICES=all  # or "0" for a specific GPU
+```
 
 Now,
 
@@ -75,8 +82,10 @@ Once completed, your [FastAPI](https://fastapi.tiangolo.com/) server should be r
 
 See the config.yaml.example, and in workflow-config.yaml, use extract_text_doctr_api instead of extract_text_doctr for configuration details.
 
+```yaml
 ocr:
   api_uri: http://localhost:8002/ocr
   det_arch: db_resnet50
   reco_arch: vitstr_base
   verify-HTTPS: false
+```
