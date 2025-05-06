@@ -35,21 +35,21 @@ Skip this step if port 8080 on your host machine is not being used by any other 
 
 Edit docker-compose.yml in the doctr/api folder
 
-```Dockerfile
+```yaml
 ports:
       - 8080:8080
 ```
 
 to
 
-```Dockerfile
+```yaml
 ports:
       - 8002:8080
 ```
 
 If you need to use OCR with a GPU, also add the following lines to the docker-compose.yml file.
 
-```Dockerfile
+```yaml
 runtime: nvidia
     environment:
       - NVIDIA_VISIBLE_DEVICES=all  # or "0" for a specific GPU
@@ -57,7 +57,7 @@ runtime: nvidia
 
 The updated docker-compose.yml will be as follows:
 
-```Dockerfile
+```yaml
 services:
   web:
     container_name: api_web
