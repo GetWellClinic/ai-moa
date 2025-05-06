@@ -304,7 +304,7 @@ def get_inbox_pendingdocs_documents_opro(self):
 	pending_file = self.config.get('inbox.pending')
 	item = 0
 	if pending_file is None:
-		self.logger.info(f"Pending documents last processed file details missing in configuration.")
+		self.logger.info("Pending documents last processed file details missing in configuration.")
 		return False
 	else:
 		last_processed_file = int(pending_file)
