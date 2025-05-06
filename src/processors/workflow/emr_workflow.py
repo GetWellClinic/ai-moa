@@ -97,6 +97,7 @@ class Workflow:
 
         self.headers['Origin'] = self.origin_url
         self.headers['Referer'] = self.base_url
+        self.headers['User-Agent'] = config.get('emr.user_agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36')
 
         self.update_o19 = o19_updater.update_o19
         self.view_output = o19_updater.view_output
@@ -108,6 +109,7 @@ class Workflow:
         self.get_document_processor_type = o19_inbox.get_document_processor_type
         self.get_o19_documents = o19_inbox.get_o19_documents
         self.get_inbox_pendingdocs_documents = o19_inbox.get_inbox_pendingdocs_documents
+        self.get_inbox_pendingdocs_documents_opro = o19_inbox.get_inbox_pendingdocs_documents_opro
         self.get_inbox_incomingdocs_documents = o19_inbox.get_inbox_incomingdocs_documents
         self.get_local_documents = local_files.get_local_documents
         self.has_ocr = ocr.has_ocr

@@ -105,7 +105,16 @@ def get_o19_documents(self):
 	system_type = self.config.get('emr.document_folder')
 
 	if system_type == 'pending':
-		return self.get_inbox_pendingdocs_documents(self)
+		system_type = self.config.get('emr.system_type', 'o19')
+		verify_document_ids = self.config.get('emr.opro_pendingdocs_ids_auto_increment', False)
+		if system_type == 'opro' and verify_document_ids:
+			"""
+			This is to fix the null status in the 'opro' queue_document_link table.
+			It should be removed immediately once the aforementioned issue is resolved.
+			"""
+			return self.get_inbox_pendingdocs_documents_opro(self)
+		else:
+			return self.get_inbox_pendingdocs_documents(self)
 	elif system_type == 'incoming':
 		return self.get_inbox_incomingdocs_documents(self)
 
@@ -137,7 +146,7 @@ def get_inbox_pendingdocs_documents(self):
 			driver.get(f"{self.base_url}/dms/inboxManage.do?method=getDocumentsInQueues")
 		
 		try:
-			driver.implicitly_wait(300)
+			driver.implicitly_wait(115)
 			queuenames_field = driver.find_element(By.ID, "queueNames")
 		except TimeoutException:
 			self.logger.debug("Timeout occurred when loading pending documents.")
@@ -276,3 +285,56 @@ def get_inbox_incomingdocs_documents(self):
 							self.logger.error(f"An error occurred: {file_response.status_code}")
 							return False
 	return False
+
+
+def get_inbox_pendingdocs_documents_opro(self):
+	"""
+    Fetch and process the next pending EMR document from the inbox for opro to resolve null in queue_document_link.
+
+    This method increments the next document number to process based on the last
+    processed file recorded in the configuration. It constructs a request to fetch
+    the document from the DMS, handles retry logic based
+    on configurable limits, and updates the processing state accordingly.
+
+    Returns:
+        bool: True if a document was successfully fetched and ready for processing;
+              False if no documents are left, if an error occurred, or if the document
+              should be skipped after exceeding retry limits.
+    """
+	pending_file = self.config.get('inbox.pending')
+	item = 0
+	if pending_file is None:
+		self.logger.info(f"Pending documents last processed file details missing in configuration.")
+		return False
+	else:
+		last_processed_file = int(pending_file)
+		item = last_processed_file + 1
+
+	max_retries = self.config.get('file_processing.max_retries')  # Get max retry count from configuration
+	current_retries = self.config.get('file_processing.pending_retries')  # Get current retry count from configuration
+	
+	file_url = f"{self.base_url}/dms/ManageDocument.do?method=display&doc_no={item}"
+	self.headers['Referer'] = file_url
+	self.session.headers.update(self.headers)
+	file_response = self.session.get(file_url, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
+
+	if file_response.status_code == 200 and file_response.content:
+		if max_retries <= current_retries:  # If max retries is equal to current retries
+			self.config.update_pending_retries(0)  # Reset the retry count in the configuration
+			tag_skipped_files = self.config.get('emr.tag_skipped_files')
+			if tag_skipped_files:
+				self.file_name = item
+			else:
+				self.config.update_pending_inbox(item)
+				self.logger.info(f"Max retries exceeded for processing. Skipping document No: {item}.")
+				return False
+		else:
+			self.config.update_pending_retries(current_retries + 1)
+			self.config.set_shared_state('current_file', file_response.content)
+			self.file_name = item
+			self.logger.info(f"Fetched EMR document from Pending Docs...Processing Document No: {item}.")
+			return True
+	else:
+		self.logger.info(f"No more documents to process or error while fetching document {item}.")
+	return False
+
