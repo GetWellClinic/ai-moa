@@ -51,8 +51,8 @@ If you need to use OCR with a GPU, also add the following lines to the docker-co
 
 ```yaml
 runtime: nvidia
-    environment:
-      - NVIDIA_VISIBLE_DEVICES=all  # or "0" for a specific GPU
+environment:
+  - NVIDIA_VISIBLE_DEVICES=all  # or "0" for a specific GPU
 ```
 
 The updated docker-compose.yml will be as follows:
