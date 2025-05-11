@@ -21,7 +21,7 @@
 
 # default values
 # Prompt Version: 2025.04.08
-# Workflow Version: 2025.04.08
+# Workflow Version: 2025.05.10
 #
 default_values:
   default_provider_tagging_id:
@@ -65,6 +65,9 @@ workflow:
       true_next: get_category_types
       false_next: release_lock
     - name: extract_text_doctr
+      true_next: get_category_types
+      false_next: release_lock
+    - name: extract_text_doctr_api
       true_next: get_category_types
       false_next: release_lock
     - name: get_category_types

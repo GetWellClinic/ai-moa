@@ -1,0 +1,17 @@
+# Replacement docker-compose.yml file for mindee/doctr/api/ local repo
+# Note: On initial request to the OCR API, it may take a lot longer for the first OCR process as the system downloads the OCR models. On subsequent document processing, it will be faster as the models will be loaded to GPU.
+
+services:
+  web:
+    container_name: ocr_api_web
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: uvicorn app.main:app --reload --workers 1 --host 0.0.0.0 --port 8080
+# Change to alternate port 8002 if localhost port 8080 being used by another application such as the EMR
+    ports:
+      - 8002:8080
+# Add below if using GPU for OCR
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all  # or "0" for a specific GPU

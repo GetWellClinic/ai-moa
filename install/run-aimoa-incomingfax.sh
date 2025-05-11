@@ -1,7 +1,7 @@
 #!/bin/bash
 # Startup script for AI-MOA
 
-# Version 2025.02.21
+# Version 2025.05.10
 
 # CONFIGURATION:
 # Automatic configuration of paths:
@@ -39,8 +39,8 @@ export PYTHONWARNINGS="ignore:Unverified HTTPS request"
 
 # Initialize permissions (otherwise AI-MOA can't read-wrote config files, or save provider list)
 #/bin/chown aimoa:aimoa $AIMOA/src/*
-#/bin/chown aimoa:aimoa $AIMOA/config/*
-#/bin/chmod g+rw $AIMOA/config -R
+/bin/chown aimoa:aimoa $AIMOA/config/*
+/bin/chmod g+rw $AIMOA/config -R
 #/bin/chmod g+rw $AIMOA/src/*
 
 # Command to start AI-MOA
