@@ -20,7 +20,7 @@
 # ***
 
 # AI configuration for interacting with the AI-MOA service.
-# Version: 2025.05.02
+# Version: 2025.05.18
 
 ai:
   uri: https://localhost:3334/v1/chat/completions  # URI endpoint for AI model interactions.
@@ -50,11 +50,11 @@ emr:
   incoming_folder_queue: '1'  # Queue number for processing incoming files. (ie. '1', '2' etc.)
   system_type: o19  # Type of system. (ie. 'o19', 'openo', 'opro' or 'o15')
   username: emr  # Username for EMR login.
-  password: passpwd  # Password for EMR login.
+  password: 'passpwd'  # Password for EMR login.
   pin: '123'  # PIN for EMR login.
   login_pin_field: true # If set to true, the system will assume that there is a PIN field on the login page. Set this to false if there is no PIN field on the login page.
   tag_skipped_files: true # If set to True, the system will tag the document to the default_unidentified_patient when it reaches the maximum retries and skip the file.
-  user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36' setting user-agent
+  user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36' # Set user-agent
 
 general_setting:
   timeout: 300 # Timeout in seconds for request (POST and GET) to avoid indefinitely hanging requests.
