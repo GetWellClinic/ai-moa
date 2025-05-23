@@ -23,6 +23,7 @@ from datetime import datetime, timedelta
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from bs4 import BeautifulSoup
 
 def get_document_processor_type(self):
 	"""
@@ -106,8 +107,7 @@ def get_o19_documents(self):
 
 	if system_type == 'pending':
 		system_type = self.config.get('emr.system_type', 'o19')
-		verify_document_ids = self.config.get('emr.opro_pendingdocs_ids_auto_increment', False)
-		if system_type == 'opro' and verify_document_ids:
+		if system_type == 'opro' and self.config.get('emr.opro_pendingdocs_ids_auto_increment', False):
 			"""
 			This is to fix the null status in the 'opro' queue_document_link table.
 			It should be removed immediately once the aforementioned issue is resolved.
@@ -318,7 +318,23 @@ def get_inbox_pendingdocs_documents_opro(self):
 	self.session.headers.update(self.headers)
 	file_response = self.session.get(file_url, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
 
+	document_details_url = f"{self.base_url}/dms/showDocument.jsp?inWindow=true&segmentID={item}"
+
 	if file_response.status_code == 200 and file_response.content:
+		document_details = self.session.get(document_details_url, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
+
+		if document_details.status_code == 200:
+			soup = BeautifulSoup(document_details.text, 'html.parser')
+			element_id = f'demofind{item}'
+			element = soup.find(id=element_id)
+			if element:
+				value = element.get('value')
+				if value != '-1':
+					self.config.update_pending_retries(0)
+					self.config.update_pending_inbox(item)
+					self.logger.info(f"Document {item} already tagged to patient.")
+					return False
+
 		if max_retries <= current_retries:  # If max retries is equal to current retries
 			self.config.update_pending_retries(0)  # Reset the retry count in the configuration
 			tag_skipped_files = self.config.get('emr.tag_skipped_files')
