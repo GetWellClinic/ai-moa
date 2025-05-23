@@ -334,6 +334,9 @@ def get_inbox_pendingdocs_documents_opro(self):
 					self.config.update_pending_inbox(item)
 					self.logger.info(f"Document {item} already tagged to patient.")
 					return False
+		else:
+			self.logger.info(f"Unexpected error from server, error code {document_details.status_code}")
+			return False
 
 		if max_retries <= current_retries:  # If max retries is equal to current retries
 			self.config.update_pending_retries(0)  # Reset the retry count in the configuration
