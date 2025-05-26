@@ -2,7 +2,7 @@
 # This custom script installs Get Well Clinic's version of AI-MOA (Aimee AI)
 # Note: To correctly use automatic detection of AI-MOA path, this script must be installed and run in subdirectory 'install'
 # This install script should be run as 'sudo ./install-aimoa.sh'
-# Version 2025.04.27
+# Version 2025.05.26
 
 # Hardware Requirements:
 #	NVIDIA RTX video card installed with at least 12 GB VRAM
@@ -128,6 +128,7 @@ pip install -r "$AIMOA/src/requirements.txt"
 /bin/echo "Fixing file permissions for AI-MOA to 'rw-rw-r-- aimoa aimoa' ..."
 /bin/sleep 5s
 # Modify user:group permissions
+/bin/chown aimoa:aimoa "$AIMOA"
 /bin/chown aimoa:aimoa "$AIMOA/"* -R
 # Fix permissions so AI MOA can read-write
 /bin/chmod ug+rwx "$AIMOA/config" "$AIMOA/logs" "$AIMOA/app" "$AIMOA/app/input" "$AIMOA/app/output"
@@ -175,3 +176,6 @@ apt-get update
 # Install google-chrome-stable
 apt-get -y install google-chrome-stable
 
+# Post-installation messages:
+/bin/echo ""
+/bin/echo "Please also check if 'aimoa' user or 'others' has r-x permissions from root directory / all the way to " $AIMOA

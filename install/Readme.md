@@ -2,7 +2,7 @@
 ## Linux Installation ##
 *Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
 *LICENSE: GNU Affero General Public License Version 3*<br />
-**Document Version 2025.05.18**
+**Document Version 2025.05.26**
 <p align="center">
   <img src="https://getwellclinic.ca/images/GetWellClinic/Logos-Icons/AimeeAI-pc.png" alt="Aimee AI">
 </p>
@@ -66,6 +66,7 @@ If you plan on installing this in a VM such as on ProxMox VE, here are some tips
 You will need to have your Github user name and a personal access token (generated from your account on Github). Github no longer allows 'git clone' access with passwords, and must use an access token generated from your user account online from Github.
 ```
 cd /opt
+sudo chmod o+rx /opt
 sudo git clone https://github.com/getwellclinic/ai-moa.git
 cd /opt/ai-moa
 ```
