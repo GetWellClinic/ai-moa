@@ -1,4 +1,4 @@
-## OCR setup with docker
+## OCR setup with Docker
 Version 2025.05.10
 
 To set up OCR with Docker, you need to install and configure a GPU. You can also use it without a GPU, but this might affect performance.
