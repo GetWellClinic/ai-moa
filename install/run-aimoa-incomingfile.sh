@@ -1,17 +1,17 @@
 #!/bin/bash
 # Startup script for AI-MOA
 
-# Version 2025.05.10
+# Version 2025.05.31
 
 # CONFIGURATION:
 # Automatic configuration of paths:
 CURRENT=$(pwd)
 cd ..
 AIMOA=$(pwd)
-# AIPYTHONENV=$(pwd)/.env
+AIPYTHONENV=$(pwd)/.env
 # Override by specifying the full path for AI-MOA base directory and Python virtual environment that contains the installed python pre-requisite packages:
 # AIMOA=/opt/ai-moa
-AIPYTHONENV=/opt/virtualenv/aimoa
+# AIPYTHONENV=/opt/virtualenv/aimoa
 
 # Confirm base directory of AI-MOA:
 /bin/echo "Currently specifying the following as the base directory for AI-MOA..."
