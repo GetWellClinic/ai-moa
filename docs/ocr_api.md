@@ -1,5 +1,5 @@
 ## OCR setup with Docker
-Version 2025.05.10
+Version 2025.05.31
 
 To set up OCR with Docker, you need to install and configure a GPU. You can also use it without a GPU, but this might affect performance.
 
@@ -93,6 +93,8 @@ ocr:
 ```
 
 Edit 'workflow-config.yaml', and use 'extract_text_doctr_api' instead of 'extract_text_doctr' to use the OCR API endpoint.
+
+Note: The first time you use the function 'extract_text_doctr_api', the system may seem to pause but it is just take a long time to download and install the model on first run. However, on second run of the function, it will be alot faster.
 
 To stop and remove the OCR container:
 ```shell
