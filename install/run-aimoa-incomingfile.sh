@@ -1,17 +1,17 @@
 #!/bin/bash
 # Startup script for AI-MOA
 
-# Version 2025.02.21
+# Version 2025.05.31
 
 # CONFIGURATION:
 # Automatic configuration of paths:
 CURRENT=$(pwd)
 cd ..
 AIMOA=$(pwd)
-# AIPYTHONENV=$(pwd)/.env
+AIPYTHONENV=$(pwd)/.env
 # Override by specifying the full path for AI-MOA base directory and Python virtual environment that contains the installed python pre-requisite packages:
 # AIMOA=/opt/ai-moa
-AIPYTHONENV=/opt/virtualenv/aimoa
+# AIPYTHONENV=/opt/virtualenv/aimoa
 
 # Confirm base directory of AI-MOA:
 /bin/echo "Currently specifying the following as the base directory for AI-MOA..."
@@ -39,8 +39,8 @@ export PYTHONWARNINGS="ignore:Unverified HTTPS request"
 
 # Initialize permissions (otherwise AI-MOA can't read-wrote config files, or save provider list)
 #/bin/chown aimoa:aimoa $AIMOA/src/*
-#/bin/chown aimoa:aimoa $AIMOA/config/*
-#/bin/chmod g+rw $AIMOA/config -R
+/bin/chown aimoa:aimoa $AIMOA/config/*
+/bin/chmod g+rw $AIMOA/config -R
 #/bin/chmod g+rw $AIMOA/src/*
 
 # Command to start AI-MOA

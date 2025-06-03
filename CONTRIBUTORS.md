@@ -18,5 +18,5 @@ Initial release: J. Joseph, M. Yingbull, K. Lai
 We acknowledge the support of the Natural Sciences and Engineering Research Council of Canada (NSERC).
 *Nous remercions le Conseil de recherches en sciences naturelles et en génie du Canada (CRSNG) de son soutien.*
 
-This project was made possible with the support of Prof. Yingbull, Conestoga College, and Dr. K. Lai, Get Well Clinic.
+This project was made possible with the support of Prof. M. Yingbull, Conestoga College, and Dr. K. Lai, Get Well Clinic.
 

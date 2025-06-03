@@ -24,6 +24,7 @@ import io
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 import torch
+import requests
 
 def has_ocr(self):
     """
@@ -138,7 +139,6 @@ def extract_text_doctr(self):
     Raises:
         Exception: If there is an issue performing OCR or reading the PDF.
     """
-    text = ''
     try:
         if self.enable_ocr_gpu:
             self.logger.debug("OCR using GPU")
@@ -181,4 +181,63 @@ def extract_text_doctr(self):
         return True
     except Exception as e:
         self.logger.error(f"An error occurred in extract_text_doctr: {e}")
+        return False
+
+
+def extract_text_doctr_api(self):
+    """
+    Extracts text from a PDF file using an external OCR API.
+
+    This method reads a PDF from shared state, sends it to the OCR API
+    specified in the configuration, and processes the returned structured
+    text output into a single concatenated string limited by the configured
+    page limit.
+
+    Returns:
+        bool: True if OCR and text extraction succeed, False otherwise.
+    """
+    try:
+        # Read the PDF from bytes (or file)
+        pdf_bytes = self.config.get_shared_state('current_file')
+
+        # Now perform OCR on the truncated document
+        self.logger.debug("Calling OCR API.")
+
+        headers = {"accept": "application/json"}
+        params = {"reco_arch": self.config.get('ocr.reco_arch','vitstr_base'), "det_arch": self.config.get('ocr.det_arch','db_resnet50')}
+
+        files = [  # application/pdf, image/jpeg, image/png supported
+                ("files", ('ocr_doc.pdf', pdf_bytes, "application/pdf")),
+            ]
+
+        results = requests.post(self.config.get('ocr.api_uri','http://localhost:8002/ocr'), headers=headers, params=params, files=files, verify=self.config.get('ocr.verify-HTTPS')).json()
+
+        all_outputs = []
+
+        for result in results:
+            lines_output = []
+
+            for page in result["items"]:
+                for block in page["blocks"]:
+                    block_lines = []
+                    for line in block["lines"]:
+                        line_text = " ".join(word["value"] for word in line["words"])
+                        block_lines.append(line_text)
+                    # Join lines in the block and add a gap after each block
+                    lines_output.append("\n".join(block_lines) + "\n")
+
+            document_text = "\n\n".join(lines_output)
+            all_outputs.append(document_text)
+
+        # Truncate the pages to a limit (page_limit)
+        page_limit = self.config.get('ocr.page_limit',20)
+        self.logger.debug(f"OCR page limit: {page_limit}")
+
+        result_string = ""
+        for i in range(min(page_limit, len(all_outputs))):
+            result_string += all_outputs[i]
+        self.ocr_text = result_string
+        return True
+    except Exception as e:
+        self.logger.error(f"An error occurred in extract_text_doctr_api: {e}")
         return False

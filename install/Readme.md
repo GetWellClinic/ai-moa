@@ -2,7 +2,7 @@
 ## Linux Installation ##
 *Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
 *LICENSE: GNU Affero General Public License Version 3*<br />
-**Document Version 2025.04.27**
+**Document Version 2025.05.26**
 <p align="center">
   <img src="https://getwellclinic.ca/images/GetWellClinic/Logos-Icons/AimeeAI-pc.png" alt="Aimee AI">
 </p>
@@ -66,6 +66,7 @@ If you plan on installing this in a VM such as on ProxMox VE, here are some tips
 You will need to have your Github user name and a personal access token (generated from your account on Github). Github no longer allows 'git clone' access with passwords, and must use an access token generated from your user account online from Github.
 ```
 cd /opt
+sudo chmod o+rx /opt
 sudo git clone https://github.com/getwellclinic/ai-moa.git
 cd /opt/ai-moa
 ```
@@ -119,7 +120,7 @@ Once system is rebooted, check to see if NVIDIA RTX video card is installed:
 nvidia-smi
 ```
 
-*You should see something like this:*
+*You should see GPU status with something like this:*
 ```
 +-----------------------------------------------------------------------------------------+
 | NVIDIA-SMI 550.120                Driver Version: 550.120        CUDA Version: 12.4     |
@@ -144,7 +145,7 @@ nvidia-smi
 
 ### 4. Install NVIDIA Toolkit Container ###
 
-Add the Repository for NVIDIA Container Toolkit
+Add the Repository for [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
 ```
 curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
   && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
@@ -162,6 +163,12 @@ Restart the server for the installation to take effect.
 ```
 sudo shutdown -r now
 ```
+
+Check if docker containers can access the GPU (if nvidia-container-toolkit was installed properly)
+```
+docker run --rm --gpus all nvidia/cuda:12.3.0-base-ubuntu20.04 nvidia-smi
+```
+If the toolkit is installed properly, you should be able to see an output from nvidia-smi showing the GPU status. If you get any errors, then you have not installed it properly and llm-container will not be able to work with the GPU.
 
 ### 5. Install Docker and Docker Compose ###
 
@@ -518,8 +525,8 @@ You can then edit any files for your own custom settings. (ie. Custom ../src/run
 AI-MOA is not 100% accurate in tagging documents to the correct patient.
 We recommend having a human medical office administrator act as `default_error_manager_id` to review the tagged documents by AI-MOA daily for incorrect matches, and manually Refile the document to correct errors.
 Unassigned or documents tagged to `default_unidentified_patient_tagging_id` will be also tagged to the medical office administrator (`default_error_manager_id`) to review in their InBox.
-A quick way to also review tagged documents is to run a Search in InBox for All documents recently uploaded within a date range (ie. in the last day). The reviewer can use Rapid Review or Preview to review all the AI-MOA work. Pay attention to "Unassigned, Unassigned" documents; and also confirm that the patient name in the document corresponds to the correct demographic tagged in EMR. The reviewer can click "Acknowledge or Next" to confirm that it has been checked by a human.
-Any incorrect documents can be sent to Refile and manually corrected through the Incoming Docs document manager.
+A quick way to also review tagged documents is to run a Search in InBox for "New" documents recently uploaded within a date range (ie. in the last day). The reviewer can use Rapid Review or Preview to review all the AI-MOA work. Pay attention to "Unassigned, Unassigned" documents; and also confirm that the patient name in the document corresponds to the correct demographic tagged in EMR. The reviewer can click "Acknowledge or Next" to confirm that it has been checked by a human.
+Any incorrect documents can be sent to Refile by clicking the "Refile" button in the InBox viewer; and then manually corrected through the Incoming Docs document manager (Click Incoming Docs, click Refile folder).
 
 ### Uninstalling Aimee AI ###
 

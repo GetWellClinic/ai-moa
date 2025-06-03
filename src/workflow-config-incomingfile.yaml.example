@@ -21,7 +21,7 @@
 
 # default values
 # Prompt Version: KC-2025.04.08
-# Workflow Version: Custom-2025.04.08 (Skip tagging providers and MRP, only file to patient)
+# Workflow Version: Custom-2025.05.26 (Skip tagging providers and MRP, only file to patient)
 #
 default_values:
   default_provider_tagging_id:
@@ -55,19 +55,25 @@ workflow:
       false_next: get_local_documents
     - name: get_o19_documents
       true_next: extract_text_doctr
+      # true_next: extract_text_doctr_api
       false_next: unidentified_patients
     - name: get_local_documents
       true_next: extract_text_doctr
+      # true_next: extract_text_doctr_api
       false_next: release_lock
     - name: has_ocr
       true_next: extract_text_from_pdf_file
       false_next: extract_text_doctr
+      # false_next: extract_text_doctr_api
     - name: extract_text_from_pdf_file
       true_next: get_category_types
       false_next: release_lock
     - name: extract_text_doctr
       true_next: get_category_types
       false_next: release_lock
+    - name: extract_text_doctr_api
+      true_next: get_category_types
+      false_next: release_lock  
     - name: get_category_types
       true_next: get_category_type
       false_next: release_lock
