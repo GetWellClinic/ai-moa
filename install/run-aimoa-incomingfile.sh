@@ -38,10 +38,10 @@ export PYTHONWARNINGS="ignore:Unverified HTTPS request"
 /bin/echo $PYTHONWARNINGS
 
 # Initialize permissions (otherwise AI-MOA can't read-wrote config files, or save provider list)
-#/bin/chown aimoa:aimoa $AIMOA/src/*
-/bin/chown aimoa:aimoa $AIMOA/config/*
-/bin/chmod g+rw $AIMOA/config -R
-#/bin/chmod g+rw $AIMOA/src/*
+#/bin/chown aimoa:aimoa $AIMOA/src/* 2>/dev/null
+/bin/chown aimoa:aimoa $AIMOA/config/* 2>/dev/null
+/bin/chmod g+rw $AIMOA/config -R 2>/dev/null
+#/bin/chmod g+rw $AIMOA/src/* 2>/dev/null
 
 # Command to start AI-MOA
 /bin/echo "Starting AI-MOA..."
