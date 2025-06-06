@@ -1,7 +1,7 @@
 #!/bin/bash
 # This script helps you install Docker, Docker Compose, and Python pip
 # This script should be run as 'sudo ./install-docker.sh'
-# Version 2025.04.27
+# Version 2025.06.06
 
 CURRENT=$(pwd)
 
@@ -40,6 +40,17 @@ pip install docker-compose
 
 # Confirm Docker Version
 docker --version
+
+# Add current user to 'docker' group
+/usr/sbin/usermod -a -G docker $USER
+# Add default first administrator username to 'docker' group
+USERNAME=$(awk -F':' -v uid=1000 '$3 == uid { print $1 }' /etc/passwd)
+/usr/sbin/usermod -a -G docker $USERNAME
+/bin/newgrp docker
+/bin/echo ""
+/bin/echo "Confirming current user belonging to the following groups (check for 'docker')..."
+/usr/bin/groups $USER
+/usr/bin/groups $USERNAME
 
 # Install NVIDIA Container Toolkit:
 #

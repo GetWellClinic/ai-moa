@@ -120,9 +120,11 @@ pip install -r "$AIMOA/src/requirements.txt"
 
 # Create Linux user and group for 'aimoa':
 /usr/sbin/useradd -m aimoa	# Requires home directory for google-chrome files
+/bin/newgrp aimoa
 # Add current user to 'aimoa' group
 /usr/sbin/usermod -a -G aimoa $USER
 /usr/sbin/usermod -a -G aimoa $USERNAME
+
 
 # Initialize file permissions for AI-MOA:
 /bin/echo "Fixing file permissions for AI-MOA to 'rw-rw-r-- aimoa aimoa' ..."
