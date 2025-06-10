@@ -2,7 +2,7 @@
 ## Linux Installation ##
 *Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
 *LICENSE: GNU Affero General Public License Version 3*<br />
-**Document Version 2025.05.26**
+**Document Version 2025.06.09**
 <p align="center">
   <img src="https://getwellclinic.ca/images/GetWellClinic/Logos-Icons/AimeeAI-pc.png" alt="Aimee AI">
 </p>
@@ -541,6 +541,7 @@ Sometimes, Aimee AI won't run properly, and your get permission errors in the lo
 
 Fix this by running:
 ```
+cd install
 sudo ./fix-aimoa.sh
 ```
 
@@ -601,6 +602,29 @@ sudo mkdir /usr/share/oscar-emr/OscarDocument/oscar/incomingdocs/1/File
 sudo mkdir /usr/share/oscar-emr/OscarDocument/oscar/incomingdocs/1/Refile
 sudo chown -R tomcat9:tomcat9 /usr/share/oscar-emr/OscarDocument/oscar/incomingdocs/1
 ```
+
+### AI-MOA periodically stops working completely ###
+
+This can happen when the Linux Ubuntu system does an automatic upgrade of the Linux kernel or the NVIDA video drivers with unattended upgrade packages. You can check if you can still access the ```nvidia-smi``` display and check the GPU memory usage.
+
+To fix the problem, simply reboot the Linux system.
+
+You can set a crontab to periodically reboot the system, ie. on Sunday mornings.
+
+Or you can try to edit some of the parameters to reboot the system and cleanup unused kernels after unattended upgrades: ```sudo nano /etc/apt/apt.conf.d/50unattended-upgrades```
+
+Edit the config file and uncomment these lines to activate the setting:
+```
+Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+Unattended-Upgrade::Automatic-Reboot "true";
+Unattended-Upgrade::Automatic-Reboot-Time "02:00";
+```
+
+### AI-MOA sometimes skips some PDF documents ###
+
+This is a feature to skip files that AI-MOA has tried several times and failed to complete the workflow. This prevents the AI-MOA from hanging on an endless futile loop attempting to process a corrupted or problematic PDF.
+
+To fix this, have a human MOA just manually label, tag, and Acknowledge the document.
 
 
 ## Special Thanks ##
