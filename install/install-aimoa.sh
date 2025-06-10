@@ -2,7 +2,7 @@
 # This custom script installs Get Well Clinic's version of AI-MOA (Aimee AI)
 # Note: To correctly use automatic detection of AI-MOA path, this script must be installed and run in subdirectory 'install'
 # This install script should be run as 'sudo ./install-aimoa.sh'
-# Version 2025.05.28
+# Version 2025.06.09
 
 # Hardware Requirements:
 #	NVIDIA RTX video card installed with at least 12 GB VRAM
@@ -165,17 +165,6 @@ else
 	(sudo crontab -u root -l && /bin/echo "# AI-MOA Cronjob to clear Chrome temp files" 2>/dev/null) | sudo crontab -
 	(sudo crontab -u root -l && /bin/echo "$AIMOACRON" 2>/dev/null) | sudo crontab -
 	/bin/echo "Added aimoa-cron-maintenance.sh to sudo crontab...successful."
-fi
-
-# Install crontab for Sunday morning reboot (to autofix kernel unattended upgrades mismatch with NVIDIA drivers causing AI-MOA to halt)
-REBOOTCRON="1 4 * * SUN     /usr/sbin/shutdown -r now"
-# Check if already exists, and add if not exist
-if sudo crontab -u root -l 2>/dev/null | /bin/grep -Fq "$REBOOTCRON"; then
-	/bin/echo "Cron job already exists. Skipping adding reboot job...Please verify correct installation of existing cron job...!"
-else
-	(sudo crontab -u root -l && /bin/echo "# AI-MOA Cronjob for weekly reboot, to autofix halted AI-MOA due to unattended kernel and NVIDIA drivers upgrade" 2>/dev/null) | sudo crontab -
-	(sudo crontab -u root -l && /bin/echo "$REBOOTCRON" 2>/dev/null) | sudo crontab -
-	/bin/echo "Added Sunday weekly reboot to sudo crontab...successful."
 fi
 
 # Install google-chrome
