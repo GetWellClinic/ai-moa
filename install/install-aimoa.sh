@@ -162,8 +162,20 @@ AIMOACRON="1 * * * * $AIMOA/install/aimoa-cron-maintenance.sh"
 if sudo crontab -u root -l 2>/dev/null | /bin/grep -Fq "$AIMOACRON"; then
 	/bin/echo "Cron job already exists. Skipping adding aimoa-cron-maintenance.sh...Please verify correct installation of existing cron job...!"
 else
+	(sudo crontab -u root -l && /bin/echo "# AI-MOA Cronjob to clear Chrome temp files" 2>/dev/null) | sudo crontab -
 	(sudo crontab -u root -l && /bin/echo "$AIMOACRON" 2>/dev/null) | sudo crontab -
 	/bin/echo "Added aimoa-cron-maintenance.sh to sudo crontab...successful."
+fi
+
+# Install crontab for Sunday morning reboot (to autofix kernel unattended upgrades mismatch with NVIDIA drivers causing AI-MOA to halt)
+REBOOTCRON="1 4 * * SUN     /usr/sbin/shutdown -r now"
+# Check if already exists, and add if not exist
+if sudo crontab -u root -l 2>/dev/null | /bin/grep -Fq "$REBOOTCRON"; then
+	/bin/echo "Cron job already exists. Skipping adding reboot job...Please verify correct installation of existing cron job...!"
+else
+	(sudo crontab -u root -l && /bin/echo "# AI-MOA Cronjob for weekly reboot, to autofix halted AI-MOA due to unattended kernel and NVIDIA drivers upgrade" 2>/dev/null) | sudo crontab -
+	(sudo crontab -u root -l && /bin/echo "$REBOOTCRON" 2>/dev/null) | sudo crontab -
+	/bin/echo "Added Sunday weekly reboot to sudo crontab...successful."
 fi
 
 # Install google-chrome
@@ -181,3 +193,5 @@ apt-get -y install google-chrome-stable
 # Post-installation messages:
 /bin/echo ""
 /bin/echo "Please also check if 'aimoa' user or 'others' has r-x permissions from root directory / all the way to " $AIMOA
+/bin/echo ""
+/bin/echo "Please check `sudo crontab -e` to verify correct installation of cronjobs."
