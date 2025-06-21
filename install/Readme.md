@@ -2,7 +2,7 @@
 ## Linux Installation ##
 *Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
 *LICENSE: GNU Affero General Public License Version 3*<br />
-**Document Version 2025.06.09**
+**Document Version 2025.06.20**
 <p align="center">
   <img src="https://getwellclinic.ca/images/GetWellClinic/Logos-Icons/AimeeAI-pc.png" alt="Aimee AI">
 </p>
@@ -23,12 +23,12 @@ healthcare team's administrative burden, so we can dedicate ourselves to the ver
 **Hardware**
 
 *Minimum*
-- 20 GB disk space
+- 50 GB disk space
 - 16 GB RAM system memory
 - NVIDIA RTX video card, minimum 12 GB VRAM
 
 *Recommended*
-- 60 GB hard drive space
+- 70 GB hard drive space
 - 24 GB RAM system memory
 - NVIDIA RTX 4060Ti video card, 16 GB VRAM
 
