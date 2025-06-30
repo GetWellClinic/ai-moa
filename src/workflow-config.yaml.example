@@ -426,7 +426,7 @@ ai_prompts:
 
   get_patient_hin: >
     Answer only to the following question in one word, one word only;
-    For context, the health card number is a 10 digit number, that sometimes may be broken up by spaces; 'HCN', 'HC#', 'HC:', 'PHN', 'Personal Health Number', 'Health Insurance Number', 'HIN', 'healthcard', 'HN:', or 'OHIP:' also refer to the health card number. In one word, one word only, what is the 10 digit health card number of the patient found in the document?
+    For context, the health card number is a 10 digit number, that sometimes may be broken up by spaces; 'HCN', 'HC#', 'HC:', 'PHN', 'Personal Health Number', 'Health Insurance Number', 'HIN', 'OHIN:', 'healthcard', 'HN:', 'OHIP', or 'OHIP:' also refer to the health card number. In one word, one word only, what is the 10 digit health card number of the patient found in the document?
     If the health card number is unavailable, do not invent a number, only return False, no other words.
 
   get_patient_name: >

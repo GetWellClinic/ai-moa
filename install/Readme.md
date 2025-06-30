@@ -2,7 +2,7 @@
 ## Linux Installation ##
 *Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
 *LICENSE: GNU Affero General Public License Version 3*<br />
-**Document Version 2025.06.20**
+**Document Version 2025.06.30**
 <p align="center">
   <img src="https://getwellclinic.ca/images/GetWellClinic/Logos-Icons/AimeeAI-pc.png" alt="Aimee AI">
 </p>
@@ -345,14 +345,14 @@ Aimee AI will file documents that do not have any corresponding patient record i
 1. Login to EMR
 2. Click "Search" for a patient.
 	- Enter "confidential" and click "Search", to check if existing patient record named "CONFIDENTIAL, UNATTACHED"
-	- If one exist, then note down the demographic number of this chart, to specify as the "default_unidentified_patient_tagging_name:" field in "workflow-config.yaml"
-3. Create Demographic:
+	- If one exist, then note down the demographic number of this chart, to specify as the "default_unidentified_patient_tagging_id:" field in "workflow-config.yaml"
+3. If none exists, Create Demographic:
 	- Click "Create Demographic" and create a new chart
 		- Lastname: CONFIDENTIAL
 		- Firstname: UNATTACHED
 		- Health Card Type: Other
 4. Update "workflow-config.yaml"
-	- Note the Demographic Number for "CONFIDENTIAL, UNATTACHED" and enter it as the "default_unidentified_patient_tagging_name:" for the YAML file.
+	- Note the Demographic Number for "CONFIDENTIAL, UNATTACHED" and enter it as the "default_unidentified_patient_tagging_id:" for the YAML file.
 
 **Create missing Document Categories**
 
