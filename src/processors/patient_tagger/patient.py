@@ -72,6 +72,8 @@ def get_patient_name(self):
 
     if query:
 
+        query = re.sub(r'([A-Za-z]),([A-Za-z])', r'\1, \2', query)
+
         query = re.sub(r'[.,]', '', query)
         query = re.sub(r'[-]', ' ', query)
 
