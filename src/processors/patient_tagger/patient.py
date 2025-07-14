@@ -174,41 +174,34 @@ def get_patient_hin(self):
 
     query = re.sub(r'[#:.,]', ' ', query)
     query = re.sub(r'[-/]', '', query)
+    query = re.sub(r'(\d{3,})\s(\d{3,})', r'\1\2', query)
+    query = re.sub(r'(\d{3,})\s(\d{3,})', r'\1\2', query)
 
     pattern = r'\b[A-Za-z]*\d{6,}[A-Za-z]*\b'
     match = re.search(pattern, query)
 
     if match is None:
-        query = self.ocr_text
-        query = re.sub(r'[#:.]', ' ', query)
-        query = re.sub(r'[,/]', '', query)
-        pattern = r'\b[A-Za-z]*\d{8,}[A-Za-z]*\b'
-        match = re.search(pattern, query)
-        if match is None:
-            return False
-        query = match.group()
-    else:
-        query = match.group()
+        return False
+
+    query = match.group()
 
     # Remove leading and trailing letters
     query = re.sub(r'^[A-Za-z]+|[A-Za-z]+$', '', query)
 
-    search_match = re.search(re.escape(query), self.ocr_text)
-    
-    if search_match:
-        result, data = self.get_patient_Html_Common(self,query,type_of_query)
-        if result:
-            return True, data
-        else:
-            n_str = str(query)
-            mid_index = len(n_str) // 2
-            if mid_index >= 3:
-                part1 = f"{int(n_str[:mid_index])}"
-                part2 = f"%{int(n_str[mid_index:])}"
-                p1_result, p1_data = self.get_patient_Html_Common(self,part1,type_of_query)
-                p2_result, p2_data = self.get_patient_Html_Common(self,part2,type_of_query)
+    result, data = self.get_patient_Html_Common(self,query,type_of_query)
 
-                if p1_result or p2_result:
+    if result:
+        return True, data
+    else:
+        n_str = str(query)
+        mid_index = len(n_str) // 2
+        if mid_index >= 3:
+            part1 = f"{int(n_str[:mid_index])}"
+            part2 = f"%{int(n_str[mid_index:])}"
+            p1_result, p1_data = self.get_patient_Html_Common(self,part1,type_of_query)
+            p2_result, p2_data = self.get_patient_Html_Common(self,part2,type_of_query)
+
+            if p1_result or p2_result:
                     return True, f"{p1_data} {p2_data}"
 
     return False
@@ -506,22 +499,33 @@ def filter_results(self):
 
         data = json.loads(text)
 
+        matched_data_array = []
+
         if isinstance(data, list) and len(data) > 1:
 
-            prompt = f"\n{data}.\n{self.ocr_text}.\n\n" + self.ai_prompts.get('get_patient_result_filter', '')
+            for item in data:
+                result, matched_data = self.compare_name_with_text(self,item,self.ocr_text)
+                if result:
+                    matched_data_array.append(matched_data)
+
+            if len(matched_data_array) > 1:
+                result_matched_data_array = ', '.join(matched_data_array)
+                prompt = f"\n{result_matched_data_array}.\n{self.ocr_text}.\n\n" + self.ai_prompts.get('get_patient_result_filter', '')
         
-            result = self.query_prompt(self, prompt)
-            
-            if isinstance(result, bool):
-                return False
+                result = self.query_prompt(self, prompt)
+                
+                if isinstance(result, bool):
+                    return False
 
-            text = result[1]
+                text = result[1]
 
-            match = re.search(r'```json\n(.*?)```', text, re.DOTALL)
+                match = re.search(r'```json\n(.*?)```', text, re.DOTALL)
 
-            if match:
-                text = match.group(1)
+                if match:
+                    text = match.group(1)
 
+            else:
+                text = matched_data_array[0]
 
         json_pattern = r'\{[^{}]*\}'
         json_match = re.search(json_pattern, text)
