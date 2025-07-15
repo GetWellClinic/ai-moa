@@ -53,10 +53,10 @@ workflow:
       true_next: get_o19_documents
       false_next: get_local_documents
     - name: get_o19_documents
-      true_next: extract_text_doctr
+      true_next: has_ocr
       false_next: unidentified_patients
     - name: get_local_documents
-      true_next: extract_text_doctr
+      true_next: has_ocr
       false_next: release_lock
     - name: has_ocr
       true_next: extract_text_from_pdf_file
