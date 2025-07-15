@@ -457,10 +457,12 @@ def get_patient_Html(self,type_of_query,query):
 
     soup = BeautifulSoup(response.text, 'html.parser')
 
-    table = soup.find_all(class_="odd")
-    table += soup.find_all(class_="even")
+    table = soup.find_all(class_="odd") + soup.find_all(class_="even")
 
-    return table
+    if table:
+        return response.text
+    else:
+        return
 
 
 def filter_results(self):
@@ -481,7 +483,54 @@ def filter_results(self):
         (True, 'filtered_data')  # cleaned and filtered patient data
     """
     type_of_query = self.config.get_shared_state('type_of_query')
-    table = self.config.get_shared_state('type_of_query_table')
+    str_table = self.config.get_shared_state('type_of_query_table')
+
+    soup = BeautifulSoup(str_table, 'html.parser')
+
+    table = soup.find_all(class_="odd") + soup.find_all(class_="even")
+
+    result_table_json = []
+
+    provider_no_pattern = re.compile(r'providerNo=(\d+)')
+
+    for parent in table:
+
+        demo_id = parent.find(class_='demoIdSearch')
+        name = parent.find(class_='name')
+        dob = parent.find(class_='dob')
+        links = parent.find(class_='links')
+
+        data = {}
+
+        if demo_id:
+            a_tag = demo_id.find('a')
+            if a_tag:
+                data['demographicNo'] = a_tag.get_text(strip=True)
+
+        if links:
+            a_tag = links.find('a')
+            if a_tag:
+                onclick_value = a_tag.get('onclick')
+                if onclick_value:
+                    match = provider_no_pattern.search(onclick_value)
+                    if match:
+                        provider_no = match.group(1)
+                        data['providerNo'] = provider_no
+
+        if name:
+            data['formattedName'] = name.get_text(strip=True)
+
+        if dob:
+            data['formattedDob'] = dob.get_text(strip=True)
+
+        result, matched_data = self.compare_name_with_text(self,data,self.ocr_text)
+
+        if result:
+            result_table_json.append(data)
+
+    table = json.dumps(result_table_json)
+
+
     if type_of_query is not None:
         prompt = f"\n{table}.\n{self.ocr_text}.\n\n" + self.ai_prompts.get('get_patient_result_filter', '')
         
