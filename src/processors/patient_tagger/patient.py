@@ -530,8 +530,13 @@ def filter_results(self):
 
     table = json.dumps(result_table_json)
 
+    if len(result_table_json) == 1:
+        text = str(result_table_json[0]).replace("'", '"')
+        self.config.set_shared_state(type_of_query+'filter', text)
+        return True,text
 
-    if type_of_query is not None:
+    if type_of_query is not None and result_table_json:
+
         prompt = f"\n{table}.\n{self.ocr_text}.\n\n" + self.ai_prompts.get('get_patient_result_filter', '')
         
         result = self.query_prompt(self, prompt)
