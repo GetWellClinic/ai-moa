@@ -864,11 +864,21 @@ def compare_name_with_text(self, data, text):
                     flag = True
 
             else:
+                parts_count = 0
                 for part in name_parts:
                     if len(part) > 3:  # Only check for parts longer than 3 characters
                         match = re.search(r'\b' + re.escape(part) + r'\b', text, re.IGNORECASE)
                         if match:
                             flag = True
+                    if len(part) == 3:
+                        match = re.search(r'\b' + re.escape(part) + r'\b', text, re.IGNORECASE)
+                        if match:
+                            parts_count += 1
+                            if parts_count >= 2:
+                                year = data.get('formattedDob').split('-')[0]
+                                match = re.search(r'\b[-/.]*' + re.escape(year) + r'[-/.]*\b', text, re.IGNORECASE)
+                                if match:
+                                    flag = True
             
             if flag:
                 self.logger.info("Match found when cross checking names.")
