@@ -2,7 +2,7 @@
 # This custom script installs Get Well Clinic's version of AI-MOA (Aimee AI)
 # Note: To correctly use automatic detection of AI-MOA path, this script must be installed and run in subdirectory 'install'
 # This install script should be run as 'sudo ./install-aimoa.sh'
-# Version 2025.04.27
+# Version 2025.06.09
 
 # Hardware Requirements:
 #	NVIDIA RTX video card installed with at least 12 GB VRAM
@@ -39,57 +39,58 @@ AIMOA=$(pwd)
 /bin/echo ""
 # Create the logs directory if it doesn't exist
 /bin/echo "Creating log directory..."
-/bin/mkdir -p '$AIMOA/logs'
+/bin/mkdir -p "$AIMOA/logs"
 
 # Create the static directory if it doesn't exist
 /bin/echo "Creating src/static directory..."
-/bin/mkdir -p '$AIMOA/src/static'
+/bin/mkdir -p "$AIMOA/src/static"
 
 # Create the config directory if it doesn't exit. For local configuration files.
 /bin/echo "Creating config directory"
-/bin/mkdir -p '$AIMOA/config'
+/bin/mkdir -p "$AIMOA/config"
 
 # Create the app directories if it doesn't exit. For local folder document processing.
 /bin/echo "Creating app directories"
-/bin/mkdir -p '$AIMOA/app'
-/bin/mkdir -p '$AIMOA/app/input'
-/bin/mkdir -p '$AIMOA/app/output'
+/bin/mkdir -p "$AIMOA/app"
+/bin/mkdir -p "$AIMOA/app/input"
+/bin/mkdir -p "$AIMOA/app/output"
 
 # Initialize permissions
-/bin/chmod g+rw '$AIMOA/config' -R
-/bin/chmod g+rw '$AIMOA/app/' -R
-/bin/chmod g+rw '$AIMOA/src/*'
+/bin/chmod g+rw "$AIMOA/config" -R
+/bin/chmod g+rw "$AIMOA/app/" -R
+/bin/chmod g+rw "$AIMOA/src/"*
 
 # Create the llm-container/models directory if it doesn't exist
 /bin/echo "Creating llm-container/models directory..."
-/bin/mkdir -p '$AIMOA/llm-container/models'
+/bin/mkdir -p "$AIMOA/llm-container/models"
 
 # Backup config files
 /bin/echo "Backing up old config files..."
-/bin/cp $AIMOA/src/config.yaml $AIMOA/src/config.yaml.$(date +'%Y-%m-%d')
-/bin/cp $AIMOA/config/config.yaml $AIMOA/config/config.yaml.$(date +'%Y-%m-%d')
-/bin/cp $AIMOA/config/config-incomingfax.yaml $AIMOA/config/config-incomingfax.yaml.$(date +'%Y-%m-%d')
-/bin/cp $AIMOA/config/config-incomingfile.yaml $AIMOA/config/config-incomingfile.yaml.$(date +'%Y-%m-%d')
-/bin/cp $AIMOA/src/workflow-config.yaml $AIMOA/src/workflow-config.yaml.$(date +'%Y-%m-%d')
-/bin/cp $AIMOA/config/workflow-config.yaml $AIMOA/config/workflow-config.yaml.$(date +'%Y-%m-%d')
-/bin/cp $AIMOA/config/workflow-config-incomingfax.yaml $AIMOA/config/workflow-config-incomingfax.yaml.$(date +'%Y-%m-%d')
-/bin/cp $AIMOA/config/workflow-config-incomingfile.yaml $AIMOA/config/workflow-config-incomingfile.yaml.$(date +'%Y-%m-%d')
-/bin/cp $AIMOA/config/provider_list.yaml $AIMOA/config/provider_list.yaml.$(date +'%Y-%m-%d')
-/bin/cp $AIMOA/src/config/provider_list.yaml $AIMOA/src/config/provider_list.yaml.$(date +'%Y-%m-%d')
+/bin/cp "$AIMOA/src/config.yaml" "$AIMOA/src/config.yaml.$(date +'%Y-%m-%d')"
+/bin/cp "$AIMOA/config/config.yaml" "$AIMOA/config/config.yaml.$(date +'%Y-%m-%d')"
+/bin/cp "$AIMOA/config/config-incomingfax.yaml" "$AIMOA/config/config-incomingfax.yaml.$(date +'%Y-%m-%d')"
+/bin/cp "$AIMOA/config/config-incomingfile.yaml" "$AIMOA/config/config-incomingfile.yaml.$(date +'%Y-%m-%d')"
+/bin/cp "$AIMOA/src/workflow-config.yaml" "$AIMOA/src/workflow-config.yaml.$(date +'%Y-%m-%d')"
+/bin/cp "$AIMOA/config/workflow-config.yaml" "$AIMOA/config/workflow-config.yaml.$(date +'%Y-%m-%d')"
+/bin/cp "$AIMOA/config/workflow-config-incomingfax.yaml" "$AIMOA/config/workflow-config-incomingfax.yaml.$(date +'%Y-%m-%d')"
+/bin/cp "$AIMOA/config/workflow-config-incomingfile.yaml" "$AIMOA/config/workflow-config-incomingfile.yaml.$(date +'%Y-%m-%d')"
+/bin/cp "$AIMOA/config/provider_list.yaml" "$AIMOA/config/provider_list.yaml.$(date +'%Y-%m-%d')"
+# /bin/cp "$AIMOA/src/config/provider_list.yaml" "$AIMOA/src/config/provider_list.yaml.$(date +'%Y-%m-%d')"
 # Create config files in config directory
 /bin/echo "Creating config files from templates..."
-/bin/cp $AIMOA/src/config.yaml.example $AIMOA/config/config.yaml
-/bin/cp $AIMOA/src/config-incomingfax.yaml.example $AIMOA/config/config-incomingfax.yaml
-/bin/cp $AIMOA/src/workflow-config.yaml.example $AIMOA/config/workflow-config.yaml	# Default workflow
-/bin/cp $AIMOA/src/workflow-config.yaml.example $AIMOA/config/workflow-config-incomingfax.yaml	# Uses same default workflow
-/bin/cp $AIMOA/src/workflow-config-incomingfile.yaml.example $AIMOA/config/workflow-config-incomingfile.yaml	# Custom worklow, skips tagging providers and MRP
-/bin/cp $AIMOA/src/template_providerlist.txt $AIMOA/config/
+/bin/cp "$AIMOA/src/config.yaml.example" "$AIMOA/config/config.yaml"
+/bin/cp "$AIMOA/src/config-incomingfax.yaml.example" "$AIMOA/config/config-incomingfax.yaml"
+/bin/cp "$AIMOA/src/config-incomingfile.yaml.example" "$AIMOA/config/config-incomingfile.yaml"
+/bin/cp "$AIMOA/src/workflow-config.yaml.example" "$AIMOA/config/workflow-config.yaml"	# Default workflow
+/bin/cp "$AIMOA/src/workflow-config.yaml.example" "$AIMOA/config/workflow-config-incomingfax.yaml"	# Uses same default workflow
+/bin/cp "$AIMOA/src/workflow-config-incomingfile.yaml.example" "$AIMOA/config/workflow-config-incomingfile.yaml"	# Custom worklow, skips tagging providers and MRP
+/bin/cp "$AIMOA/src/template_providerlist.txt" "$AIMOA/config/"
 /bin/echo "...remember to edit the config files in ../config/* to customize to your installation."
 # Initialize installation to re-fresh provider list
 /bin/echo "Removing provider_list for clean start..."
 /bin/sleep 5s
-/bin/rm $AIMOA/config/provider_list.yaml
-/bin/rm $AIMOA/src/config/provider_list.yaml
+/bin/rm "$AIMOA/config/provider_list.yaml"
+/bin/rm "$AIMOA/src/config/provider_list.yaml"
 # Missing provider list will cause AI-MOA to regenerate the list
 
 # Confirm your local timezone is set:
@@ -109,31 +110,34 @@ apt-get -y install python3-virtualenv
 # Install Python pip package manager if not installed
 apt-get -y install python3-pip
 # Create virtual environment
-virtualenv $AIMOA/.env
+virtualenv "$AIMOA/.env"
 # Install python dependencies for AI-MOA from requirements.txt
 /bin/echo "Installing Python libraries and dependencies required for running AI-MOA in python virual environment..."
 /bin/sleep 5s
 # Activate virtual environment and install in python packages in virtual environment
-source $AIMOA/.env/bin/activate
-pip install -r $AIMOA/src/requirements.txt
+source "$AIMOA/.env/bin/activate"
+pip install -r "$AIMOA/src/requirements.txt"
 
 # Create Linux user and group for 'aimoa':
 /usr/sbin/useradd -m aimoa	# Requires home directory for google-chrome files
+/bin/newgrp aimoa
 # Add current user to 'aimoa' group
 /usr/sbin/usermod -a -G aimoa $USER
 /usr/sbin/usermod -a -G aimoa $USERNAME
+
 
 # Initialize file permissions for AI-MOA:
 /bin/echo "Fixing file permissions for AI-MOA to 'rw-rw-r-- aimoa aimoa' ..."
 /bin/sleep 5s
 # Modify user:group permissions
-/bin/chown aimoa:aimoa $AIMOA/* -R
+/bin/chown aimoa:aimoa "$AIMOA"
+/bin/chown aimoa:aimoa "$AIMOA/"* -R
 # Fix permissions so AI MOA can read-write
-/bin/chmod ug+rwx $AIMOA/config $AIMOA/logs $AIMOA/app $AIMOA/app/input $AIMOA/app/output
-/bin/chmod ug+rw $AIMOA/config/* $AIMOA/logs/* $AIMOA/app/input/* $AIMOA/app/output/*
-/bin/chmod ug+rw $AIMOA/llm-container/models
+/bin/chmod ug+rwx "$AIMOA/config" "$AIMOA/logs" "$AIMOA/app" "$AIMOA/app/input" "$AIMOA/app/output"
+/bin/chmod ug+rw "$AIMOA/config/"* "$AIMOA/logs/"* "$AIMOA/app/input/"* "$AIMOA/app/output/"*
+/bin/chmod ug+rw "$AIMOA/llm-container/models"
 # Protect config.yaml from Other users
-/bin/chmod o-rwx $AIMOA/config
+/bin/chmod o-rwx "$AIMOA/config"
 # Confirm user belongs to group "aimoa"
 /bin/echo "Confirming current user belonging to the following groups (check for 'aimoa')..."
 /usr/bin/groups $USER
@@ -143,22 +147,23 @@ pip install -r $AIMOA/src/requirements.txt
 
 # Protect installation files
 /bin/echo "Enabling scripts, and protecting installation files..."
-/bin/chmod guo+x $AIMOA/install/*
-/bin/chmod o-x $AIMOA/install/install*
-/bin/chmod o-x $AIMOA/install/uninstall*
+/bin/chmod guo+x "$AIMOA/install/"*
+/bin/chmod o-x "$AIMOA/install/install"*
+/bin/chmod o-x "$AIMOA/install/uninstall"*
 # Protect directories from Other Users
 /bin/echo "Protecting ../config directory..."
-/bin/chmod o-rwx $AIMOA/config
+/bin/chmod o-rwx "$AIMOA/config"
 /bin/echo "Protecting ../app directory..."
-/bin/chmod o-rwx $AIMOA/app -R
+/bin/chmod o-rwx "$AIMOA/app" -R
 
 # Install aimoa-cron-maintenance.sh as cronjob
-AIMOA-CRON="1 * * * * $AIMOA/install/aimoa-cron-maintenance.sh"
+AIMOACRON="1 * * * * $AIMOA/install/aimoa-cron-maintenance.sh"
 # Check if already exists, and add if not exist
-if sudo crontab -u root -l 2>/dev/null | /bin/grep -Fq "$AIMOA-CRON"; then
+if sudo crontab -u root -l 2>/dev/null | /bin/grep -Fq "$AIMOACRON"; then
 	/bin/echo "Cron job already exists. Skipping adding aimoa-cron-maintenance.sh...Please verify correct installation of existing cron job...!"
 else
-	(sudo crontab -u root -l 2>/dev/null; /bin/echo "$AIMOA-CRON") | sudo crontab -
+	(sudo crontab -u root -l && /bin/echo "# AI-MOA Cronjob to clear Chrome temp files" 2>/dev/null) | sudo crontab -
+	(sudo crontab -u root -l && /bin/echo "$AIMOACRON" 2>/dev/null) | sudo crontab -
 	/bin/echo "Added aimoa-cron-maintenance.sh to sudo crontab...successful."
 fi
 
@@ -174,3 +179,8 @@ apt-get update
 # Install google-chrome-stable
 apt-get -y install google-chrome-stable
 
+# Post-installation messages:
+/bin/echo ""
+/bin/echo "Please also check if 'aimoa' user or 'others' has r-x permissions from root directory / all the way to " $AIMOA
+/bin/echo ""
+/bin/echo "Please check `sudo crontab -e` to verify correct installation of cronjobs."

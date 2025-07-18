@@ -1,4 +1,5 @@
-## OCR setup with docker
+## OCR setup with Docker
+Version 2025.05.31
 
 To set up OCR with Docker, you need to install and configure a GPU. You can also use it without a GPU, but this might affect performance.
 
@@ -23,6 +24,7 @@ docker run --rm --gpus all nvidia/cuda:12.3.0-base-ubuntu20.04 nvidia-smi
 You will need to clone the repository first, go into `api` folder and start the api:
 
 ```shell
+cd /opt
 git clone https://github.com/mindee/doctr.git
 cd doctr/api
 ```
@@ -60,7 +62,7 @@ The updated docker-compose.yml will be as follows:
 ```yaml
 services:
   web:
-    container_name: api_web
+    container_name: ocr_api_web
     build:
       context: .
       dockerfile: Dockerfile
@@ -80,7 +82,7 @@ make run
 
 Once completed, your [FastAPI](https://fastapi.tiangolo.com/) server should be running on port 8002.
 
-See config.yaml.example, and in workflow-config.yaml, use extract_text_doctr_api instead of extract_text_doctr to use the OCR API endpoint.
+See config.yaml.example for configuring OCR API parameters.
 
 ```yaml
 ocr:
@@ -88,4 +90,15 @@ ocr:
   det_arch: db_resnet50
   reco_arch: vitstr_base
   verify-HTTPS: false
+```
+
+Edit 'workflow-config.yaml', and use 'extract_text_doctr_api' instead of 'extract_text_doctr' to use the OCR API endpoint.
+
+Note: The first time you use the function 'extract_text_doctr_api', the system may seem to pause but it is just take a long time to download and install the model on first run. However, on second run of the function, it will be alot faster.
+
+To stop and remove the OCR container:
+```shell
+docker ps -a
+docker stop ocr_web_api
+docker rm ocr_web_api
 ```

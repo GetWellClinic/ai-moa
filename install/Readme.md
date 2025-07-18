@@ -2,7 +2,7 @@
 ## Linux Installation ##
 *Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
 *LICENSE: GNU Affero General Public License Version 3*<br />
-**Document Version 2025.04.27**
+**Document Version 2025.07.16**
 <p align="center">
   <img src="https://getwellclinic.ca/images/GetWellClinic/Logos-Icons/AimeeAI-pc.png" alt="Aimee AI">
 </p>
@@ -23,12 +23,12 @@ healthcare team's administrative burden, so we can dedicate ourselves to the ver
 **Hardware**
 
 *Minimum*
-- 20 GB disk space
+- 50 GB disk space
 - 16 GB RAM system memory
 - NVIDIA RTX video card, minimum 12 GB VRAM
 
 *Recommended*
-- 60 GB hard drive space
+- 70 GB hard drive space
 - 24 GB RAM system memory
 - NVIDIA RTX 4060Ti video card, 16 GB VRAM
 
@@ -66,6 +66,7 @@ If you plan on installing this in a VM such as on ProxMox VE, here are some tips
 You will need to have your Github user name and a personal access token (generated from your account on Github). Github no longer allows 'git clone' access with passwords, and must use an access token generated from your user account online from Github.
 ```
 cd /opt
+sudo chmod o+rx /opt
 sudo git clone https://github.com/getwellclinic/ai-moa.git
 cd /opt/ai-moa
 ```
@@ -119,7 +120,7 @@ Once system is rebooted, check to see if NVIDIA RTX video card is installed:
 nvidia-smi
 ```
 
-*You should see something like this:*
+*You should see GPU status with something like this:*
 ```
 +-----------------------------------------------------------------------------------------+
 | NVIDIA-SMI 550.120                Driver Version: 550.120        CUDA Version: 12.4     |
@@ -144,7 +145,7 @@ nvidia-smi
 
 ### 4. Install NVIDIA Toolkit Container ###
 
-Add the Repository for NVIDIA Container Toolkit
+Add the Repository for [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
 ```
 curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
   && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
@@ -162,6 +163,12 @@ Restart the server for the installation to take effect.
 ```
 sudo shutdown -r now
 ```
+
+Check if docker containers can access the GPU (if nvidia-container-toolkit was installed properly)
+```
+docker run --rm --gpus all nvidia/cuda:12.3.0-base-ubuntu20.04 nvidia-smi
+```
+If the toolkit is installed properly, you should be able to see an output from nvidia-smi showing the GPU status. If you get any errors, then you have not installed it properly and llm-container will not be able to work with the GPU.
 
 ### 5. Install Docker and Docker Compose ###
 
@@ -338,14 +345,14 @@ Aimee AI will file documents that do not have any corresponding patient record i
 1. Login to EMR
 2. Click "Search" for a patient.
 	- Enter "confidential" and click "Search", to check if existing patient record named "CONFIDENTIAL, UNATTACHED"
-	- If one exist, then note down the demographic number of this chart, to specify as the "default_unidentified_patient_tagging_name:" field in "workflow-config.yaml"
-3. Create Demographic:
+	- If one exist, then note down the demographic number of this chart, to specify as the "default_unidentified_patient_tagging_id:" field in "workflow-config.yaml"
+3. If none exists, Create Demographic:
 	- Click "Create Demographic" and create a new chart
 		- Lastname: CONFIDENTIAL
 		- Firstname: UNATTACHED
 		- Health Card Type: Other
 4. Update "workflow-config.yaml"
-	- Note the Demographic Number for "CONFIDENTIAL, UNATTACHED" and enter it as the "default_unidentified_patient_tagging_name:" for the YAML file.
+	- Note the Demographic Number for "CONFIDENTIAL, UNATTACHED" and enter it as the "default_unidentified_patient_tagging_id:" for the YAML file.
 
 **Create missing Document Categories**
 
@@ -518,8 +525,8 @@ You can then edit any files for your own custom settings. (ie. Custom ../src/run
 AI-MOA is not 100% accurate in tagging documents to the correct patient.
 We recommend having a human medical office administrator act as `default_error_manager_id` to review the tagged documents by AI-MOA daily for incorrect matches, and manually Refile the document to correct errors.
 Unassigned or documents tagged to `default_unidentified_patient_tagging_id` will be also tagged to the medical office administrator (`default_error_manager_id`) to review in their InBox.
-A quick way to also review tagged documents is to run a Search in InBox for All documents recently uploaded within a date range (ie. in the last day). The reviewer can use Rapid Review or Preview to review all the AI-MOA work. Pay attention to "Unassigned, Unassigned" documents; and also confirm that the patient name in the document corresponds to the correct demographic tagged in EMR. The reviewer can click "Acknowledge or Next" to confirm that it has been checked by a human.
-Any incorrect documents can be sent to Refile and manually corrected through the Incoming Docs document manager.
+A quick way to also review tagged documents is to run a Search in InBox for "New" documents recently uploaded within a date range (ie. in the last day). The reviewer can use Rapid Review or Preview to review all the AI-MOA work. Pay attention to "Unassigned, Unassigned" documents; and also confirm that the patient name in the document corresponds to the correct demographic tagged in EMR. The reviewer can click "Acknowledge or Next" to confirm that it has been checked by a human.
+Any incorrect documents can be sent to Refile by clicking the "Refile" button in the InBox viewer; and then manually corrected through the Incoming Docs document manager (Click Incoming Docs, click Refile folder).
 
 ### Uninstalling Aimee AI ###
 
@@ -534,6 +541,7 @@ Sometimes, Aimee AI won't run properly, and your get permission errors in the lo
 
 Fix this by running:
 ```
+cd install
 sudo ./fix-aimoa.sh
 ```
 
@@ -594,6 +602,33 @@ sudo mkdir /usr/share/oscar-emr/OscarDocument/oscar/incomingdocs/1/File
 sudo mkdir /usr/share/oscar-emr/OscarDocument/oscar/incomingdocs/1/Refile
 sudo chown -R tomcat9:tomcat9 /usr/share/oscar-emr/OscarDocument/oscar/incomingdocs/1
 ```
+
+### AI-MOA periodically stops working completely ###
+
+This can happen when the Linux Ubuntu system does an automatic upgrade of the Linux kernel or the NVIDA video drivers with unattended upgrade packages. You can check if you can still access the ```nvidia-smi``` display and check the GPU memory usage.
+
+To fix the problem, simply reboot the Linux system.
+
+You can set a crontab to periodically reboot the system, ie. on Sunday mornings.
+Add the following to `sudo crontab -e`
+```
+01 03 * * SUN	/usr/sbin/shutdown -r now
+```
+
+Or you can try to edit some of the parameters to reboot the system and cleanup unused kernels after unattended upgrades: ```sudo nano /etc/apt/apt.conf.d/50unattended-upgrades```
+
+Edit the config file and uncomment these lines to activate the setting:
+```
+Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+Unattended-Upgrade::Automatic-Reboot "true";
+Unattended-Upgrade::Automatic-Reboot-Time "02:00";
+```
+
+### AI-MOA sometimes skips some PDF documents ###
+
+This is a feature to skip files that AI-MOA has tried several times and failed to complete the workflow. This prevents the AI-MOA from hanging on an endless futile loop attempting to process a corrupted or problematic PDF.
+
+To fix this, have a human MOA just manually label, tag, and Acknowledge the document.
 
 
 ## Special Thanks ##

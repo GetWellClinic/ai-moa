@@ -2,7 +2,7 @@
 # This script fixes some common errors with AI-MOA Note:
 # To correctly use automatic detection of AI-MOA path, this script must be installed and run in subdirectory 'gwc-aimee'
 # This install script should be run as 'sudo ./fix-aimoa.sh'
-# Version 2025.02.20
+# Version 2025.05.28
 
 # CONFIGURATION:
 CURRENT=$(pwd)
@@ -21,15 +21,16 @@ USERNAME=$(awk -F':' -v uid=1000 '$3 == uid { print $1 }' /etc/passwd)
 /usr/sbin/usermod -a -G aimoa "$USERNAME"
 
 # Modify user:group permissions:
+/bin/chown aimoa:aimoa $AIMOA
 /bin/chown aimoa:aimoa $AIMOA/* -R
-/bin/chown aimoa:aimoa $AIMOA/.env/* -R -P
+/bin/chown aimoa:aimoa $AIMOA/.env/* -R -P 2>/dev/null
 # Fix permissions so AI MOA can read-write
-/bin/chmod ug+rwx $AIMOA/config $AIMOA/logs $AIMOA/.env $AIMOA/src/config $AIMOA/app/input $AIMOA/app/output
-/bin/chmod ug+rw $AIMOA/config/* $AIMOA/logs/* $AIMOA/.env/* $AIMOA/src/config/*.yaml $AIMOA/app/input/* $AIMOA/app/output/*
+/bin/chmod ug+rwx $AIMOA/config $AIMOA/logs $AIMOA/.env $AIMOA/app/input $AIMOA/app/output 2>/dev/null
+/bin/chmod ug+rw $AIMOA/config/* $AIMOA/logs/* $AIMOA/.env/* $AIMOA/app/input/* $AIMOA/app/output/* 2>/dev/null
 /bin/chmod ug+rw $AIMOA/llm-container/models -R
-/bin/chmod ug+rw $AIMOA/src/*.lock $AIMOA/config/*.lock
+/bin/chmod ug+rw $AIMOA/src/*.lock $AIMOA/config/*.lock 2>/dev/null
 # Protect config.yaml from Other users
-/bin/chmod o-rwx $AIMOA/config $AIMOA/app $AIMOA/app/input $AIMOA/app/output
+/bin/chmod o-rwx $AIMOA/config $AIMOA/app $AIMOA/app/input $AIMOA/app/output 2>/dev/null
 
 /bin/echo "Confirming current user belonging to the following groups (check for 'aimoa')..."
 /usr/bin/groups $USER
@@ -52,3 +53,4 @@ USERNAME=$(awk -F':' -v uid=1000 '$3 == uid { print $1 }' /etc/passwd)
 /bin/echo "Remember to also add your username to "aimoa" group so your username can run AI-MOA...!"
 /bin/echo "		(sudo usermod -a -G aimoa username)"
 /bin/echo ""
+/bin/echo "Please also check if 'aimoa' user or 'others' has r-x permissions from root directory / all the way to " $AIMOA

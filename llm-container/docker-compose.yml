@@ -35,6 +35,8 @@ services:
     command: --model ${MODEL_NAME:-/models/gemma-2-2b-it} --enable-chunked-prefill --max_model_len 20000 --gpu_memory_utilization 0.8
     # For 16 GB VRAM GPU, you can set a lower --gpu_memory_utilization 0.625 for ~10 GB usage of VRAM:
     # command: --model ${MODEL_NAME:-/models/gemma-2-2b-it} --enable-chunked-prefill --max_model_len 20000 --gpu_memory_utilization 0.625
+    # For 24 GB VRAM GPU, you can set a lower --gpu_memory_utilization 0.42 for ~10 GB usage of VRAM:
+    # command: --model ${MODEL_NAME:-/models/gemma-2-2b-it} --enable-chunked-prefill --max_model_len 20000 --gpu_memory_utilization 0.42
   caddy:
     # Service for the Caddy container
     container_name: caddy-llm-container # Name of the container
