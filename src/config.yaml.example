@@ -119,8 +119,8 @@ ocr:
   page_limit: 10  # Maximum number of pages to process in OCR; if the document exceeds this limit, additional pages will be ignored.
   # Use the settings below only if OCR is configured to run as an API. See the documentation for more information.
   api_uri: http://localhost:8002/ocr # API End Point
-  det_arch: db_resnet50 # Text detection architecture(https://mindee.github.io/doctr/modules/models.html)
-  reco_arch: vitstr_base # Text recognition architecture (https://mindee.github.io/doctr/modules/models.html)
+  det_arch: fast_base # Text detection architecture(https://mindee.github.io/doctr/modules/models.html)
+  reco_arch: crnn_vgg16_bn # Text recognition architecture (https://mindee.github.io/doctr/modules/models.html)
   verify-HTTPS: false
 
 # Provider list configuration, for generating or managing provider data.
