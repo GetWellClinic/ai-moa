@@ -38,7 +38,7 @@ default_values:
     Miscellaneous
   default_error_manager_id:
     # Sets the id for the default clinic error manager who will review error documents (o19,o15 provider_no value), used when the provider or demographic is not identified.
-    #62
+    # 62
     999998
 
 # Workflow Configuration
@@ -292,6 +292,7 @@ document_categories:
           For reference, use this SPECIALIST LIST: Homecare, Weight Management, Psychotherapy, Cardiology, Neurology, Geriatrics, ENT, Audiology, Otolaryngology, Plastic Surgery, Opthalmology, Mental Health, Psychiatry, Dermatology, Orthopedics, Rheumatology, Respirology, Hepatology, Gastroenterology, Endocrinology, Proctology, Urology, Nephrology, Obstetrics, Gynecology, Hematology, Oncology, Breast Diagnostic Centre, SCOPE, Dietitian, Chiropody, Neurology, Endoscopy, Fertility, Infectious Disease, Optometry, Family Medicine, Palliative Care, Pediatrics, Physiatry, Pain, Sleep and Language, Sports Medicine, Allied Health, Home and Community Care, Nurse Practitioner.
 
   - name: Request
+    # default_tagger: 62
     description: >
       This refers to documents that contain request for health information or transfer of medical records.
     tasks:
