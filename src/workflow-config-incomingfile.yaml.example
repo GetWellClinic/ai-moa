@@ -20,8 +20,8 @@
 # ***
 
 # default values
-# Workflow Version: Custom-2025.05.26 (Skip tagging providers and MRP, only file to patient)
-# Prompt Version: 2025.07.05
+# Workflow Version: Custom-2025.07.19 (Skip tagging providers and MRP, only file to patient)
+# Prompt Version: 2025.07.19
 #
 default_values:
   default_provider_tagging_id:
@@ -54,12 +54,10 @@ workflow:
       true_next: get_o19_documents
       false_next: get_local_documents
     - name: get_o19_documents
-      true_next: extract_text_doctr
-      # true_next: extract_text_doctr_api
+      true_next: has_ocr
       false_next: unidentified_patients
     - name: get_local_documents
-      true_next: extract_text_doctr
-      # true_next: extract_text_doctr_api
+      true_next: has_ocr
       false_next: release_lock
     - name: has_ocr
       true_next: extract_text_from_pdf_file
@@ -424,17 +422,14 @@ ai_prompts:
     Based on this, the document category for the EMR document in one word will be ...
 
   get_patient_hin: >
-    Answer only to the following question in one word, one word only;
-    For context, the health card number is a 10 digit number, that sometimes may be broken up by spaces; 'HCN', 'HC#', 'HC:', 'PHN', 'Personal Health Number', 'Health Insurance Number', 'HIN', 'OHIN:', 'healthcard', 'HN:', 'OHIP', or 'OHIP:' also refer to the health card number. In one word, one word only, what is the 10 digit health card number of the patient found in the document?
-    If the health card number is unavailable, do not invent a number, only return False, no other words.
+    Answer only to the following question;
+    What is the health card number ('HCN', 'HC', 'PHN', 'Personal Health Number', 'Health Insurance Number', 'HIN', 'HN', 'OHIN', or 'OHIP') of the patient in the above document?
 
   get_patient_name: >
-    Answer only to the following question; the answer should not be the doctor's name; if the confidence level of the likeliest patient name in the document is less than 50%, or if the document contains more than 5 patient names, then use default_unidentified_patient_tagging_name as the patient, do not invent a name; and the answer should be in the following format only;
-    What is the full name of the patient? Format: Fullname
+    Answer only to the following question; and the answer should be in the following format only; What is the full name of the patient? Format: Fullname
 
   get_patient_dob: >
-    For context, 'DOB:', 'Date of Birth', or 'Birthdate' refer to the patient's Date of Birth. The listed date of birth will be in close proxmity to the patient name, gender, age, or health card number. Answer only to the following question, and the answer should be in the following format only;
-    What is the Date of Birth of the patient? Format: yyyy-mm-dd
+    Answer only to the following question, and the answer should be in the following format only; What is the Date of Birth of the patient? Format: yyyy-mm-dd
 
   get_patient_result_filter: >
     For the following request, provide only the JSON object as shown in the example, and include no additional text or explanations.
