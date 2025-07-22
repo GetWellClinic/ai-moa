@@ -411,7 +411,6 @@ ai_prompts:
     'Notification and Radiology': select from category list,
     'Consult and Radiology': identify the consult subtype and select radiology type if radiology subtype,
     'Consult and Pathology': select pathology type if pathology subtype,
-    'Consult and Lab': select from category list,
     'Radiology and Requisition': select Requisition type,
     'Radiology and Diagnostics': select Diagnostics type,
     'Referral and Notification': select Notification type,
