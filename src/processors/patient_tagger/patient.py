@@ -72,7 +72,7 @@ def get_patient_name(self):
 
     if query:
 
-        query = re.sub(r'([A-Za-z]),([A-Za-z])', r'\1, \2', query)
+        query = re.sub(r'([A-Za-z]+),([A-Za-z]+)', r'\1, \2', query)
 
         query = re.sub(r'[.,]', '', query)
         query = re.sub(r'[-]', ' ', query)
@@ -203,8 +203,12 @@ def get_patient_hin(self):
             p1_result, p1_data = self.get_patient_Html_Common(self,part1,type_of_query)
             p2_result, p2_data = self.get_patient_Html_Common(self,part2,type_of_query)
 
-            if p1_result or p2_result:
-                    return True, f"{p1_data} {p2_data}"
+            if p1_result and p2_result:
+                return True, f"{p1_data} {p2_data}"
+            elif p1_result:
+                return True, p1_data
+            elif p2_result:
+                return True, p2_data
 
     return False
 

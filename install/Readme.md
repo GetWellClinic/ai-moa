@@ -605,7 +605,7 @@ sudo chown -R tomcat9:tomcat9 /usr/share/oscar-emr/OscarDocument/oscar/incomingd
 
 ### AI-MOA periodically stops working completely ###
 
-This can happen when the Linux Ubuntu system does an automatic upgrade of the Linux kernel or the NVIDA video drivers with unattended upgrade packages. You can check if you can still access the ```nvidia-smi``` display and check the GPU memory usage.
+This can happen when the Linux Ubuntu system does an automatic upgrade of the Linux kernel or the NVIDIA video drivers with unattended upgrade packages. You can check if you can still access the ```nvidia-smi``` display and check the GPU memory usage.
 
 To fix the problem, simply reboot the Linux system.
 
