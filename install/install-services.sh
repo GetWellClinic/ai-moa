@@ -3,7 +3,7 @@
 # This script should reside and be run in the AI-MOA subdirectory 'install' in order to properly autodetect base directory for AI-MOA.
 # Run the script as 'sudo ./install-services.sh'
 
-# Version 2025.03.26
+# Version 2025.05.09
 
 # Automatic detect base directory for AI-MOA:
 cd ..
@@ -39,6 +39,17 @@ AIMOA=$(pwd)
 # Start system services:
 /usr/sbin/service llm-container start
 /usr/sbin/service ai-moa start
+
+# Install crontab for Sunday morning reboot (to autofix kernel unattended upgrades mismatch with NVIDIA drivers causing AI-MOA to halt)
+ REBOOTCRON="1 4 * * SUN     /usr/sbin/shutdown -r now"
+# Check if already exists, and add if not exist:
+if sudo crontab -u root -l 2>/dev/null | /bin/grep -Fq "$REBOOTCRON"; then
+	/bin/echo "Cron job already exists. Skipping adding reboot job...Please verify correct installation of existing cron job...!"
+else
+	(sudo crontab -u root -l && /bin/echo "# AI-MOA Cronjob for weekly reboot, to autofix halted AI-MOA due to unattended kernel and NVIDIA drivers upgrade" 2>/dev/null) | sudo crontab -
+	(sudo crontab -u root -l && /bin/echo "$REBOOTCRON" 2>/dev/null) | sudo crontab -
+	/bin/echo "Added Sunday weekly reboot to sudo crontab...successful."
+fi
 
 /bin/echo "ai-moa.service and llm-container.service has been installed as system services in /etc/systemd/system/"
 /bin/echo "AI-MOA will start automatically on system reboot !"

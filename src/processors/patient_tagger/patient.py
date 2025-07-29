@@ -44,7 +44,7 @@ def get_patient_name(self):
         >>> print(result)
         (True, '<html_table>')  # if the patient's name was successfully extracted and matched.
     """
-    prompt = f"\n{self.ocr_text}.\n" + self.ai_prompts.get('get_patient_name', '')
+    prompt = f"\n{self.ocr_text}.\n\n" + self.ai_prompts.get('get_patient_name', '')
     text = self.query_prompt(self,prompt)[1]
     query = text.lower()
 
@@ -71,6 +71,8 @@ def get_patient_name(self):
         query = match.group()
 
     if query:
+
+        query = re.sub(r'([A-Za-z]+),([A-Za-z]+)', r'\1, \2', query)
 
         query = re.sub(r'[.,]', '', query)
         query = re.sub(r'[-]', ' ', query)
@@ -123,46 +125,16 @@ def get_patient_dob(self):
         >>> print(result)
         (True, '<html_table>')  # if the patient's date of birth was successfully extracted and matched.
     """
-    prompt = f"\n{self.ocr_text}.\n" + self.ai_prompts.get('get_patient_dob', '')
+    prompt = f"\n{self.ocr_text}.\n\n" + self.ai_prompts.get('get_patient_dob', '')
     text = self.query_prompt(self,prompt)[1]
     query = text.lower()
 
     type_of_query = "search_dob"
 
-    pattern = r'\bdate of birth of the patient\b.*?[.!?]'
-    match = re.search(pattern, query)
+    formatted_dates = self.convert_date(self,query)
 
-    if match:
-        query = match.group()
-
-    # Regex pattern for DD-MM-YYYY
-    pattern = r'\b(\d{2})-(\d{2})-(\d{4})\b'
-    match = re.search(pattern, query)
-
-    if match:
-        day, month, year = match.groups()
-        query = f"{year}-{month}-{day}"
-
-    pattern = r'\b(\d{4})-(\d{2})-(\d{2})\b'
-    match = re.search(pattern, query)
-
-    patternText = r'\b(?:January|February|March|April|May|June|July|August|September|October|November|December) \d{1,2}, \d{4}\b'
-    matchText = re.search(patternText, query)
-
-    if match:
-        query = match.group()
-    elif matchText:
-        query = matchText.group()
-        query = self.convert_date(self,query)
-
-    # Splitting the query
-    try:
-        year, month, day = query.split('-')
-    except ValueError:
-        self.logger.info(f"The query '{query}' is not in the expected 'YYYY-MM-DD' format.")
+    if isinstance(formatted_dates, bool) and formatted_dates is False:
         return False
-
-    formatted_dates = [f"{year}-{month}-{day}", f"{year}-{day}-{month}"]
     
     responses = []
 
@@ -196,14 +168,20 @@ def get_patient_hin(self):
         >>> print(result)
         (True, '<html_table>')  # if the patient's HIN was successfully extracted and matched.
     """
-    prompt = f"\n{self.ocr_text}.\n" + self.ai_prompts.get('get_patient_hin', '')
+    prompt = f"\n{self.ocr_text}.\n\n" + self.ai_prompts.get('get_patient_hin', '')
     text = self.query_prompt(self,prompt)[1]
     query = text.lower()
 
     type_of_query = "search_hin"
 
+    query = re.sub(r'[#:.,]', ' ', query)
+    query = re.sub(r'[-/]', '', query)
+    query = re.sub(r'(\d{3,})\s(\d{3,})', r'\1\2', query)
+    query = re.sub(r'(\d{3,})\s(\d{3,})', r'\1\2', query)
+
     pattern = r'\b[A-Za-z]*\d{6,}[A-Za-z]*\b'
     match = re.search(pattern, query)
+
     if match is None:
         return False
 
@@ -212,10 +190,25 @@ def get_patient_hin(self):
     # Remove leading and trailing letters
     query = re.sub(r'^[A-Za-z]+|[A-Za-z]+$', '', query)
 
-    search_match = re.search(re.escape(query), self.ocr_text)
-    
-    if search_match:
-        return self.get_patient_Html_Common(self,query,type_of_query)
+    result, data = self.get_patient_Html_Common(self,query,type_of_query)
+
+    if result:
+        return True, data
+    else:
+        n_str = str(query)
+        mid_index = len(n_str) // 2
+        if mid_index >= 3:
+            part1 = f"{int(n_str[:mid_index])}"
+            part2 = f"%{int(n_str[mid_index:])}"
+            p1_result, p1_data = self.get_patient_Html_Common(self,part1,type_of_query)
+            p2_result, p2_data = self.get_patient_Html_Common(self,part2,type_of_query)
+
+            if p1_result and p2_result:
+                return True, f"{p1_data} {p2_data}"
+            elif p1_result:
+                return True, p1_data
+            elif p2_result:
+                return True, p2_data
 
     return False
 
@@ -270,26 +263,56 @@ def convert_date(self,query):
         >>> print(date)
         '2000-01-01'  # converted date
     """
+    # Regex pattern for DD-MM-YYYY
+    pattern_dd_mm = r'\b(\d{2})[-/\s](\d{2})[-/\s](\d{4})\b'
+    match_dd_mm = re.search(pattern_dd_mm, query)
 
-    # Split the string into components
-    month_str, day_str, year_str = query.split()
-    day = int(day_str[:-1])  # Remove the comma and convert to integer
-    year = int(year_str)  # Convert year to integer
+    pattern_yyyy = r'\b(\d{4})[-/\s](\d{2})[-/\s](\d{2})\b'
+    match_yyyy = re.search(pattern_yyyy, query)
+
+    patternText = r'\b(?:[Jj]an(?:uary)?|[Ff]eb(?:ruary)?|[Mm]ar(?:ch)?|[Aa]pr(?:il)?|[Mm]ay|[Jj]un(?:e)?|[Jj]ul(?:y)?|[Aa]ug(?:ust)?|[Ss]ep(?:tember)?|[Oo]ct(?:ober)?|[Nn]ov(?:ember)?|[Dd]ec(?:ember)?)[-/\s]\d{1,2}[-/\s,][\s]?\d{4}\b'
+    matchText = re.search(patternText, query)
+
+    patternText_YYYY = r'\b\d{4}[-/\s](?:[Jj]an(?:uary)?|[Ff]eb(?:ruary)?|[Mm]ar(?:ch)?|[Aa]pr(?:il)?|[Mm]ay|[Jj]un(?:e)?|[Jj]ul(?:y)?|[Aa]ug(?:ust)?|[Ss]ep(?:tember)?|[Oo]ct(?:ober)?|[Nn]ov(?:ember)?|[Dd]ec(?:ember)?)[-/\s,][\s]?\d{1,2}\b'
+    matchText_YYYY = re.search(patternText_YYYY, query)
 
     # Create a mapping for month names to numbers
     months = {
         "January": "01", "February": "02", "March": "03", "April": "04",
         "May": "05", "June": "06", "July": "07", "August": "08",
-        "September": "09", "October": "10", "November": "11", "December": "12"
+        "September": "09", "October": "10", "November": "11", "December": "12",
+        "Jan": "01", "Feb": "02", "Mar": "03", "Apr": "04",
+        "Jun": "06", "Jul": "07", "Aug": "08", "Sep": "09", "Oct": "10",
+        "Nov": "11", "Dec": "12"
     }
 
-    # Get the month number from the mapping
-    month = months[month_str]
+    month = None
+    day = None
+    year = None
 
-    # Format the date as YYYY-MM-DD
-    formatted_date = f"{year}-{month}-{day:02d}"
-    
-    return formatted_date
+    if match_dd_mm:
+        query = match_dd_mm.group()
+        query = re.sub(r'[-/\s]', ' ', query)
+        day, month, year = query.split()
+    elif match_yyyy:
+        query = match_yyyy.group()
+        query = re.sub(r'[-/\s]', ' ', query)
+        year, month, day = query.split()
+    elif matchText:
+        query = matchText.group()
+        query = re.sub(r'[-/\s]', ' ', query)
+        query = re.sub(r'[,]', '', query)
+        month, day, year = query.split()
+        month = months.get(month.capitalize(), None)
+    elif matchText_YYYY:
+        query = matchText_YYYY.group()
+        query = re.sub(r'[-/\s]', ' ', query)
+        year, month, day = query.split()
+        month = months.get(month.capitalize(), None)
+    else:
+        return False
+
+    return [f"{year}-{int(month):02d}-{int(day):02d}", f"{year}-{int(day):02d}-{int(month):02d}"]
 
 def get_mrp_details(self):
     """
@@ -438,10 +461,12 @@ def get_patient_Html(self,type_of_query,query):
 
     soup = BeautifulSoup(response.text, 'html.parser')
 
-    table = soup.find_all(class_="odd")
-    table += soup.find_all(class_="even")
+    table = soup.find_all(class_="odd") + soup.find_all(class_="even")
 
-    return table
+    if table:
+        return response.text
+    else:
+        return
 
 
 def filter_results(self):
@@ -462,9 +487,61 @@ def filter_results(self):
         (True, 'filtered_data')  # cleaned and filtered patient data
     """
     type_of_query = self.config.get_shared_state('type_of_query')
-    table = self.config.get_shared_state('type_of_query_table')
-    if type_of_query is not None:
-        prompt = f"\n{table}.\n{self.ocr_text}.\n" + self.ai_prompts.get('get_patient_result_filter', '')
+    str_table = self.config.get_shared_state('type_of_query_table')
+
+    soup = BeautifulSoup(str_table, 'html.parser')
+
+    table = soup.find_all(class_="odd") + soup.find_all(class_="even")
+
+    result_table_json = []
+
+    provider_no_pattern = re.compile(r'providerNo=(\d+)')
+
+    for parent in table:
+
+        demo_id = parent.find(class_='demoIdSearch')
+        name = parent.find(class_='name')
+        dob = parent.find(class_='dob')
+        links = parent.find(class_='links')
+
+        data = {}
+
+        if demo_id:
+            a_tag = demo_id.find('a')
+            if a_tag:
+                data['demographicNo'] = a_tag.get_text(strip=True)
+
+        if links:
+            a_tag = links.find('a')
+            if a_tag:
+                onclick_value = a_tag.get('onclick')
+                if onclick_value:
+                    match = provider_no_pattern.search(onclick_value)
+                    if match:
+                        provider_no = match.group(1)
+                        data['providerNo'] = provider_no
+
+        if name:
+            data['formattedName'] = name.get_text(strip=True)
+
+        if dob:
+            data['formattedDob'] = dob.get_text(strip=True)
+
+        result, matched_data = self.compare_name_with_text(self,data,self.ocr_text)
+
+        if result:
+            result_table_json.append(data)
+
+    table = json.dumps(result_table_json)
+
+    if len(result_table_json) == 1:
+        text = str(result_table_json[0]).replace("'", '"')
+        self.config.set_shared_state(type_of_query+'filter', text)
+        return True,text
+
+    if type_of_query is not None and result_table_json:
+
+        prompt = f"\n{table}.\n{self.ocr_text}.\n\n" + self.ai_prompts.get('get_patient_result_filter', '')
         
         result = self.query_prompt(self, prompt)
         
@@ -478,15 +555,47 @@ def filter_results(self):
         if match:
             text = match.group(1)
 
-        json_pattern = r'\{.*\}'
+        text = text.replace("'", '"')
+
+        data = json.loads(text)
+
+        matched_data_array = []
+
+        if isinstance(data, list) and len(data) > 1:
+
+            for item in data:
+                result, matched_data = self.compare_name_with_text(self,item,self.ocr_text)
+                if result:
+                    matched_data_array.append(matched_data)
+
+            if len(matched_data_array) > 1:
+                result_matched_data_array = ', '.join(matched_data_array)
+                prompt = f"\n{result_matched_data_array}.\n{self.ocr_text}.\n\n" + self.ai_prompts.get('get_patient_result_filter', '')
+        
+                result = self.query_prompt(self, prompt)
+                
+                if isinstance(result, bool):
+                    return False
+
+                text = result[1]
+
+                match = re.search(r'```json\n(.*?)```', text, re.DOTALL)
+
+                if match:
+                    text = match.group(1)
+
+            else:
+                text = matched_data_array[0]
+
+        json_pattern = r'\{[^{}]*\}'
         json_match = re.search(json_pattern, text)
         if json_match:
             text = json_match.group(0)
 
         text = text.replace("'", '"')
-        cleaned_string = text.replace("[", "").replace("]", "")
-        self.config.set_shared_state(type_of_query+'filter', cleaned_string)
-        return True,cleaned_string
+
+        self.config.set_shared_state(type_of_query+'filter', text)
+        return True,text
     else:
         return False
 
@@ -673,18 +782,21 @@ def compare_demographic_results(self):
         self.logger.info(f"Comparing LLM response name with document for HIN.")
         result, matched_data = self.compare_name_with_text(self,data_hin,self.ocr_text)
         if result and self.compare_demographic_results_llm(self, data_hin):
+            self.config.set_shared_state('filter_results', (result, matched_data))
             return result, matched_data
 
     if data_dob is not None:
         self.logger.info(f"Comparing LLM response name with document for DOB.")
         result, matched_data = self.compare_name_with_text(self,data_dob,self.ocr_text)
         if result and self.compare_demographic_results_llm(self, data_dob):
+            self.config.set_shared_state('filter_results', (result, matched_data))
             return result, matched_data
 
     if data_name is not None:
         self.logger.info(f"Comparing LLM response name with document for NAME.")
         result, matched_data = self.compare_name_with_text(self,data_name,self.ocr_text)
         if result and self.compare_demographic_results_llm(self, data_name):
+            self.config.set_shared_state('filter_results', (result, matched_data))
             return result, matched_data
 
     return False
@@ -706,7 +818,7 @@ def compare_demographic_results_llm(self, data):
         bool: True if the LLM's response contains the word 'yes' followed by any characters,
               indicating a positive match. False otherwise, or if the result is not a valid boolean.
     """
-    prompt = f"\n{self.ocr_text}\n" + self.ai_prompts.get('compare_demographic_results_llm', '') + f"\n {data} \n"
+    prompt = f"\n{self.ocr_text}\n\n" + self.ai_prompts.get('compare_demographic_results_llm', '') + f"\n {data} \n"
 
     result = self.query_prompt(self, prompt)
 
@@ -746,19 +858,31 @@ def compare_name_with_text(self, data, text):
             name = re.sub(r'\s+', ' ', name)   # Normalize multiple spaces to a single space
             name_parts = name.split()          # Split the name into parts
             flag = False
-            
 
             # Check if all part length
             if all(len(part) <= 3 for part in name_parts):
-                # We check if every part in name_parts has a match in OCR
-                if all(re.search(r'\b' + re.escape(part) + r'\b', text, re.IGNORECASE) for part in name_parts):
+                # Check if every part except for one in the name_parts has a match in OCR
+                missing_parts_count = sum(1 for part in name_parts if not re.search(r'\b' + re.escape(part) + r'\b', text, re.IGNORECASE))
+
+                if missing_parts_count <= 1:
                     flag = True
+
             else:
+                parts_count = 0
                 for part in name_parts:
                     if len(part) > 3:  # Only check for parts longer than 3 characters
                         match = re.search(r'\b' + re.escape(part) + r'\b', text, re.IGNORECASE)
                         if match:
                             flag = True
+                    if len(part) == 3:
+                        match = re.search(r'\b' + re.escape(part) + r'\b', text, re.IGNORECASE)
+                        if match:
+                            parts_count += 1
+                            if parts_count >= 2:
+                                year = data.get('formattedDob').split('-')[0]
+                                match = re.search(r'\b[-/.]*' + re.escape(year) + r'[-/.]*\b', text, re.IGNORECASE)
+                                if match:
+                                    flag = True
             
             if flag:
                 self.logger.info("Match found when cross checking names.")

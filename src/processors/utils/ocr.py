@@ -25,6 +25,8 @@ from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 import torch
 import requests
+import fitz
+import PyPDF2
 
 def has_ocr(self):
     """
@@ -99,14 +101,39 @@ def extract_text_from_pdf_file(self):
     text = ''
     try:
         # Load the PDF from bytes
+        form_data = {}
+
         pdf_bytes = self.config.get_shared_state('current_file')
+
+        # Read the PDF from bytes
         with io.BytesIO(pdf_bytes) as pdf_file:
             reader = PyPDF2.PdfReader(pdf_file)
-            num_pages = len(reader.pages)
-            for page_num in range(num_pages):
-                page = reader.pages[page_num]
-                text += page.extract_text() or ''  # Handle potential None return
-        self.ocr_text = text
+
+            if '/AcroForm' in reader.trailer['/Root']:
+                # Loop through all pages to get form fields
+                for page in reader.pages:
+                    # Check if the page contains form fields (AcroForm data)
+                    if '/Annots' in page:
+                        for annot in page['/Annots']:
+                            field = annot.get_object()  # Use get_object() instead of getObject()
+
+                            # Check if it's a form field with a name and value
+                            field_name = field.get('/T', None)
+                            if field_name:
+                                field_name = field_name.strip('()')  # Remove parentheses from the name
+
+                                field_value = field.get('/V', None)
+                                if field_value:
+                                    field_value = field_value.strip('()')  # Remove parentheses from value
+                                else:
+                                    field_value = ''  # Empty fields should still be captured
+
+                                # Store the field name and value in the dictionary
+                                form_data[field_name] = field_value
+        
+        form_data_str = "\n".join([f"{field_name}: {field_value}" for field_name, field_value in form_data.items()])
+        self.ocr_text = form_data_str
+
         return True
     except Exception as e:
         self.logger.error(f"An error occurred in extract_text_from_pdf_file: {e}")

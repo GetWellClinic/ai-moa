@@ -2,7 +2,7 @@
 # This script helps you REMOVE / uninstall llm-container and ai-moa system services
 # This script should be edited first to confirm correct base directory for AI-MOA
 # Run the script as 'sudo ./uninstall-services.sh'
-# Version 2025.03.26
+# Version 2025.05.09
 
 # Automatic detect base directory for AI-MOA:
 cd ..
@@ -36,3 +36,7 @@ AIMOA=$(pwd)
 /usr/bin/systemctl daemon-reload
 /bin/echo ""
 /bin/echo "AI-MOA and LLM Container removed as system services."
+
+# Post-installation messages
+/bin/echo "Remember to `sudo crontab -e` to check that you have commented out or removed the # AI-MOA Cronjob entry for auto system reboot."
+/bin/echo ""

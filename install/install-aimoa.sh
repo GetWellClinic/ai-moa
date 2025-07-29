@@ -2,7 +2,7 @@
 # This custom script installs Get Well Clinic's version of AI-MOA (Aimee AI)
 # Note: To correctly use automatic detection of AI-MOA path, this script must be installed and run in subdirectory 'install'
 # This install script should be run as 'sudo ./install-aimoa.sh'
-# Version 2025.05.28
+# Version 2025.06.09
 
 # Hardware Requirements:
 #	NVIDIA RTX video card installed with at least 12 GB VRAM
@@ -120,9 +120,11 @@ pip install -r "$AIMOA/src/requirements.txt"
 
 # Create Linux user and group for 'aimoa':
 /usr/sbin/useradd -m aimoa	# Requires home directory for google-chrome files
+/bin/newgrp aimoa
 # Add current user to 'aimoa' group
 /usr/sbin/usermod -a -G aimoa $USER
 /usr/sbin/usermod -a -G aimoa $USERNAME
+
 
 # Initialize file permissions for AI-MOA:
 /bin/echo "Fixing file permissions for AI-MOA to 'rw-rw-r-- aimoa aimoa' ..."
@@ -160,6 +162,7 @@ AIMOACRON="1 * * * * $AIMOA/install/aimoa-cron-maintenance.sh"
 if sudo crontab -u root -l 2>/dev/null | /bin/grep -Fq "$AIMOACRON"; then
 	/bin/echo "Cron job already exists. Skipping adding aimoa-cron-maintenance.sh...Please verify correct installation of existing cron job...!"
 else
+	(sudo crontab -u root -l && /bin/echo "# AI-MOA Cronjob to clear Chrome temp files" 2>/dev/null) | sudo crontab -
 	(sudo crontab -u root -l && /bin/echo "$AIMOACRON" 2>/dev/null) | sudo crontab -
 	/bin/echo "Added aimoa-cron-maintenance.sh to sudo crontab...successful."
 fi
@@ -179,3 +182,5 @@ apt-get -y install google-chrome-stable
 # Post-installation messages:
 /bin/echo ""
 /bin/echo "Please also check if 'aimoa' user or 'others' has r-x permissions from root directory / all the way to " $AIMOA
+/bin/echo ""
+/bin/echo "Please check `sudo crontab -e` to verify correct installation of cronjobs."
