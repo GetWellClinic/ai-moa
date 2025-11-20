@@ -1,5 +1,5 @@
 ## OCR setup with Docker
-Version 2025.05.31
+Version 2025.11.19
 
 To set up OCR with Docker, you need to install and configure a GPU. You can also use it without a GPU, but this might affect performance.
 
@@ -102,3 +102,15 @@ docker ps -a
 docker stop ocr_web_api
 docker rm ocr_web_api
 ```
+
+## Troubleshoot
+
+### AI-MOA stops working, the logs show the process stalls during ocr process.
+
+If you are using the OCR docker version, sometimes the OCR model unloads from memory. You can verify this by checking ```nvidia-smi``` which should show you the memory usage. If you compare the current memory usage from the previous fully loaded memory usage (llm-container and OCR doctr usage) then you may notice that the main LLM model from llm-container is still loaded, but the total video memory usage is less the OCR model.
+
+Simple restart the OCR docker container:
+```
+/usr/bin/docker restart ocr_web_api
+```
+
