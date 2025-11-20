@@ -109,7 +109,7 @@ docker rm ocr_web_api
 
 If you are using the OCR docker version, sometimes the OCR model unloads from memory. You can verify this by checking ```nvidia-smi``` which should show you the memory usage. If you compare the current memory usage from the previous fully loaded memory usage (llm-container and OCR doctr usage) then you may notice that the main LLM model from llm-container is still loaded, but the total video memory usage is less the OCR model.
 
-Simple restart the OCR docker container:
+Simply restart the OCR docker container:
 ```
 /usr/bin/docker restart ocr_web_api
 ```
