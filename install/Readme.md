@@ -2,7 +2,7 @@
 ## Linux Installation ##
 *Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
 *LICENSE: GNU Affero General Public License Version 3*<br />
-**Document Version 2025.07.16**
+**Document Version 2025.11.19**
 <p align="center">
   <img src="https://getwellclinic.ca/images/GetWellClinic/Logos-Icons/AimeeAI-pc.png" alt="Aimee AI">
 </p>
@@ -624,11 +624,28 @@ Unattended-Upgrade::Automatic-Reboot "true";
 Unattended-Upgrade::Automatic-Reboot-Time "02:00";
 ```
 
+
+### AI-MOA stops working, stalling at the OCR step, however, the LLM model is still loaded in video memory.
+
+This may be due to the OCR model being unloaded from video memory. This can happen if you are using the OCR docker container. Please read [ocr_api.md](docs/ocr_api.md) for instructions on using OCR docker container.
+
+If you are using the OCR docker container, simply restart the OCR container:
+```
+/usr/bin/docker restart ocr_web_api
+```
+
+If you notice ```nvidia-smi``` shows that even the llm-container is unloaded from video memory, then simply restart the entire server to reload the LLM model:
+```
+sudo shutdown -r now
+```
+
+
 ### AI-MOA sometimes skips some PDF documents ###
 
 This is a feature to skip files that AI-MOA has tried several times and failed to complete the workflow. This prevents the AI-MOA from hanging on an endless futile loop attempting to process a corrupted or problematic PDF.
 
 To fix this, have a human MOA just manually label, tag, and Acknowledge the document.
+
 
 
 ## Special Thanks ##

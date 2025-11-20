@@ -557,7 +557,11 @@ def filter_results(self):
 
         text = text.replace("'", '"')
 
-        data = json.loads(text)
+        try:
+            data = json.loads(text)
+        except json.JSONDecodeError as e:
+            self.logger.info(f"JSON decoding failed: {e}")
+            return False
 
         matched_data_array = []
 
