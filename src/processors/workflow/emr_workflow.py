@@ -30,6 +30,7 @@ import re
 from ..utils import local_files
 from ..utils import ocr
 from ..utils import llm
+from ..utils import pif
 from ..o19 import o19_updater, o19_inbox
 from ..document_tagger import document_category, get_document_description
 from ..provider_tagger import provider
@@ -117,6 +118,15 @@ class Workflow:
         self.extract_text_doctr_api = ocr.extract_text_doctr_api
         self.extract_text_from_pdf_file = ocr.extract_text_from_pdf_file
         self.query_prompt = llm.query_prompt
+        self.query_pif = pif.query_pif
+        self.get_fht_tickler_config = pif.get_fht_tickler_config
+        self.update_fht_tickler_config = pif.update_fht_tickler_config
+        self.get_postal_code_category = pif.get_postal_code_category
+        self.new_patient_details = pif.new_patient_details
+        self.update_patient_details = pif.update_patient_details
+        self.search_patient = pif.search_patient
+        self.create_tickler = pif.create_tickler
+        self.fill_element = pif.fill_element
         self.get_category_types = document_category.get_category_types
         self.get_category_type = document_category.get_category_type
         self.get_document_description = document_category.get_document_description
