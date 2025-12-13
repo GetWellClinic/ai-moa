@@ -17,8 +17,8 @@ AIPYTHONENV=$(pwd)/.env
 /bin/echo "Currently specifying the following as the base directory for AI-MOA..."
 /bin/echo $AIMOA
 /bin/echo ""
-/bin/echo "This 'run-aimoa.sh' is for starting AI-MOA by command line. You do not need to run this if you have installed AI-MOA as a system service."
-/bin/echo "	( Hint: To install AI-MOA as a system service, execute 'sudo ./install-aimoa.sh' )"
+/bin/echo "This 'run-pif.sh' is for starting AI-MOA: PIF by command line."
+# /bin/echo "	( Hint: To install AI-MOA as a system service, execute 'sudo ./install-aimoa.sh' )"
 /bin/sleep 3s
 
 # Activate Python virtual environment with installed pre-requisite packages
