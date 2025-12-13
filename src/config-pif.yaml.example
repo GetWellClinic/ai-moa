@@ -20,7 +20,7 @@
 # ***
 
 # AI configuration for interacting with the AI-MOA service.
-# Version: 2025.05.18
+# Version: 2025.12.13
 
 
 # Chrome browser configuration for headless operation.
@@ -51,10 +51,10 @@ logging:
 
 # PIF configuration
 pif:
-  aimee_uid: 999998 # Unique identifier for the user AIMOA for initiating the PIF process.
-  batch_size: 10 # The number of PIF records to be processed in one batch. 
+  aimee_uid: 200 # Unique identifier for the user AIMOA for initiating the PIF process.
+  batch_size: 50 # The number of PIF records to be processed in one batch. 
 
-  confidential_unattached_id: 123 # A unique identifier used for creating a tickler notificaitons with AIMOA, should be a demographic number
+  confidential_unattached_id: 285 # A unique identifier used for creating a tickler notificaitons with AIMOA, should be a demographic number
 
   site_name: your_clinic_name # The name of the clinic or healthcare facility where PIF processing is taking place.
 
@@ -73,16 +73,16 @@ pif:
 
   error_msg_to: 999998 # The identifier to whom error messages are sent when an issue occurs during PIF processing.
 
-  # A list of healthcare providers who are exceptions and should be treated differently when processing PIF records. Each entry in the list typically represents a combination of a patient's last name and first name.
+  # A list of healthcare providers who are exceptions and should be treated differently when processing PIF records. Each entry in the list typically represents a combination of a provider's last name and first name.
 
   exception_provider:
   - lastname1, firstname1
   - lastname2, firstname2
   - lastname3, firstname3
 
-  primary_fsa_mrp_id: 999998 # The ID of the primary FSA MRP used for primary FSA patients.
-  primary_fsa_program_id: 999998 # The ID of the program associated with primary FSA patients.
-  primary_fsa_resident_id: 999998 # The ID of the primary FSA resident.
+  primary_fsa_mrp_id: 141 # The emr user ID of the primary FSA "MRP" used for primary FSA patients. ie. FHT Team
+  primary_fsa_program_id: 141 # The emr user ID of the "program" associated with primary FSA patients. ie. FHT Team
+  primary_fsa_resident_id: 141 # The emr user ID of the primary FSA for dropdown "resident". ie. FHT Team
 
   # A list of valid postal code prefixes for patients who are eligible for primary FSA services.
   primary_fsa_valid_prefixes:
@@ -93,11 +93,12 @@ pif:
   # A predefined message indicating that a patient is registered for FSA but is only eligible for a different program
   secondary_fsa_message: Patient registered for primary fsa but eligible for secondary fsa only.
 
-  secondary_fsa_mrp_id: 999998 # The ID of the secondary FSA MRP for secondary FSA patients.
-  secondary_fsa_msg_to: 999998 # The user who should receive the message when a secondary FSA patient is processed.
+  secondary_fsa_mrp_id: 1010 # The ID of the secondary FSA "MRP" for secondary FSA patients. ie. NPLC Clinic
+  secondary_fsa_msg_to: 1010 # The user who should receive the message when a secondary FSA patient is processed. ie. NPLC Clinic
 
   # A list of valid postal code prefixes for patients who are eligible for secondary FSA services.
   secondary_fsa_valid_prefixes:
   - A0A
   - A1A
   - A2A
+
