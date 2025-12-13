@@ -1,0 +1,103 @@
+# COPYRIGHT © 2025 by Spring Health Corporation <office(at)springhealth.org>
+# Toronto, Ontario, Canada
+# SUMMARY: This file is part of the Get Well Clinic's original "AI-MOA" project's collection of software,
+# documentation, and configuration files.
+# These programs, documentation, and configuration files are made available to you as open source
+# in the hopes that your clinic or organization may find it useful and improve your care to the public
+# by reducing administrative burden for your staff and service providers.
+# NO WARRANTY: This software and related documentation is provided "AS IS" and WITHOUT ANY WARRANTY of any kind;
+# and WITHOUT EXPRESS OR IMPLIED WARRANTY OF SUITABILITY, MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+# LICENSE: This software is licensed under the "GNU Affero General Public License Version 3".
+# Please see LICENSE file for full details. Or contact the Free Software Foundation for more details.
+# ***
+# NOTICE: We hope that you will consider contributing to our common source code repository so that
+# others may benefit from your shared work.
+# However, if you distribute this code or serve this application to users in modified form,
+# or as part of a derivative work, you are required to make your modified or derivative work
+# source code available under the same herein described license.
+# Please notify Spring Health Corp <office(at)springhealth.org> where your modified or derivative work
+# source code can be acquired publicly in its latest most up-to-date version, within one month.
+# ***
+
+# AI configuration for interacting with the AI-MOA service.
+# Version: 2025.05.18
+
+
+# Chrome browser configuration for headless operation.
+chrome:
+  options:
+    headless: true  # Whether to run Chrome in headless mode (without GUI). 'false' means it will run with a GUI.
+
+# EMR (Electronic Medical Record) configuration for connecting to an EMR system.
+emr:
+  base_url: http://127.0.0.1:8080/oscar  # Base URL for the EMR system.
+  verify-HTTPS: false   # This flag allows for ignoring warnings for self-signed TLS/SSL certificates in a development environment.
+  system_type: o19  # Type of system. (ie. 'o19', 'openo', 'opro' or 'o15')
+  username: emr  # Username for EMR login.
+  password: 'passpwd'  # Password for EMR login.
+  pin: '123'  # PIN for EMR login.
+  login_pin_field: true # If set to true, the system will assume that there is a PIN field on the login page. Set this to false if there is no PIN field on the login page.
+  user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36' # Set user-agent
+
+general_setting:
+  timeout: 300 # Timeout in seconds for request (POST and GET) to avoid indefinitely hanging requests.
+
+# Logging configuration, including file location, format, and log level.
+logging:
+  console_level: INFO   # Log level for console output. (ie. INFO, DEBUG, WARN, ERROR, FATAL etc. )
+  file_level: INFO  # Log level for file output. (ie. INFO, DEBUG etc. )
+  filename: ../logs/workflow.log  # Log file location.
+  format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'  # Log format.
+
+# PIF configuration
+pif:
+  aimee_uid: 999998 # Unique identifier for the user AIMOA for initiating the PIF process.
+  batch_size: 10 # The number of PIF records to be processed in one batch. 
+
+  confidential_unattached_id: 123 # A unique identifier used for creating a tickler notificaitons with AIMOA, should be a demographic number
+
+  site_name: your_clinic_name # The name of the clinic or healthcare facility where PIF processing is taking place.
+
+  last_processed: 0 # Keeps track of the last processed PIF record ID. This is useful for continuing processing from where it was last left off in case of an interruption.
+
+  database: test_db # The name of the database used for storing and retrieving patient data for PIF processing.
+
+  table_name: your_table_name # The name of the table in the database where PIF records are stored.
+  username: your_username # The username used for authenticating with the database.
+
+  host: 192.168.1.1 # The IP address or hostname of the server where the database is hosted.
+
+  password: your_password # The password associated with the username for authenticating against the database.
+
+  port: 3306 # The port number used to connect to the database.
+
+  error_msg_to: 999998 # The identifier to whom error messages are sent when an issue occurs during PIF processing.
+
+  # A list of healthcare providers who are exceptions and should be treated differently when processing PIF records. Each entry in the list typically represents a combination of a patient's last name and first name.
+
+  exception_provider:
+  - lastname1, firstname1
+  - lastname2, firstname2
+  - lastname3, firstname3
+
+  primary_fsa_mrp_id: 999998 # The ID of the primary FSA MRP used for primary FSA patients.
+  primary_fsa_program_id: 999998 # The ID of the program associated with primary FSA patients.
+  primary_fsa_resident_id: 999998 # The ID of the primary FSA resident.
+
+  # A list of valid postal code prefixes for patients who are eligible for primary FSA services.
+  primary_fsa_valid_prefixes:
+  - A0A
+  - A1A
+  - A2A
+  
+  # A predefined message indicating that a patient is registered for FSA but is only eligible for a different program
+  secondary_fsa_message: Patient registered for primary fsa but eligible for secondary fsa only.
+
+  secondary_fsa_mrp_id: 999998 # The ID of the secondary FSA MRP for secondary FSA patients.
+  secondary_fsa_msg_to: 999998 # The user who should receive the message when a secondary FSA patient is processed.
+
+  # A list of valid postal code prefixes for patients who are eligible for secondary FSA services.
+  secondary_fsa_valid_prefixes:
+  - A0A
+  - A1A
+  - A2A
