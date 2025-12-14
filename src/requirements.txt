@@ -13,3 +13,5 @@ torchvision==0.17.2
 webdriver_manager==4.0.2
 frontend
 tools
+mysql-connector-python>=9.5.0,<10.0.0
+
