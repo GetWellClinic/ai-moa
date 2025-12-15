@@ -11,8 +11,8 @@ From your python environment, run the following:
 
 Update your AIMOA configuration based on your requirements.
 
-## work-flow.yaml
-In your `work-flow.yaml` file, add the following workflow to configure AIMOA with PIF
+## workflow-config-pif.yaml
+In your `workflow-config-pif.yaml` file, add the following workflow to configure AIMOA with PIF
 
 ```yaml
 
@@ -24,10 +24,10 @@ workflow:
 
 ```
 
-## config.yaml
+## config-pif.yaml
 *Note: All fields are mandatory*
 
-In your `config.yaml` file, use the following fields to configure AIMOA with PIF
+In your `config-pif.yaml` file, use the following fields to configure AIMOA with PIF
 
 ### `aimee_uid`
 - **Type**: Integer  
@@ -37,7 +37,7 @@ In your `config.yaml` file, use the following fields to configure AIMOA with PIF
 ### `batch_size`
 - **Type**: Integer  
 - **Description**: The number of PIF records to be processed in one batch. This controls how many patient records will be handled at a time during the process.  
-- **Example**: `10`
+- **Example**: `50`
 
 ### `last_processed`
 - **Type**: Integer  
@@ -95,17 +95,17 @@ In your `config.yaml` file, use the following fields to configure AIMOA with PIF
 
 ### `primary_fsa_mrp_id`
 - **Type**: Integer  
-- **Description**: The ID of the primary FSA MRP used for primary FSA patients.  
+- **Description**: The emr user ID of the primary FSA "MRP" used for primary FSA patients.  
 - **Example**: `999998`
 
 ### `primary_fsa_program_id`
 - **Type**: Integer  
-- **Description**: The ID of the program associated with primary FSA patients.  
+- **Description**: The emr user ID of the program associated with primary FSA patients.  
 - **Example**: `999998`
 
 ### `primary_fsa_resident_id`
 - **Type**: Integer  
-- **Description**: The ID of the primary FSA resident.
+- **Description**: The emr user ID of the primary FSA "resident" dropdown.
 - **Example**: `999998`
 
 ### `primary_fsa_valid_prefixes`
@@ -152,7 +152,7 @@ You can configure AIMOA to process PIF at any time interval, but the recommended
 **Even if the cron starts the process, processing of PIF is controlled using ticklers**. 
 #### The basic commands for using PIF with ticklers are listed below.
 
-For this, use site_name and aimee_uid in `config.yaml` so that AIMOA can view the control messages. AIMOA will only process the start commands for the current day.
+For this, use site_name and aimee_uid in `config-pif.yaml` so that AIMOA can view the control messages. AIMOA will only process the start commands for the current day.
 
 **Control tickler message format:**
 
