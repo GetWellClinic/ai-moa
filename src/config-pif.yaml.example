@@ -75,7 +75,7 @@ pif:
 
   # A list of healthcare providers who are exceptions and should be treated differently when processing PIF records. Each entry in the list typically represents a combination of a provider's last name and first name.
 
-  exception_provider:
+  exception_provider: # ie. list of FHO doctors that have patients, but are not yet part of FHT
   - lastname1, firstname1
   - lastname2, firstname2
   - lastname3, firstname3
@@ -93,7 +93,7 @@ pif:
   # A predefined message indicating that a patient is registered for FSA but is only eligible for a different program
   secondary_fsa_message: Patient registered for primary fsa but eligible for secondary fsa only.
 
-  secondary_fsa_mrp_id: 1010 # The ID of the secondary FSA "MRP" for secondary FSA patients. ie. NPLC Clinic
+  secondary_fsa_mrp_id: 28 # The ID of the secondary FSA "MRP" for secondary FSA patients. ie. Doctor, Walk-In
   secondary_fsa_msg_to: 1010 # The user who should receive the message when a secondary FSA patient is processed. ie. NPLC Clinic
 
   # A list of valid postal code prefixes for patients who are eligible for secondary FSA services.
