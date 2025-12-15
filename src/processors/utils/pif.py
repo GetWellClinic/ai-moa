@@ -490,9 +490,9 @@ def new_patient_details(self, row, category):
 
         self.fill_element(self, driver, 'spoken', slanguage, 'select_value')
 
-        dob_parts = row['dob1'].split('-')
-        #yyyy-mm-dd
-        dob = f"{dob_parts[0]}-{dob_parts[1]}-{dob_parts[2]}"
+        # dob_parts = row['dob1'].split('-')
+        # dob = f"{dob_parts[2]}-{dob_parts[1]}-{dob_parts[0]}"
+        dob = row['dob1']
         self.fill_element(self, driver, 'inputDOB', dob)
 
         cslegend_element = driver.find_element(By.XPATH, "//div[@id='contactSection']//legend")
