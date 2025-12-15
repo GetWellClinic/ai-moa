@@ -249,8 +249,9 @@ def query_pif(self):
 
         if start_processing:
             self.update_fht_tickler_config(self, fht_tickler_id, processed_fht_count, last_processed_fht_id, starting_fht_id)
-            self.config.config['pif']['last_processed'] = last_processed_fht_id + 1
-            self.config.save_config()
+            if results:
+                self.config.config['pif']['last_processed'] = last_processed_fht_id + 1
+                self.config.save_config()
 
         return True
 
@@ -526,8 +527,11 @@ def new_patient_details(self, row, category):
             return
 
         try:
-            form_submit_element = driver.find_element(By.LINK_TEXT, "Go to record")
-        except NoSuchElementException:
+            wait = WebDriverWait(driver, 30)
+            form_submit_element = wait.until(
+                EC.element_to_be_clickable((By.LINK_TEXT, "Go to record"))
+            )
+        except TimeoutException:
             self.logger.error(f"Error when processing demographic, PIF Id : {row['id']}")
             message = f"Error when processing PIF Id : {row['id']}; {row['lastname1']}, {row['firstname1']} ({row['dob1']} #{row['hcn1']}) "
             to = self.config.get('pif.error_msg_to')
