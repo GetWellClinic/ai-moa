@@ -490,10 +490,15 @@ def new_patient_details(self, row, category):
 
         self.fill_element(self, driver, 'spoken', slanguage, 'select_value')
 
-        # dob_parts = row['dob1'].split('-')
-        # dob = f"{dob_parts[2]}-{dob_parts[1]}-{dob_parts[0]}"
-        dob = row['dob1']
-        self.fill_element(self, driver, 'inputDOB', dob)
+        dob_parts = row['dob1'].split('-')
+        wait = WebDriverWait(driver, 10)
+        dob_field = wait.until(EC.element_to_be_clickable((By.ID, "inputDOB")))
+        dob_field.clear()
+        dob_field.send_keys(
+            dob_parts[2],
+            dob_parts[1],
+            dob_parts[0]
+        )
 
         cslegend_element = driver.find_element(By.XPATH, "//div[@id='contactSection']//legend")
         cslegend_element.click()
