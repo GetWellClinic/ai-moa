@@ -9,6 +9,15 @@ From your python environment, run the following:
 
 ## Configuration Update
 
+### Note on EMR DOB Picker Format
+
+**Note:** For demographic creation, the EMR DOB picker may vary depending on the system configuration. The expected format for the EMR DOB picker is `dd-mm-yyyy`.
+
+Please set your system language so that the EMR DOB picker uses the `dd-mm-yyyy` format.
+
+**Example:**
+`LANGUAGE=en_CA:en`
+
 Update your AIMOA configuration based on your requirements.
 
 ## workflow-config-pif.yaml
