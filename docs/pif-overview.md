@@ -7,6 +7,26 @@ From your python environment, run the following:
 
 `pip install mysql-connector-python`
 
+Ensure your system is running in Canadian locale "en_CA.UTF-8" and "LANGUAGE=en_CA:en":
+
+```
+locale
+locale d_fmt
+localctl
+timedatectl
+```
+
+To change locale:
+
+```
+sudo local-gen "en_CA.UTF-8"
+sudo dpkg-reconfigure locals
+(choose en_CA.UTF-8)
+sudo update-locale LANGUAGE=en_CA:en
+sudo localectl set-locale LANG=en_CA.UTF-8
+(reboot the server for changes to take effect)
+```
+
 ## Configuration Update
 
 ### Note on EMR DOB Picker Format
