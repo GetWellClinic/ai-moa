@@ -25,16 +25,15 @@ from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 import torch
 import requests
-import fitz
 import PyPDF2
 
 def has_ocr(self):
     """
     Check if the provided PDF contains text, indicating it has OCR.
 
-    This method checks if any of the pages in the PDF have text content, 
-    which would indicate that Optical Character Recognition (OCR) has been 
-    applied to the document.
+    This method checks whether any pages in the PDF contain text,
+    which indicates that Optical Character Recognition (OCR) has been applied or
+    that the document is already in text format.
 
     Args:
         None
@@ -43,30 +42,25 @@ def has_ocr(self):
         bool: 
             - `True` if the PDF contains any text.
             - `False` if the PDF does not contain any text or if an error occurs.
-
-    Example:
-        >>> result = has_ocr()
-        >>> print(result)
-        True  # If OCR is detected in the document.
-
     Logs:
         - Logs an error if an exception occurs during OCR detection.
     
     Raises:
         Exception: If there is an issue loading or reading the PDF.
     """
-    # Will be removed as fitz module no longer used.
     try:
         # Load the PDF from bytes
         pdf_bytes = self.config.get_shared_state('current_file')
-        pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
-       
-        for page_num in range(len(pdf_document)):
-            page = pdf_document.load_page(page_num)
-            text = page.get_text()
-            if text.strip():
+        reader = PyPDF2.PdfReader(io.BytesIO(pdf_bytes))
+    
+        for page in reader.pages:
+            text = page.extract_text()
+            if text and text.strip():
+                self.logger.debug("Document contains text.")
                 return True
+        self.logger.debug("Document contains only images.")
         return False
+
     except Exception as e:
         self.logger.error(f"An error occurred in has_ocr: {e}")
         return False
@@ -86,11 +80,6 @@ def extract_text_from_pdf_file(self):
         bool:
             - `True` if text extraction is successful.
             - `False` if an error occurs during extraction.
-
-    Example:
-        >>> result = extract_text_from_pdf_file()
-        >>> print(result)
-        True  # If the text extraction was successful.
 
     Logs:
         - Logs an error if an exception occurs during text extraction.
@@ -130,9 +119,22 @@ def extract_text_from_pdf_file(self):
 
                                 # Store the field name and value in the dictionary
                                 form_data[field_name] = field_value
-        
-        form_data_str = "\n".join([f"{field_name}: {field_value}" for field_name, field_value in form_data.items()])
-        self.ocr_text = form_data_str
+
+                form_data_str = "\n".join([f"{field_name}: {field_value}" for field_name, field_value in form_data.items()])
+                self.ocr_text = form_data_str
+
+            else:
+
+                texts = []
+
+                for i, page in enumerate(reader.pages):
+                    text = page.extract_text()
+                    if text:
+                        texts.append(text)
+
+                self.ocr_text = "\n".join(texts)
+
+        self.logger.debug("Reading text data completed.")
 
         return True
     except Exception as e:
@@ -153,11 +155,6 @@ def extract_text_doctr(self):
         bool:
             - `True` if text extraction is successful using OCR.
             - `False` if an error occurs during OCR extraction.
-
-    Example:
-        >>> result = extract_text_doctr()
-        >>> print(result)
-        True  # If the OCR text extraction was successful.
 
     Logs:
         - Logs the start and completion of the OCR process.
@@ -215,10 +212,9 @@ def extract_text_doctr_api(self):
     """
     Extracts text from a PDF file using an external OCR API.
 
-    This method reads a PDF from shared state, sends it to the OCR API
-    specified in the configuration, and processes the returned structured
-    text output into a single concatenated string limited by the configured
-    page limit.
+    This method reads a PDF from the shared state, limits it according
+    to the configured page limit, sends it to the OCR API specified in the configuration,
+    and processes the returned structured text into a single concatenated string.
 
     Returns:
         bool: True if OCR and text extraction succeed, False otherwise.
@@ -227,6 +223,20 @@ def extract_text_doctr_api(self):
         # Read the PDF from bytes (or file)
         pdf_bytes = self.config.get_shared_state('current_file')
 
+        # Truncate the pages to a limit (page_limit)
+        page_limit = self.config.get('ocr.page_limit',20)
+        self.logger.debug(f"OCR page limit: {page_limit}")
+
+        with io.BytesIO(pdf_bytes) as pdf_file:
+            reader = PyPDF2.PdfReader(pdf_file)
+            writer = PyPDF2.PdfWriter()
+
+            for page in reader.pages[:page_limit]:
+                writer.add_page(page)
+
+            trimmed_file = io.BytesIO()
+            writer.write(trimmed_file)
+
         # Now perform OCR on the truncated document
         self.logger.debug("Calling OCR API.")
 
@@ -234,7 +244,7 @@ def extract_text_doctr_api(self):
         params = {"reco_arch": self.config.get('ocr.reco_arch','vitstr_base'), "det_arch": self.config.get('ocr.det_arch','db_resnet50')}
 
         files = [  # application/pdf, image/jpeg, image/png supported
-                ("files", ('ocr_doc.pdf', pdf_bytes, "application/pdf")),
+                ("files", ('ocr_doc.pdf', trimmed_file.getvalue(), "application/pdf")),
             ]
 
         results = requests.post(self.config.get('ocr.api_uri','http://localhost:8002/ocr'), headers=headers, params=params, files=files, verify=self.config.get('ocr.verify-HTTPS')).json()
@@ -256,14 +266,8 @@ def extract_text_doctr_api(self):
             document_text = "\n\n".join(lines_output)
             all_outputs.append(document_text)
 
-        # Truncate the pages to a limit (page_limit)
-        page_limit = self.config.get('ocr.page_limit',20)
-        self.logger.debug(f"OCR page limit: {page_limit}")
-
-        result_string = ""
-        for i in range(min(page_limit, len(all_outputs))):
-            result_string += all_outputs[i]
-        self.ocr_text = result_string
+        self.ocr_text = "\n".join(all_outputs)
+        self.logger.debug("OCR completed.")
         return True
     except Exception as e:
         self.logger.error(f"An error occurred in extract_text_doctr_api: {e}")
