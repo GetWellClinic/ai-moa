@@ -131,6 +131,8 @@ document_categories:
     # default_tagger: 200
     description: >
       These are laboratory tests received by a medical clinic notifying physicians of patient test results or messages.
+    default_description: >
+      This will be the default document description for this category when using pdf processor.
     tasks:
       - name: get_document_description
         prompt: >
@@ -146,6 +148,8 @@ document_categories:
     # default_tagger: 200
     description: >
       These are consult reports from medical specialists/programs/services, and admission reports/discharge summaries from hospitals/clinics for the purpose of exchanging communications between healthcare professionals.
+    default_description: >
+      This will be the default document description for this category when using pdf processor.
     tasks:
       - name: get_document_description
         prompt: >
@@ -162,6 +166,8 @@ document_categories:
     # default_tagger: 44
     description: >
       These are documents from medical health insurance companies, requesting medical records for insurance, and attending physician statements.
+    default_description: >
+      This will be the default document description for this category when using pdf processor.
     tasks:
       - name: get_document_description
         prompt: >
@@ -176,6 +182,8 @@ document_categories:
     # default_tagger: 44
     description: >
       These are correspondence documents between a lawyer's law firm and a physician's clinic, or documents that contain legal agreements.
+    default_description: >
+      This will be the default document description for this category when using pdf processor.
     tasks:
       - name: get_document_description
         prompt: >
@@ -189,6 +197,8 @@ document_categories:
   - name: Old Chart
     description: >
       These are an heterogenous collection of medical records and documents that have a variety of document types. These documents may provide a summary of the patient's medical profile for later quick reference by a physician.
+    default_description: >
+      This will be the default document description for this category when using pdf processor.
     tasks:
       - name: get_document_description
         prompt: >
@@ -201,6 +211,8 @@ document_categories:
   - name: Radiology
     description: >
       This category type refers to radiology reports from radiologist and imaging centres. It also includes reports related to bone mineral density scans like DXA and BMD.
+    default_description: >
+      This will be the default document description for this category when using pdf processor.
     tasks:
       - name: get_document_description
         prompt: >
@@ -219,6 +231,8 @@ document_categories:
   - name: Pathology
     description: >
       This refers to documents related to detailed findings from tissue biopsy, fluid samples, PAP cytology, microbiology, and cancer or precancerous conditions. These reports are usually produced by a pathologist and include microscopic examination results and interpretations.
+    default_description: >
+      This will be the default document description for this category when using pdf processor.
     tasks:
       - name: get_document_description
         prompt: >
@@ -234,6 +248,8 @@ document_categories:
     # default_tagger: 44
     description: >
       These documents are patient consent forms for an action, and clinic registration forms.
+    default_description: >
+      This will be the default document description for this category when using pdf processor.
     tasks:
       - name: get_document_description
         prompt: >
@@ -246,6 +262,8 @@ document_categories:
   - name: Diagnostics
     description: >
       These documents are reports regarding medical diagnostic tests that require specialist equipment for monitoring and measuring patients regarding heart rhythm, cardiac electrical activity, airway capacity, vascular supply, breathign, brain electrical activity, nerve conduction, hearing, vision, and sleep.
+    default_description: >
+      This will be the default document description for this category when using pdf processor.
     tasks:
       - name: get_document_description
         prompt: >
@@ -258,6 +276,8 @@ document_categories:
   - name: Pharmacy
     description: >
       This refers to documents sent from a pharmacy solely regarding medication renewals, prescription clarifications, notification of MedsCheck, as well as questions or correspondence from a pharmacist/pharmacy to a doctor to ensure a patient is taking the correct medications and dosage as prescribed.
+    default_description: >
+      This will be the default document description for this category when using pdf processor.
     tasks:
       - name: get_document_description
         prompt: >
@@ -271,6 +291,8 @@ document_categories:
   - name: Requisition
     description: >
       The first, second, or third page of these documents refers to requisition forms for patients to receive a diagnostic test, imaging test, or request for a medical service/program.
+    default_description: >
+      This will be the default document description for this category when using pdf processor.
     tasks:
       - name: get_document_description
         prompt: >
@@ -285,6 +307,8 @@ document_categories:
   - name: Referral
     description: >
       The first 1 to 3 pages of these documents are referral forms for a patient to a physician, medical specialist, clinic, program or service. The subsequent pages may contain other medical records.
+    default_description: >
+      This will be the default document description for this category when using pdf processor.
     tasks:
       - name: get_document_description
         prompt: >
@@ -300,6 +324,8 @@ document_categories:
     # default_tagger: 62
     description: >
       This refers to documents that contain request for health information or transfer of medical records.
+    default_description: >
+      This will be the default document description for this category when using pdf processor.
     tasks:
       - name: get_document_description
         prompt: >
@@ -314,6 +340,8 @@ document_categories:
     # default_tagger: 4
     description: >
       These are marketing, promotional, or advertisement related documents. Usually not about a particular patient.
+    default_description: >
+      This will be the default document description for this category when using pdf processor.
     tasks:
       - name: get_document_description
         prompt: >
@@ -324,6 +352,8 @@ document_categories:
   - name: Miscellaneous
     description: >
       These are documents received by a medical clinic regarding questionnaires, logs, medical forms, application forms, educational material, and other records.
+    default_description: >
+      This will be the default document description for this category when using pdf processor.
     tasks:
       - name: get_document_description
         prompt: >
@@ -338,6 +368,8 @@ document_categories:
   - name: Notification
     description: >
       These are documents received by a medical clinic regarding notifications from specialists, clinics and hospitals regarding patient medical appointments.
+    default_description: >
+      This will be the default document description for this category when using pdf processor.
     tasks:
       - name: get_document_description
         prompt: >
