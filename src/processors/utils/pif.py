@@ -183,13 +183,15 @@ def query_pif(self):
                         type_of_query = "search_hin"
                         search_result, data = self.get_patient_Html_Common(self,row['hcn1'],type_of_query)
 
+                        is_patient = False
+
                         if search_result is False:
                             self.logger.info("Patient not found using HC details, trying DOB.")
                             type_of_query = "search_dob"
                             search_result, data = self.get_patient_Html_Common(self,row['dob1'],type_of_query)
                         else:
                             self.logger.info("Match found using HC details, verifying.")
-                            is_patient, patient_id, roster_status, doctor = self.search_patient(self, data, row)
+                            is_patient, patient_id, roster_status, doctor = self.search_patient(self, data, row, 'hcn')
 
                             if is_patient is False:
                                 self.logger.info("Patient not found using HC details, trying DOB.")
@@ -201,7 +203,8 @@ def query_pif(self):
                             self.new_patient_details(self, row, category)
                         else:
 
-                            is_patient, patient_id, roster_status, doctor = self.search_patient(self, data, row)
+                            if is_patient is False:
+                                is_patient, patient_id, roster_status, doctor = self.search_patient(self, data, row, 'dob')
 
                             if is_patient is False:
                                 patient_id = 0
@@ -369,7 +372,7 @@ def get_fht_tickler_config(self, assigned_to):
         except Exception as e:
             return False, 0, 0
 
-def search_patient(self, data, row):
+def search_patient(self, data, row, type):
     """
     Searches for a patient in the provided HTML data using the patient's first and last name.
 
@@ -410,6 +413,7 @@ def search_patient(self, data, row):
         chart_cell = table_row.find("td", class_="demoIdSearch")
         roster_status_cell = table_row.find("td", class_="rosterStatus")
         mrp_cell = table_row.find("td", class_="doctor")
+        dob_cell = table_row.find("td", class_="dob")
 
         if name_cell and chart_cell:
             link = chart_cell.find("a")
@@ -418,25 +422,34 @@ def search_patient(self, data, row):
                 name_cell.get_text(strip=True),
                 link.get_text(strip=True),
                 roster_status_cell.get_text(strip=True),
-                mrp_cell.get_text(strip=True)
+                mrp_cell.get_text(strip=True),
+                dob_cell.get_text(strip=True)
                 ))
     if pairs:
+        if type == 'dob':
+            fn = re.escape(row['firstname1'].rstrip())
+            ln = re.escape(row['lastname1'].rstrip())
 
-        fn = re.escape(row['firstname1'].rstrip())
-        ln = re.escape(row['lastname1'].rstrip())
+            pattern_fn = re.compile(rf"\b{fn}\b", re.IGNORECASE)
+            pattern_ln = re.compile(rf"\b{ln}\b", re.IGNORECASE)
 
-        pattern_fn = re.compile(rf"\b{fn}\b", re.IGNORECASE)
-        pattern_ln = re.compile(rf"\b{ln}\b", re.IGNORECASE)
+            for item in pairs:
+                name_text = item[0].replace(",", " ").strip()
 
-        for item in pairs:
-            name_text = item[0].replace(",", " ").strip()
-
-            if pattern_fn.search(name_text) and pattern_ln.search(name_text):
-                is_patient = True
-                patient_id = item[1]
-                roster_status = item[2]
-                mrp = item[3]
-                break
+                if pattern_fn.search(name_text) and pattern_ln.search(name_text):
+                    is_patient = True
+                    patient_id = item[1]
+                    roster_status = item[2]
+                    mrp = item[3]
+                    break
+        else:
+            for item in pairs:
+                if row['dob1'] == item[4]:
+                    is_patient = True
+                    patient_id = item[1]
+                    roster_status = item[2]
+                    mrp = item[3]
+                    break
 
     return is_patient, patient_id, roster_status, mrp
 
@@ -688,6 +701,10 @@ def update_patient_details(self, row, demographic_id, category, is_patient=False
                     message = self.config.get('pif.secondary_fsa_message')
                     to = self.config.get('pif.secondary_fsa_msg_to')
                     self.create_tickler(self, demographic_id, message, str(to))
+            else:
+                message = f"Patient is eligible, check patient's internal providers information."
+                to = self.config.get('pif.error_msg_to')
+                self.create_tickler(self, demographic_id, message, str(to))
 
     else:
         self.logger.error("EMR Login Failure : update_patient_details")
