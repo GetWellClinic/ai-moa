@@ -372,7 +372,7 @@ def get_fht_tickler_config(self, assigned_to):
         except Exception as e:
             return False, 0, 0
 
-def search_patient(self, data, row, type):
+def search_patient(self, data, row, match_mode):
     """
     Searches for a patient in the provided HTML data using the patient's first and last name.
 
@@ -382,7 +382,13 @@ def search_patient(self, data, row, type):
 
     The method performs the following steps:
     1. Parses the `data` parameter (HTML) to extract patient-related information (name, ID, roster status, mrp).
-    2. Searches for the first and last name in the parsed data.
+    2. When ``match_mode == 'dob'``, the function performs a case-insensitive,
+        whole-word match on both first and last names. Regular expressions are
+        used to ensure exact word boundaries and to safely handle special
+        characters in names.
+
+        For HCN match, the function falls back to verifying records
+        strictly by date of birth.
     3. Returns a tuple containing:
        - A boolean indicating if the patient was found (`is_patient`).
        - The patient's ID (`patient_id`).
@@ -426,7 +432,7 @@ def search_patient(self, data, row, type):
                 dob_cell.get_text(strip=True)
                 ))
     if pairs:
-        if type == 'dob':
+        if match_mode == 'dob':
             fn = re.escape(row['firstname1'].rstrip())
             ln = re.escape(row['lastname1'].rstrip())
 

@@ -45,10 +45,14 @@ def pif_pdf(self):
     if PDF_TAG not in self.ocr_text:
         return False
 
-    data = None
+    matched_categories = data = None
 
     pattern = rf'{re.escape(PDF_TAG)}\s*(\{{[^}}]*\}})'
     match = re.search(pattern, self.ocr_text)
+
+    if not match:
+        self.logger.info("PDF doesn't contain AIMOA tag.")
+        return False
 
 
     if match:
