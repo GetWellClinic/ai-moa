@@ -23,5 +23,6 @@ from .local_files import get_local_documents
 from .ocr import has_ocr, extract_text_doctr, extract_text_doctr_api, extract_text_from_pdf_file
 from .llm import query_prompt
 from .pif import query_pif, get_fht_tickler_config, update_fht_tickler_config, get_postal_code_category, new_patient_details, update_patient_details, search_patient, create_tickler, fill_element
+from .pdf_processor import pif_pdf
 
-__all__ = ['get_local_documents' , 'has_ocr', 'extract_text_from_pdf_file', 'extract_text_doctr', 'extract_text_doctr_api', 'query_prompt', 'query_pif', 'get_postal_code_category', 'new_patient_details', 'update_patient_details', 'search_patient', 'create_tickler', 'get_fht_tickler_config', 'update_fht_tickler_config', 'fill_element']
+__all__ = ['get_local_documents' , 'has_ocr', 'extract_text_from_pdf_file', 'extract_text_doctr', 'extract_text_doctr_api', 'query_prompt', 'query_pif', 'get_postal_code_category', 'new_patient_details', 'update_patient_details', 'search_patient', 'create_tickler', 'get_fht_tickler_config', 'update_fht_tickler_config', 'fill_element', 'pif_pdf']

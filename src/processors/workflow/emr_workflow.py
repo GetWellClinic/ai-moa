@@ -31,6 +31,7 @@ from ..utils import local_files
 from ..utils import ocr
 from ..utils import llm
 from ..utils import pif
+from ..utils import pdf_processor
 from ..o19 import o19_updater, o19_inbox
 from ..document_tagger import document_category, get_document_description
 from ..provider_tagger import provider
@@ -119,6 +120,7 @@ class Workflow:
         self.extract_text_from_pdf_file = ocr.extract_text_from_pdf_file
         self.query_prompt = llm.query_prompt
         self.query_pif = pif.query_pif
+        self.pif_pdf = pdf_processor.pif_pdf
         self.get_fht_tickler_config = pif.get_fht_tickler_config
         self.update_fht_tickler_config = pif.update_fht_tickler_config
         self.get_postal_code_category = pif.get_postal_code_category
