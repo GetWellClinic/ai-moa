@@ -140,7 +140,7 @@ openssl req -x509 -newkey rsa:4096 \
   -subj "/CN=localhost"
 ```
 
-to generate a key and certificate, create them and place both files in the `doctr/api/cert` folder, and then
+To generate a key and certificate, create them and place both files in the `doctr/api/cert` folder, and then
 
 Update the line (doctr/api/docker-compose.yml) to include the key and certificate
 ```

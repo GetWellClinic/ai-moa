@@ -75,7 +75,7 @@ In your `config-pif.yaml` file, use the following fields to configure AIMOA with
 
 ### `confidential_unattached_id`
 - **Type**: Integer  
-- **Description**: A unique identifier used for creating a tickler notificaitons with AIMOA, should be a demographic number  
+- **Description**: A unique identifier used for creating a tickler notificaitons with AIMOA. This should be a demographic number.
 - **Example**: `100`
 
 ### `error_msg_to`

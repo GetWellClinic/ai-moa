@@ -94,7 +94,7 @@ def query_pif(self):
     """
     try:
 
-        connection = None
+        results = connection = None
         assigned_to = self.config.get('pif.aimee_uid')
         start_processing = False
         last_processed_fht_id = self.config.get('pif.last_processed', 0)
