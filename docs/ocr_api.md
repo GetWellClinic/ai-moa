@@ -1,5 +1,5 @@
 ## OCR setup with Docker
-Version 2025.11.19
+Version 2026.01.13
 
 To set up OCR with Docker, you need to install and configure a GPU. You can also use it without a GPU, but this might affect performance.
 
@@ -74,6 +74,8 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all  # or "0" for a specific GPU
 ```
 
+Note: This will create the API endpoint with HTTP. If you prefer to use HTTPS, see the end of the document.
+
 Now,
 
 ```shell
@@ -113,4 +115,58 @@ Simply restart the OCR docker container:
 ```
 /usr/bin/docker restart ocr_web_api
 ```
+
+## Enabling HTTPS for the API Endpoint
+
+### To change the API endpoint to use HTTPS
+
+If you have your own key and certificate, create a folder named `certs` under the `doctr/api` directory and place your private key `(key.pem)` and certificate `(cert.pem)` inside it.
+
+If you don’t have one, use the following to create one
+```
+openssl req -x509 -newkey rsa:4096 \
+  -keyout key.pem \
+  -out cert.pem \
+  -days 365 \
+  -nodes
+```
+For non-interactive, use (optional) :
+```
+openssl req -x509 -newkey rsa:4096 \
+  -keyout key.pem \
+  -out cert.pem \
+  -days 365 \
+  -nodes \
+  -subj "/CN=localhost"
+```
+
+to generate a key and certificate, create them and place both files in the `doctr/api/cert` folder, and then
+
+Update the line (doctr/api/docker-compose.yml) to include the key and certificate
+```
+command: uvicorn app.main:app --reload --workers 1 --host 0.0.0.0 --port 8080 --ssl-keyfile /app/certs/key.pem --ssl-certfile /app/certs/cert.pem
+```
+
+and 
+
+```
+volumes:
+      - ./certs:/app/certs
+```
+
+Once the docker-compose.yml file is updated, then
+
+```shell
+make run
+```
+
+Once completed, update the OCR API URL to use HTTPS in the config.yaml file.
+
+```
+ocr:
+  api_uri: https://localhost:8002/ocr
+```
+You can verify HTTPS by opening `https://localhost:8002/docs` in your browser.
+
+The OCR API now uses HTTPS for secure communications. Enabling HTTPS is recommended when the OCR Docker container is running on a machine other than the AIMOA localhost, to ensure data security across the network.
 
