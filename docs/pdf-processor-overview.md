@@ -33,7 +33,7 @@ In your `config-pdf-processor.yaml` file, use the following fields to configure 
 
 ### `pdf_processor: pdf_tag`
 - **Type**: String  
-- **Description**: Unique tag identifier for AIMOA to find the json from the pdf file. Can be changed to any value to match the tag in the pdf file.  
+- **Description**: Unique tag identifier for AIMOA to find the JSON from the PDF file. Can be changed to any value to match the tag in the PDF file.  
 - **Example**: `pdf_processor: `
 `pdf_tag : '#ai-moa'`
 

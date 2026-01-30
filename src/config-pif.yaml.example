@@ -60,6 +60,10 @@ pif:
 
   last_processed: 0 # Keeps track of the last processed PIF record ID. This is useful for continuing processing from where it was last left off in case of an interruption.
 
+  error_tickler_max_count: 5 # Maximum error count for stopping PIF processing
+
+  notify_row_count: 50 # Limit after which a notification is sent
+
   database: test_db # The name of the database used for storing and retrieving patient data for PIF processing.
 
   table_name: your_table_name # The name of the table in the database where PIF records are stored.
@@ -70,6 +74,15 @@ pif:
   password: your_password # The password associated with the username for authenticating against the database.
 
   port: 3306 # The port number used to connect to the database.
+
+  # The above configuration applies when AIMOA is installed in the same environment as the PIF database. If the PIF database is hosted in a different environment, it is recommended to use SSL for the database connection. To enable this, use the following fields (pif_db_encrypt, ssl_ca,ssl_cert, ssl_key, ssl_verify_cert)
+
+  pif_db_encrypt: true # Enable SSL for the database connection.
+  ssl_ca: './ca.pem' # Path to the ca.pem file.
+  ssl_cert: './client-cert.pem' # Path to the client-cert.pem file.
+  ssl_key: './client-key.pem' # Path to the client-cert.pem file.
+  ssl_verify_cert: 'true' # To verify SSL for the database connection.
+
 
   error_msg_to: 999998 # The identifier to whom error messages are sent when an issue occurs during PIF processing.
 

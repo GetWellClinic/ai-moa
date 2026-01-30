@@ -123,12 +123,15 @@ class Workflow:
         self.pif_pdf = pdf_processor.pif_pdf
         self.get_fht_tickler_config = pif.get_fht_tickler_config
         self.update_fht_tickler_config = pif.update_fht_tickler_config
+        self.get_aimoa_status_report = pif.get_aimoa_status_report
+        self.get_lines_after_last_match = pif.get_lines_after_last_match
         self.get_postal_code_category = pif.get_postal_code_category
         self.new_patient_details = pif.new_patient_details
         self.update_patient_details = pif.update_patient_details
         self.search_patient = pif.search_patient
         self.create_tickler = pif.create_tickler
         self.fill_element = pif.fill_element
+        self.error_tickler_count = 0
         self.get_category_types = document_category.get_category_types
         self.get_category_type = document_category.get_category_type
         self.get_document_description = document_category.get_document_description
