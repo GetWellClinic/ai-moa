@@ -237,9 +237,9 @@ Eg 4:
 
 **skip_from: 85; skip_to:200;** Will skip processing documents from ID 85 to 200. Not mandatory.
 
-**skip_ids: 250, 251;** Will skip documents with IDs 250 and 251 when used. Not mandatory, use only when required."
+**skip_ids: 250, 251;** Will skip documents with IDs 250 and 251 when used. Not mandatory, use only when required.
 
-**aimoa:pif-status;** AIMOA provides information about the last processed PIF documents. Not mandatory, use only when required."
+**aimoa:pif-status;** AIMOA provides information about the last processed PIF documents. Not mandatory, use only when required.
 
 ## Example
 **aimoa:pif-status;**

@@ -459,7 +459,7 @@ def get_fht_tickler_config(self, assigned_to):
             if update_status:
                 self.logger.info(f"PIF status reporting.")
                 tickler_message = self.get_aimoa_status_report(self,query='query_pif')
-                self.update_fht_tickler_config(self, tickler_id, tickler_message)
+                self.update_fht_tickler_config(self, update_status_tickler_id, tickler_message)
 
             if stop_status:
                 self.logger.info(f"Stop tickler found; processing has been stopped.")
