@@ -50,7 +50,7 @@ Configure the AI-MOA parameters and docker containers to use SSL/TLS
 
 ## Use generic or obfuscated filenames for PDFs ##
 
-To further protect privacy, configure your other external process that ingest PDFs from faxes, scans, or from the EMR to use generic or obfuscated filenames (not patient names). The log files on AI-MOA do not record any details of the PDF contents, however, it does list the filenames in the logs for error tracking purposes. To prevent inadvertant exposure of PHI, please do not name filenames with PHI identifiers.
+To further protect privacy, configure your other external process that ingest PDFs from faxes, scans, or from the EMR to use generic or obfuscated filenames (not personal health information or PHI). The log files on AI-MOA do not record any details of the PDF contents, however, it does list the filenames in the logs for error tracking purposes. To prevent inadvertant exposure of PHI, please do not name filenames with PHI identifiers.
 
 ## Use of cloud hosted virtual machines ##
 
