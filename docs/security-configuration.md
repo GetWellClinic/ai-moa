@@ -58,4 +58,10 @@ AI-MOA was not intended for cloud hosted virtual machine installation. If you do
 
 We also do not recommend separating the LLM or OCR components, unless you can ensure the privacy and security of offloading the LLM or OCR components under the same standards. This is out of scope of this document.
 
+## Considerations for Backup Procedures ##
+
+If you use some backup system for your server, be aware of how and where your backup stores the backup files. Ensure that the backup system is encrypted at rest, and that the transfer is through encrypted tunnels. It is best if you are able to delete/remove the password credentials in the AI-MOA configuration files before backup.
+
+
+
 
