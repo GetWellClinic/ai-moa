@@ -1,17 +1,17 @@
 # AI-MOA Security Configuration Guide #
-*Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
+*Copyright © 2026 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
 *LICENSE: GNU Affero General Public License Version 3*<br />
 **Document Version 2026.01.30**
 
 ## Introduction ##
 
-AI-MOA was designed with privacy and security in mind. It gives the control of privacy and security back to the clinic as the installer/user, by reducing the risks of third-party data leaks, and secondary use of data. The application is intended and designed to be installed all locally, including the AI-MOA code, the large language model (LLM) engine, the LLMs itself, the OCR, and docker containers. Communication between the systems are all done locally (within the same server/virtual machine/internal network) and using SSL/TLS when required. External communication with an EMR is conducted as a normal authenticated/secured human user, through encrypted SSL/TLS web connections. All patient data is processed locally and within memory, is not saved on local disks, and discarded when the process is completed.
+AI-MOA was designed with privacy and security in mind. It gives the control of privacy and security back to the clinic as the installer/user, by reducing the risks of third-party data leaks, and secondary use of data. The application is intended and designed to be installed entirely locally, including the AI-MOA code, the large language model (LLM) engine, the LLMs themselves, the OCR, and docker containers. Communication between the systems is all done locally (within the same server/virtual machine/internal network) and using SSL/TLS when required. External communication with an EMR is conducted as a normal authenticated/secured human user, through encrypted SSL/TLS web connections. All patient data is processed locally and within memory, is not saved on local disks, and discarded when the process is completed.
 
 In order to remain compliant with the privacy and security standards of AI-MOA, the following best practices are recommended for your installation of AI-MOA. We are not responsible for any incorrect setup, misuse, or errors created by you when you do not follow the recommended configuration parameters.
 
-## Release and Waiver ##
+## Disclaimer ##
 
-The information and software provided here is provided as is, and not to be construed as a service agreement, guarantee, nor a contract. We do not warrant the reliability, privacy, or security of your installation of AI-MOA. By installing and using AI-MOA, you are assuming the risks and liability under you and your organization.
+The information and software provided here is provided as is, and not to be construed as a service agreement, guarantee, nor a contract. We do not warrant the reliability, privacy, or security of your installation of AI-MOA. By installing and using AI-MOA, you are assuming the risks and liability assumed by you and your organization.
 
 We provide the following Security Configuration documentation for your convenience and reminder.
 
@@ -27,7 +27,7 @@ The local internal network that you plan on installing AI-MOA must have it's dev
 	
 ## Secure your Server ##
 
-AI-MOA was intended to be installed on a server within your physical protected premise, and within your protected internal network.
+AI-MOA was intended to be installed on a server within your physically protected premises, and within your protected internal network.
 - Physically secure your server by putting it in a room/closet with a locked door, accessible only by trusted entities of your organization that follow your processes and procedures.
 - The server or virtual machine on which the AI-MOA is to be installed should be a standalone instance, minimizing other applications that may be running on the server, and that may be access by other users for other purposes.
 - Only yourself (physician IT expert) or trusted IT administrators should have user accounts and passwords to access this server which contains EMR authentication details in configuration files. The root access and credentials must be protected an known only to yourself or a trusted IT administrator.
@@ -50,11 +50,11 @@ Configure the AI-MOA parameters and docker containers to use SSL/TLS
 
 ## Use generic or obfuscated filenames for PDFs ##
 
-To further protect privacy, configure your other external process that ingest PDFs from faxes, scans, or from the EMR to use generic or obfuscated filenames (not personal health information or PHI). The log files on AI-MOA do not record any details of the PDF contents, however, it does list the filenames in the logs for error tracking purposes. To prevent inadvertant exposure of PHI, please do not name filenames with PHI identifiers.
+To further protect privacy, configure your other external processes that ingest PDFs from faxes, scans, or from the EMR to use generic or obfuscated filenames (not personal health information or PHI). The log files on AI-MOA do not record any details of the PDF contents; however, they do list the filenames in the logs for error tracking purposes. To prevent inadvertent exposure of PHI, please do not give file names with PHI identifiers.
 
 ## Use of cloud hosted virtual machines ##
 
-AI-MOA was not intended for cloud hosted virtual machine installation. If you do choose this route, we recommend that the instance is a virtual private cloud that has firewall protection, and VPN access with private keys. Similar to the above mentioned policies and procedures must be maintained for your organization that control and has direct oversight of this VPC.
+AI-MOA was not intended for cloud hosted virtual machine installation. If you do choose this route, we recommend that the instance is a virtual private cloud that has firewall protection, and VPN access with private keys. Similar to the above mentioned policies and procedures must be maintained by your organization, which controls and has direct oversight of this VPC.
 
 We also do not recommend separating the LLM or OCR components, unless you can ensure the privacy and security of offloading the LLM or OCR components under the same standards. This is out of scope of this document.
 
