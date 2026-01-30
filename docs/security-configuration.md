@@ -18,38 +18,35 @@ We provide the following Security Configuration documentation for your convenien
 ## Secure your Local Network ##
 
 The local internal network that you plan on installing AI-MOA must have it's devices and network secured. It must be a trusted network, with the appropriate processes, controls, and procedures for data systems and human personnel that use the system. This is standard best-practices for any organization.
-	- Protect your local network with an enterprise-grade firewall (ie. pfSense)
-	- Install anti-virus and malware endpoint protection on all your devices on your internal network that humans use
-	- Keep your systems up-to-date with patches
-	- Use VPN when appropriate between networks that cross the Internet
-	- Ensure that only trusted personnel, entities, and devices access the local network through authentication methods such LDAP with user directory services, encrypted password protected Wifi access, MAC address restrictions, network segmentation with routers, switches, and DNS.
-	- Ensure your human personnel are authorized to use the local network and have been trained with proper process and procedures and protect their user accounts and password, preferably using two-factor authentication methods when accessing systems from the external.
+- Protect your local network with an enterprise-grade firewall (ie. pfSense)
+- Install anti-virus and malware endpoint protection on all your devices on your internal network that humans use
+- Keep your systems up-to-date with patches
+- Use VPN when appropriate between networks that cross the Internet
+- Ensure that only trusted personnel, entities, and devices access the local network through authentication methods such LDAP with user directory services, encrypted password protected Wifi access, MAC address restrictions, network segmentation with routers, switches, and DNS.
+- Ensure your human personnel are authorized to use the local network and have been trained with proper process and procedures and protect their user accounts and password, preferably using two-factor authentication methods when accessing systems from the external.
 	
 ## Secure your Server ##
 
 AI-MOA was intended to be installed on a server within your physical protected premise, and within your protected internal network.
-	- Physically secure your server by putting it in a room/closet with a locked door, accessible only by trusted entities of your organization that follow your processes and procedures.
-	- The server or virtual machine on which the AI-MOA is to be installed should be a standalone instance, minimizing other applications that may be running on the server, and that may be access by other users for other purposes.
-	- Only yourself (physician IT expert) or trusted IT administrators should have user accounts and passwords to access this server which contains EMR authentication details in configuration files. The root access and credentials must be protected an known only to yourself or a trusted IT administrator.
-	- Ensure that the AI-MOA configuration files and their directories must be protected and not shared with anyone. Use proper Linux file and directory permissions to limit access to only specific users or groups.
+- Physically secure your server by putting it in a room/closet with a locked door, accessible only by trusted entities of your organization that follow your processes and procedures.
+- The server or virtual machine on which the AI-MOA is to be installed should be a standalone instance, minimizing other applications that may be running on the server, and that may be access by other users for other purposes.
+- Only yourself (physician IT expert) or trusted IT administrators should have user accounts and passwords to access this server which contains EMR authentication details in configuration files. The root access and credentials must be protected an known only to yourself or a trusted IT administrator.
+- Ensure that the AI-MOA configuration files and their directories must be protected and not shared with anyone. Use proper Linux file and directory permissions to limit access to only specific users or groups.
 	```
 	e.g. -rwxr-x---	aimoa aimoa
 	```
-
-	- Protect and provide access to the server only through a physical console, or through SSH and VPN.
+- Protect and provide access to the server only through a physical console, or through SSH and VPN.
 
 ## Co-locate containers, packages on the same server ##
 
 Install all packages and containers within the same server or virtual machine.
-
-	- Install the AI-MOA code, the OCR container, and the LLM container on the same server or virtual machine. This ensures that communication between these parts are secured.
-	- Download and use the large language models only locally on the machine.
+- Install the AI-MOA code, the OCR container, and the LLM container on the same server or virtual machine. This ensures that communication between these parts are secured.
+- Download and use the large language models only locally on the machine.
 
 ## Use SSL/TLS ##
 
 Configure the AI-MOA parameters and docker containers to use SSL/TLS
-
-	- Follow the detailed installation and configuration instructions provided in this repository to enable and use SSL/TLS for the EMR, the OCR container API, and the LLM engine docker container.
+- Follow the detailed installation and configuration instructions provided in this repository to enable and use SSL/TLS for the EMR, the OCR container API, and the LLM engine docker container.
 
 ## Use generic or obfuscated filenames for PDFs ##
 
