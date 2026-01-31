@@ -30,7 +30,7 @@ The local internal network that you plan on installing AI-MOA must have it's dev
 AI-MOA was intended to be installed on a server within your physically protected premises, and within your protected internal network.
 - Physically secure your server by putting it in a room/closet with a locked door, accessible only by trusted entities of your organization that follow your processes and procedures.
 - The server or virtual machine on which the AI-MOA is to be installed should be a standalone instance, minimizing other applications that may be running on the server, and that may be access by other users for other purposes.
-- Only yourself (physician IT expert) or trusted IT administrators should have user accounts and passwords to access this server which contains EMR authentication details in configuration files, and log files. The root access and credentials must be protected an known only to yourself or a trusted IT administrator.
+- Only yourself (physician IT expert) or trusted IT administrators should have user accounts and passwords to access this server which contains EMR authentication details in configuration files, and log files. The root access and credentials must be protected and known only to yourself or a trusted IT administrator.
 - Ensure that the AI-MOA configuration files, log files, and their directories must be protected and not shared with anyone. Use proper Linux file and directory permissions to limit access to only specific users or groups.
 	```
 	e.g. -rwxr-x---	aimoa aimoa
@@ -51,7 +51,7 @@ Configure the AI-MOA parameters and docker containers to use SSL/TLS
 ## Use generic or obfuscated filenames for PDFs ##
 
 To further protect privacy, configure your other external processes that ingest PDFs from faxes, scans, or from the EMR to use generic or obfuscated filenames (not personal health information or PHI). The log files on AI-MOA do not record any details of the PDF contents; however, they do list the filenames in the logs for error tracking purposes. To prevent inadvertent exposure of PHI, please do not give file names with PHI identifiers.
-For safety measure, you may want to routinely delete log files.
+As a safety measure, you may want to routinely delete log files.
 
 ## Use of cloud hosted virtual machines ##
 
