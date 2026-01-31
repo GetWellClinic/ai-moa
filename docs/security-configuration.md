@@ -1,7 +1,7 @@
 # AI-MOA Security Configuration Guide #
 *Copyright © 2026 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
 *LICENSE: GNU Affero General Public License Version 3*<br />
-**Document Version 2026.01.30**
+**Document Version 2026.01.31**
 
 ## Introduction ##
 
@@ -30,8 +30,8 @@ The local internal network that you plan on installing AI-MOA must have it's dev
 AI-MOA was intended to be installed on a server within your physically protected premises, and within your protected internal network.
 - Physically secure your server by putting it in a room/closet with a locked door, accessible only by trusted entities of your organization that follow your processes and procedures.
 - The server or virtual machine on which the AI-MOA is to be installed should be a standalone instance, minimizing other applications that may be running on the server, and that may be access by other users for other purposes.
-- Only yourself (physician IT expert) or trusted IT administrators should have user accounts and passwords to access this server which contains EMR authentication details in configuration files. The root access and credentials must be protected an known only to yourself or a trusted IT administrator.
-- Ensure that the AI-MOA configuration files and their directories must be protected and not shared with anyone. Use proper Linux file and directory permissions to limit access to only specific users or groups.
+- Only yourself (physician IT expert) or trusted IT administrators should have user accounts and passwords to access this server which contains EMR authentication details in configuration files, and log files. The root access and credentials must be protected an known only to yourself or a trusted IT administrator.
+- Ensure that the AI-MOA configuration files, log files, and their directories must be protected and not shared with anyone. Use proper Linux file and directory permissions to limit access to only specific users or groups.
 	```
 	e.g. -rwxr-x---	aimoa aimoa
 	```
@@ -51,6 +51,7 @@ Configure the AI-MOA parameters and docker containers to use SSL/TLS
 ## Use generic or obfuscated filenames for PDFs ##
 
 To further protect privacy, configure your other external processes that ingest PDFs from faxes, scans, or from the EMR to use generic or obfuscated filenames (not personal health information or PHI). The log files on AI-MOA do not record any details of the PDF contents; however, they do list the filenames in the logs for error tracking purposes. To prevent inadvertent exposure of PHI, please do not give file names with PHI identifiers.
+For safety measure, you may want to routinely delete log files.
 
 ## Use of cloud hosted virtual machines ##
 
@@ -61,6 +62,13 @@ We also do not recommend separating the LLM or OCR components, unless you can en
 ## Considerations for Backup Procedures ##
 
 If you use some backup system for your server, be aware of how and where your backup stores the backup files. Ensure that the backup system is encrypted at rest, and that the transfer is through encrypted tunnels. It is best if you are able to delete/remove the password credentials in the AI-MOA configuration files before backup.
+The log files contain PDF file names. If the filenames are labelled with sensitive information, you should delete the log files before backup.
+
+## Database connections ##
+
+AI-MOA does not provide a database. If you use the SQL database connection functionality, please ensure that the database is secured as per best-practices. For example, the SQL database can be installed on the same local VM host as AI-MOA, and allowing only localhost access. For external SQL database connections, consider enabling encrypted SQL server connections.
+
+
 
 
 
