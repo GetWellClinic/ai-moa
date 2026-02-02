@@ -868,7 +868,7 @@ def update_patient_details(self, row, demographic_id, category, is_patient=False
                 self.create_tickler(self, demographic_id, message, str(to))
 
             else:
-                # Sucessfully created, re-setting error count to zero
+                # Successfully created, re-setting error count to zero
                 self.error_tickler_count = 0
                 self.config.config['pif']['error_tickler_count'] = self.error_tickler_count
                 self.config.save_config()
