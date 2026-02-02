@@ -75,13 +75,23 @@ In your `config-pif.yaml` file, use the following fields to configure AIMOA with
 
 ### `confidential_unattached_id`
 - **Type**: Integer  
-- **Description**: A unique identifier used for creating a tickler notificaitons with AIMOA, should be a demographic number  
+- **Description**: A unique identifier used for creating a tickler notificaitons with AIMOA. This should be a demographic number.
 - **Example**: `100`
 
 ### `error_msg_to`
 - **Type**: Integer  
 - **Description**: The identifier to whom error messages are sent when an issue occurs during PIF processing.  
 - **Example**: `999998`
+
+### `error_tickler_max_count`
+- **Type**: Integer  
+- **Description**: Maximum error count for stopping PIF processing
+- **Example**: `5`
+
+### `notify_row_count`
+- **Type**: Integer  
+- **Description**: Limit after which a notification is sent
+- **Example**: `50`
 
 ### `exception_provider`
 - **Type**: List of Strings  
@@ -121,6 +131,35 @@ In your `config-pif.yaml` file, use the following fields to configure AIMOA with
 - **Type**: Integer  
 - **Description**: The port number used to connect to the database.  
 - **Example**: `3306`
+
+The above configuration applies when AIMOA is installed in the same environment as the PIF database.
+If the PIF database is hosted in a different environment, it is recommended to use SSL for the database connection.
+To enable this, use the following fields (pif_db_encrypt, ssl_ca,ssl_cert, ssl_key, ssl_verify_cert).
+
+### `pif_db_encrypt`
+- **Type**: Boolean  
+- **Description**: Enable SSL for the database connection.
+- **Example**: `false`
+
+### `ssl_ca`
+- **Type**: String  
+- **Description**: Path to the ca.pem file.  
+- **Example**: `./ca.pem`
+
+### `ssl_cert`
+- **Type**: String  
+- **Description**: Path to the client-cert.pem file.  
+- **Example**: `./client-cert.pem`
+
+### `ssl_key`
+- **Type**: String  
+- **Description**: Path to the client-key.pem file.  
+- **Example**: `./client-key.pem`
+
+### `ssl_verify_cert`
+- **Type**: Boolean  
+- **Description**: To verify SSL for the database connection.
+- **Example**: `true`
 
 ### `primary_fsa_mrp_id`
 - **Type**: Integer  
@@ -177,23 +216,36 @@ In your `config-pif.yaml` file, use the following fields to configure AIMOA with
 
 ## Using AIMOA for PIF
 
-You can configure AIMOA to process PIF at any time interval, but the recommended interval is every 5 or 10 minutes. 
-**Even if the cron starts the process, processing of PIF is controlled using ticklers**. 
+You can configure AIMOA to process PIF at any time interval, but the recommended interval is every 20 or 30 minutes. 
+
 #### The basic commands for using PIF with ticklers are listed below.
 
-For this, use site_name and aimee_uid in `config-pif.yaml` so that AIMOA can view the control messages. AIMOA will only process the start commands for the current day.
+For this, use site_name and aimee_uid in `config-pif.yaml` so that AIMOA can view the control messages.
 
 **Control tickler message format:**
 
-```start:pif;start_from:250;batch_size:5;skip_ids:250```
+Eg 1:
+```config:pif; skip_ids:250,258,260```
+Eg 2:
+```config:pif; skip_from:85; skip_to:200;```
+Eg 3:
+```stop:pif;```
+Eg 4:
+```aimoa:pif-status;```
 
-**start: pif;** Only if this message is present will AIMOA start processing. **Required (Mandatory).**
+**stop: pif;** Only if this message is present will AIMOA stop processing. **Remove to continue processing.** AIMOA will generate this to stop further processing if the error count exceeds the limit specified by `error_tickler_max_count`
 
-**start_from: 250;** Will start processing documents from ID 250. Not mandatory, but recommended to have.
+**skip_from: 85; skip_to:200;** Will skip processing documents from ID 85 to 200. Not mandatory.
 
-**batch_size: 5;** Batch size to be processed. Not mandatory, but recommended to have.
+**skip_ids: 250, 251;** Will skip documents with IDs 250 and 251 when used. Not mandatory, use only when required.
 
-**skip_ids: 250, 251;** Will skip documents with IDs 250 and 251 when used. Not mandatory, use only when required."
+**aimoa:pif-status;** AIMOA provides information about the last processed PIF documents. Not mandatory, use only when required.
+
+## Example
+**aimoa:pif-status;**
+```
+Started task at 2026-01-10 13:56:12;Completed task at 2026-01-10 13:56:28;Processed 3 files during execution.
+```
 
 ## Common Error Notifications
 

@@ -20,6 +20,7 @@
 # ***
 
 import re
+import os
 from datetime import datetime
 from bs4 import BeautifulSoup
 import mysql.connector
@@ -93,24 +94,29 @@ def query_pif(self):
     """
     try:
 
-        connection = None
+        results = connection = None
         assigned_to = self.config.get('pif.aimee_uid')
         start_processing = False
         last_processed_fht_id = self.config.get('pif.last_processed', 0)
         starting_fht_id = last_processed_fht_id
         current_row = None
         processed_fht_count = 0
+        self.error_tickler_count = self.config.get('pif.error_tickler_count', 0)
+        notify_row_count = self.config.get('pif.notify_row_count', 50)
+        last_processed_fht_count = self.config.get('pif.processed_fht_count', 0)
         fht_batch_size = self.config.get('pif.batch_size', 1)
         fht_tickler_id = 0
         skip_ids = []
+        skip_from_to = []
         start_processing, fht_tickler_id, fht_tickler_data = self.get_fht_tickler_config(self, str(assigned_to))
 
         if not start_processing:
             return True
 
-        if 'start_from' in fht_tickler_data:
-            last_processed_fht_id = fht_tickler_data['start_from']
-            starting_fht_id = last_processed_fht_id
+        # Remove; will cause infinite loop
+        # if 'start_from' in fht_tickler_data:
+        #     last_processed_fht_id = fht_tickler_data['start_from']
+        #     starting_fht_id = last_processed_fht_id
 
         if 'batch_size' in fht_tickler_data:
             fht_batch_size = fht_tickler_data['batch_size']
@@ -118,16 +124,36 @@ def query_pif(self):
         if 'skip_ids' in fht_tickler_data:
             skip_ids = fht_tickler_data['skip_ids']
 
+        if 'skip_from' in fht_tickler_data and 'skip_to' in fht_tickler_data:
+            from_id = fht_tickler_data['skip_from']
+            to_id = fht_tickler_data['skip_to']
+            skip_from_to = list(range(from_id, to_id + 1))
+
         self.logger.info("Creating connection for PIF.")
 
         # Establish connection to the MySQL server
-        connection = mysql.connector.connect(
-            host=self.config.get('pif.host'),
-            user=self.config.get('pif.username'),
-            password=self.config.get('pif.password'),
-            database=self.config.get('pif.database'),
-            port=self.config.get('pif.port')
-        )
+        pif_db_encrypt = self.config.get('pif.pif_db_encrypt', False)
+
+        if pif_db_encrypt:
+            connection = mysql.connector.connect(
+                host=self.config.get('pif.host'),
+                user=self.config.get('pif.username'),
+                password=self.config.get('pif.password'),
+                database=self.config.get('pif.database'),
+                port=self.config.get('pif.port'),
+                ssl_ca=self.config.get('pif.ssl_ca'),
+                ssl_cert=self.config.get('pif.ssl_cert'),
+                ssl_key=self.config.get('pif.ssl_key'),
+                ssl_verify_cert=self.config.get('pif.ssl_verify_cert', True)
+            )
+        else:
+            connection = mysql.connector.connect(
+                host=self.config.get('pif.host'),
+                user=self.config.get('pif.username'),
+                password=self.config.get('pif.password'),
+                database=self.config.get('pif.database'),
+                port=self.config.get('pif.port')
+            )
 
         table_name = self.config.get('pif.table_name')
 
@@ -157,6 +183,26 @@ def query_pif(self):
         for row in results:
 
             if processed_fht_count < fht_batch_size:
+
+                self.error_tickler_count = self.config.get('pif.error_tickler_count', 0)
+
+                if self.error_tickler_count >= self.config.get('pif.error_tickler_max_count', 3):
+                    if last_processed_fht_id == self.config.get('pif.last_processed', 0):
+                        last_processed_fht_id -= 1
+                    message = f"stop:pif;"
+                    unattached_patient_id = self.config.get('pif.confidential_unattached_id')
+                    self.create_tickler(self, str(unattached_patient_id), message, str(assigned_to))
+
+                    to = self.config.get('pif.error_msg_to')
+                    message = f"Maximum error count reached, stopping processing. Last processed id {last_processed_fht_id}"
+                    self.create_tickler(self, str(unattached_patient_id), message, str(to))
+                    self.logger.info("Maximum error count reached for PIF.")
+
+                    self.error_tickler_count = 0
+                    self.config.config['pif']['error_tickler_count'] = self.error_tickler_count
+                    self.config.save_config()
+
+                    break
                 
                 last_processed_fht_id = row['id']
 
@@ -165,12 +211,12 @@ def query_pif(self):
                 self.logger.info(f"Started processing PIF Id : {row['id']}")
 
                 if not isinstance(skip_ids, list):
-                    if row['id'] == skip_ids:
+                    if row['id'] == skip_ids or (skip_from_to and row['id'] in skip_from_to):
                         self.logger.info(f"Skipping PIF Id : {row['id']}")
                         processed_fht_count += 1
                         continue
 
-                elif row['id'] in skip_ids:
+                elif row['id'] in skip_ids or (skip_from_to and row['id'] in skip_from_to):
                     self.logger.info(f"Skipping PIF Id : {row['id']}")
                     processed_fht_count += 1
                     continue
@@ -242,6 +288,10 @@ def query_pif(self):
         to = self.config.get('pif.error_msg_to')
         unattached_patient_id = self.config.get('pif.confidential_unattached_id')
         self.create_tickler(self, str(unattached_patient_id), message, str(to))
+
+        self.error_tickler_count += 1
+        self.config.config['pif']['error_tickler_count'] = self.error_tickler_count
+        self.config.save_config()
     
     finally:
         # Ensure that the connection is closed properly
@@ -250,15 +300,31 @@ def query_pif(self):
             connection.close()
             self.logger.info("PIF connection closed.")
 
+        if int(processed_fht_count) + int(last_processed_fht_count) >= int(notify_row_count):
+            self.config.config['pif']['processed_fht_count'] = (int(processed_fht_count) + int(last_processed_fht_count)) % int(notify_row_count)
+            self.config.save_config()
+
+            times_count = (int(processed_fht_count) + int(last_processed_fht_count)) // int(notify_row_count)
+            times_count = times_count * notify_row_count
+
+            message = f"Completed processing batch of {times_count} documents, Last processed PIF Id : {last_processed_fht_id};"
+            to = self.config.get('pif.error_msg_to')
+            unattached_patient_id = self.config.get('pif.confidential_unattached_id')
+            self.create_tickler(self, str(unattached_patient_id), message, str(to))
+        else:
+            self.config.config['pif']['processed_fht_count'] = (int(processed_fht_count) + int(last_processed_fht_count))
+            self.config.save_config()
+
         if start_processing:
-            self.update_fht_tickler_config(self, fht_tickler_id, processed_fht_count, last_processed_fht_id, starting_fht_id)
+            # Removed since auto-start will be used going forward
+            # self.update_fht_tickler_config(self, fht_tickler_id, tickler_message)
             if results:
                 self.config.config['pif']['last_processed'] = last_processed_fht_id + 1
                 self.config.save_config()
 
         return True
 
-def update_fht_tickler_config(self, fht_tickler_id, processed_fht_count, last_processed_fht_id, starting_fht_id):
+def update_fht_tickler_config(self, fht_tickler_id, tickler_message):
     """
     Updates the control tickler configuration by submitting progress information to the EMR.
 
@@ -286,7 +352,7 @@ def update_fht_tickler_config(self, fht_tickler_id, processed_fht_count, last_pr
         driver.get(f"{self.base_url}/tickler/ticklerEdit.jsp?tickler_no={fht_tickler_id}")
         driver.implicitly_wait(20)
         message_element = driver.find_element(By.NAME, 'newMessage')
-        message_element.send_keys('Starting PIF Id: '+ str(starting_fht_id) +', Processed up to PIF Id : ' + str(last_processed_fht_id) + ', Processed file count : ' + str(processed_fht_count))
+        message_element.send_keys(str(tickler_message))
 
         statusSelect = Select(driver.find_element(By.NAME, "status"))
         statusSelect.select_by_value("C")
@@ -309,16 +375,16 @@ def get_fht_tickler_config(self, assigned_to):
     - The tickler ID.
     - A dictionary containing the tickler data.
 
-    If the tickler data includes a 'start' key with the value 'pif', the method returns 
+    If the tickler data includes a 'stop' key with the value 'pif', the method returns 
     the tickler ID and its associated data. If no valid tickler is found, it returns 
-    `False`, `0`, and `0`.
+    `True`, `0`, and `0`.
 
     Parameters:
         assigned_to (str): The user ID to filter the ticklers assigned to that user.
 
     Returns:
         tuple: A tuple where:
-            - A boolean indicating if a valid tickler was found (`True` or `False`).
+            - An inverse boolean indicating if a valid tickler was found (`False` or `True`).
             - The tickler ID (if found).
             - A dictionary with the tickler data if found, otherwise `0`.
     """
@@ -328,17 +394,33 @@ def get_fht_tickler_config(self, assigned_to):
 
         formatted_date = current_date.strftime('%Y-%m-%d')
 
+        year = current_date.year
+        month = current_date.month - 1
+
+        if month == 0:
+            month = 12
+            year -= 1
+
+        old_formatted_date = current_date.replace(year=year, month=month).strftime('%Y-%m-%d')
+
         driver = self.driver
-        driver.get(f"{self.base_url}/tickler/ticklerMain.jsp?ticklerview=A&assignedTo={assigned_to}&xml_vdate={formatted_date}&xml_appointment_date={formatted_date}")
+        driver.get(f"{self.base_url}/tickler/ticklerMain.jsp?ticklerview=A&assignedTo={assigned_to}&xml_vdate={old_formatted_date}&xml_appointment_date={formatted_date}")
         driver.implicitly_wait(10)
 
         try:
             table = driver.find_element(By.ID, 'ticklersTbl')
             tbody = table.find_element(By.TAG_NAME, 'tbody')
             rows = tbody.find_elements(By.TAG_NAME, 'tr')
+            tickler_data = {}
+            update_status = False
+            update_status_tickler_id = 0
+            stop_status = False
             for row in rows:
                 td = row.find_elements(By.TAG_NAME, 'td')
-                checkbox = row.find_element(By.NAME, 'checkbox')
+                try:
+                    checkbox = row.find_element(By.NAME, 'checkbox')
+                except NoSuchElementException as e:
+                    continue
                 tickler_id = checkbox.get_attribute("value")
 
                 s = td[9].text.lower()
@@ -364,13 +446,113 @@ def get_fht_tickler_config(self, assigned_to):
                     else:
                         data[p] = True
 
-                if 'start' in data and data['start'] == 'pif':
-                    return True, tickler_id, data
+                if 'aimoa' in data and data['aimoa'] == 'pif-status':
+                    update_status = True
+                    update_status_tickler_id = tickler_id                    
 
-            return False, 0, 0
+                if 'stop' in data and data['stop'] == 'pif':
+                    stop_status = True
+
+                if 'config' in data and data['config'] == 'pif':
+                    tickler_data = data
+
+            if update_status:
+                self.logger.info(f"PIF status reporting.")
+                tickler_message = self.get_aimoa_status_report(self,query='query_pif')
+                self.update_fht_tickler_config(self, update_status_tickler_id, tickler_message)
+
+            if stop_status:
+                self.logger.info(f"Stop tickler found; processing has been stopped.")
+                return False, 0, 0
+
+            return True, 0, tickler_data
 
         except Exception as e:
+            self.logger.error(f"An unexpected error occurred when checking tickler: {e}")
             return False, 0, 0
+
+def get_aimoa_status_report(self, query):
+    log_file = self.config.get('logging.filename', 'workflow.log')
+    query = 'Executing task: ' + query
+    lines = self.get_lines_after_last_match(self, log_file, query)
+
+    processing_count = 0
+    message = ''
+    for line in lines:
+        if query in line:
+            log_time = line.split(",")[0]
+            message = message + f'Started task at {log_time};'
+
+        if "Started processing PIF Id" in line:
+            processing_count += 1
+
+        if "Stop tickler found" in line:
+            message = message + f'Stop tickler found;'
+
+        if "Maximum error count reached for PIF" in line:
+            message = message + f'Error count reached maximum limit;'
+
+        if "Workflow execution completed" in line:
+            log_time = line.split(",")[0]
+            message = message + f'Completed task at {log_time};'
+            message = message + f'Processed {processing_count} files during execution.'
+            break
+
+    return message
+
+def get_lines_after_last_match(self, filepath, phrase, block_size=4096):
+
+    phrase_b = phrase.encode()
+
+    with open(filepath, "rb") as f:
+        f.seek(0, os.SEEK_END)
+        pos = f.tell()  # start from EOF
+
+        buffer = b""
+        match_positions = []
+
+        block_count = 0
+
+        # Scan backwards until we find two matches
+        while pos > 0 and len(match_positions) < 2:
+            block_count += 1
+            read_size = min(block_size, pos)
+            pos -= read_size
+            f.seek(pos)
+
+            chunk = f.read(read_size)
+            buffer = chunk + buffer
+
+            lines = buffer.split(b"\n")
+
+            # save possibly partial first line for next block
+            buffer = lines[0]
+
+            # absolute byte offset of the first full line in this block
+            line_pos = pos + len(buffer) + 1
+
+            # scan lines forward (so offsets are correct)
+            for line in lines[1:]:
+                if phrase_b in line:
+                    match_positions.append(line_pos)
+                    if len(match_positions) == 2:
+                        break
+                line_pos += len(line) + 1
+
+        # if less than 2 matches, return empty
+        if len(match_positions) < 2:
+            return []
+
+        if block_count == 1:
+            second_last_pos = match_positions[0]
+        else:
+            # second-to-last match offset
+            second_last_pos = match_positions[1]
+
+        # read from second-to-last match to EOF
+        f.seek(second_last_pos)
+        return f.read().decode(errors="ignore").splitlines()
+
 
 def search_patient(self, data, row, match_mode):
     """
@@ -549,6 +731,9 @@ def new_patient_details(self, row, category):
             to = self.config.get('pif.error_msg_to')
             unattached_patient_id = self.config.get('pif.confidential_unattached_id')
             self.create_tickler(self, str(unattached_patient_id), message, str(to))
+            self.error_tickler_count += 1
+            self.config.config['pif']['error_tickler_count'] = self.error_tickler_count
+            self.config.save_config()
             return
 
         try:
@@ -562,6 +747,9 @@ def new_patient_details(self, row, category):
             to = self.config.get('pif.error_msg_to')
             unattached_patient_id = self.config.get('pif.confidential_unattached_id')
             self.create_tickler(self, str(unattached_patient_id), message, str(to))
+            self.error_tickler_count += 1
+            self.config.config['pif']['error_tickler_count'] = self.error_tickler_count
+            self.config.save_config()
             return
 
         demographic_href = form_submit_element.get_attribute("href")
@@ -679,6 +867,12 @@ def update_patient_details(self, row, demographic_id, category, is_patient=False
                 to = self.config.get('pif.error_msg_to')
                 self.create_tickler(self, demographic_id, message, str(to))
 
+            else:
+                # Sucessfully created, re-setting error count to zero
+                self.error_tickler_count = 0
+                self.config.config['pif']['error_tickler_count'] = self.error_tickler_count
+                self.config.save_config()
+
             if category == "secondary_fsa":
                 message = self.config.get('pif.secondary_fsa_message')
                 to = self.config.get('pif.secondary_fsa_msg_to')
@@ -687,6 +881,8 @@ def update_patient_details(self, row, demographic_id, category, is_patient=False
         if is_patient:
             residentSelect = Select(driver.find_element(By.ID, "resident"))
             selected_text = residentSelect.first_selected_option.text
+
+            selected_value = residentSelect.first_selected_option.get_attribute("value")
 
             if not selected_text.strip():
                 if category == "primary_fsa":
@@ -707,7 +903,7 @@ def update_patient_details(self, row, demographic_id, category, is_patient=False
                     message = self.config.get('pif.secondary_fsa_message')
                     to = self.config.get('pif.secondary_fsa_msg_to')
                     self.create_tickler(self, demographic_id, message, str(to))
-            else:
+            elif str(selected_value) != str(self.config.get('pif.primary_fsa_resident_id')):
                 message = f"Patient is eligible, check patient's internal providers information."
                 to = self.config.get('pif.error_msg_to')
                 self.create_tickler(self, demographic_id, message, str(to))

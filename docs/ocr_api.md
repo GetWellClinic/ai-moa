@@ -140,9 +140,8 @@ openssl req -x509 -newkey rsa:4096 \
   -subj "/CN=localhost"
 ```
 
-to generate a key and certificate, create them and place both files in the `doctr/api/cert` folder, and then
+To generate a key and certificate, create them, place both files in the `doctr/api/cert` folder, and then update the line in `doctr/api/docker-compose.yml` to include the key and certificate.
 
-Update the line (doctr/api/docker-compose.yml) to include the key and certificate
 ```
 command: uvicorn app.main:app --reload --workers 1 --host 0.0.0.0 --port 8080 --ssl-keyfile /app/certs/key.pem --ssl-certfile /app/certs/cert.pem
 ```
