@@ -93,7 +93,7 @@ Although AI-MOA outputs likely perform on average better than a novice human med
 
 Always keep the "human in the loop": (Mandatory)
 - Ensure that the parameter "error_manager" is correctly assigned to an actual human medical office administrator (MOA) who will review and manually correct unsure or incorrect outputs from AI-MOA.
-- Assign a human MOA on a daily rotation/regular basis to conduct a EMR document Search for the past day's AI-MOA tagging results, and manually review ALL results for accuracy, and make edits/corrections as required.
+- Assign a human MOA on a daily rotation/regular basis to conduct an EMR document Search for the past day's AI-MOA tagging results, and manually review ALL results for accuracy, and make edits/corrections as required.
 - Continue clinic administrative best practices of human verification of patient demographic data (with viewing the healthcard and confirming contact details) before each clinical encounter point (i.e. every time patient checks in for an appointment).
 
 
