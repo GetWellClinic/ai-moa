@@ -18,7 +18,7 @@ We provide the following Security Configuration documentation for your convenien
 ## Secure your Local Network ##
 
 The local internal network that you plan on installing AI-MOA must have it's devices and network secured. It must be a trusted network, with the appropriate processes, controls, and procedures for data systems and human personnel that use the system. This is standard best-practices for any organization.
-- Protect your local network with an enterprise-grade firewall (ie. pfSense)
+- Protect your local network with an enterprise-grade firewall (i.e. pfSense)
 - Install anti-virus and malware endpoint protection on all your devices on your internal network that humans use
 - Keep your systems up-to-date with patches
 - Use VPN when appropriate between networks that cross the Internet
@@ -41,7 +41,7 @@ AI-MOA was intended to be installed on a server within your physically protected
 ## EMR Credentials Considerations ##
 
 When configuring the AI-MOA user in the EMR, use a separate user account that is not known to anyone else.
-- Assign the user role to the lowest required permissions (ie. "receptionist" role, not an admin role). 
+- Assign the user role to the lowest required permissions (i.e. "receptionist" role, not an admin role). 
 - Change/rotate the password regularly.
 
 ## Co-locate containers, packages on the same server ##
@@ -77,7 +77,7 @@ AI-MOA does not provide a database. If you use the SQL database connection funct
 
 ## Other config.yaml parameters ##
 
-The following settings are also recommended for best security, and are default:
+The following settings are also recommended for best security, and should be default settings:
 - disable local storing of files
 - disable logging of prompt output in the logs
 - disable/mask filenames in the logs
@@ -85,16 +85,16 @@ The following settings are also recommended for best security, and are default:
 
 ## Using JSON option for filing documents ##
 
-Enable the JSON function in the workflow-config.yaml workflow for a restricted trusted filing process, such as using it only on IncomingDocs/File queue, not the usual Fax ingestion queue. This allows for human selection of trusted documents to file (scanning and uploading to the EMR to the specific IncomingDocs/File queue) and allow AI-MOA to use the JSON feature only on that queue to avoid wrong tagging/labelling of PDFs.
+Enable the JSON function in the workflow-config.yaml workflow for a restricted trusted filing process, such as using it only on IncomingDocs/File queue, not the usual Fax ingestion queue. This allows for human selection of trusted documents to file (scanning and uploading to the EMR to the specific IncomingDocs/File queue) and allows AI-MOA to use the JSON feature only on that queue to avoid wrong tagging/labelling of PDFs.
 
 ## Clinic Process and Procedures ##
 
-Although AI-MOA outputs likely perform on average better than a novice human medical office administrator who also makes mistakes, do not rely on AI-MOA to replace the usual human clinical administrative best practices. The outputs of AI-MOA are not 100%, just as human outputs are not 100%. Practice the Swiss Cheese Model of healthcare risk mitigation which recommends building multiple redundant checks and balances allow a process pathway (in this case, AI-MOA is one, and human interventions and process are another) so that system errors (the holes of multiple layers) do not line up, and are caught by each subsequent layer for check.
+Although AI-MOA outputs likely perform on average better than a novice human medical office administrator who also makes mistakes, do not rely on AI-MOA to replace the usual human clinical administrative best practices. The outputs of AI-MOA are not 100%, just as human outputs are not 100%. Practice the Swiss Cheese Model of healthcare risk mitigation which recommends building multiple redundant checks and balances that allow a process pathway (in this case, AI-MOA is one, and human interventions and processes are another) so that system errors (the holes of multiple layers) do not line up, and are caught by each subsequent layer for check.
 
 Always keep the "human in the loop": (Mandatory)
 - Ensure that the parameter "error_manager" is correctly assigned to an actual human medical office administrator (MOA) who will review and manually correct unsure or incorrect outputs from AI-MOA.
 - Assign a human MOA on a daily rotation/regular basis to conduct a EMR document Search for the past day's AI-MOA tagging results, and manually review ALL results for accuracy, and make edits/corrections as required.
-- Continue clinic administrative best practices of human verification of patient demographic data (with viewing the healthcard and confirming contact details) before each clinical encounter point (ie. every time patient checks in for an appointment).
+- Continue clinic administrative best practices of human verification of patient demographic data (with viewing the healthcard and confirming contact details) before each clinical encounter point (i.e. every time patient checks in for an appointment).
 
 
 
