@@ -21,7 +21,7 @@
 
 # default values
 # Workflow Version: Custom-2025.07.19 (Skip tagging providers and MRP, only file to patient)
-# Prompt Version: 2025.07.29
+# Prompt Version: 2026.02.06
 #
 default_values:
   default_provider_tagging_id:
@@ -234,7 +234,7 @@ document_categories:
         prompt: >
           Act as if you are a medical office assistant who follows direction precisely and consistently when identifying a document. Review the above document and provide only the output using in the specified output format, without labeling it as 'output format:'. After reviewing the document, perform through the following steps.
           1. Select one description type from the CATEGORY LIST provided below that matches the document. If the provided category list does not provide a strong match select the word 'Other'.
-          2. Identify the organization requesting consent. Use the following output format template: description (organization). Ensure this output format template is followed precisely including brackets (), and the output must end without a period.
+          2. Identify the organization requesting consent. Use the following output format template: document description (organization name). Ensure this output format template is followed precisely including brackets (), and the output must end without a period.
           For reference, these are examples using this output template: Patient Registration and Consent (Get Well Clinic), Authorization to Release Medical Records (NYGH), Governing Law and Jurisdiction Agreement (Get Well Clinic).
           For reference, use this CATEGORY LIST: Patient Registration and Consent, Consent to Release Records, Authorization to Release Medical Records, Authorization for Release to Third Party, Governing Law and Jurisdiction Agreement, Consent for Medical Record Transfer, Patient Enrolment Form, Informed Consent for Treatment, Consent for Telemedicine Services, Consent for Minor's Treatment, Consent for Surgical Procedure, First Visit Information Registration.
 
