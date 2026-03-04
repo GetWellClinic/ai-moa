@@ -91,7 +91,7 @@ def pif_pdf(self):
             self.logger.info("Match found using HC details, verifying.")
             is_patient, patient_id, roster_status, doctor, is_hcn_dob_mismatch = self.search_patient(self, data, row, 'hcn')
 
-            if is_hcn_dob_mismatch:
+            if is_hcn_dob_mismatch or is_patient is False:
                 is_patient = False
                 self.logger.info("Patient not found using HC details, trying DOB.")
                 type_of_query = "search_dob"
