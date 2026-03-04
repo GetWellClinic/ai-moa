@@ -237,7 +237,14 @@ def query_pif(self):
                             search_result, data = self.get_patient_Html_Common(self,row['dob1'],type_of_query)
                         else:
                             self.logger.info("Match found using HC details, verifying.")
-                            is_patient, patient_id, roster_status, doctor = self.search_patient(self, data, row, 'hcn')
+                            is_patient, patient_id, roster_status, doctor, is_hcn_dob_mismatch = self.search_patient(self, data, row, 'hcn')
+
+                            if is_hcn_dob_mismatch:
+                                message = "From FHT Intake form, double check patient DOB information."
+                                to = self.config.get('pif.error_msg_to')
+                                self.create_tickler(self, patient_id, message, to)
+                                self.logger.info("Mismatch in patient DOB information.")
+                                continue
 
                             if is_patient is False:
                                 self.logger.info("Patient not found using HC details, trying DOB.")
@@ -250,7 +257,7 @@ def query_pif(self):
                         else:
 
                             if is_patient is False:
-                                is_patient, patient_id, roster_status, doctor = self.search_patient(self, data, row, 'dob')
+                                is_patient, patient_id, roster_status, doctor, _ = self.search_patient(self, data, row, 'dob')
 
                             if is_patient is False:
                                 patient_id = 0
@@ -472,6 +479,16 @@ def get_fht_tickler_config(self, assigned_to):
             return False, 0, 0
 
 def get_aimoa_status_report(self, query):
+    """
+    Generate a status report for a given task based on the workflow log.
+
+    Args:
+        query (str): The task name or identifier to search in the log.
+
+    Returns:
+        str: A summary message including start time, completion time, 
+             number of files processed, and any stop/error events found.
+    """
     log_file = self.config.get('logging.filename', 'workflow.log')
     query = 'Executing task: ' + query
     lines = self.get_lines_after_last_match(self, log_file, query)
@@ -501,7 +518,19 @@ def get_aimoa_status_report(self, query):
     return message
 
 def get_lines_after_last_match(self, filepath, phrase, block_size=4096):
+    """
+    Reads a file backwards and returns all lines from the second-to-last occurrence
+    of a given phrase to the end of the file.
 
+    Args:
+        filepath (str): Path to the log file.
+        phrase (str): The phrase to search for.
+        block_size (int, optional): Number of bytes to read per backward block. Defaults to 4096.
+
+    Returns:
+        list[str]: Lines from the second-to-last match to the end of the file. 
+                   Returns an empty list if fewer than two matches are found.
+    """
     phrase_b = phrase.encode()
 
     with open(filepath, "rb") as f:
@@ -589,6 +618,7 @@ def search_patient(self, data, row, match_mode):
             - `doctor` (str): The name of the doctor associated with the patient, or an empty string if not found.
     """
     is_patient = False
+    is_hcn_dob_mismatch = False
     patient_id = 0
     roster_status = ''
     mrp = ''
@@ -632,14 +662,16 @@ def search_patient(self, data, row, match_mode):
                     break
         else:
             for item in pairs:
-                if row['dob1'] == item[4]:
-                    is_patient = True
-                    patient_id = item[1]
-                    roster_status = item[2]
-                    mrp = item[3]
+                is_patient = True
+                patient_id = item[1]
+                roster_status = item[2]
+                mrp = item[3]
+                is_hcn_dob_mismatch = row['dob1'] != item[4]
+
+                if not is_hcn_dob_mismatch:
                     break
 
-    return is_patient, patient_id, roster_status, mrp
+    return is_patient, patient_id, roster_status, mrp, is_hcn_dob_mismatch
 
 
 def new_patient_details(self, row, category):
