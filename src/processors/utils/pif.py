@@ -237,7 +237,14 @@ def query_pif(self):
                             search_result, data = self.get_patient_Html_Common(self,row['dob1'],type_of_query)
                         else:
                             self.logger.info("Match found using HC details, verifying.")
-                            is_patient, patient_id, roster_status, doctor = self.search_patient(self, data, row, 'hcn')
+                            is_patient, patient_id, roster_status, doctor, is_hcn_dob_mismatch = self.search_patient(self, data, row, 'hcn')
+
+                            if is_hcn_dob_mismatch:
+                                message = "From FHT Intake form, double check patient DOB information."
+                                to = self.config.get('pif.error_msg_to')
+                                self.create_tickler(self, patient_id, message, to)
+                                self.logger.info("Mismatch in patient DOB information.")
+                                continue
 
                             if is_patient is False:
                                 self.logger.info("Patient not found using HC details, trying DOB.")
@@ -250,7 +257,7 @@ def query_pif(self):
                         else:
 
                             if is_patient is False:
-                                is_patient, patient_id, roster_status, doctor = self.search_patient(self, data, row, 'dob')
+                                is_patient, patient_id, roster_status, doctor, _ = self.search_patient(self, data, row, 'dob')
 
                             if is_patient is False:
                                 patient_id = 0
@@ -472,6 +479,16 @@ def get_fht_tickler_config(self, assigned_to):
             return False, 0, 0
 
 def get_aimoa_status_report(self, query):
+    """
+    Generate a status report for a given task based on the workflow log.
+
+    Args:
+        query (str): The task name or identifier to search in the log.
+
+    Returns:
+        str: A summary message including start time, completion time, 
+             number of files processed, and any stop/error events found.
+    """
     log_file = self.config.get('logging.filename', 'workflow.log')
     query = 'Executing task: ' + query
     lines = self.get_lines_after_last_match(self, log_file, query)
@@ -501,7 +518,19 @@ def get_aimoa_status_report(self, query):
     return message
 
 def get_lines_after_last_match(self, filepath, phrase, block_size=4096):
+    """
+    Reads a file backwards and returns all lines from the second-to-last occurrence
+    of a given phrase to the end of the file.
 
+    Args:
+        filepath (str): Path to the log file.
+        phrase (str): The phrase to search for.
+        block_size (int, optional): Number of bytes to read per backward block. Defaults to 4096.
+
+    Returns:
+        list[str]: Lines from the second-to-last match to the end of the file. 
+                   Returns an empty list if fewer than two matches are found.
+    """
     phrase_b = phrase.encode()
 
     with open(filepath, "rb") as f:
@@ -558,37 +587,38 @@ def search_patient(self, data, row, match_mode):
     """
     Searches for a patient in the provided HTML data using the patient's first and last name.
 
-    This method parses the provided HTML data (in the form of a string) using BeautifulSoup to extract patient information 
-    from a table. It then compares the first and last name from the provided `row` to the names in the extracted data to 
-    find a match. If a match is found, it returns the patient's ID, roster status, and mrp information.
+    This method parses the provided HTML data (in the form of a string) using BeautifulSoup
+    to extract patient information from a table. It then compares the first and last name
+    from the provided row to the names in the extracted data to find a match.
+    If a match is found, it returns the patient's ID, roster status, mrp information, and DOB mismatch flag.
 
-    The method performs the following steps:
-    1. Parses the `data` parameter (HTML) to extract patient-related information (name, ID, roster status, mrp).
-    2. When ``match_mode == 'dob'``, the function performs a case-insensitive,
-        whole-word match on both first and last names. Regular expressions are
-        used to ensure exact word boundaries and to safely handle special
-        characters in names.
-
-        For HCN match, the function falls back to verifying records
-        strictly by date of birth.
-    3. Returns a tuple containing:
-       - A boolean indicating if the patient was found (`is_patient`).
-       - The patient's ID (`patient_id`).
-       - The patient's roster status (`roster_status`).
-       - The mrp's name (`mrp`).
+    Steps performed:
+    1. Parses `data` to extract patient information: name, chart ID, roster status, doctor (mrp), and DOB.
+    2. When `match_mode == 'dob'`, performs a case-insensitive, whole-word regex match 
+       on both first and last names. HCN (Health Card Number) match falls back to DOB verification.
+    3. When `match_mode != 'dob'`, selects the first matching record and sets 
+       `is_hcn_dob_mismatch` if the provided DOB differs from the record.
 
     Parameters:
-        data (str): The HTML data containing the patient information to be searched.
-        row (dict): A dictionary containing the patient's first and last name (keys `'firstname1'` and `'lastname1'`).
+        data (str): HTML content containing patient information.
+        row (dict): Dictionary with keys:
+            - 'firstname1' (str): Patient's first name.
+            - 'lastname1' (str): Patient's last name.
+            - 'dob1' (str): Patient's date of birth.
+        match_mode (str): Determines matching strategy. 
+            - 'dob': Match using first and last name with DOB verification.
+            - Other: Match the first available record; DOB mismatch is flagged.
 
     Returns:
-        tuple: A tuple `(is_patient, patient_id, roster_status, doctor)`:
-            - `is_patient` (bool): Whether a matching patient was found.
-            - `patient_id` (int): The ID of the found patient, or `0` if not found.
-            - `roster_status` (str): The patient's roster status, or an empty string if not found.
-            - `doctor` (str): The name of the doctor associated with the patient, or an empty string if not found.
+        tuple: `(is_patient, patient_id, roster_status, mrp, is_hcn_dob_mismatch)`:
+            - is_patient (bool): True if a matching patient is found, else False.
+            - patient_id (str or int): The patient’s ID, or 0 if not found.
+            - roster_status (str): The patient's roster status, or empty string if not found.
+            - mrp (str): The patient's associated doctor, or empty string if not found.
+            - is_hcn_dob_mismatch (bool): True if the DOB from `row` does not match the record (only for non-'dob' mode), else False.
     """
     is_patient = False
+    is_hcn_dob_mismatch = False
     patient_id = 0
     roster_status = ''
     mrp = ''
@@ -632,14 +662,16 @@ def search_patient(self, data, row, match_mode):
                     break
         else:
             for item in pairs:
-                if row['dob1'] == item[4]:
-                    is_patient = True
-                    patient_id = item[1]
-                    roster_status = item[2]
-                    mrp = item[3]
+                is_patient = True
+                patient_id = item[1]
+                roster_status = item[2]
+                mrp = item[3]
+                is_hcn_dob_mismatch = row['dob1'] != item[4]
+
+                if not is_hcn_dob_mismatch:
                     break
 
-    return is_patient, patient_id, roster_status, mrp
+    return is_patient, patient_id, roster_status, mrp, is_hcn_dob_mismatch
 
 
 def new_patient_details(self, row, category):
@@ -868,7 +900,7 @@ def update_patient_details(self, row, demographic_id, category, is_patient=False
                 self.create_tickler(self, demographic_id, message, str(to))
 
             else:
-                # Sucessfully created, re-setting error count to zero
+                # Successfully created, re-setting error count to zero
                 self.error_tickler_count = 0
                 self.config.config['pif']['error_tickler_count'] = self.error_tickler_count
                 self.config.save_config()
