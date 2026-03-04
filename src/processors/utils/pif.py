@@ -587,35 +587,35 @@ def search_patient(self, data, row, match_mode):
     """
     Searches for a patient in the provided HTML data using the patient's first and last name.
 
-    This method parses the provided HTML data (in the form of a string) using BeautifulSoup to extract patient information 
-    from a table. It then compares the first and last name from the provided `row` to the names in the extracted data to 
-    find a match. If a match is found, it returns the patient's ID, roster status, and mrp information.
+    This method parses the provided HTML data (in the form of a string) using BeautifulSoup
+    to extract patient information from a table. It then compares the first and last name
+    from the provided row to the names in the extracted data to find a match.
+    If a match is found, it returns the patient's ID, roster status, mrp information, and DOB mismatch flag.
 
-    The method performs the following steps:
-    1. Parses the `data` parameter (HTML) to extract patient-related information (name, ID, roster status, mrp).
-    2. When ``match_mode == 'dob'``, the function performs a case-insensitive,
-        whole-word match on both first and last names. Regular expressions are
-        used to ensure exact word boundaries and to safely handle special
-        characters in names.
-
-        For HCN match, the function falls back to verifying records
-        strictly by date of birth.
-    3. Returns a tuple containing:
-       - A boolean indicating if the patient was found (`is_patient`).
-       - The patient's ID (`patient_id`).
-       - The patient's roster status (`roster_status`).
-       - The mrp's name (`mrp`).
+    Steps performed:
+    1. Parses `data` to extract patient information: name, chart ID, roster status, doctor (mrp), and DOB.
+    2. When `match_mode == 'dob'`, performs a case-insensitive, whole-word regex match 
+       on both first and last names. HCN (Health Card Number) match falls back to DOB verification.
+    3. When `match_mode != 'dob'`, selects the first matching record and sets 
+       `is_hcn_dob_mismatch` if the provided DOB differs from the record.
 
     Parameters:
-        data (str): The HTML data containing the patient information to be searched.
-        row (dict): A dictionary containing the patient's first and last name (keys `'firstname1'` and `'lastname1'`).
+        data (str): HTML content containing patient information.
+        row (dict): Dictionary with keys:
+            - 'firstname1' (str): Patient's first name.
+            - 'lastname1' (str): Patient's last name.
+            - 'dob1' (str): Patient's date of birth.
+        match_mode (str): Determines matching strategy. 
+            - 'dob': Match using first and last name with DOB verification.
+            - Other: Match the first available record; DOB mismatch is flagged.
 
     Returns:
-        tuple: A tuple `(is_patient, patient_id, roster_status, doctor)`:
-            - `is_patient` (bool): Whether a matching patient was found.
-            - `patient_id` (int): The ID of the found patient, or `0` if not found.
-            - `roster_status` (str): The patient's roster status, or an empty string if not found.
-            - `doctor` (str): The name of the doctor associated with the patient, or an empty string if not found.
+        tuple: `(is_patient, patient_id, roster_status, mrp, is_hcn_dob_mismatch)`:
+            - is_patient (bool): True if a matching patient is found, else False.
+            - patient_id (str or int): The patient’s ID, or 0 if not found.
+            - roster_status (str): The patient's roster status, or empty string if not found.
+            - mrp (str): The patient's associated doctor, or empty string if not found.
+            - is_hcn_dob_mismatch (bool): True if the DOB from `row` does not match the record (only for non-'dob' mode), else False.
     """
     is_patient = False
     is_hcn_dob_mismatch = False
