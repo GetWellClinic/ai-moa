@@ -21,7 +21,7 @@
 
 import re
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 import mysql.connector
 from selenium.webdriver.common.by import By
@@ -108,6 +108,20 @@ def query_pif(self):
         fht_tickler_id = 0
         skip_ids = []
         skip_from_to = []
+
+        # Skip processing if unknown errors exceed a limit of 10.
+        if self.error_tickler_count >= 10:
+            if not self.config.get('pif.stop_flag', False):
+                to = self.config.get('pif.error_msg_to')
+                unattached_patient_id = self.config.get('pif.confidential_unattached_id')
+                message = f"Unexpected error; Please contact system admin. Last processed id {last_processed_fht_id}"
+                self.create_tickler(self, str(unattached_patient_id), message, str(to))
+                self.logger.info("Unexpected error; force stopping PIF.")
+                self.config.config['pif']['stop_flag'] = True
+                self.config.save_config()
+            return True
+
+
         start_processing, fht_tickler_id, fht_tickler_data = self.get_fht_tickler_config(self, str(assigned_to))
 
         if not start_processing:
@@ -398,17 +412,10 @@ def get_fht_tickler_config(self, assigned_to):
 
     if self.login_successful:
         current_date = datetime.now()
-
         formatted_date = current_date.strftime('%Y-%m-%d')
 
-        year = current_date.year
-        month = current_date.month - 1
-
-        if month == 0:
-            month = 12
-            year -= 1
-
-        old_formatted_date = current_date.replace(year=year, month=month).strftime('%Y-%m-%d')
+        old_date = current_date - timedelta(days=7)
+        old_formatted_date = old_date.strftime('%Y-%m-%d')
 
         driver = self.driver
         driver.get(f"{self.base_url}/tickler/ticklerMain.jsp?ticklerview=A&assignedTo={assigned_to}&xml_vdate={old_formatted_date}&xml_appointment_date={formatted_date}")
@@ -903,6 +910,7 @@ def update_patient_details(self, row, demographic_id, category, is_patient=False
                 # Successfully created, re-setting error count to zero
                 self.error_tickler_count = 0
                 self.config.config['pif']['error_tickler_count'] = self.error_tickler_count
+                self.config.config['pif']['stop_flag'] = False
                 self.config.save_config()
 
             if category == "secondary_fsa":
