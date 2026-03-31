@@ -116,7 +116,7 @@ def query_pif(self):
                 unattached_patient_id = self.config.get('pif.confidential_unattached_id')
                 message = f"Unexpected error; Please contact system admin. Last processed id {last_processed_fht_id}"
                 self.create_tickler(self, str(unattached_patient_id), message, str(to))
-                self.logger.info("Unexpected error; force stopping PIF.")
+                self.logger.error("Unexpected error; force stopping PIF.")
                 self.config.config['pif']['stop_flag'] = True
                 self.config.save_config()
             return True
