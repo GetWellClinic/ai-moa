@@ -109,7 +109,11 @@ def query_pif(self):
         skip_ids = []
         skip_from_to = []
 
-        # Skip processing if unknown errors exceed a limit of 10.
+        # NOTE:
+        # If error_tickler_count reaches 10, PIF processing is intentionally paused
+        # until the error count is manually reset (error_tickler_count,
+        # stop_flag) in the config file.
+        
         if self.error_tickler_count >= 10:
             if not self.config.get('pif.stop_flag', False):
                 to = self.config.get('pif.error_msg_to')
