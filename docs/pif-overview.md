@@ -268,3 +268,10 @@ The above notification occurs when a patient registers for primary FSA but is on
 The system will also send a notification if the postal code is invalid.
 
 
+## When PIF stops completely
+
+```
+Sample: Unexpected error. Please contact the system administrator. Last processed ID: 123.
+```
+If this message appears in the tickler, reset error_tickler_count in the config file to 0 and set stop_flag to false once the underlying issue has been resolved.
+
