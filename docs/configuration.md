@@ -55,10 +55,12 @@ emr:
   pin: '1234'
 ```
 
+Use `python main.py --encrypt-credentials` to encrypt the EMR credentials in the config.yaml file.
+
 - `base_url`: Base URL of the O19 EMR system
-- `username`: EMR login username
-- `password`: EMR login password
-- `pin`: Pin for EMR login
+- `username`: Encrypted EMR login username
+- `password`: Encrypted EMR login password
+- `pin`: Encrypted Pin for EMR login
 
 ### OCR Configuration
 

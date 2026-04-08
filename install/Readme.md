@@ -1,8 +1,8 @@
 # Aimee AI (AI-MOA) #
 ## Linux Installation ##
-*Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
+*Copyright © 2026 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
 *LICENSE: GNU Affero General Public License Version 3*<br />
-**Document Version 2025.11.19**
+**Document Version 2026.04.08**
 <p align="center">
   <img src="https://getwellclinic.ca/images/GetWellClinic/Logos-Icons/AimeeAI-pc.png" alt="Aimee AI">
 </p>
@@ -264,6 +264,8 @@ emr:
 	password:
 	pin:
 ```
+
+Use `python main.py --encrypt-credentials` to update the EMR credentials in the config.yaml file.
 
 When you are ready to process documents, edit the "..\config\workflow-config.yaml" file to the last document
 in your EMR from where you want to start AI-MOA to start processing documents.
