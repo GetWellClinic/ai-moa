@@ -30,6 +30,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, NoAlertPresentException
 from selenium.webdriver.support import expected_conditions as EC
 import time
+from cryptography.fernet import Fernet
 
 def get_postal_code_category(self, postal_code):
     """
@@ -149,15 +150,22 @@ def query_pif(self):
 
         self.logger.info("Creating connection for PIF.")
 
+        key = os.getenv("PIF_SECRET_KEY")
+
+        if not key:
+            raise ValueError("Missing PIF_SECRET_KEY environment variable")
+            
+        fernet = Fernet(key.encode())
+
         # Establish connection to the MySQL server
         pif_db_encrypt = self.config.get('pif.pif_db_encrypt', False)
 
         if pif_db_encrypt:
             connection = mysql.connector.connect(
-                host=self.config.get('pif.host'),
-                user=self.config.get('pif.username'),
-                password=self.config.get('pif.password'),
-                database=self.config.get('pif.database'),
+                host=fernet.decrypt(self.config.get('pif.host')).decode(),
+                user=fernet.decrypt(self.config.get('pif.username')).decode(),
+                password=fernet.decrypt(self.config.get('pif.password')).decode(),
+                database=fernet.decrypt(self.config.get('pif.database')).decode(),
                 port=self.config.get('pif.port'),
                 ssl_ca=self.config.get('pif.ssl_ca'),
                 ssl_cert=self.config.get('pif.ssl_cert'),
@@ -166,14 +174,14 @@ def query_pif(self):
             )
         else:
             connection = mysql.connector.connect(
-                host=self.config.get('pif.host'),
-                user=self.config.get('pif.username'),
-                password=self.config.get('pif.password'),
-                database=self.config.get('pif.database'),
+                host=fernet.decrypt(self.config.get('pif.host')).decode(),
+                user=fernet.decrypt(self.config.get('pif.username')).decode(),
+                password=fernet.decrypt(self.config.get('pif.password')).decode(),
+                database=fernet.decrypt(self.config.get('pif.database')).decode(),
                 port=self.config.get('pif.port')
             )
 
-        table_name = self.config.get('pif.table_name')
+        table_name = fernet.decrypt(self.config.get('pif.table_name')).decode()
 
         # Create a cursor object to interact with the database
         cursor = connection.cursor(dictionary=True)
@@ -995,7 +1003,7 @@ def create_tickler(self, demographic_id, message, to):
 
     self.headers['Referer'] = url
     self.session.headers.update(self.headers)
-    response = self.session.post(url, data=params, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
+    response = self.session.post(url, data=params, verify=self.config.get('emr.verify-HTTPS', True), timeout=self.config.get('general_setting.timeout', 300))
 
     if response.status_code == 200:
         self.logger.info(f"Tickler updated.")

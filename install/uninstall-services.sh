@@ -16,24 +16,24 @@ AIMOA=$(pwd)
 /bin/sleep 10s
 
 # Stopping services:
-/usr/sbin/service llm-container stop
-/usr/sbin/service ai-moa stop
-/usr/sbin/service ai-moa-incomingfax stop
-/usr/sbin/service ai-moa-incomingfile stop
+sudo /usr/sbin/service llm-container stop
+sudo /usr/sbin/service ai-moa stop
+sudo /usr/sbin/service ai-moa-incomingfax stop
+sudo /usr/sbin/service ai-moa-incomingfile stop
 # Disable system services:
-/usr/bin/systemctl disable ai-moa.service
-/usr/bin/systemctl disable ai-moa-incomingfax.service
-/usr/bin/systemctl disable ai-moa-incomingfile.service
-/usr/bin/systemctl disable llm-container.service
+sudo /usr/bin/systemctl disable ai-moa.service
+sudo /usr/bin/systemctl disable ai-moa-incomingfax.service
+sudo /usr/bin/systemctl disable ai-moa-incomingfile.service
+sudo /usr/bin/systemctl disable llm-container.service
 
 # REMOVE/Uninstall AI-MOA and LLM Container as system services in Linux:
-/bin/mv /etc/systemd/system/ai-moa.service $AIMOA/install/services/ai-moa.service.removed
-/bin/mv /etc/systemd/system/ai-moa-incomingfax.service $AIMOA/install/services/ai-moa-incomingfax.service.removed
-/bin/mv /etc/systemd/system/ai-moa-incomingfile.service $AIMOA/install/services/ai-moa-incomingfile.service.removed
-/bin/mv /etc/systemd/system/llm-container.service $AIMOA/install/services/llm-container.service.removed
+sudo /bin/mv /etc/systemd/system/ai-moa.service $AIMOA/install/services/ai-moa.service.removed
+sudo /bin/mv /etc/systemd/system/ai-moa-incomingfax.service $AIMOA/install/services/ai-moa-incomingfax.service.removed
+sudo /bin/mv /etc/systemd/system/ai-moa-incomingfile.service $AIMOA/install/services/ai-moa-incomingfile.service.removed
+sudo /bin/mv /etc/systemd/system/llm-container.service $AIMOA/install/services/llm-container.service.removed
 /bin/echo "ai-moa and llm-container services removed from /etc/systemd/system/ and moved to $AIMOA/install/services/*.services.removed"
 # Reload any changes to system service folder /etc/systemd/system
-/usr/bin/systemctl daemon-reload
+sudo /usr/bin/systemctl daemon-reload
 /bin/echo ""
 /bin/echo "AI-MOA and LLM Container removed as system services."
 

@@ -64,16 +64,22 @@ If you plan on installing this in a VM such as on ProxMox VE, here are some tips
 ### 2. Clone the AI-MOA repository from Github ###
 
 You will need to have your Github user name and a personal access token (generated from your account on Github). Github no longer allows 'git clone' access with passwords, and must use an access token generated from your user account online from Github.
+
+Recommended to use the user `aimoa` for AIMOA. To create it, use:
+
+`sudo useradd -M aimoa`
+
+Switch to this user using:
+
+`sudo su - aimoa`
+
+and then run the following:
+
 ```
 cd /opt
-sudo chmod o+rx /opt
 sudo git clone https://github.com/getwellclinic/ai-moa.git
+sudo chown -R $(whoami):$(whoami) /opt/ai-moa
 cd /opt/ai-moa
-```
-
-Change the ownership of files to your username:
-```
-sudo chown {username} /opt/ai-moa/* -R
 ```
 
 **Set file permissions to enable run installation scripts**
@@ -172,14 +178,17 @@ If the toolkit is installed properly, you should be able to see an output from n
 
 ### 5. Install Docker and Docker Compose ###
 
+Recommended to use the user `aimoa` for AIMOA. To create it, see section 2.
+
 Follow online instructions to install Docker and Docker Compose.
 
 Or
 
 Use our custom "install-docker.sh" script to install automatically:
 ```
-sudo ./install-docker.sh
+./install-docker.sh
 ```
+
 
 ### 6. Configure Docker to use NVIDIA Container Toolkit ###
 ```
@@ -191,19 +200,19 @@ sudo systemctl restart docker
 
 This installs the default AI Large Language Model for AI-MOA in LLM Container.
 ```
-sudo ./install-model.sh
+./install-model.sh
 ```
 
 ### 8. Install Aimee AI (AI-MOA) ###
 
 This installs "Aimee AI" version of AI-MOA, by setting up custom settings and prerequisites.
 ```
-sudo ./install-aimoa.sh
+./install-aimoa.sh
 ```
 
 Add your username to the group "aimoa" so it can run AI-MOA:
 ```
-sudo usermod -a -G aimoa {username}
+sudo usermod -a -G aimoa $(whoami)
 ```
 
 ### 9. Install *AI-MOA* as a system service (for automatic production use)###
@@ -217,7 +226,7 @@ Option 1: Install one workflow "AI-MOA" as a system service (minimum 12 GB VRAM 
 
 *This will install ../install/services/ai-moa.service and ../install/services/llm-container.service as a system service in /etc/systemd/system/*
 ```
-sudo ./install-services.sh
+./install-services.sh
 ```
 
 Option 2: Install the full *Aimee AI Suite* with multiple workflows as a system service (minimum 16 GB VRAM GPU)
@@ -227,7 +236,7 @@ Option 2: Install the full *Aimee AI Suite* with multiple workflows as a system 
 
 *This will install ai-moa.service, ai-moa-incomingfax.service, ai-moa-incomingfile.service, and llm-container.service*
 ```
-sudo ./install-services-aimee.sh
+./install-services-aimee.sh
 ```
 
 ## (Optional) Install a test EMR with OSCAR v.19 Community Edition ##
@@ -241,8 +250,8 @@ If you wish to test out AI-MOA with your own free OSCAR v.19 CE, visit OscarGala
 
 To configure your *Aimee AI*, please edit the parameters in the following configuration files.
 ```
-sudo nano ../config/config.yaml
-sudo nano ../config/workflow-config.yaml
+nano ../config/config.yaml
+nano ../config/workflow-config.yaml
 ```
 
 ### 1. Edit "../config/config.yaml" file ###
@@ -297,7 +306,7 @@ confuse the LLM. If some providers have middle names, you can create multiple en
 each variation of the first name that could include all or part of the middle name.
 
 ```
-sudo nano ../config/provider_list.yaml
+nano ../config/provider_list.yaml
 ```
 
 If you do not see this file, wait, or complete the configuration steps and then start Aimee AI manually by command line (See section: Maintenance Operations)
@@ -308,22 +317,25 @@ If you do not see this file, wait, or complete the configuration steps and then 
 
 Aimee AI will access the EMR with a user account you create for her.
 
-1. Login to EMR
-2. Administration -> Add a Provider Record:
+1. Login to EMR with Admin Privilege. 
+2. Administration -> System Management -> Add a Role:
+  - Role Name : aimoa
+3. Administration -> System Management -> Assign Role/Rights to Object:
+  - Role/Privilege : _tickler, _demographic, _lab, _edoc, _search
+  - Privilege : write, read, update
+4. Administration -> Add a Provider Record:
 	- Provider No: **200**
 	- Last Name: AI
 	- First Name: MOA
 	- Sites Assigned: (select your site)
 	- Status: Active
-3. Administration -> Assign Role to Provider:
+5. Administration -> Assign Role to Provider:
 	- Find Provider No. **200** (MOA AI)
-		- Add "doctor" role
-		- Add "receptionist" role
+		- Add "aimoa" role
 	- Scroll to bottom: Update Primary EMR Role:
 		- Select Provider: AI, MOA
-		- Assign AI, MOA primary Role: **receptionist**
 		- Click "Update Primary EMR Role" to save settings.
-4. Administration -> Add a Login Record:
+6. Administration -> Add a Login Record:
 	- Create new user for Aimee AI
 		- User Name: aimoa
 		- Password: *********
@@ -335,7 +347,10 @@ Aimee AI will access the EMR with a user account you create for her.
 		- Pin (local) Enable: (uncheck or check)
 		- Force Password Reset: **No**
 		- Save settings by clicking "Add Record"
-5. Update "config.yaml" file with AI, MOA login information.
+7. To update "config.yaml" file with AI, MOA login information use:
+    - python3 main.py --encrypt-credentials
+    For PIF credentials use:
+      - python3 main.py --pif-encrypt-credentials
 (Please note: be sure to secure the server installation from any unauthorized access or use.)
 
 **Create CONFIDENTIAL, UNATTACHED patient demographic record in EMR**
@@ -464,7 +479,7 @@ Ctrl-C
 
 Consider installing the `aimoa-cron-maintenance.sh` script in sudoer's crontab to run periodically to fix permissions and clear the /tmp directory files accumulated by AI-MOA.
 
-`sudo crontab -e`
+`crontab -e`
 
 Add the following to the crontab file:
 ```
@@ -480,11 +495,11 @@ need to start/stop LLM Container manually.
 To start the LLM Container manually:
 ```
 sudo service llm-container stop
-sudo ./run-llm.sh
+./run-llm.sh
 ````
 To stop the LLM Container manually:
 ```
-sudo ./stop-llm.sh
+./stop-llm.sh
 ```
 
 ### Upgrading AI-MOA from Github repository ###
@@ -493,7 +508,7 @@ You can upgrade to the latest code by doing a Git pull.
 
 Backup the config directory just in case.
 ```
-sudo cp /opt/ai-moa/config /opt/ai-moa/config.backup -r
+cp /opt/ai-moa/config /opt/ai-moa/config.backup -r
 ```
 Show the current working branch code (ie. main or dev)
 ```
@@ -513,7 +528,7 @@ Fix the permissions for AI-MOA:
 ```
 cd /opt/ai-moa/install
 sudo chmod +x fix-aimoa.sh
-sudo ./fix-aimoa.sh
+./fix-aimoa.sh
 ```
 You can then edit any files for your own custom settings. (ie. Custom ../src/run-aimoa.sh startup parameters, or ../llm-container/docker-compose.yml VRAM parameters)
 
@@ -532,7 +547,7 @@ Any incorrect documents can be sent to Refile by clicking the "Refile" button in
 
 To remove "Aimee AI" from running as a system service:
 ```
-sudo ./uninstall-services.sh
+./uninstall-services.sh
 ```
 
 ### Fixing Permissions ###
@@ -542,7 +557,7 @@ Sometimes, Aimee AI won't run properly, and your get permission errors in the lo
 Fix this by running:
 ```
 cd install
-sudo ./fix-aimoa.sh
+./fix-aimoa.sh
 ```
 
 ### AI-MOA is running, but no documents being processed ###
@@ -558,9 +573,9 @@ sudo service ai-moa-incomingfile stop
 
 Edit config.yaml and remove file lock by setting "lock:status:false"
 ```
-sudo nano ../config/config.yaml
-sudo nano ../config/config-incomingfax.yaml
-sudo nano ../config/config-incomingfile.yaml
+nano ../config/config.yaml
+nano ../config/config-incomingfax.yaml
+nano ../config/config-incomingfile.yaml
 ```
 Change setting to "false"
 ```
@@ -610,7 +625,7 @@ This can happen when the Linux Ubuntu system does an automatic upgrade of the Li
 To fix the problem, simply reboot the Linux system.
 
 You can set a crontab to periodically reboot the system, ie. on Sunday mornings.
-Add the following to `sudo crontab -e`
+Add the following to `crontab -e`
 ```
 01 03 * * SUN	/usr/sbin/shutdown -r now
 ```

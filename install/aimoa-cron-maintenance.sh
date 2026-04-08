@@ -12,10 +12,11 @@ DAYS=0.05
 GROUP=aimoa
 # Path of AI-MOA (Please confirm/edit)
 AIMOAPATH=/opt/ai-moa
+USER=${SUDO_USER:-$(whoami)}
 
 # Change permission for user:group to AI-MOA group
 /bin/echo "Fixing AI-MOA permissions..."
-/bin/chown '$GROUP':'$GROUP' '$AIMOAPATH' -R
+/bin/chown $USER:$USER $AIMOAPATH -R
 # Add read-write permissions to config files to fix permissions on *.yaml.lock files
 /bin/chmod g+rw '$AIMOAPATH'/config/*
 

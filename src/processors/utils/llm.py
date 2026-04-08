@@ -71,16 +71,16 @@ def query_prompt(self,prompt):
     log_llm_response = self.config.get('llm.log_responses', False)
 
     try:
-        response = requests.post(self.url, headers=self.headers, json=data, verify=self.config.get('ai.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
+        response = requests.post(self.url, headers=self.headers, json=data, verify=self.config.get('ai.verify-HTTPS', True), timeout=self.config.get('general_setting.timeout', 300))
     except Timeout:
         self.config.update_lock_status(False)
         self.logger.info(f"Lock released.")
-        self.logger.info(f"An error occurred waiting for LLM response, exceeded time out. Stopping task processing Document No. {self.file_name}")
+        self.logger.info(f"An error occurred waiting for LLM response, exceeded time out. Stopping task processing Document No. {self.file_name[:self.logger_mask_filename_length]}*****")
         raise SystemExit("Stopping task due to LLM timed out.")
     except RequestException as e:
         self.config.update_lock_status(False)
         self.logger.info(f"Lock released.")
-        self.logger.info(f"An error occurred waiting for LLM response, LLM Request Exception. Stopping task processing Document No. {self.file_name}")
+        self.logger.info(f"An error occurred waiting for LLM response, LLM Request Exception. Stopping task processing Document No. {self.file_name[:self.logger_mask_filename_length]}*****")
         raise SystemExit("Stopping task due to LLM Request Exception.")
     else:
         if response.status_code != 200:

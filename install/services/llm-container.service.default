@@ -5,8 +5,8 @@ After=network.target
 # Assumes the path to AI-MOA base directory is '/opt/ai-moa'; if different, please edit ExecStart and ExecStop paths below:
 
 [Service]
-# AI LLM Container should run as 'root':
-User=root
+# AI LLM Container should run as 'aimoa':
+User=aimoa
 Nice=1
 KillMode=control-group
 # KillMode=none

@@ -85,7 +85,7 @@ def setup_logging(config: ConfigManager):
 
     file_handler = RotatingFileHandler(
         log_file,
-        maxBytes=10*1024*1024,  # 10MB
+        maxBytes=2*1024*1024,  # 2MB
         backupCount=5
     )
     file_handler.setLevel(file_level)

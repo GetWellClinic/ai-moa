@@ -61,6 +61,7 @@ class Workflow:
         """
         self.config = config
         self.logger = setup_logging(config)
+        self.logger_mask_filename_length = config.get('logging.mask_length', 4)
         self.task_results = {}
         self.steps = config.workflow_steps
         self.document_categories = config.document_categories

@@ -29,6 +29,8 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
+import os
+from cryptography.fernet import Fernet
 
 from config import ConfigManager
 
@@ -61,10 +63,17 @@ class LoginManager:
         :param config: Configuration manager with login credentials and URLs.
         :type config: ConfigManager
         """
+        key = os.getenv("EMR_SECRET_KEY")
+
+        if not key:
+            raise ValueError("Missing EMR_SECRET_KEY environment variable")
+            
+        fernet = Fernet(key.encode())
+
         self.config = config
-        self.username = config.get('emr.username')
-        self.password = config.get('emr.password')
-        self.pin = config.get('emr.pin')
+        self.username = fernet.decrypt(config.get('emr.username')).decode()
+        self.password = fernet.decrypt(config.get('emr.password')).decode()
+        self.pin = fernet.decrypt(config.get('emr.pin')).decode()
         self.base_url = config.get('emr.base_url')
         self.login_url = ""
         logger.debug("LoginManager initialized")
@@ -147,7 +156,7 @@ class LoginManager:
         if self.config.get('chrome.options.headless', False):
                 chrome_options.add_argument("--headless")
                 logger.debug("Chrome headless mode enabled")
-        if not self.config.get('emr.verify-HTTPS', False):
+        if not self.config.get('emr.verify-HTTPS', True):
             chrome_options.add_argument('--ignore-certificate-errors')
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
         return driver, self.is_login_successful(self.login_with_selenium(driver))

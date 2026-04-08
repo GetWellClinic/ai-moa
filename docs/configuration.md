@@ -49,7 +49,7 @@ logging:
 
 ```yaml
 emr:
-  base_url: 'http://localhost:8080/oscar'
+  base_url: 'https://localhost:8080/oscar'
   username: 'admin'
   password: 'admin'
   pin: '1234'

@@ -36,6 +36,8 @@ from ai_moa_utils.logging_setup import setup_logging
 from datetime import datetime
 from threading import Event
 from typing import Optional
+from cryptography.fernet import Fernet
+import getpass
 
 print("AI-MOA version 1.2; licensed under AGPL3.0, see LICENSE file. (c) Spring Health Corporation")
 print("")
@@ -59,6 +61,121 @@ def check_config_files_exist(config_file: str, workflow_config_file: str) -> Non
             raise FileNotFoundError(f"{file_type} file '{file_path}' is missing.")
         logger.info(f"{file_type} file exists: '{file_path}'")
 
+def encrypt_emr_credentials(config_file: str, workflow_config_file: str) -> None:
+    """
+    Prompt for EMR credentials, encrypt them, and store them in the config file.
+
+    This function performs the following steps:
+    - Generates a new Fernet encryption key
+    - Encrypts the provided credentials
+    - Stores the encrypted values in the EMR section of the configuration
+    - Saves the updated configuration file
+    - Outputs the environment variable export command for the encryption key
+
+    The generated encryption key is NOT stored automatically and must be
+    securely saved by the user as an environment variable (EMR_SECRET_KEY)
+    for future decryption.
+
+    Args:
+        config_file (str): Path to the main configuration YAML file.
+        workflow_config_file (str): Path to the workflow configuration file.
+
+    Returns:
+        None
+
+    Raises:
+        ValueError: If required configuration sections are missing.
+
+    Security Notes:
+        - The encryption key is printed once and should be stored securely.
+        - Loss of the key will make encrypted credentials unrecoverable and
+        will have to regenerate a new key.
+    """
+    logger.info(f"Encrypting EMR credentials...")
+    config_manager: ConfigManager = ConfigManager(config_file, workflow_config_file)
+    key = Fernet.generate_key()
+    fernet = Fernet(key)
+
+    username = input("Enter EMR username: ").strip()
+    password = getpass.getpass("Enter EMR password: ").strip()
+    pin = getpass.getpass("Enter EMR PIN, press Enter if not needed: ").strip()
+
+    if not username or not password:
+        print("Username and Password fields are required.")
+        logger.error(f"Encrypting credentials, Username and Password fields are required.")
+        return
+
+    config_manager.config["emr"]["username"] = fernet.encrypt(username.encode()).decode()
+    config_manager.config["emr"]["password"] = fernet.encrypt(password.encode()).decode()
+
+    if pin:
+        config_manager.config["emr"]["pin"] = fernet.encrypt(pin.encode()).decode()
+
+    config_manager.save_config()
+
+    print("\n=== IMPORTANT ===")
+    print("For AIMOA to work properly, please store this key securely as an environment variable using the following:\n")
+    print(f'export EMR_SECRET_KEY="{key.decode()}"')
+    print("\n=== END ===")
+
+def encrypt_pif_credentials(config_file: str, workflow_config_file: str) -> None:
+    """
+    Prompt for PIF credentials, encrypt them, and store them in the config file.
+
+    This function performs the following steps:
+    - Generates a new Fernet encryption key
+    - Encrypts the provided credentials
+    - Stores the encrypted values in the EMR section of the configuration
+    - Saves the updated configuration file
+    - Outputs the environment variable export command for the encryption key
+
+    The generated encryption key is NOT stored automatically and must be
+    securely saved by the user as an environment variable (PIF_SECRET_KEY)
+    for future decryption.
+
+    Args:
+        config_file (str): Path to the main configuration YAML file.
+        workflow_config_file (str): Path to the workflow configuration file.
+
+    Returns:
+        None
+
+    Raises:
+        ValueError: If required configuration sections are missing.
+
+    Security Notes:
+        - The encryption key is printed once and should be stored securely.
+        - Loss of the key will make encrypted credentials unrecoverable and
+        will have to regenerate a new key.
+    """
+    logger.info(f"Encrypting PIF credentials...")
+    config_manager: ConfigManager = ConfigManager(config_file, workflow_config_file)
+    key = Fernet.generate_key()
+    fernet = Fernet(key)
+
+    username = input("Enter PIF DB username: ").strip()
+    password = getpass.getpass("Enter PIF DB password: ").strip()
+    host = input("Enter PIF Host IP Address: ").strip()
+    database = input("Enter PIF Database Name: ").strip()
+    table_name = input("Enter PIF Table Name: ").strip()
+
+    if not username or not password or not host or not database or not table_name:
+        print("All fields are required.")
+        logger.error(f"Encrypting credentials, All fields are required.")
+        return
+
+    config_manager.config["pif"]["username"] = fernet.encrypt(username.encode()).decode()
+    config_manager.config["pif"]["password"] = fernet.encrypt(password.encode()).decode()
+    config_manager.config["pif"]["host"] = fernet.encrypt(host.encode()).decode()
+    config_manager.config["pif"]["database"] = fernet.encrypt(database.encode()).decode()
+    config_manager.config["pif"]["table_name"] = fernet.encrypt(table_name.encode()).decode()
+
+    config_manager.save_config()
+
+    print("\n=== IMPORTANT ===")
+    print("For AIMOA-PIF to work properly, please store this key securely as an environment variable using the following:\n")
+    print(f'export PIF_SECRET_KEY="{key.decode()}"')
+    print("\n=== END ===")
 
 class AIMOAAutomation:
     """
@@ -167,6 +284,8 @@ def args_parse_aimoa():
     parser.add_argument("--cron-interval", help="Cron interval for scheduling tasks (e.g. '*/5' for every 5 minutes)")
     parser.add_argument("--run-immediately", action="store_true", help="Run the task immediately when started")
     parser.add_argument("--reset-lock", action="store_true", help="Run the task while bypassing the process lock, if set.")
+    parser.add_argument("--encrypt-credentials", action="store_true", help="Save EMR credentials in config file as encrypetd values.")
+    parser.add_argument("--pif-encrypt-credentials", action="store_true", help="Save PIF credentials in config file as encrypetd values.")
     args = parser.parse_args()
     return args
 
@@ -239,6 +358,18 @@ if __name__ == "__main__":
         check_config_files_exist(config_file, workflow_config_file)
     except FileNotFoundError as e:
         logger.error(f"Configuration error: {e}")
+        sys.exit(1)
+
+    encrypt_credentials = args.encrypt_credentials
+
+    if encrypt_credentials:
+        encrypt_emr_credentials(config_file, workflow_config_file)
+        sys.exit(1)
+
+    pif_encrypt_credentials = args.pif_encrypt_credentials
+
+    if pif_encrypt_credentials:
+        encrypt_pif_credentials(config_file, workflow_config_file)
         sys.exit(1)
 
     # Check for run_immediately option

@@ -30,8 +30,7 @@ chrome:
 
 # EMR (Electronic Medical Record) configuration for connecting to an EMR system.
 emr:
-  base_url: http://127.0.0.1:8080/oscar  # Base URL for the EMR system.
-  verify-HTTPS: false   # This flag allows for ignoring warnings for self-signed TLS/SSL certificates in a development environment.
+  base_url: https://127.0.0.1:8080/oscar  # Base URL for the EMR system.
   system_type: o19  # Type of system. (ie. 'o19', 'openo', 'opro' or 'o15')
   username: emr  # Username for EMR login.
   password: 'passpwd'  # Password for EMR login.

@@ -24,7 +24,6 @@
 
 ai:
   uri: https://localhost:3334/v1/chat/completions  # URI endpoint for AI model interactions.
-  verify-HTTPS: false
 
 # AI-MOA document processor configuration.
 aimoa_document_processor:
@@ -43,8 +42,7 @@ document_processor:
 
 # EMR (Electronic Medical Record) configuration for connecting to an EMR system.
 emr:
-  base_url: http://127.0.0.1:8080/oscar  # Base URL for the EMR system.
-  verify-HTTPS: false   # This flag allows for ignoring warnings for self-signed TLS/SSL certificates in a development environment.
+  base_url: https://127.0.0.1:8080/oscar  # Base URL for the EMR system. 
   document_folder: pending  # Folder where pending documents to be processed are stored in o19. (ie. 'pending', or 'incoming')
   incoming_folder: Fax  # Folder where incoming documents to be processed are stored in o19. (ie. 'Fax', 'File', 'Mail', or 'Refile')
   incoming_folder_queue: '1'  # Queue number for processing incoming files. (ie. '1', '2' etc.)
@@ -118,10 +116,9 @@ ocr:
   enable_gpu: true  # Whether to enable GPU support for OCR (faster processing).
   page_limit: 10  # Maximum number of pages to process in OCR; if the document exceeds this limit, additional pages will be ignored.
   # Use the settings below only if OCR is configured to run as an API. See the documentation for more information.
-  api_uri: http://localhost:8002/ocr # API End Point
+  api_uri: https://localhost:8002/ocr # API End Point
   det_arch: fast_base # Text detection architecture(https://mindee.github.io/doctr/modules/models.html)
   reco_arch: crnn_vgg16_bn # Text recognition architecture (https://mindee.github.io/doctr/modules/models.html)
-  verify-HTTPS: false
 
 # Provider list configuration, for generating or managing provider data.
 provider_list:

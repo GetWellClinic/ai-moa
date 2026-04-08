@@ -67,7 +67,7 @@ class DriverManager:
         if self.config.get('chrome.options.headless', False):
             chrome_options.add_argument("--headless")
             logger.debug("Chrome headless mode enabled")
-        if not self.config.get('emr.verify-HTTPS', False):
+        if not self.config.get('emr.verify-HTTPS', True):
             chrome_options.add_argument('--ignore-certificate-errors')
         return webdriver.Chrome(
             service=Service(ChromeDriverManager().install()),

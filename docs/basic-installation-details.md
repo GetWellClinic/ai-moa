@@ -121,8 +121,7 @@ config.yaml
 
 ### EMR (Electronic Medical Record) configuration for connecting to an EMR system.
 emr:
-  base_url: http://127.0.0.1:8080/oscar  # Base URL for the EMR system.
-  verify-HTTPS: false # Set this to true to verify the SSL certificates for o19.
+  base_url: https://127.0.0.1:8080/oscar  # Base URL for the EMR system.
   document_folder: pending  # Folder where pending documents to be processed are stored in o19.
   incoming_folder: File  # Folder where incoming documents to be processed are stored in o19.
   incoming_folder_queue: '1'  # Queue number for processing incoming files.
@@ -132,8 +131,6 @@ emr:
   username: emr  # Username for EMR login.
 
 `base_url`: This specifies the base address or endpoint for the EMR system. (Mandatory)
-
-`verify-HTTPS`: This setting determines whether the system will verify SSL/TLS certificates when making requests to the O19 platform.
 
 `document_folder`: Specifies the folder (in this case, named `pending`) where documents that are waiting to be processed will be stored within the O19 system.
 To use `incoming_docs` folder change `pending` to `incoming`
@@ -173,11 +170,8 @@ You can set this based on your O19.
 ### AI configuration for interacting with the AI-MOA service.
 ai:
   uri: https://localhost:3334/v1/chat/completions  # URI endpoint for AI model interactions.
-  verify-HTTPS: false # Set this to true to verify the SSL certificates for LLM api's.
 
 `uri`: URI endpoint for AI model (Mandatory)
-
-`verify-HTTPS`: To verify the SSL certificates for LLM api's.
 
 ### LLM (Large Language Model) configuration, including model parameters for AI interactions.
 llm:

@@ -6,6 +6,7 @@
 # CONFIGURATION:
 # Automatic configuration of paths:
 CURRENT=$(pwd)
+USER=${SUDO_USER:-$(whoami)}
 cd ..
 AIMOA=$(pwd)
 AIPYTHONENV=$(pwd)/.env
@@ -39,8 +40,8 @@ export PYTHONWARNINGS="ignore:Unverified HTTPS request"
 
 # Initialize permissions (otherwise AI-MOA can't read-wrote config files, or save provider list)
 #/bin/chown aimoa:aimoa $AIMOA/src/* 2>/dev/null
-/bin/chown aimoa:aimoa $AIMOA/config/* 2>/dev/null
-/bin/chmod g+rw $AIMOA/config -R 2>/dev/null
+sudo /bin/chown $USER:$USER $AIMOA/config/* 2>/dev/null
+sudo /bin/chmod g+rw $AIMOA/config -R 2>/dev/null
 #/bin/chmod g+rw $AIMOA/src/* 2>/dev/null
 
 # Command to start AI-MOA

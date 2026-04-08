@@ -4,6 +4,7 @@
 # Version 2025.06.06
 
 CURRENT=$(pwd)
+USER=${SUDO_USER:-$(whoami)}
 
 # Change to home directory
 cd ~/
@@ -21,20 +22,20 @@ cd ~/
 /bin/curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
 
 # Add Docker repository to Apt resources:
-/bin/echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-apt-get update
+/bin/echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release &bin/echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null& echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
 
 # Install latest Docker
-apt-get -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo apt-get -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 # Can confirm docker running by testing hello-world docker:
 # docker run hello-world
 
 # Install Python pip package manager if not installed
-apt-get -y install python3-pip
+sudo apt-get -y install python3-pip
 
 # Install Docker Compose
-apt-get -y install docker-compose
+sudo apt-get -y install docker-compose
 pip install docker-compose
 # Hint: New Docker Compose command has no space, ie. 'docker compose'
 
@@ -42,15 +43,15 @@ pip install docker-compose
 docker --version
 
 # Add current user to 'docker' group
-/usr/sbin/usermod -a -G docker $USER
+sudo /usr/sbin/usermod -a -G docker $USER
 # Add default first administrator username to 'docker' group
 USERNAME=$(awk -F':' -v uid=1000 '$3 == uid { print $1 }' /etc/passwd)
-/usr/sbin/usermod -a -G docker $USERNAME
-/bin/newgrp docker
+sudo /usr/sbin/usermod -a -G docker $USERNAME
+sudo /bin/newgrp docker
 /bin/echo ""
 /bin/echo "Confirming current user belonging to the following groups (check for 'docker')..."
-/usr/bin/groups $USER
-/usr/bin/groups $USERNAME
+sudo /usr/bin/groups $USER
+sudo /usr/bin/groups $USERNAME
 
 # Install NVIDIA Container Toolkit:
 #
@@ -68,8 +69,8 @@ USERNAME=$(awk -F':' -v uid=1000 '$3 == uid { print $1 }' /etc/passwd)
 
 # Configure Docker to use NVIDIA Container Toolkit
 /bin/echo "Configuring Docker to use NVIDIA Container Toolkit"
-nvidia-ctk runtime configure --runtime=docker
-systemctl restart docker
+sudo nvidia-ctk runtime configure --runtime=docker
+sudo systemctl restart docker
 
 # Go back to previous path location
 cd $CURRENT
