@@ -1,5 +1,5 @@
 # AI-MOA Developers Guide
-*Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
+*Copyright © 2026 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
 *LICENSE: GNU Affero General Public License Version 3*<br />
 **Document Version 2025.02.02**
 
