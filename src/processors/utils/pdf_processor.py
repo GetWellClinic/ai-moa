@@ -89,9 +89,10 @@ def pif_pdf(self):
             search_result, data = self.get_patient_Html_Common(self,row['dob1'],type_of_query)
         else:
             self.logger.info("Match found using HC details, verifying.")
-            is_patient, patient_id, roster_status, doctor = self.search_patient(self, data, row, 'hcn')
+            is_patient, patient_id, roster_status, doctor, is_hcn_dob_mismatch = self.search_patient(self, data, row, 'hcn')
 
-            if is_patient is False:
+            if is_hcn_dob_mismatch or is_patient is False:
+                is_patient = False
                 self.logger.info("Patient not found using HC details, trying DOB.")
                 type_of_query = "search_dob"
                 search_result, data = self.get_patient_Html_Common(self,row['dob1'],type_of_query)
@@ -101,7 +102,7 @@ def pif_pdf(self):
             return False
         else:
             if is_patient is False:
-                is_patient, patient_id, roster_status, doctor = self.search_patient(self, data, row, 'dob')
+                is_patient, patient_id, roster_status, doctor, _ = self.search_patient(self, data, row, 'dob')
 
             if is_patient is False:
                 patient_id = 0
