@@ -138,13 +138,8 @@ Run `../install/export-pif-key.sh` to persist this environment variable `PIF_SEC
 - **Example**: `3306`
 
 The above configuration applies when AIMOA is installed in the same environment as the PIF database.
-If the PIF database is hosted in a different environment, it is recommended to use SSL for the database connection.
-To enable this, use the following fields (pif_db_encrypt, ssl_ca,ssl_cert, ssl_key, ssl_verify_cert).
-
-### `pif_db_encrypt`
-- **Type**: Boolean  
-- **Description**: Enable SSL for the database connection.
-- **Example**: `false`
+The PIF database uses SSL for the database connection.
+To configure this, use the following fields (ssl_ca,ssl_cert, ssl_key, ssl_verify_cert).
 
 ### `ssl_ca`
 - **Type**: String  

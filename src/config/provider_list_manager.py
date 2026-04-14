@@ -33,7 +33,6 @@ from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 import os
-from cryptography.fernet import Fernet
 
 import logging
 
@@ -49,9 +48,6 @@ class ProviderListManager:
 
     Attributes:
         config (dict): The configuration settings for the workflow, including login credentials and URLs.
-        username (str): The EMR username.
-        password (str): The EMR password.
-        pin (str): The EMR PIN.
         base_url (str): The base URL of the EMR system.
         logger (logging.Logger): A logger instance to log information and errors.
         session (requests.Session): The requests session for making HTTP requests.
@@ -62,18 +58,8 @@ class ProviderListManager:
 
         Args:
             workflow (object): The workflow object that contains configuration data and logger instance.
-        """
-        key = os.getenv("EMR_SECRET_KEY")
-
-        if not key:
-            raise ValueError("Missing EMR_SECRET_KEY environment variable")
-            
-        fernet = Fernet(key.encode())
-        
+        """        
         self.config = workflow.config
-        self.username = fernet.decrypt(workflow.config.get('emr.username')).decode()
-        self.password = fernet.decrypt(workflow.config.get('emr.password')).decode()
-        self.pin = fernet.decrypt(workflow.config.get('emr.pin')).decode()
         self.base_url = workflow.config.get('emr.base_url')
         self.logger = workflow.logger
         self.system_type = workflow.config.get('emr.system_type')

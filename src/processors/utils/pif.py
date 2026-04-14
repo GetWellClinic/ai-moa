@@ -158,7 +158,7 @@ def query_pif(self):
         fernet = Fernet(key.encode())
 
         # Establish connection to the MySQL server
-        pif_db_encrypt = self.config.get('pif.pif_db_encrypt', False)
+        pif_db_encrypt = self.config.get('pif.pif_db_encrypt', True)
 
         if pif_db_encrypt:
             connection = mysql.connector.connect(
@@ -205,7 +205,6 @@ def query_pif(self):
         # Fetch all results
         results = cursor.fetchall()
 
-        # Print the results
         for row in results:
 
             if processed_fht_count < fht_batch_size:
