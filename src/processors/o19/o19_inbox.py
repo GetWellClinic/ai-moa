@@ -188,7 +188,7 @@ def get_inbox_pendingdocs_documents(self):
 						file_url = f"{self.base_url}/documentManager/ManageDocument.do?method=display&doc_no={item}"
 					self.headers['Referer'] = file_url
 					self.session.headers.update(self.headers)
-					file_response = self.session.get(file_url, verify=self.config.get('emr.verify-HTTPS' True), timeout=self.config.get('general_setting.timeout', 300))
+					file_response = self.session.get(file_url, verify=self.config.get('emr.verify-HTTPS', True), timeout=self.config.get('general_setting.timeout', 300))
 
 					if file_response.status_code == 200 and file_response.content:
 						self.config.set_shared_state('current_file', file_response.content)

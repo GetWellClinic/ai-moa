@@ -57,6 +57,8 @@ emr:
 
 Use `python main.py --encrypt-credentials` to encrypt the EMR credentials in the config.yaml file.
 
+Run `./export-emr-key.sh` to persist the environment variable `EMR_SECRET_KEY`.
+
 - `base_url`: Base URL of the O19 EMR system
 - `username`: Encrypted EMR login username
 - `password`: Encrypted EMR login password

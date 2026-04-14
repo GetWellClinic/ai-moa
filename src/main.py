@@ -116,6 +116,7 @@ def encrypt_emr_credentials(config_file: str, workflow_config_file: str) -> None
     print("\n=== IMPORTANT ===")
     print("For AIMOA to work properly, please store this key securely as an environment variable using the following:\n")
     print(f'export EMR_SECRET_KEY="{key.decode()}"')
+    print(f'Run ../install/export-emr-key.sh to persist this environment variable.')
     print("\n=== END ===")
 
 def encrypt_pif_credentials(config_file: str, workflow_config_file: str) -> None:
@@ -175,6 +176,7 @@ def encrypt_pif_credentials(config_file: str, workflow_config_file: str) -> None
     print("\n=== IMPORTANT ===")
     print("For AIMOA-PIF to work properly, please store this key securely as an environment variable using the following:\n")
     print(f'export PIF_SECRET_KEY="{key.decode()}"')
+    print(f'Run ../install/export-pif-key.sh to persist this environment variable.')
     print("\n=== END ===")
 
 class AIMOAAutomation:
@@ -284,8 +286,8 @@ def args_parse_aimoa():
     parser.add_argument("--cron-interval", help="Cron interval for scheduling tasks (e.g. '*/5' for every 5 minutes)")
     parser.add_argument("--run-immediately", action="store_true", help="Run the task immediately when started")
     parser.add_argument("--reset-lock", action="store_true", help="Run the task while bypassing the process lock, if set.")
-    parser.add_argument("--encrypt-credentials", action="store_true", help="Save EMR credentials in config file as encrypetd values.")
-    parser.add_argument("--pif-encrypt-credentials", action="store_true", help="Save PIF credentials in config file as encrypetd values.")
+    parser.add_argument("--encrypt-credentials", action="store_true", help="Save EMR credentials in config file as encrypted values.")
+    parser.add_argument("--pif-encrypt-credentials", action="store_true", help="Save PIF credentials in config file as encrypted values.")
     args = parser.parse_args()
     return args
 
@@ -364,13 +366,13 @@ if __name__ == "__main__":
 
     if encrypt_credentials:
         encrypt_emr_credentials(config_file, workflow_config_file)
-        sys.exit(1)
+        sys.exit(0)
 
     pif_encrypt_credentials = args.pif_encrypt_credentials
 
     if pif_encrypt_credentials:
         encrypt_pif_credentials(config_file, workflow_config_file)
-        sys.exit(1)
+        sys.exit(0)
 
     # Check for run_immediately option
     run_immediately = args.run_immediately or os.environ.get('RUN_IMMEDIATELY', '').lower() in ('true', '1', 'yes')

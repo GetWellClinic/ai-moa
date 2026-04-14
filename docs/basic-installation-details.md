@@ -139,6 +139,8 @@ To use `incoming_docs` folder change `pending` to `incoming`
 
 Use `python main.py --encrypt-credentials` to encrypt the EMR credentials in the config.yaml file.
 
+Run `./export-emr-key.sh` to persist the environment variable `EMR_SECRET_KEY`.
+
 `password`: Encrypted Password for O19 login. (Mandatory)
 
 `pin`: Encrypted PIN for O19 login. (Mandatory)

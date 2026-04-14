@@ -19,7 +19,7 @@ AIMOA=$(pwd)
 
 # Add default first administrator username to "aimoa" group
 USERNAME=$(awk -F':' -v uid=1000 '$3 == uid { print $1 }' /etc/passwd)
-/usr/sbin/usermod -a -G $USER "$USERNAME"
+/usr/sbin/usermod -a -G aimoa "$USERNAME"
 
 # Modify user:group permissions:
 sudo /bin/chown $USER:$USER $AIMOA

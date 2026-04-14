@@ -60,6 +60,8 @@ In your `config-pif.yaml` file, use the following fields to configure AIMOA with
 
 Use `python main.py --pif-encrypt-credentials` to encrypt the credentials in the config-pif.yaml file.
 
+Run `../install/export-pif-key.sh` to persist this environment variable `PIF_SECRET_KEY`.
+
 
 ### `aimee_uid`
 - **Type**: Integer  

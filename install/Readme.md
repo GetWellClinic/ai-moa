@@ -65,7 +65,7 @@ If you plan on installing this in a VM such as on ProxMox VE, here are some tips
 
 You will need to have your Github user name and a personal access token (generated from your account on Github). Github no longer allows 'git clone' access with passwords, and must use an access token generated from your user account online from Github.
 
-Recommended to use the user `aimoa` for AIMOA. To create it, use:
+Recommended to use the user `aimoa` for AI-MOA. To create it, use:
 
 `sudo useradd -M aimoa`
 
@@ -267,6 +267,8 @@ emr:
 
 Use `python main.py --encrypt-credentials` to update the EMR credentials in the config.yaml file.
 
+Run `./export-emr-key.sh` to persist the environment variable `EMR_SECRET_KEY`.
+
 When you are ready to process documents, edit the "..\config\workflow-config.yaml" file to the last document
 in your EMR from where you want to start AI-MOA to start processing documents.
 The default "pending: 9999999" and "incoming: '2125-01-01 00:00:00'" has been set at a very unlikely high number to prevent default installations from processing live documents until you are ready.
@@ -351,8 +353,10 @@ Aimee AI will access the EMR with a user account you create for her.
 		- Save settings by clicking "Add Record"
 7. To update "config.yaml" file with AI, MOA login information use:
     - python3 main.py --encrypt-credentials
+    - Run `./export-emr-key.sh` to persist the environment variable `EMR_SECRET_KEY`.
     For PIF credentials use:
       - python3 main.py --pif-encrypt-credentials
+      - Run `./export-pif-key.sh` to persist this environment variable `PIF_SECRET_KEY`.
 (Please note: be sure to secure the server installation from any unauthorized access or use.)
 
 **Create CONFIDENTIAL, UNATTACHED patient demographic record in EMR**
