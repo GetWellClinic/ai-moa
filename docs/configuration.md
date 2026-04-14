@@ -49,16 +49,20 @@ logging:
 
 ```yaml
 emr:
-  base_url: 'http://localhost:8080/oscar'
+  base_url: 'https://localhost:8080/oscar'
   username: 'admin'
   password: 'admin'
   pin: '1234'
 ```
 
+Use `python main.py --encrypt-credentials` to encrypt the EMR credentials in the config.yaml file.
+
+Run `./export-emr-key.sh` to persist the environment variable `EMR_SECRET_KEY`.
+
 - `base_url`: Base URL of the O19 EMR system
-- `username`: EMR login username
-- `password`: EMR login password
-- `pin`: Pin for EMR login
+- `username`: Encrypted EMR login username
+- `password`: Encrypted EMR login password
+- `pin`: Encrypted Pin for EMR login
 
 ### OCR Configuration
 

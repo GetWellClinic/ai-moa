@@ -1,4 +1,4 @@
-# COPYRIGHT © 2024 by Spring Health Corporation <office(at)springhealth.org>
+# COPYRIGHT © 2026 by Spring Health Corporation <office(at)springhealth.org>
 # Toronto, Ontario, Canada
 # SUMMARY: This file is part of the Get Well Clinic's original "AI-MOA" project's collection of software,
 # documentation, and configuration files.
@@ -61,6 +61,7 @@ class Workflow:
         """
         self.config = config
         self.logger = setup_logging(config)
+        self.logger_mask_filename_length = config.get('logging.mask_length', 4)
         self.task_results = {}
         self.steps = config.workflow_steps
         self.document_categories = config.document_categories

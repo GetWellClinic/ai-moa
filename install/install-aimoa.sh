@@ -23,12 +23,14 @@
 # 
 # Autodetect first administrator username:
 USERNAME=$(awk -F':' -v uid=1000 '$3 == uid { print $1 }' /etc/passwd)
+USER=${SUDO_USER:-$(whoami)}
 # Override username to be added to "aimoa" group permissions, to allow username to run AI-MOA:
 # USERNAME=
 
 # Automatic detection of base directory
 cd ..
 AIMOA=$(pwd)
+sudo /bin/chown -R $USER:$USER $AIMOA
 
 /bin/echo "AI-MOA (Aimee AI) will be installed and setup with the following specified base directory for AI-MOA..."
 /bin/echo ""
@@ -56,9 +58,9 @@ AIMOA=$(pwd)
 /bin/mkdir -p "$AIMOA/app/output"
 
 # Initialize permissions
-/bin/chmod g+rw "$AIMOA/config" -R
-/bin/chmod g+rw "$AIMOA/app/" -R
-/bin/chmod g+rw "$AIMOA/src/"*
+sudo /bin/chmod g+rw "$AIMOA/config" -R
+sudo /bin/chmod g+rw "$AIMOA/app/" -R
+sudo /bin/chmod g+rw "$AIMOA/src/"*
 
 # Create the llm-container/models directory if it doesn't exist
 /bin/echo "Creating llm-container/models directory..."
@@ -104,11 +106,11 @@ AIMOA=$(pwd)
 # Create Python virtual environment for AI-MOA libraries and dependency packages:
 /bin/echo "Creating python virtual environment for AI-MOA dependencies..."
 /bin/sleep 5s
-apt-get update
+sudo apt-get update
 # Install virtualenv app
-apt-get -y install python3-virtualenv
+sudo apt-get -y install python3-virtualenv
 # Install Python pip package manager if not installed
-apt-get -y install python3-pip
+sudo apt-get -y install python3-pip
 # Create virtual environment
 virtualenv "$AIMOA/.env"
 # Install python dependencies for AI-MOA from requirements.txt
@@ -122,49 +124,49 @@ pip install -r "$AIMOA/src/requirements.txt"
 /usr/sbin/useradd -m aimoa	# Requires home directory for google-chrome files
 /bin/newgrp aimoa
 # Add current user to 'aimoa' group
-/usr/sbin/usermod -a -G aimoa $USER
-/usr/sbin/usermod -a -G aimoa $USERNAME
+sudo /usr/sbin/usermod -a -G aimoa $USER
+sudo /usr/sbin/usermod -a -G aimoa $USERNAME
 
 
 # Initialize file permissions for AI-MOA:
 /bin/echo "Fixing file permissions for AI-MOA to 'rw-rw-r-- aimoa aimoa' ..."
 /bin/sleep 5s
 # Modify user:group permissions
-/bin/chown aimoa:aimoa "$AIMOA"
-/bin/chown aimoa:aimoa "$AIMOA/"* -R
+sudo /bin/chown $USER:$USER $AIMOA
+sudo /bin/chown $USER:$USER "$AIMOA/"* -R
 # Fix permissions so AI MOA can read-write
-/bin/chmod ug+rwx "$AIMOA/config" "$AIMOA/logs" "$AIMOA/app" "$AIMOA/app/input" "$AIMOA/app/output"
-/bin/chmod ug+rw "$AIMOA/config/"* "$AIMOA/logs/"* "$AIMOA/app/input/"* "$AIMOA/app/output/"*
-/bin/chmod ug+rw "$AIMOA/llm-container/models"
+sudo /bin/chmod ug+rwx "$AIMOA/config" "$AIMOA/logs" "$AIMOA/app" "$AIMOA/app/input" "$AIMOA/app/output"
+sudo /bin/chmod ug+rw "$AIMOA/config/"* "$AIMOA/logs/"* "$AIMOA/app/input/"* "$AIMOA/app/output/"*
+sudo /bin/chmod ug+rw "$AIMOA/llm-container/models"
 # Protect config.yaml from Other users
-/bin/chmod o-rwx "$AIMOA/config"
+sudo /bin/chmod o-rwx "$AIMOA/config"
 # Confirm user belongs to group "aimoa"
 /bin/echo "Confirming current user belonging to the following groups (check for 'aimoa')..."
-/usr/bin/groups $USER
-/usr/bin/groups $USERNAME
+sudo /usr/bin/groups $USER
+sudo /usr/bin/groups $USERNAME
 /bin/echo ""
 /bin/sleep 5s
 
 # Protect installation files
 /bin/echo "Enabling scripts, and protecting installation files..."
-/bin/chmod guo+x "$AIMOA/install/"*
-/bin/chmod o-x "$AIMOA/install/install"*
-/bin/chmod o-x "$AIMOA/install/uninstall"*
+sudo /bin/chmod guo+x "$AIMOA/install/"*
+sudo /bin/chmod o-x "$AIMOA/install/install"*
+sudo /bin/chmod o-x "$AIMOA/install/uninstall"*
 # Protect directories from Other Users
 /bin/echo "Protecting ../config directory..."
-/bin/chmod o-rwx "$AIMOA/config"
-/bin/echo "Protecting ../app directory..."
-/bin/chmod o-rwx "$AIMOA/app" -R
+sudo /bin/chmod o-rwx "$AIMOA/config"
+sudo /bin/echo "Protecting ../app directory..."
+sudo /bin/chmod o-rwx "$AIMOA/app" -R
 
 # Install aimoa-cron-maintenance.sh as cronjob
 AIMOACRON="1 * * * * $AIMOA/install/aimoa-cron-maintenance.sh"
 # Check if already exists, and add if not exist
-if sudo crontab -u root -l 2>/dev/null | /bin/grep -Fq "$AIMOACRON"; then
+if crontab -u $USER -l 2>/dev/null | /bin/grep -Fq "$AIMOACRON"; then
 	/bin/echo "Cron job already exists. Skipping adding aimoa-cron-maintenance.sh...Please verify correct installation of existing cron job...!"
 else
-	(sudo crontab -u root -l && /bin/echo "# AI-MOA Cronjob to clear Chrome temp files" 2>/dev/null) | sudo crontab -
-	(sudo crontab -u root -l && /bin/echo "$AIMOACRON" 2>/dev/null) | sudo crontab -
-	/bin/echo "Added aimoa-cron-maintenance.sh to sudo crontab...successful."
+	(crontab -u $USER -l && /bin/echo "# AI-MOA Cronjob to clear Chrome temp files" 2>/dev/null) | crontab -
+	(crontab -u $USER -l && /bin/echo "$AIMOACRON" 2>/dev/null) | crontab -
+	/bin/echo "Added aimoa-cron-maintenance.sh to crontab...successful."
 fi
 
 # Install google-chrome
@@ -175,12 +177,12 @@ fi
 /bin/wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
 # Add Chrome repo to system sources
 /bin/echo "deb http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee -a /etc/apt/sources.list.d/google.list
-apt-get update
+sudo apt-get update
 # Install google-chrome-stable
-apt-get -y install google-chrome-stable
+sudo apt-get -y install google-chrome-stable
 
 # Post-installation messages:
 /bin/echo ""
 /bin/echo "Please also check if 'aimoa' user or 'others' has r-x permissions from root directory / all the way to " $AIMOA
 /bin/echo ""
-/bin/echo "Please check `sudo crontab -e` to verify correct installation of cronjobs."
+/bin/echo "Please check `crontab -e` to verify correct installation of cronjobs."

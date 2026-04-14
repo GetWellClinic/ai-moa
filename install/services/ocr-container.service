@@ -6,8 +6,8 @@ After=network.target
 # Assumes that doctr has been installed in /opt/doctr and that src/docker-compose.yml.doctr.example has replaced the file in /opt/doctr/api/
 
 [Service]
-# OCR Container should run as 'root':
-User=root
+# OCR Container should run as 'aimoa':
+User=aimoa
 Nice=1
 KillMode=control-group
 # KillMode=none

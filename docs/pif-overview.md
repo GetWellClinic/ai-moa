@@ -58,6 +58,11 @@ workflow:
 
 In your `config-pif.yaml` file, use the following fields to configure AIMOA with PIF
 
+Use `python main.py --pif-encrypt-credentials` to encrypt the credentials in the config-pif.yaml file.
+
+Run `../install/export-pif-key.sh` to persist this environment variable `PIF_SECRET_KEY`.
+
+
 ### `aimee_uid`
 - **Type**: Integer  
 - **Description**: Unique identifier for the user AIMOA for initiating the PIF process.  
@@ -102,28 +107,28 @@ In your `config-pif.yaml` file, use the following fields to configure AIMOA with
   ```
 
 ### `database`
-- **Type**: String  
+- **Type**: Encrypted String  
 - **Description**: The name of the database used for storing and retrieving patient data for PIF processing.  
 - **Example**: `test_db`
 
 
 ### `host`
-- **Type**: String  
+- **Type**: Encrypted String  
 - **Description**: The IP address or hostname of the server where the database is hosted.  
 - **Example**: `192.168.1.1`
 
 ### `table_name`
-- **Type**: String  
+- **Type**: Encrypted String  
 - **Description**: The name of the table in the database where PIF records are stored.  
 - **Example**: `test_table`
 
 ### `username`
-- **Type**: String  
+- **Type**: Encrypted String  
 - **Description**: The username used for authenticating with the database.  
 - **Example**: `test`
 
 ### `password`
-- **Type**: String  
+- **Type**: Encrypted String  
 - **Description**: The password associated with the username for authenticating against the database.  
 - **Example**: `test`
 
@@ -133,13 +138,8 @@ In your `config-pif.yaml` file, use the following fields to configure AIMOA with
 - **Example**: `3306`
 
 The above configuration applies when AIMOA is installed in the same environment as the PIF database.
-If the PIF database is hosted in a different environment, it is recommended to use SSL for the database connection.
-To enable this, use the following fields (pif_db_encrypt, ssl_ca,ssl_cert, ssl_key, ssl_verify_cert).
-
-### `pif_db_encrypt`
-- **Type**: Boolean  
-- **Description**: Enable SSL for the database connection.
-- **Example**: `false`
+The PIF database uses SSL for the database connection.
+To configure this, use the following fields (ssl_ca,ssl_cert, ssl_key, ssl_verify_cert).
 
 ### `ssl_ca`
 - **Type**: String  

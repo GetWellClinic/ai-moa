@@ -1,6 +1,6 @@
 # Aimee AI (AI-MOA) #
 ## Windows Installation ##
-*Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
+*Copyright © 2026 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
 *LICENSE: GNU Affero General Public License Version 3*<br />
 **Document Version 2025.03.07**
 <p align="center">
@@ -225,6 +225,7 @@ emr:
 	password:
 	pin:
 ```
+Use `python main.py --encrypt-credentials` to update the EMR credentials in the config.yaml file.
 
 When you are ready to process documents, edit the "..\config\workflow-config.yaml" file to the last document
 in your EMR from where you want to start AI-MOA to start processing documents.
@@ -278,22 +279,25 @@ If you do not see this file, wait, or complete the configuration steps and then 
 
 Aimee AI will access the EMR with a user account you create for her.
 
-1. Login to EMR
-2. Administration -> Add a Provider Record:
+1. Login to EMR with Admin Privilege. 
+2. Administration -> System Management -> Add a Role:
+  - Role Name : aimoa
+3. Administration -> System Management -> Assign Role/Rights to Object:
+  - Role/Privilege : _tickler, _demographic, _lab, _edoc, _search
+  - Privilege : write, read, update
+4. Administration -> Add a Provider Record:
 	- Provider No: **200**
 	- Last Name: AI
 	- First Name: MOA
 	- Sites Assigned: (select your site)
 	- Status: Active
-3. Administration -> Assign Role to Provider:
+5. Administration -> Assign Role to Provider:
 	- Find Provider No. **200** (MOA AI)
-		- Add "doctor" role
-		- Add "receptionist" role
+		- Add "aimoa" role
 	- Scroll to bottom: Update Primary EMR Role:
 		- Select Provider: AI, MOA
-		- Assign AI, MOA primary Role: **receptionist**
 		- Click "Update Primary EMR Role" to save settings.
-4. Administration -> Add a Login Record:
+6. Administration -> Add a Login Record:
 	- Create new user for Aimee AI
 		- User Name: aimoa
 		- Password: *********
@@ -305,7 +309,10 @@ Aimee AI will access the EMR with a user account you create for her.
 		- Pin (local) Enable: (uncheck or check)
 		- Force Password Reset: **No**
 		- Save settings by clicking "Add Record"
-5. Update "config.yaml" file with AI, MOA login information.
+7. To update "config.yaml" file with AI, MOA login information use:
+    - python3 main.py --encrypt-credentials
+    For PIF credentials use:
+      - python3 main.py --pif-encrypt-credentials
 (Please note: be sure to secure the server installation from any unauthorized access or use.)
 
 **Create CONFIDENTIAL, UNATTACHED patient demographic record in EMR**
