@@ -1,4 +1,4 @@
-# COPYRIGHT © 2024 by Spring Health Corporation <office(at)springhealth.org>
+# COPYRIGHT © 2026 by Spring Health Corporation <office(at)springhealth.org>
 # Toronto, Ontario, Canada
 # SUMMARY: This file is part of the Get Well Clinic's original "AI-MOA" project's collection of software,
 # documentation, and configuration files.
@@ -67,7 +67,7 @@ class DriverManager:
         if self.config.get('chrome.options.headless', False):
             chrome_options.add_argument("--headless")
             logger.debug("Chrome headless mode enabled")
-        if not self.config.get('emr.verify-HTTPS', False):
+        if not self.config.get('emr.verify-HTTPS', True):
             chrome_options.add_argument('--ignore-certificate-errors')
         return webdriver.Chrome(
             service=Service(ChromeDriverManager().install()),

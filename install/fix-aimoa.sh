@@ -6,6 +6,7 @@
 
 # CONFIGURATION:
 CURRENT=$(pwd)
+USER=${SUDO_USER:-$(whoami)}
 # Automatic detection of AI-MOA base directory:
 cd ..
 AIMOA=$(pwd)
@@ -21,29 +22,29 @@ USERNAME=$(awk -F':' -v uid=1000 '$3 == uid { print $1 }' /etc/passwd)
 /usr/sbin/usermod -a -G aimoa "$USERNAME"
 
 # Modify user:group permissions:
-/bin/chown aimoa:aimoa $AIMOA
-/bin/chown aimoa:aimoa $AIMOA/* -R
-/bin/chown aimoa:aimoa $AIMOA/.env/* -R -P 2>/dev/null
+sudo /bin/chown $USER:$USER $AIMOA
+sudo /bin/chown $USER:$USER $AIMOA/* -R
+sudo /bin/chown $USER:$USER $AIMOA/.env/* -R -P 2>/dev/null
 # Fix permissions so AI MOA can read-write
-/bin/chmod ug+rwx $AIMOA/config $AIMOA/logs $AIMOA/.env $AIMOA/app/input $AIMOA/app/output 2>/dev/null
-/bin/chmod ug+rw $AIMOA/config/* $AIMOA/logs/* $AIMOA/.env/* $AIMOA/app/input/* $AIMOA/app/output/* 2>/dev/null
-/bin/chmod ug+rw $AIMOA/llm-container/models -R
-/bin/chmod ug+rw $AIMOA/src/*.lock $AIMOA/config/*.lock 2>/dev/null
+sudo /bin/chmod ug+rwx $AIMOA/config $AIMOA/logs $AIMOA/.env $AIMOA/app/input $AIMOA/app/output 2>/dev/null
+sudo /bin/chmod ug+rw $AIMOA/config/* $AIMOA/logs/* $AIMOA/.env/* $AIMOA/app/input/* $AIMOA/app/output/* 2>/dev/null
+sudo /bin/chmod ug+rw $AIMOA/llm-container/models -R
+sudo /bin/chmod ug+rw $AIMOA/src/*.lock $AIMOA/config/*.lock 2>/dev/null
 # Protect config.yaml from Other users
-/bin/chmod o-rwx $AIMOA/config $AIMOA/app $AIMOA/app/input $AIMOA/app/output 2>/dev/null
+sudo /bin/chmod o-rwx $AIMOA/config $AIMOA/app $AIMOA/app/input $AIMOA/app/output 2>/dev/null
 
 /bin/echo "Confirming current user belonging to the following groups (check for 'aimoa')..."
-/usr/bin/groups $USER
-/usr/bin/groups $USERNAME
+sudo /usr/bin/groups $USER
+sudo /usr/bin/groups $USERNAME
 /bin/echo ""
 /bin/sleep 5s
 
 # Protect installation files
-/bin/chmod guo+x $AIMOA/install/*
-/bin/chmod o-x $AIMOA/install/install*
-/bin/chmod o-x $AIMOA/install/uninstall*
+sudo /bin/chmod guo+x $AIMOA/install/*
+sudo /bin/chmod o-x $AIMOA/install/install*
+sudo /bin/chmod o-x $AIMOA/install/uninstall*
 # Protect config directory
-/bin/chmod o-rw ../config/config.yaml*
+sudo /bin/chmod o-rw ../config/config.yaml*
 
 # Release file lock on workflow-config.yaml
 # release_lock

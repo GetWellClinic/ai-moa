@@ -8,6 +8,7 @@
 # Automatic detect base directory for AI-MOA:
 cd ..
 AIMOA=$(pwd)
+USER=${SUDO_USER:-$(whoami)}
 # Override to specify base directory for AI-MOA:
 # AIMOA=/opt/ai-moa
 
@@ -22,23 +23,23 @@ AIMOA=$(pwd)
 /bin/sleep 10s
 
 # Edit the AI-MOA services to match installed AI-MOA base directory:
-/bin/cp $AIMOA/install/services/ai-moa.service.default $AIMOA/install/services/ai-moa.service
-/bin/cp $AIMOA/install/services/llm-container.service.default $AIMOA/install/services/llm-container.service
+sudo /bin/cp $AIMOA/install/services/ai-moa.service.default $AIMOA/install/services/ai-moa.service
+sudo /bin/cp $AIMOA/install/services/llm-container.service.default $AIMOA/install/services/llm-container.service
 /bin/sed -i 's#/opt/ai-moa#'"$AIMOA"'#g' $AIMOA/install/services/ai-moa.service
 /bin/sed -i 's#/opt/ai-moa#'"$AIMOA"'#g' $AIMOA/install/services/llm-container.service
 
 # Install AI-MOA and LLM Container as system services in Linux:
-/bin/cp $AIMOA/install/services/ai-moa.service /etc/systemd/system/
-/bin/cp $AIMOA/install/services/llm-container.service /etc/systemd/system/
+sudo /bin/cp $AIMOA/install/services/ai-moa.service /etc/systemd/system/
+sudo /bin/cp $AIMOA/install/services/llm-container.service /etc/systemd/system/
 # Reload any changes to system service folder /etc/systemd/system
-/usr/bin/systemctl daemon-reload
+sudo /usr/bin/systemctl daemon-reload
 
 # Enable system AI-MOA and LLM Container services:
-/usr/bin/systemctl enable ai-moa.service
-/usr/bin/systemctl enable llm-container.service
+sudo /usr/bin/systemctl enable ai-moa.service
+sudo /usr/bin/systemctl enable llm-container.service
 # Start system services:
-/usr/sbin/service llm-container start
-/usr/sbin/service ai-moa start
+sudo /usr/sbin/service llm-container start
+sudo /usr/sbin/service ai-moa start
 
 # Install crontab for Sunday morning reboot (to autofix kernel unattended upgrades mismatch with NVIDIA drivers causing AI-MOA to halt)
  REBOOTCRON="1 4 * * SUN     /usr/sbin/shutdown -r now"

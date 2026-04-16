@@ -1,4 +1,4 @@
-# COPYRIGHT © 2024 by Spring Health Corporation <office(at)springhealth.org>
+# COPYRIGHT © 2026 by Spring Health Corporation <office(at)springhealth.org>
 # Toronto, Ontario, Canada
 # SUMMARY: This file is part of the Get Well Clinic's original "AI-MOA" project's collection of software,
 # documentation, and configuration files.
@@ -358,7 +358,7 @@ def get_mrp_details(self):
     self.session.headers.update(self.headers)
 
     # Send the POST request
-    response = self.session.post(url, data=payload, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
+    response = self.session.post(url, data=payload, verify=self.config.get('emr.verify-HTTPS', True), timeout=self.config.get('general_setting.timeout', 300))
 
     if response.status_code == 200:
         try:
@@ -457,7 +457,7 @@ def get_patient_Html(self,type_of_query,query):
     self.session.headers.update(self.headers)
 
     # Send the POST request
-    response = self.session.post(url, data=payload, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
+    response = self.session.post(url, data=payload, verify=self.config.get('emr.verify-HTTPS', True), timeout=self.config.get('general_setting.timeout', 300))
 
     soup = BeautifulSoup(response.text, 'html.parser')
 

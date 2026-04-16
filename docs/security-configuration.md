@@ -41,7 +41,9 @@ AI-MOA was intended to be installed on a server within your physically protected
 ## EMR Credentials Considerations ##
 
 When configuring the AI-MOA user in the EMR, use a separate user account that is not known to anyone else.
-- Assign the user role to the lowest required permissions (i.e. "receptionist" role, not an admin role). 
+- Assign the user role to the lowest required permissions (i.e. "aimoa" role, not an admin role). 
+- Always assign the minimum required privileges for aimoa role to limit access. The aimoa role should only have the permissions necessary for AI-MOA to function (write, read, and update for the specific objects).
+- Periodically review roles and privileges to ensure that they remain aligned with your organization’s security policies and that no unnecessary permissions are granted.
 - Change/rotate the password regularly.
 
 ## Co-locate containers, packages on the same server ##
@@ -96,5 +98,91 @@ Always keep the "human in the loop": (Mandatory)
 - Assign a human MOA on a daily rotation/regular basis to conduct an EMR document Search for the past day's AI-MOA tagging results, and manually review ALL results for accuracy, and make edits/corrections as required.
 - Continue clinic administrative best practices of human verification of patient demographic data (with viewing the healthcard and confirming contact details) before each clinical encounter point (i.e. every time patient checks in for an appointment).
 
+## Enforcing Administrative Access Policy ##
 
+1. Purpose
 
+The purpose of this policy is to define the procedures governing administrative access to the AI-MOA host environment and to enforce role separation between system maintenance and operational oversight. This policy aims to minimize risks of insider threats, accidental misconfigurations, and unauthorized access to sensitive patient data by implementing controls over administrative privileges.
+
+2. Scope
+
+This policy applies to all personnel, contractors, and vendors who require administrative access to the AI-MOA host environment, including servers, virtual machines, and associated systems.
+
+3. Administrative Access Control
+
+Access Roles:
+ - System Administrator (SysAdmin): Responsible for system maintenance, updates, patching, and infrastructure management. This role will not have access to operational oversight functions or patient data.
+ - Operational Manager (OpManager): Oversees the day-to-day functionality of the AI-MOA system, including monitoring AI outputs, auditing logs, and ensuring compliance with clinical workflows.
+ - Security Officer (SecOfficer): Responsible for reviewing system security, monitoring user activity, and ensuring the integrity of data and system access controls.
+
+Role Separation:
+ - System Administration: SysAdmins handle all technical aspects of the environment, including server maintenance, software updates, and configuration changes.
+ - Operational Oversight: OpManagers handle day-to-day operations, monitor system performance, and verify outputs of the AI-MOA system.
+ - Security & Auditing: SecOfficers maintain the security of the system by monitoring administrative access logs, reviewing audit trails, and ensuring access control procedures are followed.
+
+4. Administrative Access Procedures
+
+ - Least Privilege Access: Administrative access will be granted based on the principle of least privilege, ensuring that users only have the permissions necessary to perform their job functions.
+ - Access Review and Approval: All access requests for administrative privileges must be submitted in writing and approved by both the SysAdmin and the Security Officer before access is granted.
+ - Monitoring and Logging: All administrative access will be logged, and logs will be reviewed by the Security Officer on a monthly basis. Logs will include details of the actions taken, user identity, and timestamps.
+
+5. Dual Control & Approval Mechanisms
+
+ - Critical Actions: Any critical administrative actions (e.g., system configuration changes, access to sensitive data) must require dual approval: one from the SysAdmin and one from the Security Officer. These actions must also be documented and reviewed periodically.
+ - Escalation Process: In the event of critical system issues or changes, the access of multiple authorized personnel will be required to ensure thorough review and verification of the decision-making process.
+
+6. Periodic Access Review
+
+ - Access Review Frequency: Administrative access rights will be reviewed every 6 months to ensure that only necessary privileges are maintained and that no unauthorized access has been granted.
+ - Role Modifications: If a user's role or responsibilities change, their access privileges must be immediately reviewed and modified to reflect the new role.
+
+7. Enforcement
+
+Violations of this policy will result in disciplinary action, which may include, but are not limited to, revocation of administrative access and other actions as per company policy.
+
+## Secure Deployment Guidelines ##
+
+1. Role Separation in AI-MOA Deployment
+
+To maintain the integrity and security of the AI-MOA environment, clear role separation between administrative tasks (system maintenance) and operational oversight will be enforced. The following roles are defined within the deployment environment:
+
+ - System Administrator (SysAdmin): Manages the physical and virtual infrastructure, including server configuration, patching, and overall system health.
+ - Operational Manager (OpManager): Oversees daily usage, verifying AI-MOA outputs, monitoring system performance, and addressing any operational issues.
+ - Security Officer (SecOfficer): Ensures the security of the environment by auditing access logs, monitoring activity, and enforcing security protocols.
+
+2. Access Procedures for AI-MOA Host Environment
+
+ - Administrative Access: Admin access to the AI-MOA host environment will only be granted based on the principle of least privilege, where each user’s access is restricted to the minimum level of privilege required for their tasks.
+ - Access Approval: Access to administrative functions will require approval from both the SysAdmin and the Security Officer. All requests for administrative access must be documented and reviewed.
+
+3. Monitoring and Audit Trails
+
+ - Logging of Administrative Access: All administrative access to the AI-MOA host environment will be logged. Logs will include:
+	- User identity (and role)
+	- Action taken (e.g., configuration change, file access)
+	- Timestamp
+	- Affected system component
+ - Audit Review: Logs will be reviewed by the Security Officer on a monthly basis to detect unauthorized access or abnormal activities. Any anomalies will be flagged for further investigation.
+
+4. Backup and Encryption of Access Logs
+
+ - Log Backup: All logs related to administrative access, including system maintenance and operational oversight, will be encrypted at rest and backed up in accordance with the clinic's backup procedures.
+ - Log Retention: Logs will be retained for at least 12 months to support auditing and security investigations.
+
+5. Security of Administrative Accounts
+
+ - SSH Key Management: SSH keys used for remote access must be managed securely, and all keys should be regularly rotated to minimize risk.
+
+6. Role-Specific Configuration and Deployment
+
+ - Secure Deployment: The deployment of AI-MOA should always occur within a secure environment, preferably on an isolated server or virtual machine with access restricted to authorized personnel.
+ - Update and Patch Management: AI-MOA components, including the host operating system, containers (OCR, LLM), and related infrastructure, must be updated regularly with security patches.
+
+7. User Training
+
+ - Administrator Training: All system administrators, operational managers, and security officers will undergo security training to ensure they understand their roles and responsibilities in safeguarding patient data and clinic operations.
+
+8. Enforcement and Auditing
+
+ - Compliance: Non-compliance with the guidelines will result in corrective actions, which may include, but are not limited to, revocation of administrative access and other actions as per company policy.
+ - Audit and Review: The deployment and access protocols will be audited at least once every 12 months by an external third-party security reviewer to ensure compliance with the guidelines and best practices.

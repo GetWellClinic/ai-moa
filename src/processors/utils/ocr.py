@@ -1,4 +1,4 @@
-# COPYRIGHT © 2024 by Spring Health Corporation <office(at)springhealth.org>
+# COPYRIGHT © 2026 by Spring Health Corporation <office(at)springhealth.org>
 # Toronto, Ontario, Canada
 # SUMMARY: This file is part of the Get Well Clinic's original "AI-MOA" project's collection of software,
 # documentation, and configuration files.
@@ -247,7 +247,7 @@ def extract_text_doctr_api(self):
                 ("files", ('ocr_doc.pdf', trimmed_file.getvalue(), "application/pdf")),
             ]
 
-        results = requests.post(self.config.get('ocr.api_uri','http://localhost:8002/ocr'), headers=headers, params=params, files=files, verify=self.config.get('ocr.verify-HTTPS')).json()
+        results = requests.post(self.config.get('ocr.api_uri','https://localhost:8002/ocr'), headers=headers, params=params, files=files, verify=self.config.get('ocr.verify-HTTPS', True)).json()
 
         all_outputs = []
 

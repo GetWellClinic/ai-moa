@@ -1,4 +1,4 @@
-# COPYRIGHT © 2025 by Spring Health Corporation <office(at)springhealth.org>
+# COPYRIGHT © 2026 by Spring Health Corporation <office(at)springhealth.org>
 # Toronto, Ontario, Canada
 # SUMMARY: This file is part of the Get Well Clinic's original "AI-MOA" project's collection of software,
 # documentation, and configuration files.
@@ -30,8 +30,7 @@ chrome:
 
 # EMR (Electronic Medical Record) configuration for connecting to an EMR system.
 emr:
-  base_url: http://127.0.0.1:8080/oscar  # Base URL for the EMR system.
-  verify-HTTPS: false   # This flag allows for ignoring warnings for self-signed TLS/SSL certificates in a development environment.
+  base_url: https://127.0.0.1:8080/oscar  # Base URL for the EMR system.
   system_type: o19  # Type of system. (ie. 'o19', 'openo', 'opro' or 'o15')
   username: emr  # Username for EMR login.
   password: 'passpwd'  # Password for EMR login.
@@ -79,9 +78,8 @@ pif:
 
   port: 3306 # The port number used to connect to the database.
 
-  # The above configuration applies when AIMOA is installed in the same environment as the PIF database. If the PIF database is hosted in a different environment, it is recommended to use SSL for the database connection. To enable this, use the following fields (pif_db_encrypt, ssl_ca,ssl_cert, ssl_key, ssl_verify_cert)
+  # The above configuration applies when AIMOA is installed in the same environment as the PIF database. The PIF database uses SSL for the database connection. To configure this, use the following fields (ssl_ca,ssl_cert, ssl_key, ssl_verify_cert)
 
-  pif_db_encrypt: true # Enable SSL for the database connection.
   ssl_ca: './ca.pem' # Path to the ca.pem file.
   ssl_cert: './client-cert.pem' # Path to the client-cert.pem file.
   ssl_key: './client-key.pem' # Path to the client-cert.pem file.

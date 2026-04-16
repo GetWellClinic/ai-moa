@@ -1,4 +1,4 @@
-# COPYRIGHT © 2024 by Spring Health Corporation <office(at)springhealth.org>
+# COPYRIGHT © 2026 by Spring Health Corporation <office(at)springhealth.org>
 # Toronto, Ontario, Canada
 # SUMMARY: This file is part of the Get Well Clinic's original "AI-MOA" project's collection of software,
 # documentation, and configuration files.
@@ -32,6 +32,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
+import os
 
 import logging
 
@@ -47,9 +48,6 @@ class ProviderListManager:
 
     Attributes:
         config (dict): The configuration settings for the workflow, including login credentials and URLs.
-        username (str): The EMR username.
-        password (str): The EMR password.
-        pin (str): The EMR PIN.
         base_url (str): The base URL of the EMR system.
         logger (logging.Logger): A logger instance to log information and errors.
         session (requests.Session): The requests session for making HTTP requests.
@@ -60,16 +58,13 @@ class ProviderListManager:
 
         Args:
             workflow (object): The workflow object that contains configuration data and logger instance.
-        """
+        """        
         self.config = workflow.config
-        self.username = workflow.config.get('emr.username')
-        self.password = workflow.config.get('emr.password')
-        self.pin = workflow.config.get('emr.pin')
         self.base_url = workflow.config.get('emr.base_url')
         self.logger = workflow.logger
         self.system_type = workflow.config.get('emr.system_type')
         self.chrome_headless = workflow.config.get('chrome.options.headless')
-        self.verify_https = workflow.config.get('emr.verify-HTTPS')
+        self.verify_https = workflow.config.get('emr.verify-HTTPS', True)
         
         self.headers = {}
         self.origin_url = ''
@@ -112,7 +107,7 @@ class ProviderListManager:
                 data = {'action': 'add'}
                 self.headers['Referer'] = url
                 self.session.headers.update(self.headers)
-                response = self.session.post(url, files=files, data=data, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
+                response = self.session.post(url, files=files, data=data, verify=self.config.get('emr.verify-HTTPS', True), timeout=self.config.get('general_setting.timeout', 300))
                 if(response.status_code == 200):
                     self.logger.info("Template uploaded successfully.")
                     return True
@@ -140,7 +135,7 @@ class ProviderListManager:
         self.session.headers.update(self.headers)
 
         # Send the POST request
-        response = self.session.get(url, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
+        response = self.session.get(url, verify=self.config.get('emr.verify-HTTPS', True), timeout=self.config.get('general_setting.timeout', 300))
 
         soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -182,7 +177,7 @@ class ProviderListManager:
             url = f"{self.base_url}/oscarReport/reportByTemplate/homePage.jsp?templates=all"
             self.headers['Referer'] = url
             self.session.headers.update(self.headers)
-            response = self.session.get(url, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
+            response = self.session.get(url, verify=self.config.get('emr.verify-HTTPS', True), timeout=self.config.get('general_setting.timeout', 300))
             soup = BeautifulSoup(response.text, 'html.parser')
             tbody = soup.find('tbody', id='tableData')
             template_id = self.find_template_id(tbody)
@@ -230,7 +225,7 @@ class ProviderListManager:
         try:
             self.headers['Referer'] = url
             self.session.headers.update(self.headers)
-            response = self.session.post(url, data=params, verify=self.config.get('emr.verify-HTTPS'), timeout=self.config.get('general_setting.timeout', 300))
+            response = self.session.post(url, data=params, verify=self.config.get('emr.verify-HTTPS', True), timeout=self.config.get('general_setting.timeout', 300))
             soup = BeautifulSoup(response.text, 'html.parser')
             input_element = soup.find('input', {'type': 'hidden', 'class': 'btn', 'name': 'csv'})
             if input_element:

@@ -1,5 +1,5 @@
 # AI-MOA (AI-powered Medical Office Assistant)
-*Copyright © 2024 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
+*Copyright © 2026 by Spring Health Corporation, Toronto, Ontario, Canada*<br />
 *LICENSE: GNU Affero General Public License Version 3*<br />
 **Document Version 2025.03.07**
 
@@ -22,7 +22,10 @@ AI-MOA is an advanced, AI-powered Medical Office Assistant designed to automate 
 
 ```
 ai-moa/
-├── src/
+├── docs/                          # Documentation
+├── install/                       # Linux installation scripts & instructions
+├── llm-container/                 # Docker setup for running a local LLM
+├── src/                           # Core Python application code
 │   ├── ai_moa_utils/
 │   │   ├── __init__.py
 │   │   └── logging_setup.py
@@ -58,14 +61,18 @@ ai-moa/
 │   │   └── workflow/
 │   │       ├── __init__.py
 │   │       └── emr_workflow.py
-│   ├── config.yaml
-│   ├── main.py
-│   ├── requirements.txt
-│   └── workflow-config.yaml
-├── docker-compose.yaml
+│   ├── config.yaml                # Main configuration
+│   ├── main.py                    # Entry point of the application
+│   ├── requirements.txt           # Python dependencies
+│   └── workflow-config.yaml       # Workflow rules configuration
+├── windows/                       # Windows-specific installation scripts & instructions
+├── .gitignore
+├── CONTRIBUTORS.md
+├── COPYRIGHT
 ├── Dockerfile
 ├── LICENSE
-└── README.md
+├── README.md
+└── docker-compose.yaml
 ```
 
 ## Setup and Installation
