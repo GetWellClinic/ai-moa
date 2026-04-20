@@ -93,12 +93,38 @@ def encrypt_emr_credentials(config_file: str, workflow_config_file: str) -> None
     """
     logger.info(f"Encrypting EMR credentials...")
     config_manager: ConfigManager = ConfigManager(config_file, workflow_config_file)
-    key = Fernet.generate_key()
+
+    key = os.getenv("EMR_SECRET_KEY")
+
+    generate_key_flag = 'yes'
+
+    if not key:
+        print("No existing key found. Generating a new one...")
+        key = Fernet.generate_key()
+    else:
+        print("\nIMPORTANT: If you are using the same environment for multiple (document tagging) instances,\n"
+        "generating a new key will make your other instances unable to authenticate with the old key,\n"
+        "and you will have to regenerate credential encryption for those instances.\n")
+
+        generate_key_flag = input(
+            "Enter 'Yes' to generate new key, 'No' to use the existing key: "
+        ).strip().lower()
+
+        if generate_key_flag == "yes":
+            print("Generating a new key...\n")
+            key = Fernet.generate_key()
+        else:
+            key = key.encode()
+
     fernet = Fernet(key)
 
     username = input("Enter EMR username: ").strip()
-    password = getpass.getpass("Enter EMR password: ").strip()
-    pin = getpass.getpass("Enter EMR PIN, press Enter if not needed: ").strip()
+    password = prompt_with_confirmation("Enter EMR password:")
+
+    use_pin = input("Does your EMR uses PIN at login? (y/n): ").strip().lower()
+    pin = None
+    if use_pin in ("y", "yes"):
+        pin = prompt_with_confirmation("Enter EMR PIN: ")
 
     if not username or not password:
         print("Username and Password fields are required.")
@@ -108,16 +134,17 @@ def encrypt_emr_credentials(config_file: str, workflow_config_file: str) -> None
     config_manager.config["emr"]["username"] = fernet.encrypt(username.encode()).decode()
     config_manager.config["emr"]["password"] = fernet.encrypt(password.encode()).decode()
 
-    if pin:
+    if pin and use_pin in ("y", "yes"):
         config_manager.config["emr"]["pin"] = fernet.encrypt(pin.encode()).decode()
 
     config_manager.save_config()
 
-    print("\n=== IMPORTANT ===")
-    print("For AIMOA to work properly, please store this key securely as an environment variable using the following:\n")
-    print(f'export EMR_SECRET_KEY="{key.decode()}"')
-    print(f'Run ../install/export-emr-key.sh to persist this environment variable.')
-    print("\n=== END ===")
+    if generate_key_flag == "yes":
+        print("\n=== IMPORTANT ===")
+        print("For AIMOA to work properly, please store this key securely as an environment variable using the following:\n")
+        print(f'export EMR_SECRET_KEY="{key.decode()}"')
+        print(f'Run ../install/export-emr-key.sh to persist this environment variable.')
+        print("\n=== END ===")
 
 def encrypt_pif_credentials(config_file: str, workflow_config_file: str) -> None:
     """
@@ -151,11 +178,33 @@ def encrypt_pif_credentials(config_file: str, workflow_config_file: str) -> None
     """
     logger.info(f"Encrypting PIF credentials...")
     config_manager: ConfigManager = ConfigManager(config_file, workflow_config_file)
-    key = Fernet.generate_key()
+
+    key = os.getenv("PIF_SECRET_KEY")
+
+    generate_key_flag = 'yes'
+
+    if not key:
+        print("No existing key found. Generating a new one...")
+        key = Fernet.generate_key()
+    else:
+        print("\nIMPORTANT: If you are using the same environment for multiple (PIF) instances,\n"
+        "generating a new key will make your other instances unable to authenticate with the old key,\n"
+        "and you will have to regenerate credential encryption for those instances.\n")
+
+        generate_key_flag = input(
+            "Enter 'Yes' to generate new key, 'No' to use the existing key: "
+        ).strip().lower()
+
+        if generate_key_flag == "yes":
+            print("Generating a new key...\n")
+            key = Fernet.generate_key()
+        else:
+            key = key.encode()
+
     fernet = Fernet(key)
 
     username = input("Enter PIF DB username: ").strip()
-    password = getpass.getpass("Enter PIF DB password: ").strip()
+    password = prompt_with_confirmation("Enter PIF DB password:")
     host = input("Enter PIF Host IP Address: ").strip()
     database = input("Enter PIF Database Name: ").strip()
     table_name = input("Enter PIF Table Name: ").strip()
@@ -173,11 +222,37 @@ def encrypt_pif_credentials(config_file: str, workflow_config_file: str) -> None
 
     config_manager.save_config()
 
-    print("\n=== IMPORTANT ===")
-    print("For AIMOA-PIF to work properly, please store this key securely as an environment variable using the following:\n")
-    print(f'export PIF_SECRET_KEY="{key.decode()}"')
-    print(f'Run ../install/export-pif-key.sh to persist this environment variable.')
-    print("\n=== END ===")
+    if generate_key_flag == "yes":
+        print("\n=== IMPORTANT ===")
+        print("For AIMOA-PIF to work properly, please store this key securely as an environment variable using the following:\n")
+        print(f'export PIF_SECRET_KEY="{key.decode()}"')
+        print(f'Run ../install/export-pif-key.sh to persist this environment variable.')
+        print("\n=== END ===")
+
+def prompt_with_confirmation(prompt_text):
+    """
+    Prompt the user to securely enter a value (e.g., password or PIN) twice
+    using hidden input. The function ensures both entries match and are not empty.
+
+    If the values do not match or are empty, the user is prompted again
+    until valid input is provided.
+
+    Args:
+        prompt_text (str): The message displayed to the user when asking for input.
+
+    Returns:
+        str: The confirmed, non-empty user input.
+    """
+    while True:
+        first = getpass.getpass(prompt_text).strip()
+        second = getpass.getpass("Confirm " + prompt_text).strip()
+
+        if first != second:
+            print("Entries do not match. Please try again.\n")
+        elif not first:
+            print("Value cannot be empty. Please try again.\n")
+        else:
+            return first
 
 class AIMOAAutomation:
     """
