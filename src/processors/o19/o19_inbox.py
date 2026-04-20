@@ -40,7 +40,7 @@ def get_document_processor_type(self):
         >>> print(processor_type)
         True
     """
-	system_type = self.config.get('aimoa_document_processor.type')
+	system_type = self.config.get('aimoa_document_processor.type','emr')
 
 	return system_type in ['emr']
 
