@@ -214,6 +214,7 @@ def aimoa_fernet_key(env_var: str, system_label: str) -> tuple[bytes, bool]:
             key = Fernet.generate_key()
             regenerated = True
         else:
+            print("Using existing key...\n")
             key = key_str.encode()
 
     return key, regenerated
