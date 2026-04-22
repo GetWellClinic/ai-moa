@@ -113,7 +113,7 @@ def encrypt_emr_credentials(config_file: str, workflow_config_file: str) -> None
     config_manager.config["emr"]["username"] = fernet.encrypt(username.encode()).decode()
     config_manager.config["emr"]["password"] = fernet.encrypt(password.encode()).decode()
 
-    if pin and use_pin in ("y", "yes"):
+    if pin:
         config_manager.config["emr"]["pin"] = fernet.encrypt(pin.encode()).decode()
 
     config_manager.save_config()
