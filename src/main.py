@@ -94,34 +94,13 @@ def encrypt_emr_credentials(config_file: str, workflow_config_file: str) -> None
     logger.info(f"Encrypting EMR credentials...")
     config_manager: ConfigManager = ConfigManager(config_file, workflow_config_file)
 
-    key = os.getenv("EMR_SECRET_KEY")
-
-    generate_key_flag = 'yes'
-
-    if not key:
-        print("No existing key found. Generating a new one...")
-        key = Fernet.generate_key()
-    else:
-        print("\nIMPORTANT: If you are using the same environment for multiple (document tagging) instances,\n"
-        "generating a new key will make your other instances unable to authenticate with the old key,\n"
-        "and you will have to regenerate credential encryption for those instances.\n")
-
-        generate_key_flag = input(
-            "Enter 'Yes' to generate new key, 'No' to use the existing key: "
-        ).strip().lower()
-
-        if generate_key_flag == "yes":
-            print("Generating a new key...\n")
-            key = Fernet.generate_key()
-        else:
-            key = key.encode()
-
+    key, regenerated = aimoa_fernet_key("EMR_SECRET_KEY", "document tagging")
     fernet = Fernet(key)
 
     username = input("Enter EMR username: ").strip()
     password = prompt_with_confirmation("Enter EMR password:")
 
-    use_pin = input("Does your EMR uses PIN at login? (y/n): ").strip().lower()
+    use_pin = input("Does your EMR use a PIN at login? (y/n): ").strip().lower()
     pin = None
     if use_pin in ("y", "yes"):
         pin = prompt_with_confirmation("Enter EMR PIN: ")
@@ -139,7 +118,7 @@ def encrypt_emr_credentials(config_file: str, workflow_config_file: str) -> None
 
     config_manager.save_config()
 
-    if generate_key_flag == "yes":
+    if regenerated:
         print("\n=== IMPORTANT ===")
         print("For AIMOA to work properly, please store this key securely as an environment variable using the following:\n")
         print(f'export EMR_SECRET_KEY="{key.decode()}"')
@@ -179,28 +158,7 @@ def encrypt_pif_credentials(config_file: str, workflow_config_file: str) -> None
     logger.info(f"Encrypting PIF credentials...")
     config_manager: ConfigManager = ConfigManager(config_file, workflow_config_file)
 
-    key = os.getenv("PIF_SECRET_KEY")
-
-    generate_key_flag = 'yes'
-
-    if not key:
-        print("No existing key found. Generating a new one...")
-        key = Fernet.generate_key()
-    else:
-        print("\nIMPORTANT: If you are using the same environment for multiple (PIF) instances,\n"
-        "generating a new key will make your other instances unable to authenticate with the old key,\n"
-        "and you will have to regenerate credential encryption for those instances.\n")
-
-        generate_key_flag = input(
-            "Enter 'Yes' to generate new key, 'No' to use the existing key: "
-        ).strip().lower()
-
-        if generate_key_flag == "yes":
-            print("Generating a new key...\n")
-            key = Fernet.generate_key()
-        else:
-            key = key.encode()
-
+    key, regenerated = aimoa_fernet_key("PIF_SECRET_KEY", "PIF")
     fernet = Fernet(key)
 
     username = input("Enter PIF DB username: ").strip()
@@ -222,12 +180,43 @@ def encrypt_pif_credentials(config_file: str, workflow_config_file: str) -> None
 
     config_manager.save_config()
 
-    if generate_key_flag == "yes":
+    if regenerated:
         print("\n=== IMPORTANT ===")
         print("For AIMOA-PIF to work properly, please store this key securely as an environment variable using the following:\n")
         print(f'export PIF_SECRET_KEY="{key.decode()}"')
         print(f'Run ../install/export-pif-key.sh to persist this environment variable.')
         print("\n=== END ===")
+
+def aimoa_fernet_key(env_var: str, system_label: str) -> tuple[bytes, bool]:
+    """
+    Returns (key_bytes, regenerated_flag).
+    regenerated_flag is True only if a new key was generated.
+    """
+    key_str = os.getenv(env_var)
+    regenerated = False
+
+    if not key_str:
+        print("No existing key found. Generating a new one...")
+        key = Fernet.generate_key()
+        regenerated = True
+    else:
+        print(
+            f"\nIMPORTANT: If you are using the same environment for multiple ({system_label}) instances,\n"
+            "generating a new key will make your other instances unable to authenticate with the old key,\n"
+            "and you will have to regenerate credential encryption for those instances.\n"
+        )
+        answer = input(
+            "Enter 'Yes' to generate new key, 'No' to use the existing key: "
+        ).strip().lower()
+
+        if answer == "yes":
+            print("Generating a new key...\n")
+            key = Fernet.generate_key()
+            regenerated = True
+        else:
+            key = key_str.encode()
+
+    return key, regenerated
 
 def prompt_with_confirmation(prompt_text):
     """

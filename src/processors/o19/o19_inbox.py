@@ -178,7 +178,7 @@ def get_inbox_pendingdocs_documents(self):
 						self.file_name = item
 					else:
 						self.config.update_pending_inbox(item)
-						self.logger.info(f"Max retries exceeded for processing. Skipping document No: {item[:self.logger_mask_filename_length]}*****.")
+						self.logger.info(f"Max retries exceeded for processing. Skipping document No: {str(item)[:self.logger_mask_filename_length]}*****.")
 					return False
 				else:
 					self.config.update_pending_retries(current_retries + 1)  # Increment the retry count by 1
@@ -192,7 +192,7 @@ def get_inbox_pendingdocs_documents(self):
 
 					if file_response.status_code == 200 and file_response.content:
 						self.config.set_shared_state('current_file', file_response.content)
-						self.logger.info(f"Fetched EMR document from Pending Docs...Processing Document No: {item[:self.logger_mask_filename_length]}*****.")
+						self.logger.info(f"Fetched EMR document from Pending Docs...Processing Document No: {str(item)[:self.logger_mask_filename_length]}*****.")
 						return True
 					else:
 						self.logger.error(f"An error occurred: {file_response.status_code}")
@@ -263,7 +263,7 @@ def get_inbox_incomingdocs_documents(self):
 						else:
 							current_file_plus_one_second = current_file + timedelta(seconds=1)
 							self.config.update_incoming_inbox(str(current_file_plus_one_second))
-							self.logger.info(f"Max retries exceeded for processing. Skipping document No: {item[:self.logger_mask_filename_length]}*****.")
+							self.logger.info(f"Max retries exceeded for processing. Skipping document No: {str(item)[:self.logger_mask_filename_length]}*****.")
 						return False
 					else:
 						self.config.update_incoming_retries(current_retries + 1)  # Increment the retry count by 1
@@ -279,7 +279,7 @@ def get_inbox_incomingdocs_documents(self):
 							self.file_name = option.get_attribute('value')
 							self.inbox_incoming_lastfile = update_time
 							self.config.set_shared_state('current_file', file_response.content)
-							self.logger.info(f"Fetched EMR document from Incoming Docs...Processing Document No: {item[:self.logger_mask_filename_length]}*****.")
+							self.logger.info(f"Fetched EMR document from Incoming Docs...Processing Document No: {str(item)[:self.logger_mask_filename_length]}*****.")
 							return True
 						else:
 							self.logger.error(f"An error occurred: {file_response.status_code}")
@@ -332,7 +332,7 @@ def get_inbox_pendingdocs_documents_opro(self):
 				if value != '-1':
 					self.config.update_pending_retries(0)
 					self.config.update_pending_inbox(item)
-					self.logger.info(f"Document {item[:self.logger_mask_filename_length]}***** already tagged to patient.")
+					self.logger.info(f"Document {str(item)[:self.logger_mask_filename_length]}***** already tagged to patient.")
 					return False
 		else:
 			self.logger.info(f"Unexpected error from server, error code {document_details.status_code}")
@@ -345,15 +345,15 @@ def get_inbox_pendingdocs_documents_opro(self):
 				self.file_name = item
 			else:
 				self.config.update_pending_inbox(item)
-				self.logger.info(f"Max retries exceeded for processing. Skipping document No: {item[:self.logger_mask_filename_length]}*****.")
+				self.logger.info(f"Max retries exceeded for processing. Skipping document No: {str(item)[:self.logger_mask_filename_length]}*****.")
 				return False
 		else:
 			self.config.update_pending_retries(current_retries + 1)
 			self.config.set_shared_state('current_file', file_response.content)
 			self.file_name = item
-			self.logger.info(f"Fetched EMR document from Pending Docs...Processing Document No: {item[:self.logger_mask_filename_length]}*****.")
+			self.logger.info(f"Fetched EMR document from Pending Docs...Processing Document No: {str(item)[:self.logger_mask_filename_length]}*****.")
 			return True
 	else:
-		self.logger.info(f"No more documents to process or error while fetching document {item[:self.logger_mask_filename_length]}*****.")
+		self.logger.info(f"No more documents to process or error while fetching document {str(item)[:self.logger_mask_filename_length]}*****.")
 	return False
 

@@ -145,7 +145,7 @@ def update_o19_pendingdocs(self):
 	response = self.session.post(url, data=params, verify=self.config.get('emr.verify-HTTPS', True), timeout=self.config.get('general_setting.timeout', 300))
 
 	if response.status_code == 200:
-		self.logger.info(f"Completed processing document and posted responses to EMR demographic ({self.demographic_number}) for Document No: {self.file_name[:self.logger_mask_filename_length]}*****")
+		self.logger.info(f"Completed processing document and posted responses to EMR demographic ({self.demographic_number}) for Document No: {str(self.file_name)[:self.logger_mask_filename_length]}*****")
 		return self.update_o19_last_processed_file(self)
 
 	self.logger.error(f"An error occurred: {response.status_code}")
@@ -214,7 +214,7 @@ def update_o19_incomingdocs(self):
 	response = self.session.post(url, data=params, verify=self.config.get('emr.verify-HTTPS', True), timeout=self.config.get('general_setting.timeout', 300))
 
 	if response.status_code == 200:
-		self.logger.info(f"Completed processing document and posted responses to EMR demographic ({self.demographic_number}) for Document No: {self.file_name[:self.logger_mask_filename_length]}*****")
+		self.logger.info(f"Completed processing document and posted responses to EMR demographic ({self.demographic_number}) for Document No: {str(self.file_name)[:self.logger_mask_filename_length]}*****")
 		return self.update_o19_last_processed_file(self)
 		
 	self.logger.error(f"An error occurred: {response.status_code}")
