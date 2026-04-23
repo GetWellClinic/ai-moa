@@ -89,8 +89,8 @@ See config.yaml.example for configuring OCR API parameters.
 ```yaml
 ocr:
   api_uri: https://localhost:8002/ocr
-  det_arch: db_resnet50
-  reco_arch: vitstr_base
+  det_arch: fast_base
+  reco_arch: crnn_vgg16_bn
 ```
 
 Edit 'workflow-config.yaml', and use 'extract_text_doctr_api' instead of 'extract_text_doctr' to use the OCR API endpoint.

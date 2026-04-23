@@ -241,7 +241,7 @@ def extract_text_doctr_api(self):
         self.logger.debug("Calling OCR API.")
 
         headers = {"accept": "application/json"}
-        params = {"reco_arch": self.config.get('ocr.reco_arch','vitstr_base'), "det_arch": self.config.get('ocr.det_arch','db_resnet50')}
+        params = {"reco_arch": self.config.get('ocr.reco_arch','crnn_vgg16_bn'), "det_arch": self.config.get('ocr.det_arch','fast_base')}
 
         files = [  # application/pdf, image/jpeg, image/png supported
                 ("files", ('ocr_doc.pdf', trimmed_file.getvalue(), "application/pdf")),
