@@ -881,6 +881,13 @@ def update_patient_details(self, row, demographic_id, category, is_patient=False
             elif category == "secondary_fsa":
                 self.fill_element(self, driver, 'mrp', str(self.config.get('pif.secondary_fsa_mrp_id')), 'select_value')
 
+                self.fill_element(self, driver, 'resident', str(self.config.get('pif.secondary_fsa_resident_id')), 'select_value')
+
+                self.fill_element(self, driver, 'internalProviderList', str(self.config.get('pif.secondary_fsa_program_id')), 'select_value')
+
+                ipl_add_button = driver.find_element(By.ID, "addHealthCareTeamButton")
+                ipl_add_button.click()
+
             self.fill_element(self, driver, 'addr', row['address'])
 
             self.fill_element(self, driver, 'city', row['city'])
@@ -924,7 +931,7 @@ def update_patient_details(self, row, demographic_id, category, is_patient=False
                 self.config.config['pif']['stop_flag'] = False
                 self.config.save_config()
 
-            if category == "secondary_fsa":
+            if category == "secondary_fsa" and self.config.get('pif.send_secondary_fsa_new_patient_tickler',False):
                 message = self.config.get('pif.secondary_fsa_message')
                 to = self.config.get('pif.secondary_fsa_msg_to')
                 self.create_tickler(self, demographic_id, message, str(to))
