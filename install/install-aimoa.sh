@@ -21,20 +21,17 @@
 
 # CONFIGURATION:
 # 
-# Autodetect first administrator username:
-USERNAME=$(awk -F':' -v uid=1000 '$3 == uid { print $1 }' /etc/passwd)
 USER=${SUDO_USER:-$(whoami)}
 # Override username to be added to "aimoa" group permissions, to allow username to run AI-MOA:
 # USERNAME=
 
 # Automatic detection of base directory
-cd ..
-AIMOA=$(pwd)
-sudo /bin/chown -R $USER:$USER $AIMOA
+AIMOA=$(dirname "$(pwd)")
+sudo /bin/chown -R aimoa:aimoa $AIMOA
 
 /bin/echo "AI-MOA (Aimee AI) will be installed and setup with the following specified base directory for AI-MOA..."
 /bin/echo ""
-/bin/echo "Base directory: "$(pwd)
+/bin/echo "Base directory: "$AIMOA
 /bin/echo ""
 /bin/echo "...if the above directory is not the correct base directory for AI-MOA, please Ctrl-C to cancel installation now...!"
 /bin/sleep 10s
@@ -42,10 +39,6 @@ sudo /bin/chown -R $USER:$USER $AIMOA
 # Create the logs directory if it doesn't exist
 /bin/echo "Creating log directory..."
 /bin/mkdir -p "$AIMOA/logs"
-
-# Create the static directory if it doesn't exist
-/bin/echo "Creating src/static directory..."
-/bin/mkdir -p "$AIMOA/src/static"
 
 # Create the config directory if it doesn't exit. For local configuration files.
 /bin/echo "Creating config directory"
@@ -125,7 +118,6 @@ pip install -r "$AIMOA/src/requirements.txt"
 /bin/newgrp aimoa
 # Add current user to 'aimoa' group
 sudo /usr/sbin/usermod -a -G aimoa $USER
-sudo /usr/sbin/usermod -a -G aimoa $USERNAME
 
 
 # Initialize file permissions for AI-MOA:
@@ -143,7 +135,6 @@ sudo /bin/chmod o-rwx "$AIMOA/config"
 # Confirm user belongs to group "aimoa"
 /bin/echo "Confirming current user belonging to the following groups (check for 'aimoa')..."
 sudo /usr/bin/groups $USER
-sudo /usr/bin/groups $USERNAME
 /bin/echo ""
 /bin/sleep 5s
 
