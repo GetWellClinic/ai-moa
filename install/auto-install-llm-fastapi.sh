@@ -38,8 +38,8 @@ MODEL_URL="$MODEL_URL"
 MODEL_FILE="$MODEL_FILE"
 EXPECTED_SHA256="$EXPECTED_SHA256"
 
-/bin/echo "Base directory: \$APP_DIR"
-/bin/echo "...press Ctrl-C to cancel"
+/bin/echo "The base directory for the AI-MOA installation is: \$APP_DIR"
+/bin/echo "Press Ctrl-C within 5 seconds to cancel if this is the incorrect location."
 /bin/sleep 10s
 
 # Validate paths

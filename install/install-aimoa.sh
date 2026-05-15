@@ -25,6 +25,11 @@ USER=${SUDO_USER:-$(whoami)}
 # Override username to be added to "aimoa" group permissions, to allow username to run AI-MOA:
 # USERNAME=
 
+id aimoa >/dev/null 2>&1 || {
+  echo "Required user 'aimoa' does not exist. Please create it before running this script." >&2
+  exit 1
+}
+
 # Automatic detection of base directory
 AIMOA=$(dirname "$(pwd)")
 sudo /bin/chown -R aimoa:aimoa $AIMOA

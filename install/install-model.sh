@@ -11,6 +11,11 @@ USER=${SUDO_USER:-$(whoami)}
 # Override with specifying full path to AI-MOA installed directory:
 # AIMOA=/opt/ai-moa
 
+id aimoa >/dev/null 2>&1 || {
+  echo "Required user 'aimoa' does not exist. Please create it before running this script." >&2
+  exit 1
+}
+
 # Confirming base directory of AI-MOA:
 /bin/echo "The followings has been specified as the base directory for AI-MOA..."
 /bin/echo $AIMOA

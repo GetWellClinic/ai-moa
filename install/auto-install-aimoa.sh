@@ -89,7 +89,7 @@ setup_repo() {
     sudo -u "$APP_USER" bash <<EOF
 set -e
 cd "$APP_DIR"
-git clone https://github.com/getwellclinic/ai-moa.git .
+git clone https://github.com/GetWellClinic/ai-moa.git .
 cd install
 ls -l -h
 chmod ug+x *.sh
@@ -185,6 +185,16 @@ install_driver() {
 }
 
 install_nvidia_container_toolkit() {
+
+    echo "Adding NVIDIA Container Toolkit repository and GPG key..."
+
+    curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | \
+        sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+
+    curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+        sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+        sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list > /dev/null
+
     echo "Updating package list..."
     sudo apt-get update
 
@@ -224,9 +234,15 @@ install_nvidia_container_toolkit() {
         sudo systemctl start docker
 
         echo "Adding user to docker group..."
+        # Add the invoking admin user to the docker group so they can manage containers.
+        # Note: The aimoa account is intentionally *not* added here to avoid
+        # granting root-equivalent Docker socket access to the app user.
         sudo usermod -aG docker "$USER"
         
         echo "You must log out and log back in for Docker group changes to take effect."
+
+        echo "After logging back in, please rerun this script again to complete installation."
+        sleep 5
 
     fi
 
@@ -468,6 +484,9 @@ main() {
 
                 read -p "Reboot now? [Y/N]: " ans
                 if [[ "$ans" =~ ^[Yy]$ ]]; then
+                    echo "After reboot, please rerun this script again to complete installation."
+                    echo "Rebooting in 5 seconds..."
+                    sleep 5
                     sudo reboot
                 else
                     echo "Please reboot manually and rerun the script."
