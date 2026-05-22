@@ -174,7 +174,7 @@ install_chrome() {
 }
 
 install_driver() {
-    echo "Installing NVIDIA driver ${REQUIRED_DRIVER}..."
+    echo "Installing NVIDIA driver branch >= ${REQUIRED_DRIVER}..."
     sudo apt update
 
     if dpkg -l | grep -q "nvidia-driver-${REQUIRED_DRIVER}"; then
@@ -188,12 +188,16 @@ install_nvidia_container_toolkit() {
 
     echo "Adding NVIDIA Container Toolkit repository and GPG key..."
 
-    curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | \
+    if [ ! -f /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg ]; then
+        curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | \
         sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+    fi
 
-    curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+    if [ ! -f /etc/apt/sources.list.d/nvidia-container-toolkit.list ]; then
+        curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
         sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
         sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list > /dev/null
+    fi
 
     echo "Updating package list..."
     sudo apt-get update
@@ -468,7 +472,7 @@ main() {
         echo
 
         echo "Choose installation method:"
-        echo "1) Let this script install NVIDIA driver ${REQUIRED_DRIVER}"
+        echo "1) Let this script install NVIDIA driver branch >= ${REQUIRED_DRIVER}"
         echo "2) I will install manually"
         echo
 
