@@ -116,6 +116,8 @@ Use the Workflow config file at /opt/ai-moa/config/workflow-config.yaml to updat
 **Note:** To use DocTR OCR as an API, set `extract_text_doctr_api` in `workflow-config.yaml`.
 If not, skip the below step (**2**) `./auto-install-ocr-fastapi.sh` and use `extract_text_doctr` instead in the `workflow-config.yaml`.
 
+**Recommended:** Use DocTR OCR as an API, please follow step (**2**)
+
 **2.** Once you see the above confirmation, run the following command to install DocTR OCR as an API:
 
 `cd /opt/ai-moa/install`
@@ -157,11 +159,15 @@ Use the Config file at `/opt/ai-moa/config/config.yaml` to update your configura
 
 Use the Workflow config file at `/opt/ai-moa/config/workflow-config.yaml` to update your workflow configuration
 
+**Note:** AI-MOA should only be run as the `aimoa` user. Before running any of the following scripts, use nan`sudo -u aimoa -i` to switch to the `aimoa` user.
+
 **To encrypt EMR Credentials**
 
-Use `python main.py --encrypt-credentials` to update the EMR credentials in the config.yaml file.
+`cd /opt/ai-moa/src`
 
-Run `./export-emr-key.sh` to persist the environment variable `EMR_SECRET_KEY`.
+Use `/opt/ai-moa.env/pyenv/bin/python main.py --encrypt-credentials --config /opt/ai-moa/config/config.yaml --workflow-config /opt/ai-moa/config/workflow-config.yaml` to update the EMR credentials in the config.yaml file.
+
+Run `../install/export-emr-key.sh` to persist the environment variable `EMR_SECRET_KEY`.
 
 For more details: [install/Readme.md](https://github.com/GetWellClinic/ai-moa/blob/main/install/Readme.md#optional-install-a-test-emr-with-oscar-v19-community-edition)
 
@@ -169,30 +175,23 @@ For more details: [install/Readme.md](https://github.com/GetWellClinic/ai-moa/bl
 
 In your `config-pif.yaml` file, use the following fields to configure AI-MOA with PIF
 
-Use `python main.py --pif-encrypt-credentials` to encrypt the credentials in the config-pif.yaml file.
+`cd /opt/ai-moa/src`
 
-Run `./export-pif-key.sh` to persist this environment variable `PIF_SECRET_KEY`.
+Use `/opt/ai-moa.env/pyenv/bin/python main.py --pif-encrypt-credentials --config /opt/ai-moa/config/config.yaml --workflow-config /opt/ai-moa/config/workflow-config.yaml` to encrypt the credentials in the config-pif.yaml file.
+
+Run `../install/export-pif-key.sh` to persist this environment variable `PIF_SECRET_KEY`.
 
 For more details: [docs/pif-overview.md](https://github.com/GetWellClinic/ai-moa/blob/main/docs/pif-overview.md)
-
-Next, activate the virtual environment:
-
-On Linux/macOS:
-
-`source /opt/ai-moa.env/bin/activate`
 
 Once you have installed, and configured AI-MOA, you can start AI-MOA by executing the following command:
 
 `cd /opt/ai-moa/src`
 
-Depending on your Python setup, use `python` or `python3`
+`/opt/ai-moa.env/pyenv/bin/python main.py --run-immediately --config /opt/ai-moa/config/config.yaml --workflow-config /opt/ai-moa/config/workflow-config.yaml`
 
-`python3 main.py --run-immediately`
+`--run-immediately` will run the script immediately.
 
-You can also specify the location of config files by passing on some parameters, when executing start command:
-
-`python3 main.py --config /opt/ai-moa/src/config/config.yaml --workflow-config /opt/ai-moa/src/config/workflow-config.yaml --cron-interval */1`
-
+Use `/opt/ai-moa.env/pyenv/bin/python main.py --help` for more details on the available parameters.
 
 **Note:** If you prefer a manual installation, please see the instructions below.
 
