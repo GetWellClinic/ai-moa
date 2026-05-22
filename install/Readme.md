@@ -161,6 +161,8 @@ Use the Workflow config file at `/opt/ai-moa/config/workflow-config.yaml` to upd
 
 **Note:** AI-MOA should only be run as the `aimoa` user. Before running any of the following scripts, use `sudo -u aimoa -i` to switch to the `aimoa` user.
 
+**AI-MOA only accepts encrypted EMR and PIF credentials. Follow the steps below to encrypt your EMR and PIF credentials.**
+
 **To encrypt EMR Credentials**
 
 `cd /opt/ai-moa/src`
@@ -390,6 +392,9 @@ nano ../config/workflow-config.yaml
 ### 1. Edit "../config/config.yaml" file ###
 
 Particularly, pay attention to the section on "emr" that is unique to your EMR server.
+
+Do not edit the following section manually; use `python3 main.py --encrypt-credentials` instead.
+
 ```
 emr:
 	base_url:
@@ -397,6 +402,8 @@ emr:
 	password:
 	pin:
 ```
+
+**AI-MOA only accepts encrypted EMR credentials. Follow the steps below to encrypt your EMR credentials.**
 
 Depending on your Python setup, use `python` or `python3`
 

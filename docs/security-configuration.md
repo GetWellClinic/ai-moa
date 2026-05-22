@@ -35,6 +35,7 @@ AI-MOA was intended to be installed on a server within your physically protected
 	```
 	e.g. -rwxr-x---	aimoa aimoa
 	```
+- Secret key files in `~/.config/aimoa` should have `read and write permissions` only for the `aimoa` user; no other user account should have access to this folder.
 - Protect and provide access to the server only through a physical console, or through SSH and VPN.
 - Consider whole-disk encryption for the server/VM.
 

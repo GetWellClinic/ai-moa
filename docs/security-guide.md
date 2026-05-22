@@ -57,7 +57,7 @@ The software and accompanying documentation are provided 'as is,' without any ex
 ## Containers, Packages, and LLM/OCR Documentation ##
 - Install AI-MOA, OCR, and LLM containers locally on the same server/VM.
 - Always use the specific LLM and OCR versions referenced in the official documentation. Deviating from these versions may introduce compatibility issues or security vulnerabilities.
-- Using an external LLM or OCR component involves downloading software from sources that may not be verified, which could introduce significant security risks. Only officially vetted and approved LLM/OCR versions should be used to mitigate potential threats.
+- Using an external LLM or OCR component involves downloading or connecting to software from sources that may not be verified, which could introduce significant security risks. Only officially vetted and approved LLM/OCR versions should be used to mitigate potential threats. AI-MOA does not perform this automatically. This configuration can only be performed manually, and any security risks associated with it are the responsibility of the IT administrator or the person in charge.
 
 ## Use SSL/TLS ##
 AI-MOA enforces SSL/TLS for all communications, including the EMR interface, OCR API, and LLM container. Disabling or bypassing SSL/TLS may lead to compatibility issues and significant security vulnerabilities.
