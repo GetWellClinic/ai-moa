@@ -48,10 +48,7 @@ healthcare team's administrative burden, so we can dedicate ourselves to the ver
 - Github [https://github.com](https://github.com) user account and personal private access token generated
 - Hugging Face [https://huggingface.co](https://huggingface.co) user account and personal private access token generated (Optional)
 
-
-## Installation (for Linux) ##
-
-**Be sure to change working directory to "install" where this readme.md and installation files are stored, before executing the installation files.**
+## Automated Installation (for Linux) ##
 
 ### 1. Install Ubuntu 22 LTS ###
 
@@ -61,24 +58,170 @@ If you plan on installing this in a VM such as on ProxMox VE, here are some tips
 - Enable IOMMU in BIOS
 - Enable [PCI passthrough](https://pve.proxmox.com/wiki/PCI_Passthrough) for Proxmox VE. This is a helpful Youtube [instructional video](https://www.youtube.com/watch?v=TWX3iWcka_0)
 
+### 2. Download and Run installer files (bash files) ###
+
+**Notes:**
+Executing the following scripts `auto-install-aimoa.sh; auto-install-ocr-fastapi.sh; auto-install-llm-fastapi.sh` would:
+
+- Install system dependencies (Docker, Python, Git, Chrome, NVIDIA drivers/toolkit if needed)
+- Enable GPU support for Docker containers
+- Create a dedicated service user (`aimoa`)
+- Download and set up:
+  - AI-MOA
+  - OCR service (DocTR)
+- Download and configure a local large language model (Mistral 7B)
+- Start Docker-based services so they serve as API endpoints on the machine
+
+**1.** To start the auto-install process, log in as a non-root user with sudo privileges and run:
+
+`wget https://raw.githubusercontent.com/GetWellClinic/ai-moa/refs/heads/main/install/auto-install-aimoa.sh`
+
+Then run:
+
+`chmod +x auto-install-aimoa.sh`
+
+and
+
+`./auto-install-aimoa.sh`
+
+If the above script runs successfully, you will see a message similar to the following:
+```
+=== Verifying Installation ===
+[x] NVIDIA driver (580.xxx) and CUDA (13.0) meet requirements
+[x] NVIDIA Container Toolkit installed
+[x] Docker installed: Docker version 29.4.3
+[x] Git installed: git version 2.43.0
+[x] python3 version 3.12 meets requirement >= 3.11
+[x] pip found for python3: version 22.0
+[x] virtualenv found: virtualenv 20.xxx
+[x] AI-MOA user exists: aimoa
+[x] AI-MOA directory exists at /opt/ai-moa
+[x] Google Chrome installed successfully: Google Chrome 148.0.xxx
+
+** All requirements installed successfully! **
+=== Verification Complete ===
+```
+
+```
+Python environment (/opt/ai-moa.env/pyenv) setup complete.
+
+This installer script can be found at /opt/ai-moa/install/auto-install-aimoa.sh
+Removing installer script which was downloaded at the beginning...
+
+Use the Config file at /opt/ai-moa/config/config.yaml to update your configuration
+
+Use the Workflow config file at /opt/ai-moa/config/workflow-config.yaml to update your workflow configuration
+```
+
+**Note:** To use DocTR OCR as an API, set `extract_text_doctr_api` in `workflow-config.yaml`.
+If not, skip the below step (**2**) `./auto-install-ocr-fastapi.sh` and use `extract_text_doctr` instead in the `workflow-config.yaml`.
+
+**2.** Once you see the above confirmation, run the following command to install DocTR OCR as an API:
+
+`cd /opt/ai-moa/install`
+
+Then run:
+
+`./auto-install-ocr-fastapi.sh` 
+
+This will install DocTR OCR as an API
+
+If successful, you will see a similar message:
+```
+[+] up 2/2
+ ✔ Image api-web               Built                                                                 
+ ✔ Container api_web           Started
+Deployment complete!
+API available at: https://localhost:8002
+```
+
+**3.** Finally, to configure the LLM container, run:
+
+`cd /opt/ai-moa/install`
+
+Then run:
+
+`./auto-install-llm-fastapi.sh`
+
+If successful, you will see a similar message:
+```
+[+] up 2/2
+ ✔ Container llm-container-llm-container-1             Started
+ ✔ Container caddy-llm-container                       Started
+Done.
+```
+
+Once you see all the success messages, AI-MOA has been installed successfully.
+
+Use the Config file at `/opt/ai-moa/config/config.yaml` to update your configuration
+
+Use the Workflow config file at `/opt/ai-moa/config/workflow-config.yaml` to update your workflow configuration
+
+**To encrypt EMR Credentials**
+
+Use `python main.py --encrypt-credentials` to update the EMR credentials in the config.yaml file.
+
+Run `./export-emr-key.sh` to persist the environment variable `EMR_SECRET_KEY`.
+
+For more details: [install/Readme.md](https://github.com/GetWellClinic/ai-moa/blob/main/install/Readme.md#optional-install-a-test-emr-with-oscar-v19-community-edition)
+
+**To encrypt PIF Credentials**
+
+In your `config-pif.yaml` file, use the following fields to configure AI-MOA with PIF
+
+Use `python main.py --pif-encrypt-credentials` to encrypt the credentials in the config-pif.yaml file.
+
+Run `./export-pif-key.sh` to persist this environment variable `PIF_SECRET_KEY`.
+
+For more details: [docs/pif-overview.md](https://github.com/GetWellClinic/ai-moa/blob/main/docs/pif-overview.md)
+
+Next, activate the virtual environment:
+
+On Linux/macOS:
+
+`source /opt/ai-moa.env/bin/activate`
+
+Once you have installed, and configured AI-MOA, you can start AI-MOA by executing the following command:
+
+`cd /opt/ai-moa/src`
+
+Depending on your Python setup, use `python` or `python3`
+
+`python3 main.py --run-immediately`
+
+You can also specify the location of config files by passing on some parameters, when executing start command:
+
+`python3 main.py --config /opt/ai-moa/src/config/config.yaml --workflow-config /opt/ai-moa/src/config/workflow-config.yaml --cron-interval */1`
+
+
+**Note:** If you prefer a manual installation, please see the instructions below.
+
+## Manual Installation (for Linux) ##
+
+**Be sure to change working directory to "install" where this readme.md and installation files are stored, before executing the installation files.**
+
+### 1. Install Ubuntu 22 LTS ###
+
+**Notes:**
+If you plan on installing this in a VM such as on Proxmox VE, here are some tips:
+- Enable virtualization on the bare metal machine in the BIOS
+- Enable IOMMU in BIOS
+- Enable [PCI passthrough](https://pve.proxmox.com/wiki/PCI_Passthrough) for Proxmox VE. This is a helpful YouTube [instructional video](https://www.youtube.com/watch?v=TWX3iWcka_0)
+
 ### 2. Clone the AI-MOA repository from Github ###
 
 You will need to have your Github user name and a personal access token (generated from your account on Github). Github no longer allows 'git clone' access with passwords, and must use an access token generated from your user account online from Github.
 
 Recommended to use the user `aimoa` for AI-MOA. To create it, use:
 
-`sudo useradd -M aimoa`
-
-Switch to this user using:
-
-`sudo su - aimoa`
+`sudo useradd -m -s /bin/bash aimoa`
 
 and then run the following:
 
 ```
 cd /opt
 sudo git clone https://github.com/getwellclinic/ai-moa.git
-sudo chown -R $(whoami):$(whoami) /opt/ai-moa
+sudo chown -R aimoa:aimoa /opt/ai-moa
 cd /opt/ai-moa
 ```
 
@@ -151,30 +294,11 @@ nvidia-smi
 
 ### 4. Install NVIDIA Toolkit Container ###
 
-Add the Repository for [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
-```
-curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
-  && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
-    sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
-    sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
-```
-
 Update and install the latest nvidia-container-toolkit
 ```
 sudo apt-get update
 sudo apt-get install nvidia-container-toolkit
 ```
-
-Restart the server for the installation to take effect.
-```
-sudo shutdown -r now
-```
-
-Check if docker containers can access the GPU (if nvidia-container-toolkit was installed properly)
-```
-docker run --rm --gpus all nvidia/cuda:12.3.0-base-ubuntu20.04 nvidia-smi
-```
-If the toolkit is installed properly, you should be able to see an output from nvidia-smi showing the GPU status. If you get any errors, then you have not installed it properly and llm-container will not be able to work with the GPU.
 
 ### 5. Install Docker and Docker Compose ###
 
@@ -195,13 +319,20 @@ Use our custom "install-docker.sh" script to install automatically:
 sudo nvidia-ctk runtime configure --runtime=docker
 sudo systemctl restart docker
 ```
+Check if docker containers can access the GPU (if nvidia-container-toolkit was installed properly)
+```
+docker run --rm --gpus all nvidia/cuda:12.3.0-base-ubuntu20.04 nvidia-smi
+```
+If the toolkit is installed properly, you should be able to see an output from nvidia-smi showing the GPU status. If you get any errors, then you have not installed it properly and llm-container will not be able to work with the GPU.
 
-### 7. Install AI LLM Model for LLM Container ###
+### 7. Download LLM Model for LLM Container ###
 
-This installs the default AI Large Language Model for AI-MOA in LLM Container.
+This downloads the default Large Language Model for AI-MOA in LLM Container.
 ```
 ./install-model.sh
 ```
+
+Follow the instructions in [docs/llm-container.md](https://github.com/GetWellClinic/ai-moa/blob/main/docs/llm-container.md#4-update-the-docker-composeyml-file) to configure the local LLM container.
 
 ### 8. Install Aimee AI (AI-MOA) ###
 
@@ -214,6 +345,9 @@ Add your username to the group "aimoa" so it can run AI-MOA:
 ```
 sudo usermod -a -G aimoa $(whoami)
 ```
+
+
+If you need OCR as an API endpoint, follow the instructions in [docs/ocr_api.md](https://github.com/GetWellClinic/ai-moa/blob/main/docs/ocr_api.md) to set up DocTR OCR as an API.
 
 ### 9. Install *AI-MOA* as a system service (for automatic production use)###
 
@@ -265,7 +399,9 @@ emr:
 	pin:
 ```
 
-Use `python main.py --encrypt-credentials` to update the EMR credentials in the config.yaml file.
+Depending on your Python setup, use `python` or `python3`
+
+Use `python3 main.py --encrypt-credentials` to update the EMR credentials in the config.yaml file.
 
 Run `./export-emr-key.sh` to persist the environment variable `EMR_SECRET_KEY`.
 

@@ -109,6 +109,9 @@ pif:
   secondary_fsa_message: Patient registered for primary fsa but eligible for secondary fsa only.
 
   secondary_fsa_mrp_id: 28 # The ID of the secondary FSA "MRP" for secondary FSA patients. ie. Doctor, Walk-In
+  secondary_fsa_resident_id: 111 # The emr user ID of the secondary FSA for dropdown "resident".
+  secondary_fsa_program_id: 111 # The emr user ID of the "program" associated with secondary FSA patients.
+  send_secondary_fsa_new_patient_tickler: True # If set to true, a tickler message will be sent when a new patient registers and meets the secondary FSA criteria.
   secondary_fsa_msg_to: 1010 # The user who should receive the message when a secondary FSA patient is processed. ie. NPLC Clinic
 
   # A list of valid postal code prefixes for patients who are eligible for secondary FSA services.

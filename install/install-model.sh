@@ -6,11 +6,15 @@
 
 # CONFIGURATION:
 # Using automatic detection, when this script is found under directory "AIMOA/install/":
-cd ..
-AIMOA=$(pwd)
+AIMOA=$(dirname "$(pwd)")
 USER=${SUDO_USER:-$(whoami)}
 # Override with specifying full path to AI-MOA installed directory:
 # AIMOA=/opt/ai-moa
+
+id aimoa >/dev/null 2>&1 || {
+  echo "Required user 'aimoa' does not exist. Please create it before running this script." >&2
+  exit 1
+}
 
 # Confirming base directory of AI-MOA:
 /bin/echo "The followings has been specified as the base directory for AI-MOA..."
@@ -49,9 +53,10 @@ export MODEL_NAME="/models/Mistral-7B-Instruct-v0.3.Q8_0.gguf"
 /bin/echo $MODEL_NAME
 
 # Fix permissions:
-sudo /bin/chown $USER:$USER $AIMOA/llm-container/models -R
+sudo /bin/chown aimoa:aimoa $AIMOA/llm-container/models -R
 
 # Note:
 # You can download other AI models in GGUF format from Hugging Face and install them in models folder to use.
 # Remember to specify the model name in AIMOA/src/config.yaml
 
+cd $AIMOA/install
