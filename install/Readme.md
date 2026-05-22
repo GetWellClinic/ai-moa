@@ -116,7 +116,7 @@ Use the Workflow config file at /opt/ai-moa/config/workflow-config.yaml to updat
 **Note:** To use DocTR OCR as an API, set `extract_text_doctr_api` in `workflow-config.yaml`.
 If not, skip the below step (**2**) `./auto-install-ocr-fastapi.sh` and use `extract_text_doctr` instead in the `workflow-config.yaml`.
 
-**Recommended:** Use DocTR OCR as an API, please follow step (**2**)
+**Recommended:** To use DocTR OCR as an API, follow step (**2**).
 
 **2.** Once you see the above confirmation, run the following command to install DocTR OCR as an API:
 
@@ -159,7 +159,7 @@ Use the Config file at `/opt/ai-moa/config/config.yaml` to update your configura
 
 Use the Workflow config file at `/opt/ai-moa/config/workflow-config.yaml` to update your workflow configuration
 
-**Note:** AI-MOA should only be run as the `aimoa` user. Before running any of the following scripts, use nan`sudo -u aimoa -i` to switch to the `aimoa` user.
+**Note:** AI-MOA should only be run as the `aimoa` user. Before running any of the following scripts, use `sudo -u aimoa -i` to switch to the `aimoa` user.
 
 **To encrypt EMR Credentials**
 
