@@ -6,7 +6,7 @@ AI-MOA was designed with privacy and security in mind. It gives control of priva
 
 Communication between the systems is all done locally (within the same server/VM/internal network) and using SSL/TLS. External communication with an EMR is conducted as a normal authenticated/secured human user, through encrypted SSL/TLS web connections. AI-MOA is designed to minimize persistent storage of patient data and process data locally and primarily in memory wherever operationally feasible. Organizations deploying AI-MOA remain responsible for ensuring that operating systems, containers, logging systems, backups, and infrastructure are configured securely to prevent unauthorized retention or disclosure of protected information.
 
-The following security, operational, and deployment requirements are mandatory for all production installations of AI-MOA. Improper setup, misuse, or failure to follow these requirements may compromise privacy, security, regulatory compliance, system integrity, and patient safety..
+The following security, operational, and deployment requirements are mandatory for all production installations of AI-MOA. Improper setup, misuse, or failure to follow these requirements may compromise privacy, security, regulatory compliance, system integrity, and patient safety.
 
 ## Secure Your Local Network ##
 - Protect your internal network with an enterprise-grade firewall.
