@@ -23,6 +23,8 @@ echo "export $VAR=\"$VALUE\"" > "$ENV_FILE"
 # Add source line to .bashrc if missing
 grep -Fqx "$LINE" "$BASHRC" || echo "$LINE" >> "$BASHRC"
 
+chmod 600 "$ENV_FILE"
+
 echo "$VAR set successfully."
 
 echo "Use 'source $BASHRC' to reload .bashrc file."
