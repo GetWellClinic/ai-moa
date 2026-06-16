@@ -25,6 +25,9 @@ KillSignal=SIGINT
 Restart=on-failure
 RestartSec=30s
 
+EnvironmentFile=/home/aimoa/.config/aimoa/aimoa_service_emr_env_keys
+# EnvironmentFile=/home/aimoa/.config/aimoa/aimoa_service_pif_env_keys
+
 [Install]
 WantedBy=multi-user.target
 
