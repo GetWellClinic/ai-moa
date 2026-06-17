@@ -110,8 +110,8 @@ class SessionManager:
         Safely shuts down the Selenium WebDriver and HTTP session,
         and logs each step in the shutdown process.
         """
-        logger.debug("Closing dirver.")
+        logger.info("Closing dirver.")
         self.driver.close()
         self.driver.quit()
         self.session.close()
-        logger.debug("Closing session.")
+        logger.info("Closing session.")

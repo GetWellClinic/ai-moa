@@ -773,10 +773,11 @@ def new_patient_details(self, row, category):
             alert.accept()
 
         except Exception as e:
-            print("No alert message, pass one.")
+            self.logger.info("No alert message, pass one.")
             pass
 
         if alert_text:
+            self.logger.info(alert_text)
             message = f"Unable to create demographic, please verify details; PIF Id : {row['id']}; {row['lastname1']}, {row['firstname1']} ({row['dob1']} #{row['hcn1']}) "
             to = self.config.get('pif.error_msg_to')
             unattached_patient_id = self.config.get('pif.confidential_unattached_id')
@@ -912,10 +913,11 @@ def update_patient_details(self, row, demographic_id, category, is_patient=False
                 alert.accept()
 
             except Exception as e:
-                print("No alert message, pass two.")
+                self.logger.info("No alert message, pass two.")
                 pass
 
             if alert_text:
+                self.logger.info(alert_text)
                 hcn_input_field = driver.find_element(By.ID, "hinBox")
                 driver.execute_script("arguments[0].value = '';", hcn_input_field)
                 updatebutton_field.click()

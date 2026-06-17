@@ -124,7 +124,7 @@ If not, skip the below step (**2**) `./auto-install-ocr-fastapi.sh` and use `ext
 
 Then run:
 
-`./auto-install-ocr-fastapi.sh` 
+`bash ./auto-install-ocr-fastapi.sh` 
 
 This will install DocTR OCR as an API
 
@@ -143,7 +143,7 @@ API available at: https://localhost:8002
 
 Then run:
 
-`./auto-install-llm-fastapi.sh`
+`bash ./auto-install-llm-fastapi.sh`
 
 If successful, you will see a similar message:
 ```
@@ -169,7 +169,9 @@ Use the Workflow config file at `/opt/ai-moa/config/workflow-config.yaml` to upd
 
 Use `/opt/ai-moa.env/pyenv/bin/python main.py --encrypt-credentials --config /opt/ai-moa/config/config.yaml --workflow-config /opt/ai-moa/config/workflow-config.yaml` to update the EMR credentials in the config.yaml file.
 
-Run `../install/export-emr-key.sh` to persist the environment variable `EMR_SECRET_KEY`.
+Run `bash ../install/export-emr-key.sh` to persist the environment variable `EMR_SECRET_KEY`.
+
+Run `bash ../install/export-service-emr-key.sh` to save the key in a systemd-compatible environment file.
 
 For more details: [install/Readme.md](https://github.com/GetWellClinic/ai-moa/blob/main/install/Readme.md#optional-install-a-test-emr-with-oscar-v19-community-edition)
 
@@ -181,7 +183,9 @@ In your `config-pif.yaml` file, use the following fields to configure AI-MOA wit
 
 Use `/opt/ai-moa.env/pyenv/bin/python main.py --pif-encrypt-credentials --config /opt/ai-moa/config/config.yaml --workflow-config /opt/ai-moa/config/workflow-config.yaml` to encrypt the credentials in the config-pif.yaml file.
 
-Run `../install/export-pif-key.sh` to persist this environment variable `PIF_SECRET_KEY`.
+Run `bash ../install/export-pif-key.sh` to persist this environment variable `PIF_SECRET_KEY`.
+
+Run `bash ../install/export-service-pif-key.sh` to save the key in a systemd-compatible environment file.
 
 For more details: [docs/pif-overview.md](https://github.com/GetWellClinic/ai-moa/blob/main/docs/pif-overview.md)
 
@@ -467,7 +471,7 @@ Aimee AI will access the EMR with a user account you create for her.
 2. Administration -> System Management -> Add a Role:
   - Role Name : aimoa
 3. Administration -> System Management -> Assign Role/Rights to Object:
-  - Role/Privilege : _tickler, _demographic, _lab, _edoc, _search
+  - Role/Privilege : _tickler, _appointment, _search, _demographic, _edoc, _appointment.doctorLink, _report, _lab
   - Privilege : write, read, update
 4. Administration -> Add a Provider Record:
 	- Provider No: **200**

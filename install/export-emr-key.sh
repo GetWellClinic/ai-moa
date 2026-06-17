@@ -13,7 +13,7 @@ LINE='[ -f ~/.config/aimoa/env_emr_key.sh ] && source ~/.config/aimoa/env_emr_ke
 VAR="EMR_SECRET_KEY"
 
 # Prompt for value
-read -rp "Enter value for $VAR: " VALUE
+read -rsp "Enter value for $VAR: " VALUE
 
 # Ensure directory exists
 mkdir -p "$(dirname "$ENV_FILE")"
