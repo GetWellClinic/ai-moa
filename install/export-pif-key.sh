@@ -13,7 +13,7 @@ LINE='[ -f ~/.config/aimoa/env_pif_key.sh ] && source ~/.config/aimoa/env_pif_ke
 VAR="PIF_SECRET_KEY"
 
 # Prompt for value
-read -rp "Enter value for $VAR: " VALUE
+read -rsp "Enter value for $VAR: " VALUE
 
 # Ensure directory exists
 mkdir -p "$(dirname "$ENV_FILE")"

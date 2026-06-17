@@ -10,7 +10,7 @@
 ENV_FILE="$HOME/.config/aimoa/aimoa_service_pif_env_keys"
 VAR="PIF_SECRET_KEY"
 
-read -rp "Enter value for $VAR: " VALUE
+read -rsp "Enter value for $VAR: " VALUE
 
 mkdir -p "$(dirname "$ENV_FILE")"
 

@@ -471,7 +471,7 @@ Aimee AI will access the EMR with a user account you create for her.
 2. Administration -> System Management -> Add a Role:
   - Role Name : aimoa
 3. Administration -> System Management -> Assign Role/Rights to Object:
-  - Role/Privilege : _tickler, _demographic, _lab, _edoc, _search
+  - Role/Privilege : _tickler, _appointment, _search, _demographic, _edoc, _appointment.doctorLink, _report, _lab
   - Privilege : write, read, update
 4. Administration -> Add a Provider Record:
 	- Provider No: **200**

@@ -11,7 +11,7 @@
 ENV_FILE="$HOME/.config/aimoa/aimoa_service_emr_env_keys"
 VAR="EMR_SECRET_KEY"
 
-read -rp "Enter value for $VAR: " VALUE
+read -rsp "Enter value for $VAR: " VALUE
 
 mkdir -p "$(dirname "$ENV_FILE")"
 
