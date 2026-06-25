@@ -690,7 +690,7 @@ def verify_demographic_data(self, data):
     # Compile patterns once
     demographic_pattern = re.compile(rf"\bdemographic_no={demographic_no}&\b")
     dob_pattern = re.compile(rf"<td\s+class=\"dob\"\s*>{re.escape(dob)}</td>")
-    name_pattern = r'<td class="name">(.*?)</td>'
+    name_pattern = r'<td\s+class="name"[^>]*>(.*?)</td>'
 
 
     if table:
